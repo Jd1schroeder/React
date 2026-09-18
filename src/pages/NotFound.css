@@ -1,0 +1,101 @@
+.not-found-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0;
+  padding: 28px 24px 48px;
+  overflow: hidden;
+  color: var(--ink);
+  background: #f7fbff;
+}
+
+.not-found-brand {
+  position: absolute;
+  top: 28px;
+  left: 32px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #12315d;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.not-found-brand-mark {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: #fff;
+  background: var(--blue);
+  font-size: 17px;
+}
+
+.not-found-art-frame {
+  width: min(100%, 980px);
+  height: min(58vh, 560px);
+  overflow: hidden;
+}
+
+.not-found-art {
+  width: 100%;
+  display: block;
+}
+
+.not-found-content {
+  position: relative;
+  z-index: 1;
+  margin-top: -48px;
+  text-align: center;
+}
+
+.not-found-content h1 {
+  margin: 0;
+  color: #09295c;
+  font-size: clamp(24px, 3vw, 40px);
+  line-height: 1.15;
+  letter-spacing: -0.8px;
+}
+
+.not-found-content p {
+  margin: 12px 0 22px;
+  color: #536778;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.not-found-content .button {
+  min-width: 190px;
+  border-radius: 999px;
+  background: #087cf2;
+}
+
+.not-found-content .button:hover {
+  background: #0769ca;
+}
+
+@media (max-width: 640px) {
+  .not-found-brand {
+    top: 20px;
+    left: 20px;
+  }
+
+  .not-found-page {
+    padding: 76px 18px 28px;
+  }
+
+  .not-found-art-frame {
+    width: 130%;
+    height: 48vh;
+  }
+
+  .not-found-content {
+    margin-top: -14px;
+  }
+
+  .not-found-content p br {
+    display: none;
+  }
+}

@@ -64,7 +64,11 @@ export function getRouteFromLocation(location = window.location) {
     return { page: hashPage, recordId: null }
   }
 
-  return { page: 'Work Orders', recordId: null }
+  if (pathname === '/' && !location.hash) {
+    return { page: 'Work Orders', recordId: null }
+  }
+
+  return { page: 'NotFound', recordId: null }
 }
 
 export function navigateToPath(path) {

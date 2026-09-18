@@ -337,6 +337,15 @@
   text-align: center;
 }
 
+.login-legal {
+  max-width: 390px;
+  margin: 56px auto 0;
+  color: #7b848d;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+
 .login-signup-mobile {
   display: none;
 }
@@ -345,7 +354,7 @@
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 74px;
+  margin-top: 24px;
   color: #5967d6;
   font-size: 13px;
 }

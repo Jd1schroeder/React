@@ -76,6 +76,12 @@ export function Login() {
               <span className="login-signup-mobile">Create account</span>
             </button>
           </p>
+          <p className="login-legal">
+            By creating an account or logging in, you agree to the current{' '}
+            <button type="button" className="login-link">Terms of Service</button>{' '}
+            and{' '}
+            <button type="button" className="login-link">Privacy Policy</button>.
+          </p>
           <div className="login-panel-footer">
             <button type="button" className="login-language">English <ChevronDown size={14} /></button>
             <button type="button" className="login-support"><MessageCircle size={16} /> Get support</button>
