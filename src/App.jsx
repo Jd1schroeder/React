@@ -8,6 +8,9 @@ import { ScaffoldPage } from './pages/ScaffoldPage'
 import { Meters } from './pages/Meters'
 import { PartsInventory } from './pages/PartsInventory'
 import { Login } from './pages/Login'
+import { Signup } from './pages/Signup'
+import { VerifyEmail } from './pages/VerifyEmail'
+import { ForgotPassword } from './pages/ForgotPassword'
 import { NotFound } from './pages/NotFound'
 import { getPagePath, getRecordPath, getRouteFromLocation, navigateToPath } from './routes'
 import './styles/tokens.css'
@@ -16,6 +19,9 @@ import './App.css'
 
 const pages = {
   Login,
+  Signup,
+  'Verify Email': VerifyEmail,
+  'Forgot Password': ForgotPassword,
   NotFound,
   Dashboard,
   'Work Orders': WorkOrders,
@@ -68,7 +74,10 @@ function App() {
     navigateToPath(getRecordPath(type, id))
   }
 
-  if (activePage === 'Login') return <Login />
+  if (activePage === 'Login') return <Login onNavigate={navigate} />
+  if (activePage === 'Signup') return <Signup onNavigate={navigate} />
+  if (activePage === 'Verify Email') return <VerifyEmail onNavigate={navigate} />
+  if (activePage === 'Forgot Password') return <ForgotPassword onNavigate={navigate} />
   if (activePage === 'NotFound') return <NotFound onNavigate={navigate} />
 
   return (

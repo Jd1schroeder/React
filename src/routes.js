@@ -1,5 +1,8 @@
 const pagePaths = {
   Login: '/login',
+  Signup: '/signup',
+  'Verify Email': '/verify-email',
+  'Forgot Password': '/forgot-password',
   Dashboard: '/dashboard',
   'Work Orders': '/workorders',
   Requests: '/requests',

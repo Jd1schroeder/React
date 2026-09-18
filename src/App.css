@@ -82,12 +82,40 @@
   font-size: 12px;
   font-weight: 600;
 }
+.button:disabled {
+  cursor: wait;
+  opacity: 0.86;
+}
 .button-primary {
   color: #fff;
   background: var(--blue);
 }
 .button-primary:hover {
   background: #1e52bd;
+}
+.button-ripple {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.button-ripple-effect {
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 34%);
+  pointer-events: none;
+  transform: scale(0);
+  animation: button-ripple-expand 560ms ease-out;
+}
+.button-ripple > :not(.button-ripple-effect) {
+  position: relative;
+  z-index: 1;
+}
+@keyframes button-ripple-expand {
+  to {
+    opacity: 0;
+    transform: scale(1);
+  }
 }
 .text-button {
   padding: 0;
