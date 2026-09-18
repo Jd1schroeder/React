@@ -23,9 +23,13 @@ Use the existing layout primitives before creating page-specific alternatives.
 
 Every new sidebar destination should use the shared panel shell unless its interaction model genuinely differs. Keep page-specific differences in the page stylesheet, not in `App.css`.
 
+The authenticated shell is gated by `WorkspaceProvider`. During session/workspace hydration, show the shared neutral loading surface and spinner; render the sidebar and page together only after authoritative workspace data is ready. Workspace failures must show the shared retry state instead of placeholder identity or organization values.
+
 Unknown record IDs under a valid section route must preserve the parent `PanelView` and render the shared `PanelRecordNotFound` state in its detail pane. Unknown authenticated top-level routes must preserve `AppLayout` and render only the artwork in the main content area. Public splash and authentication routes remain outside the application shell.
 
 Use Lucide icons already installed in the project. Keep icon sizing controlled by the component that owns the shared UI so changes propagate consistently.
+
+Use `src/components/ui/Avatar.jsx` for every user avatar. Render the uploaded image when available; otherwise derive initials from first and last names, or only the first name when no last name exists, with `A` as the neutral fallback. Do not create page-specific avatar fallback logic.
 
 Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the shared styled trigger, rotating Lucide chevron, focus tokens, outside-click dismissal, keyboard navigation, and listbox semantics. Options may provide `disabled: true` and a Lucide `icon` for unavailable choices or explanatory affordances; disabled options remain muted and non-interactive. Keep specialized selectors, such as phone-country selection, separate only when they need custom option content.
 

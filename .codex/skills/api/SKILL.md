@@ -21,7 +21,7 @@ When an invite recipient is signed out, preserve the raw invitation token only i
 
 Explicit audit writes use the `record_audit_event` database function, which derives the actor from `auth.uid()` and checks organization-admin authorization. Organization, membership, and invitation mutation triggers record their own audit events atomically; client mutation services must not add duplicate audit calls. Do not insert arbitrary audit rows directly from browser code.
 
-Avatar files must be uploaded through the `avatars` Storage bucket using a user-scoped path and RLS. Persist the storage path in the profile and generate signed URLs only when data is loaded for display; never store temporary browser blob URLs or expiring signed URLs.
+Avatar files must be uploaded through the private `avatars` Storage bucket using a user-scoped path and RLS. Organization-owned files should use a separate private bucket with organization-scoped paths and membership-backed Storage RLS. Use buckets for access or lifecycle boundaries rather than creating one bucket per organization. Persist storage paths in profiles or domain rows and generate signed URLs only when data is loaded for display; never store temporary browser blob URLs or expiring signed URLs.
 
 When API work begins:
 
@@ -31,3 +31,10 @@ When API work begins:
 - define loading, empty, error, and retry states in the shared panel primitives.
 
 The invitation contract should resolve the allowed membership role for the current organization rather than accepting an arbitrary client-provided label. The invite flow should submit a stable role value and let the backend validate membership and permissions.
+
+## Browser storage standard
+
+- Use `localStorage` only for non-sensitive, durable UI context. The current approved key is `workbench.activeOrganizationId`; always revalidate it against the authenticated user's active memberships before using it.
+- Use `sessionStorage` only for short-lived flow state. The current approved key is `workbench.pendingInviteToken`, which may bridge login or email verification and must be removed after invitation acceptance or cancellation.
+- Never store access tokens, refresh tokens, passwords, authorization decisions, profile records, organization records, or signed URLs in application-managed browser storage. Supabase Auth owns its session persistence.
+- Persist profile, preference, membership, invitation, and audit data in Supabase and reload it through services. Namespace any future browser keys under `workbench.` and document their owner, sensitivity, lifetime, and cleanup behavior before adding them.

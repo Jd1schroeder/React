@@ -12,18 +12,19 @@ import {
   Palette,
   Pencil,
   Plus,
-  Settings2,
   ShieldCheck,
   UsersRound,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Select } from "../components/ui/Select";
+import { Avatar } from "../components/ui/Avatar";
 import flagUnitedStates from "../assets/flags/us.svg";
 import { createOrganizationInvitation, listOrganizationInvitations, revokeOrganizationInvitation } from "../services/invitationService";
 import { listOrganizationMembers, membershipRoles, updateOrganizationMember } from "../services/organizationService";
 import { updateAuthContact, updateProfile, updateUserPreferences, uploadAvatar } from "../services/profileService";
 import { getCurrentWorkspace } from "../services/workspaceService";
+import { useWorkspace } from "../components/layout/useWorkspace";
 import "./SettingsPage.css";
 
 const settings = {
@@ -187,7 +188,7 @@ function ManageTeammatesPage({ onNavigate }) {
         {!isLoading && !error && members.length > 0 && <div className="teammates-list">{members.map((member) => {
           const name = [member.profile?.first_name, member.profile?.last_name].filter(Boolean).join(" ") || "Unnamed teammate";
           return <div className="teammate-row" key={`${member.organization_id}-${member.user_id}`}>
-            <div className="teammate-identity"><span className="teammate-avatar">{name.slice(0, 2).toUpperCase()}</span><div><strong>{name}</strong><small>{member.status === "active" ? "Active member" : member.status}</small></div></div>
+            <div className="teammate-identity"><Avatar className="teammate-avatar" src={member.profile?.avatar_url?.startsWith("http") ? member.profile.avatar_url : ""} firstName={member.profile?.first_name} lastName={member.profile?.last_name} alt={name} /><div><strong>{name}</strong><small>{member.status === "active" ? "Active member" : member.status}</small></div></div>
             <Select value={member.role} onChange={(value) => updateMember(member.user_id, { role: value })} ariaLabel={`Role for ${name}`} options={membershipRoles} />
             <button type="button" className="teammate-status-button" onClick={() => updateMember(member.user_id, { status: member.status === "suspended" ? "active" : "suspended" })}>{member.status === "suspended" ? "Reactivate" : "Suspend"}</button>
           </div>;
@@ -376,55 +377,26 @@ function InviteUsersPage({ onNavigate }) {
 }
 
 function ProfilePreferencesPage({ onNavigate }) {
-  const [workspace, setWorkspace] = useState({
-    user: null,
-    organization: null,
-  });
-  const [avatarUrl, setAvatarUrl] = useState("");
-  const [avatarPath, setAvatarPath] = useState("");
+  const sharedWorkspace = useWorkspace();
+  const workspace = sharedWorkspace;
+  const [avatarUrl, setAvatarUrl] = useState(() => sharedWorkspace.profile?.avatar_url ?? sharedWorkspace.user?.user_metadata?.avatar_url ?? "");
+  const [avatarPath, setAvatarPath] = useState(() => sharedWorkspace.profile?.avatar_path ?? "");
   const [avatarFile, setAvatarFile] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileSaveError, setProfileSaveError] = useState("");
-  const [editForm, setEditForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-  });
-  const [preferences, setPreferences] = useState({
-    language: "English",
-    dateFormat: "MM/DD/YYYY",
-    timeFormat: "11:59 PM",
-    weekStart: "Sunday",
-  });
-
-  useEffect(() => {
-    getCurrentWorkspace()
-      .then((currentWorkspace) => {
-        const user = currentWorkspace.user;
-        const profile = currentWorkspace.profile;
-        const savedPreferences = currentWorkspace.preferences;
-        setWorkspace(currentWorkspace);
-        setAvatarUrl(profile?.avatar_url ?? user?.user_metadata?.avatar_url ?? "");
-        setAvatarPath(profile?.avatar_path ?? "");
-        setEditForm({
-          firstName: profile?.first_name ?? user?.user_metadata?.first_name ?? "",
-          lastName: profile?.last_name ?? user?.user_metadata?.last_name ?? "",
-          email: user?.email ?? "",
-          phone: profile?.phone ?? user?.user_metadata?.phone ?? user?.phone ?? "",
-        });
-        if (savedPreferences) {
-          setPreferences({
-            language: savedPreferences.language ?? "English",
-            dateFormat: savedPreferences.date_format ?? "MM/DD/YYYY",
-            timeFormat: savedPreferences.time_format ?? "11:59 PM",
-            weekStart: savedPreferences.week_start ?? "Sunday",
-          });
-        }
-      })
-      .catch(() => setWorkspace({ user: null, organization: null }));
-  }, []);
+  const [editForm, setEditForm] = useState(() => ({
+    firstName: sharedWorkspace.profile?.first_name ?? sharedWorkspace.user?.user_metadata?.first_name ?? "",
+    lastName: sharedWorkspace.profile?.last_name ?? sharedWorkspace.user?.user_metadata?.last_name ?? "",
+    email: sharedWorkspace.user?.email ?? "",
+    phone: sharedWorkspace.profile?.phone ?? sharedWorkspace.user?.user_metadata?.phone ?? sharedWorkspace.user?.phone ?? "",
+  }));
+  const [preferences, setPreferences] = useState(() => ({
+    language: sharedWorkspace.preferences?.language ?? "English",
+    dateFormat: sharedWorkspace.preferences?.date_format ?? "MM/DD/YYYY",
+    timeFormat: sharedWorkspace.preferences?.time_format ?? "11:59 PM",
+    weekStart: sharedWorkspace.preferences?.week_start ?? "Sunday",
+  }));
 
   const user = workspace.user;
   const displayName =
@@ -433,13 +405,6 @@ function ProfilePreferencesPage({ onNavigate }) {
       .join(" ") ||
     user?.email ||
     "Your profile";
-  const initials = displayName
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
   const role =
     workspace.organization?.role === "owner"
       ? "Administrator"
@@ -462,20 +427,16 @@ function ProfilePreferencesPage({ onNavigate }) {
     try {
       const uploadedAvatar = avatarFile ? await uploadAvatar(avatarFile) : null;
       const persistedAvatarPath = uploadedAvatar?.path ?? (avatarPath || undefined);
-      const profile = await updateProfile({
+      await updateProfile({
         firstName: editForm.firstName,
         lastName: editForm.lastName,
         phone: editForm.phone,
         avatarUrl: persistedAvatarPath,
       });
-      const user = await updateAuthContact({ email: editForm.email });
-      setWorkspace((current) => ({
-        ...current,
-        profile,
-        user: current.user ? { ...current.user, ...(user ?? {}), email: editForm.email, user_metadata: { ...current.user.user_metadata, first_name: editForm.firstName, last_name: editForm.lastName, phone: editForm.phone } } : current.user,
-      }));
+      await updateAuthContact({ email: editForm.email });
       if (uploadedAvatar?.signedUrl) setAvatarUrl(uploadedAvatar.signedUrl);
       setAvatarPath(persistedAvatarPath ?? "");
+      window.dispatchEvent(new Event("workbench:profile-updated"));
       closeEditModal();
     } catch (error) {
       setProfileSaveError(error.message || "Unable to update your profile.");
@@ -487,8 +448,7 @@ function ProfilePreferencesPage({ onNavigate }) {
   const savePreferences = async (nextPreferences) => {
     setPreferences(nextPreferences);
     try {
-      const saved = await updateUserPreferences({ ...nextPreferences, timezone: workspace.preferences?.timezone ?? "America/New_York" });
-      setWorkspace((current) => ({ ...current, preferences: saved }));
+      await updateUserPreferences({ ...nextPreferences, timezone: workspace.preferences?.timezone ?? "America/New_York" });
     } catch (error) {
       setProfileSaveError(error.message || "Unable to save this preference.");
     }
@@ -517,11 +477,7 @@ function ProfilePreferencesPage({ onNavigate }) {
                 accept="image/gif,image/jpeg,image/png,image/heic,image/heif"
                 onChange={handleAvatarChange}
               />
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={`${displayName} profile`} />
-              ) : (
-                <span>{initials || "A"}</span>
-              )}
+              <Avatar className="profile-avatar-display" src={avatarUrl} firstName={editForm.firstName} lastName={editForm.lastName} alt={`${displayName} profile`} />
               <span className="profile-avatar-overlay">
                 <Camera size={22} />
               </span>
@@ -707,11 +663,7 @@ function ProfileEditModal({
               accept="image/gif,image/jpeg,image/png,image/heic,image/heif"
               onChange={onAvatarChange}
             />
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="Profile" />
-            ) : (
-              <Settings2 size={96} strokeWidth={1.5} />
-            )}
+            <Avatar className="profile-modal-avatar-display" src={avatarUrl} firstName={editForm.firstName} lastName={editForm.lastName} alt="Profile" />
             <span className="profile-modal-avatar-overlay">
               <Camera size={22} />
             </span>

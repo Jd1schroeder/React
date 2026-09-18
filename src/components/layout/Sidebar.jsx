@@ -28,7 +28,9 @@ import {
 import "./Sidebar.css";
 import workbenchIcon from "../../assets/workbench-icon.png";
 import { supabase } from "../../lib/supabase";
-import { getCurrentWorkspace, setActiveOrganization } from "../../services/workspaceService";
+import { setActiveOrganization } from "../../services/workspaceService";
+import { Avatar } from "../ui/Avatar";
+import { useWorkspace } from "./useWorkspace";
 
 const settingsPageByLabel = {
   General: "Settings / General",
@@ -212,18 +214,9 @@ export function Sidebar({ activePage, onNavigate }) {
   const [collapsed, setCollapsed] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
-  const [workspace, setWorkspace] = useState({ user: null, organization: null });
+  const workspace = useWorkspace();
   const settingsMenuRef = useRef(null);
 
-  useEffect(() => {
-    getCurrentWorkspace().then(setWorkspace).catch(() => setWorkspace({ user: null, organization: null }));
-  }, []);
-
-  useEffect(() => {
-    const handleOrganizationChange = () => getCurrentWorkspace().then(setWorkspace).catch(() => undefined)
-    window.addEventListener('workbench:organization-changed', handleOrganizationChange)
-    return () => window.removeEventListener('workbench:organization-changed', handleOrganizationChange)
-  }, []);
 
   useEffect(() => {
     if (!isSettingsOpen) return undefined;
@@ -242,8 +235,9 @@ export function Sidebar({ activePage, onNavigate }) {
     onNavigate("Login");
   };
 
-  const displayName = [workspace.user?.user_metadata?.first_name, workspace.user?.user_metadata?.last_name].filter(Boolean).join(" ") || workspace.user?.email || "Account";
-  const initials = displayName.split(/\s+/).filter(Boolean).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+  const firstName = workspace.profile?.first_name || workspace.user?.user_metadata?.first_name || "";
+  const lastName = workspace.profile?.last_name || workspace.user?.user_metadata?.last_name || "";
+  const displayName = [firstName, lastName].filter(Boolean).join(" ") || workspace.user?.email || "Account";
   const organizationName = workspace.organization?.name || "Workspace";
 
   return (
@@ -296,7 +290,7 @@ export function Sidebar({ activePage, onNavigate }) {
         </div>
         <div ref={settingsMenuRef} className="settings-menu-root">
           <button className="account-menu" onClick={() => setIsSettingsOpen((value) => !value)} aria-haspopup="menu" aria-expanded={isSettingsOpen}>
-            <div className="avatar avatar-purple account-avatar">{initials || "A"}</div>
+            <Avatar className="avatar-purple account-avatar" src={workspace.profile?.avatar_url} firstName={firstName} lastName={lastName} alt={displayName} />
             <span className="account-copy">
               <strong>{displayName}</strong>
               <span className="account-secondary">

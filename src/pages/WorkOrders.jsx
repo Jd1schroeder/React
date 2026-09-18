@@ -22,6 +22,7 @@ import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { PanelLayout } from "../components/layout/PanelLayout";
 import { PanelOverflowButton, PanelRecordNotFound } from "../components/layout/PanelView";
+import { Avatar } from "../components/ui/Avatar";
 
 const statusTone = {
   Open: "blue",
@@ -202,9 +203,7 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
                   </DetailRow>
                   <DetailRow icon={Users} label="Assigned to">
                     <span className="detail-person">
-                      <span className="avatar avatar-blue">
-                        {selected.assignee}
-                      </span>{" "}
+                      <Avatar className="avatar-blue" name={selected.assignee} alt={selected.assignee} />{" "}
                       {selected.assignedTeam}
                     </span>
                   </DetailRow>
@@ -230,14 +229,14 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
                     <button className="text-button">View all</button>
                   </div>
                   <div className="activity">
-                    <div className="avatar avatar-blue">JD</div>
+                    <Avatar className="avatar-blue" name="Jordan Davis" alt="Jordan Davis" />
                     <p>
                       <strong>Jordan Davis</strong> commented on this work order
                       <small>34 minutes ago</small>
                     </p>
                   </div>
                   <div className="activity">
-                    <div className="avatar avatar-green">MK</div>
+                    <Avatar className="avatar-green" name="Maria Kim" alt="Maria Kim" />
                     <p>
                       <strong>Maria Kim</strong> updated the status to{" "}
                       <b>{selected.status}</b>

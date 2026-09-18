@@ -19,6 +19,8 @@
 .profile-avatar-upload { position: relative; display: grid; place-items: center; width: 128px; height: 128px; margin-bottom: 14px; overflow: hidden; border-radius: 50%; color: var(--blue); background: var(--blue-soft); font-size: 34px; font-weight: 600; cursor: pointer; }
 .profile-avatar-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .profile-avatar-upload img { width: 100%; height: 100%; object-fit: cover; }
+.profile-avatar-display { display: grid; place-items: center; width: 100%; height: 100%; min-width: 100%; min-height: 100%; color: var(--blue); background: var(--blue-soft); font-size: 34px; }
+.profile-avatar-upload > .profile-avatar-display > img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .profile-avatar-overlay { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; background: rgb(30 36 41 / 52%); opacity: 0; transition: opacity 160ms ease; }
 .profile-avatar-upload:hover .profile-avatar-overlay, .profile-avatar-upload:focus-within .profile-avatar-overlay { opacity: 1; }
 .profile-identity h2 { margin: 0; color: var(--ink); font-size: 22px; }
@@ -46,6 +48,8 @@
 .profile-modal-avatar-upload { position: relative; display: grid; place-items: center; width: 128px; height: 128px; margin: 0 auto 18px; overflow: hidden; border-radius: 50%; color: var(--ink); background: var(--surface-subtle); cursor: pointer; }
 .profile-modal-avatar-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .profile-modal-avatar-upload img { width: 100%; height: 100%; object-fit: cover; }
+.profile-modal-avatar-display { display: grid; place-items: center; width: 100%; height: 100%; min-width: 100%; min-height: 100%; color: var(--ink); background: var(--surface-subtle); font-size: 42px; }
+.profile-modal-avatar-upload > .profile-modal-avatar-display > img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .profile-modal-avatar-overlay { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; background: rgb(30 36 41 / 54%); opacity: 0; transition: opacity 160ms ease; }
 .profile-modal-avatar-upload:hover .profile-modal-avatar-overlay, .profile-modal-avatar-upload:focus-within .profile-modal-avatar-overlay { opacity: 1; }
 .profile-modal-field { display: grid; gap: 8px; }
