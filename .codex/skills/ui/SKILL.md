@@ -42,6 +42,7 @@ Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the share
 - The settings page uses a viewport-based two-row layout: the header occupies the first row, the navigation and details share the second-row top edge, and only the details column scrolls. Do not align these areas with fixed pixel offsets.
 - The authenticated shell owns page scrolling through `.main-shell` and `.page-content`; settings pages must fill that shell rather than allowing the document body to scroll the entire settings layout.
 - The sidebar account popover and settings navigation share the same section headings, divider, item spacing, radius, and hover treatment; keep their navigation groupings synchronized.
+- Notification Settings uses grouped cards with a shared event matrix: event labels in the main column and Email/In-App toggle columns, implemented with the reusable notification row/toggle pattern in `src/pages/SettingsPage.jsx`.
 - Icon-only edit controls use color-only hover feedback with `var(--icon-hover)` (`rgb(97 174 255)`); do not add a hover background behind the icon.
 - Sign-out actions use `var(--signout)` (`rgb(236 65 70)`) and `var(--signout-hover)` (`rgb(236 65 70 / 75%)`) with no hover background.
 - Active items use `#E7F3FE` as the background, normal 400 weight, and `#1E2429` for the root text color; active icon and label treatments may apply the accent blue separately.
