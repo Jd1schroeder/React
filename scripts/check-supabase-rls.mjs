@@ -57,6 +57,18 @@ if (!baseUrl || !publishableKey || !accessToken) {
     console.log(`RLS denied direct write: ${path}`)
   }
 
+  async function updateAndVerify(path, body, userId, label) {
+    const rows = await request(path, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify(body),
+    })
+    if (!Array.isArray(rows) || rows.length !== 1 || rows[0].updated_by !== userId) {
+      throw new Error(`${label} update did not record updated_by as the authenticated user.`)
+    }
+    console.log(`${label} update recorded updated_by correctly.`)
+  }
+
   try {
     const userResponse = await fetch(`${baseUrl}/auth/v1/user`, { headers })
     if (!userResponse.ok) throw new Error(`Authenticated token rejected: ${userResponse.status} ${await userResponse.text()}`)
@@ -67,15 +79,30 @@ if (!baseUrl || !publishableKey || !accessToken) {
       request(`/rest/v1/organization_members?select=organization_id,role,status,updated_by&user_id=eq.${user.id}`),
     ])
 
-    if (profile.length > 1 || preferences.length > 1) throw new Error('Expected at most one profile and preference row for the authenticated user.')
+    if (profile.length !== 1 || preferences.length !== 1) throw new Error('Expected exactly one profile and preference row for the authenticated user.')
     const allowedStatuses = new Set(['invited', 'active', 'suspended'])
     if (memberships.some((membership) => !allowedStatuses.has(membership.status))) throw new Error('Membership lifecycle contains an unknown status.')
     console.log(`Authenticated workspace checks passed for ${user.id}: ${memberships.length} membership(s).`)
+
+    await updateAndVerify(`/rest/v1/profiles?id=eq.${user.id}`, { phone: profile[0].phone }, user.id, 'Profile')
+    await updateAndVerify(`/rest/v1/user_preferences?user_id=eq.${user.id}`, {
+      language: preferences[0].language,
+      date_format: preferences[0].date_format,
+      time_format: preferences[0].time_format,
+      week_start: preferences[0].week_start,
+      timezone: preferences[0].timezone,
+    }, user.id, 'Preference')
 
     await assertDenied('/rest/v1/audit_events', {
       organization_id: '00000000-0000-0000-0000-000000000000',
       action: 'validation_probe',
       entity_type: 'validation_probe',
+    })
+    await assertDenied('/rest/v1/organization_members', {
+      organization_id: '00000000-0000-0000-0000-000000000000',
+      user_id: user.id,
+      role: 'member',
+      status: 'invited',
     })
   } catch (error) {
     console.error(error.cause?.code ? `${error.message} (${error.cause.code})` : error.message)
