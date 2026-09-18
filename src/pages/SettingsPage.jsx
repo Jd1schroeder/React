@@ -7,12 +7,12 @@ import {
   Gauge,
   Link2,
   LockKeyhole,
+  LogOut,
   Mail,
   Monitor,
   Palette,
   Pencil,
   Plus,
-  ShieldCheck,
   UsersRound,
   X,
 } from "lucide-react";
@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import { Select } from "../components/ui/Select";
 import { Avatar } from "../components/ui/Avatar";
 import flagUnitedStates from "../assets/flags/us.svg";
+import { supabase } from "../lib/supabase";
 import { createOrganizationInvitation, listOrganizationInvitations, revokeOrganizationInvitation } from "../services/invitationService";
 import { listOrganizationMembers, membershipRoles, updateOrganizationMember } from "../services/organizationService";
 import { updateAuthContact, updateProfile, updateUserPreferences, uploadAvatar } from "../services/profileService";
@@ -406,6 +407,10 @@ function ProfilePreferencesPage({ onNavigate }) {
 
   const openEditModal = () => setIsEditModalOpen(true);
   const closeEditModal = () => setIsEditModalOpen(false);
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    onNavigate("Login");
+  };
   const updateEditField = (field, value) =>
     setEditForm((current) => ({ ...current, [field]: value }));
   const saveProfile = async () => {
@@ -491,6 +496,10 @@ function ProfilePreferencesPage({ onNavigate }) {
                 </div>
               </div>
             </div>
+            <button type="button" className="profile-signout-button" onClick={handleSignOut}>
+              <LogOut size={16} />
+              Sign out
+            </button>
           </section>
 
           <section className="profile-settings-card profile-preferences-card">
@@ -570,7 +579,7 @@ function ProfilePreferencesPage({ onNavigate }) {
 
           <section className="profile-settings-card profile-quit-card">
             <div className="profile-quit-copy">
-              <ShieldCheck size={22} />
+              <LogOut size={22} />
               <div>
                 <h2>Quit Organization</h2>
                 <p>

@@ -68,6 +68,8 @@
   --borderRadius2x: var(--radius-md);
   --accent: var(--blue);
   --danger: #e5484d;
+  --signout: rgb(236 65 70);
+  --signout-hover: rgb(236 65 70 / 75%);
   --warning: #ee8312;
   --success: #2eaf68;
   --white: #fff;

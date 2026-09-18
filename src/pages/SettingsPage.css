@@ -1,5 +1,9 @@
 .settings-page {
-  min-height: 100vh;
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: visible;
   padding: 0;
   background: var(--surface-subtle);
 }
@@ -7,8 +11,6 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  margin-top: -16px;
-  padding-top: 16px;
   padding-bottom: 28px;
   background: var(--surface-subtle);
 }
@@ -24,11 +26,11 @@
   font-size: 14px;
 }
 .settings-layout {
-  position: relative;
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
   gap: 40px;
   align-items: start;
+  min-height: 0;
   max-width: 1160px;
   overflow: visible;
 }
@@ -39,18 +41,18 @@
   background: var(--surface);
 }
 .settings-navigation {
-  position: fixed;
-  left: calc(var(--sidebarWidth) + 16px);
-  top: 112px;
-  z-index: 21;
-  width: 220px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
   height: max-content;
   align-self: start;
   padding: 16px 8px;
 }
 .settings-details {
-  grid-column: 2;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 40px;
 }
 .profile-preferences-content {
   display: grid;
@@ -228,6 +230,21 @@
 }
 .profile-personal-info-card {
   grid-area: personal;
+}
+.profile-signout-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 20px;
+  padding: 0;
+  border: 0;
+  color: var(--signout);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+}
+.profile-signout-button:hover {
+  color: var(--signout-hover);
 }
 .profile-preferences-card {
   grid-area: localization;
@@ -722,13 +739,12 @@
   }
   .settings-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
     gap: 24px;
   }
   .settings-navigation {
     position: sticky;
-    top: 112px;
-    left: auto;
-    width: auto;
+    top: 0;
     z-index: 10;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

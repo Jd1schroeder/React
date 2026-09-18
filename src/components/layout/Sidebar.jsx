@@ -305,13 +305,12 @@ export function Sidebar({ activePage, onNavigate }) {
                 <p className="account-popover-heading">Organization Settings</p>
                 {['General', 'Features', 'Subscription', 'Manage Teammates', 'Customizations', 'Integrations'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => { setIsSettingsOpen(false); onNavigate(settingsPageByLabel[label]); }}>{label}</button>)}
               </div>
+              <div className="account-popover-divider" />
               <div className="account-popover-section">
-                {['Profile Preferences', 'Notification Settings'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => { setIsSettingsOpen(false); onNavigate(settingsPageByLabel[label]); }}>{label}</button>)}
+                <p className="account-popover-heading">Personal Settings</p>
+                {['Profile Preferences', 'Notification Settings', 'Invite Users'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => { setIsSettingsOpen(false); onNavigate(settingsPageByLabel[label]); }}>{label}</button>)}
               </div>
-              <div className="account-popover-section account-popover-links">
-                <button type="button" role="menuitem" onClick={() => { setIsSettingsOpen(false); onNavigate(settingsPageByLabel['Invite Users']); }}>Invite Users</button>
-              </div>
-              <button type="button" className="account-popover-logout" role="menuitem" onClick={handleSignOut}><LogOut size={16} /> Log out</button>
+              <button type="button" className="account-popover-logout" role="menuitem" onClick={handleSignOut}><LogOut size={16} /> Sign out</button>
             </div>
           )}
         </div>

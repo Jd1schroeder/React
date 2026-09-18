@@ -39,8 +39,11 @@ Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the share
 - Navigation items use 32px height, 8px padding, and an 8px radius.
 - Standard page content uses a 16px shell inset. Full-bleed `PanelView` pages may offset that inset with matching `-16px` margins, but their visible content must remain one 16px inset from the shell edge.
 - Page headers must remain visible while the page scrolls: use the shared sticky treatment for `.page-heading`, `.panel-view-header`, and `.settings-page-header`, with an opaque surface background and stacking order below the sidebar menus.
-- The settings navigation rail is fixed beside the details column on desktop and remains in-flow on narrow screens; reserve the details grid column when using the fixed rail.
+- The settings page uses a viewport-based two-row layout: the header occupies the first row, the navigation and details share the second-row top edge, and only the details column scrolls. Do not align these areas with fixed pixel offsets.
+- The authenticated shell owns page scrolling through `.main-shell` and `.page-content`; settings pages must fill that shell rather than allowing the document body to scroll the entire settings layout.
+- The sidebar account popover and settings navigation share the same section headings, divider, item spacing, radius, and hover treatment; keep their navigation groupings synchronized.
 - Icon-only edit controls use color-only hover feedback with `var(--icon-hover)` (`rgb(97 174 255)`); do not add a hover background behind the icon.
+- Sign-out actions use `var(--signout)` (`rgb(236 65 70)`) and `var(--signout-hover)` (`rgb(236 65 70 / 75%)`) with no hover background.
 - Active items use `#E7F3FE` as the background, normal 400 weight, and `#1E2429` for the root text color; active icon and label treatments may apply the accent blue separately.
 - When matching reference designs, compare computed styles and rendered fonts in addition to screenshots.
 - The collapsed sidebar root uses `padding: 0`; section spacing belongs to `.sidebar-header` and `.sidebar-nav`, while `.sidebar-bottom` remains `padding: 0`.
