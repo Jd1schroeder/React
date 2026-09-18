@@ -36,5 +36,6 @@ Use Lucide icons already installed in the project. Keep icon sizing controlled b
 - Nested sidebar destinations must automatically open their parent group when the nested route is active, so deep-linked pages remain visible and selected in navigation.
 - Sidebar expand/collapse uses a short 160ms width transition; preserve this when changing collapsed-state geometry.
 - Sidebar navigation scrolling is owned by `.sidebar-nav`; keep `.sidebar-bottom` outside the scroll region. For scrollbar styling, scope `scrollbar-color` and `scrollbar-width` to non-WebKit browsers so Chromium `::-webkit-scrollbar` rules can remove native arrow buttons.
+- The account area in `.settings-menu-root` owns the account popover and Supabase sign-out action; close it on outside pointer interaction and keep account identity sourced from `workspaceService.js`.
 
 Validate visual refactors with `npm.cmd run lint` and `npm.cmd run build`.

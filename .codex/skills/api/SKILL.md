@@ -11,5 +11,5 @@ When API work begins:
 
 - document the request/response contract before wiring UI behavior;
 - isolate transport code from page components;
-- preserve the existing mock-data path for local UI development where practical;
+- render explicit loading and empty states while a domain service is not yet available;
 - define loading, empty, error, and retry states in the shared panel primitives.

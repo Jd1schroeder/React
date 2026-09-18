@@ -213,6 +213,7 @@ export function Sidebar({ activePage, onNavigate }) {
   };
 
   const displayName = [workspace.user?.user_metadata?.first_name, workspace.user?.user_metadata?.last_name].filter(Boolean).join(" ") || workspace.user?.email || "Account";
+  const initials = displayName.split(/\s+/).filter(Boolean).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
   const organizationName = workspace.organization?.name || "Workspace";
 
   return (
@@ -264,7 +265,7 @@ export function Sidebar({ activePage, onNavigate }) {
         </div>
         <div ref={settingsMenuRef} className="settings-menu-root">
           <button className="account-menu" onClick={() => setIsSettingsOpen((value) => !value)} aria-haspopup="menu" aria-expanded={isSettingsOpen}>
-            <div className="avatar avatar-purple account-avatar">JS</div>
+            <div className="avatar avatar-purple account-avatar">{initials || "A"}</div>
             <span className="account-copy">
               <strong>{displayName}</strong>
               <span className="account-secondary">
@@ -281,10 +282,9 @@ export function Sidebar({ activePage, onNavigate }) {
                 {['General', 'Features', 'Subscription', 'Manage Teammates', 'Customizations', 'Integrations'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => setIsSettingsOpen(false)}>{label}</button>)}
               </div>
               <div className="account-popover-section">
-                {['My Account', 'Profile Preferences', 'Notification Settings', 'Open Download Center'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => setIsSettingsOpen(false)}>{label}</button>)}
+                {['My Account', 'Profile Preferences', 'Notification Settings'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => setIsSettingsOpen(false)}>{label}</button>)}
               </div>
               <div className="account-popover-section account-popover-links">
-                <button type="button" role="menuitem" onClick={() => setIsSettingsOpen(false)}>Get the Mobile App</button>
                 <button type="button" role="menuitem" onClick={() => setIsSettingsOpen(false)}>Invite Users</button>
               </div>
               <button type="button" className="account-popover-logout" role="menuitem" onClick={handleSignOut}><LogOut size={16} /> Log out</button>
