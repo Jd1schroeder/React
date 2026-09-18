@@ -63,8 +63,8 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  margin: -39px -42px -60px;
-  padding: 31px 16px 0;
+  margin: -16px;
+  padding: 16px;
   background: #f6f8fa;
 }
 .panel-view-header {

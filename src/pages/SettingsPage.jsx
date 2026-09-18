@@ -125,8 +125,7 @@ export function SettingsPage({ pageName, onNavigate }) {
           <p>{current.description}</p>
         </div>
       </header>
-      <div className="settings-layout">
-        <SettingsNavigation pageName={pageName} onNavigate={onNavigate} />
+      <SettingsLayout pageName={pageName} onNavigate={onNavigate}>
         <section
           className="settings-content"
           aria-labelledby="settings-content-title"
@@ -145,7 +144,7 @@ export function SettingsPage({ pageName, onNavigate }) {
             </small>
           </div>
         </section>
-      </div>
+      </SettingsLayout>
     </div>
   );
 }
@@ -178,8 +177,7 @@ function ManageTeammatesPage({ onNavigate }) {
 
   return <div className="settings-page manage-teammates-page">
     <header className="settings-page-header"><p className="eyebrow">Organization Settings</p><h1>Manage Teammates</h1><p>Manage members, roles, and workspace access.</p></header>
-    <div className="settings-layout">
-      <SettingsNavigation pageName="Settings / Manage Teammates" onNavigate={onNavigate} />
+    <SettingsLayout pageName="Settings / Manage Teammates" onNavigate={onNavigate}>
       <section className="settings-content teammates-card" aria-labelledby="teammates-title">
         <div className="teammates-card-header"><div><h2 id="teammates-title">Teammates</h2><p>Active and invited members of this organization.</p></div><button type="button" className="invite-add-button" onClick={() => onNavigate("Settings / Invite Users")}><Plus size={16} /> Invite users</button></div>
         {isLoading && <p className="teammates-state">Loading teammates...</p>}
@@ -194,7 +192,7 @@ function ManageTeammatesPage({ onNavigate }) {
           </div>;
         })}</div>}
       </section>
-    </div>
+    </SettingsLayout>
   </div>;
 }
 
@@ -250,11 +248,7 @@ function InviteUsersPage({ onNavigate }) {
         <h1>Invite Users</h1>
         <p>Invite teammates to collaborate in this workspace.</p>
       </header>
-      <div className="settings-layout invite-users-layout">
-        <SettingsNavigation
-          pageName="Settings / Invite Users"
-          onNavigate={onNavigate}
-        />
+      <SettingsLayout pageName="Settings / Invite Users" onNavigate={onNavigate} className="invite-users-layout">
         <section className="settings-content invite-card">
           <div className="invite-table-header">
             <span>Full Name</span>
@@ -371,7 +365,7 @@ function InviteUsersPage({ onNavigate }) {
           {sendError && <p className="invite-error" role="alert">{sendError}</p>}
           {invitations.length > 0 && <div className="invitation-list"><h2>Recent invitations</h2>{invitations.map((invitation) => <div className="invitation-row" key={invitation.id}><div><strong>{[invitation.first_name, invitation.last_name].filter(Boolean).join(" ") || invitation.contact_value}</strong><small>{invitation.contact_type} · {invitation.role} · {invitation.status}</small></div>{invitation.status === "invited" && <button type="button" onClick={async () => { try { await revokeOrganizationInvitation(invitation.id); setInvitations((current) => current.map((item) => item.id === invitation.id ? { ...item, status: "revoked" } : item)); } catch (error) { setSendError(error.message || "Unable to revoke the invitation."); } }}>Revoke</button>}</div>)}</div>}
         </section>
-      </div>
+      </SettingsLayout>
     </div>
   );
 }
@@ -461,11 +455,7 @@ function ProfilePreferencesPage({ onNavigate }) {
         <h1>Profile Preferences</h1>
         <p>Manage your profile and personal workspace preferences.</p>
       </header>
-      <div className="settings-layout">
-        <SettingsNavigation
-          pageName="Settings / Profile Preferences"
-          onNavigate={onNavigate}
-        />
+      <SettingsLayout pageName="Settings / Profile Preferences" onNavigate={onNavigate}>
         <section
           className="profile-preferences-content"
           aria-label="Profile preferences"
@@ -601,7 +591,7 @@ function ProfilePreferencesPage({ onNavigate }) {
             </button>
           </section>
         </section>
-      </div>
+      </SettingsLayout>
       {isEditModalOpen && (
         <ProfileEditModal
           avatarUrl={avatarUrl}
@@ -752,6 +742,15 @@ function ProfileModalField({ label, required = false, value, onChange }) {
   );
 }
 
+function SettingsLayout({ pageName, onNavigate, className = "", children }) {
+  return (
+    <div className={`settings-layout ${className}`.trim()}>
+      <SettingsNavigation pageName={pageName} onNavigate={onNavigate} />
+      <div className="settings-details">{children}</div>
+    </div>
+  );
+}
+
 function SettingsNavigation({ pageName, onNavigate }) {
   const renderNav = (pages) =>
     pages.map((page) => (
@@ -770,10 +769,15 @@ function SettingsNavigation({ pageName, onNavigate }) {
     ));
   return (
     <aside className="settings-navigation" aria-label="Settings navigation">
-      <p className="settings-nav-heading">Organization Settings</p>
-      {renderNav(organizationPages)}
-      <p className="settings-nav-heading">Personal Settings</p>
-      {renderNav(personalPages)}
+      <section className="settings-nav-section" aria-labelledby="organization-settings-heading">
+        <p id="organization-settings-heading" className="settings-nav-heading">Organization Settings</p>
+        {renderNav(organizationPages)}
+      </section>
+      <div className="settings-nav-divider" />
+      <section className="settings-nav-section" aria-labelledby="personal-settings-heading">
+        <p id="personal-settings-heading" className="settings-nav-heading">Personal Settings</p>
+        {renderNav(personalPages)}
+      </section>
     </aside>
   );
 }

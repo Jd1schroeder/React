@@ -84,7 +84,7 @@
 .page-content {
   max-width: 1420px;
   margin: 0 auto;
-  padding: 39px 42px 60px;
+  padding: 16px;
 }
 .page-heading {
   display: flex;
@@ -245,8 +245,8 @@
 }
 @media (max-width: 900px) {
   .page-content {
-    padding-left: 22px;
-    padding-right: 22px;
+    padding-left: 16px;
+    padding-right: 16px;
   }
 }
 @media (max-width: 600px) {
@@ -255,7 +255,7 @@
     flex-direction: column;
   }
   .page-content {
-    padding-top: 25px;
+    padding-top: 16px;
   }
 }
 .page-content-full {
