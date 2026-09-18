@@ -27,16 +27,16 @@ Unknown record IDs under a valid section route must preserve the parent `PanelVi
 
 Use Lucide icons already installed in the project. Keep icon sizing controlled by the component that owns the shared UI so changes propagate consistently.
 
-Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the shared styled trigger, rotating Lucide chevron, focus tokens, outside-click dismissal, keyboard navigation, and listbox semantics. Keep specialized selectors, such as phone-country selection, separate only when they need custom option content.
+Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the shared styled trigger, rotating Lucide chevron, focus tokens, outside-click dismissal, keyboard navigation, and listbox semantics. Options may provide `disabled: true` and a Lucide `icon` for unavailable choices or explanatory affordances; disabled options remain muted and non-interactive. Keep specialized selectors, such as phone-country selection, separate only when they need custom option content.
 
 ## Sidebar reference tokens
 
 - Group headings use `0.8571rem` font size and `1.2857rem` line-height.
 - Navigation items use 32px height, 8px padding, and an 8px radius.
 - Active items use `#E7F3FE` as the background, normal 400 weight, and `#1E2429` for the root text color; active icon and label treatments may apply the accent blue separately.
-- When matching MaintainX, compare computed styles and rendered fonts in addition to screenshots.
+- When matching reference designs, compare computed styles and rendered fonts in addition to screenshots.
 - The collapsed sidebar root uses `padding: 0`; section spacing belongs to `.sidebar-header` and `.sidebar-nav`, while `.sidebar-bottom` remains `padding: 0`.
-- The collapsed sidebar width is `50px`, exposed as `--sidebar-collapsed-width` and the MaintainX-compatible alias `--sidebarCollapsedWidth`.
+- The collapsed sidebar width is `50px`, exposed as `--sidebar-collapsed-width`; preserve the legacy `--sidebarCollapsedWidth` alias when changing sidebar geometry.
 - The expanded sidebar width is `246px`, exposed as `--sidebar-expanded-width` and the alias `--sidebarWidth`.
 - Sidebar item icons are assigned through the `icon` property in the `groups` configuration in `src/components/layout/Sidebar.jsx`; use installed Lucide icons rather than duplicating navigation markup.
 - Nested sidebar destinations must automatically open their parent group when the nested route is active, so deep-linked pages remain visible and selected in navigation.

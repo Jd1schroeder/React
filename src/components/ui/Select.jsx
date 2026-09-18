@@ -66,7 +66,10 @@ export function Select({ ariaLabel, className = '', name, onChange, options = []
       <ChevronDown className="select-chevron" size={16} aria-hidden="true" />
     </button>
     {isOpen && <div className="select-menu" role="listbox" aria-label={ariaLabel}>
-      {normalizedOptions.map((option, index) => <button ref={(element) => { optionRefs.current[index] = element }} key={option.value} type="button" role="option" aria-selected={option.value === value} className={option.value === value ? 'is-selected' : ''} onClick={() => selectOption(option)} onKeyDown={handleOptionKeyDown} onMouseEnter={() => setHighlightedIndex(index)}>{option.label}</button>)}
+      {normalizedOptions.map((option, index) => {
+        const OptionIcon = option.icon
+        return <button ref={(element) => { optionRefs.current[index] = element }} key={option.value} type="button" role="option" aria-selected={option.value === value} aria-disabled={option.disabled || undefined} disabled={option.disabled} className={`${option.value === value ? 'is-selected ' : ''}${option.disabled ? 'is-disabled' : ''}`.trim()} onClick={() => selectOption(option)} onKeyDown={handleOptionKeyDown} onMouseEnter={() => setHighlightedIndex(index)}>{OptionIcon && <OptionIcon size={15} aria-hidden="true" />}<span>{option.label}</span></button>
+      })}
     </div>}
     {name && <input type="hidden" name={name} value={value} />}
   </div>

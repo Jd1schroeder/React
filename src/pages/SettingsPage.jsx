@@ -1,4 +1,4 @@
-import { AlertTriangle, Bell, Building2, Camera, CreditCard, Gauge, Link2, Monitor, Palette, Pencil, Plus, Save, ShieldCheck, UsersRound, X } from 'lucide-react'
+import { AlertTriangle, Bell, Building2, Camera, CreditCard, Gauge, Link2, LockKeyhole, Monitor, Palette, Pencil, Plus, Save, ShieldCheck, UsersRound, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Select } from '../components/ui/Select'
 import { getCurrentWorkspace } from '../services/workspaceService'
@@ -97,7 +97,7 @@ function ProfilePreferencesPage({ onNavigate }) {
   const [isEditingInfo, setIsEditingInfo] = useState(false)
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [preferences, setPreferences] = useState({ language: 'English (Default)', dateFormat: 'MM/DD/YYYY', timeFormat: '11:59 PM', weekStart: 'Sunday' })
+  const [preferences, setPreferences] = useState({ language: 'English', dateFormat: 'MM/DD/YYYY', timeFormat: '11:59 PM', weekStart: 'Sunday' })
 
   useEffect(() => {
     getCurrentWorkspace().then((currentWorkspace) => {
@@ -151,7 +151,7 @@ function ProfilePreferencesPage({ onNavigate }) {
         <section className="profile-settings-card profile-preferences-card">
           <div className="profile-card-heading"><h2>Localization Settings</h2></div>
           <div className="profile-preference-list">
-            <label>Language<Select value={preferences.language} onChange={(value) => setPreferences({ ...preferences, language: value })} ariaLabel="Language" options={['English (Default)', 'Spanish', 'French']} /></label>
+            <label>Language<Select value={preferences.language} onChange={(value) => setPreferences({ ...preferences, language: value })} ariaLabel="Language" options={[{ label: 'English', value: 'English' }, { label: 'Spanish', value: 'Spanish', disabled: true, icon: LockKeyhole }, { label: 'French', value: 'French', disabled: true, icon: LockKeyhole }]} /></label>
             <label>Date Format<Select value={preferences.dateFormat} onChange={(value) => setPreferences({ ...preferences, dateFormat: value })} ariaLabel="Date Format" options={['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD']} /></label>
             <label>Time Format<Select value={preferences.timeFormat} onChange={(value) => setPreferences({ ...preferences, timeFormat: value })} ariaLabel="Time Format" options={['11:59 PM', '23:59']} /></label>
             <label>Beginning of Week<Select value={preferences.weekStart} onChange={(value) => setPreferences({ ...preferences, weekStart: value })} ariaLabel="Beginning of Week" options={['Sunday', 'Monday']} /></label>
