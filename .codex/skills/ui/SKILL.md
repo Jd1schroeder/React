@@ -43,8 +43,8 @@ Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the share
 - Sidebar expand/collapse uses a short 160ms width transition; preserve this when changing collapsed-state geometry.
 - Sidebar navigation scrolling is owned by `.sidebar-nav`; keep `.sidebar-bottom` outside the scroll region. For scrollbar styling, scope `scrollbar-color` and `scrollbar-width` to non-WebKit browsers so Chromium `::-webkit-scrollbar` rules can remove native arrow buttons.
 - The account area in `.settings-menu-root` owns the account popover and Supabase sign-out action; close it on outside pointer interaction and keep account identity sourced from `workspaceService.js`.
-- Organization and personal settings use the shared route-backed `src/pages/SettingsPage.jsx`; Invite Users has the initial repeatable-row UI and remains unconnected to the invitation API until its Supabase contract is defined.
-- Profile Preferences uses workspace identity from `src/services/workspaceService.js`; profile and localization controls are UI-ready and remain local until their persistence contracts are implemented.
+- Organization and personal settings use the shared route-backed `src/pages/SettingsPage.jsx`; Manage Teammates and Invite Users use the organization and invitation services for membership administration, generated invite links, and invitation revocation.
+- Profile Preferences uses workspace identity from `src/services/workspaceService.js`; profile, phone, avatar, and localization controls persist through `src/services/profileService.js`.
 - Tork destinations (`Chat`, `Routines`, and `History`) intentionally render only the Workbench 404 artwork inside the authenticated app shell until their UI is designed.
 
 Validate visual refactors with `npm.cmd run lint` and `npm.cmd run build`.

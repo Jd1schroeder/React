@@ -19,7 +19,7 @@ Invitation acceptance is enforced by the `accept_organization_invitation` databa
 
 When an invite recipient is signed out, preserve the raw invitation token only in session storage while routing through login or email verification; never persist it in the database or logs. The acceptance page removes it after a successful RPC.
 
-Audit writes use the `record_audit_event` database function, which derives the actor from `auth.uid()` and checks organization-admin authorization. Admin mutation services must call this RPC after successful organization, membership, invitation, or similar changes. Do not insert arbitrary audit rows directly from browser code.
+Explicit audit writes use the `record_audit_event` database function, which derives the actor from `auth.uid()` and checks organization-admin authorization. Organization, membership, and invitation mutation triggers record their own audit events atomically; client mutation services must not add duplicate audit calls. Do not insert arbitrary audit rows directly from browser code.
 
 Avatar files must be uploaded through the `avatars` Storage bucket using a user-scoped path and RLS. Persist the storage path in the profile and generate signed URLs only when data is loaded for display; never store temporary browser blob URLs or expiring signed URLs.
 
