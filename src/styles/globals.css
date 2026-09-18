@@ -1,0 +1,44 @@
+@layer theme, base, components;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  color: var(--ink);
+  background: var(--surface-subtle);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  color: var(--ink);
+  background: #f6e79a;
+}
+
+::-moz-selection {
+  color: var(--ink);
+  background: #f6e79a;
+}
+
+html {
+  height: 100%;
+  background: #fff;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+body,
+#root {
+  min-height: 100%;
+}
