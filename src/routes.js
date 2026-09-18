@@ -1,4 +1,5 @@
 const pagePaths = {
+  Login: '/login',
   Dashboard: '/dashboard',
   'Work Orders': '/workorders',
   Requests: '/requests',
@@ -70,4 +71,3 @@ export function navigateToPath(path) {
   window.history.pushState({}, '', path)
   window.dispatchEvent(new PopStateEvent('popstate'))
 }
-

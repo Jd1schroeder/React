@@ -41,13 +41,7 @@
   display: grid;
   place-items: center;
   flex: none;
-  border: 1px solid #d8dde2;
-  border-radius: 3px;
-  color: #1e2429;
-  background: #fff;
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
+  object-fit: contain;
   transition: width 160ms ease-out, height 160ms ease-out;
 }
 

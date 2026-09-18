@@ -7,12 +7,14 @@ import { PreventiveMaintenance } from './pages/PreventiveMaintenance'
 import { ScaffoldPage } from './pages/ScaffoldPage'
 import { Meters } from './pages/Meters'
 import { PartsInventory } from './pages/PartsInventory'
+import { Login } from './pages/Login'
 import { getPagePath, getRecordPath, getRouteFromLocation, navigateToPath } from './routes'
 import './styles/tokens.css'
 import './styles/globals.css'
 import './App.css'
 
 const pages = {
+  Login,
   Dashboard,
   'Work Orders': WorkOrders,
   Assets,
@@ -63,6 +65,8 @@ function App() {
   const navigateToRecord = (type, id) => {
     navigateToPath(getRecordPath(type, id))
   }
+
+  if (activePage === 'Login') return <Login />
 
   return (
     <AppLayout activePage={activePage} onNavigate={navigate}>

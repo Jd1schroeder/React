@@ -1,6 +1,6 @@
-# Maintainly
+# Workbench
 
-Maintainly is a React operations dashboard inspired by modern facilities-maintenance tools.
+Workbench is a React operations dashboard for facility maintenance teams.
 
 ## Run locally
 

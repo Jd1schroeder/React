@@ -23,6 +23,7 @@ import {
   Zap,
 } from "lucide-react";
 import "./Sidebar.css";
+import workbenchIcon from "../../assets/workbench-icon.png";
 
 const groups = [
   {
@@ -187,10 +188,8 @@ export function Sidebar({ activePage, onNavigate }) {
     <aside className={`sidebar ${collapsed ? "is-collapsed" : ""}`}>
       <div className="sidebar-header">
         <div className="brand">
-          <span className="brand-mark" aria-label="Simona PMC logo">
-            PMC
-          </span>
-          <span className="brand-name">Simona PMC</span>
+          <img className="brand-mark" src={workbenchIcon} alt="Workbench logo" />
+          <span className="brand-name">Workbench</span>
           <button
             className="collapse-button"
             onClick={() => setCollapsed((value) => !value)}
