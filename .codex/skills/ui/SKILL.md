@@ -27,6 +27,8 @@ Unknown record IDs under a valid section route must preserve the parent `PanelVi
 
 Use Lucide icons already installed in the project. Keep icon sizing controlled by the component that owns the shared UI so changes propagate consistently.
 
+Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the shared styled trigger, rotating Lucide chevron, focus tokens, outside-click dismissal, keyboard navigation, and listbox semantics. Keep specialized selectors, such as phone-country selection, separate only when they need custom option content.
+
 ## Sidebar reference tokens
 
 - Group headings use `0.8571rem` font size and `1.2857rem` line-height.
@@ -42,6 +44,7 @@ Use Lucide icons already installed in the project. Keep icon sizing controlled b
 - Sidebar navigation scrolling is owned by `.sidebar-nav`; keep `.sidebar-bottom` outside the scroll region. For scrollbar styling, scope `scrollbar-color` and `scrollbar-width` to non-WebKit browsers so Chromium `::-webkit-scrollbar` rules can remove native arrow buttons.
 - The account area in `.settings-menu-root` owns the account popover and Supabase sign-out action; close it on outside pointer interaction and keep account identity sourced from `workspaceService.js`.
 - Organization and personal settings use the shared route-backed `src/pages/SettingsPage.jsx`; Invite Users has the initial repeatable-row UI and remains unconnected to the invitation API until its Supabase contract is defined.
+- Profile Preferences uses workspace identity from `src/services/workspaceService.js`; profile and localization controls are UI-ready and remain local until their persistence contracts are implemented.
 - Tork destinations (`Chat`, `Routines`, and `History`) intentionally render only the Workbench 404 artwork inside the authenticated app shell until their UI is designed.
 
 Validate visual refactors with `npm.cmd run lint` and `npm.cmd run build`.

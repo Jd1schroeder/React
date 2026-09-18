@@ -22,5 +22,5 @@ export async function getCurrentWorkspace() {
     .maybeSingle()
   if (organizationError) throw organizationError
 
-  return { user, organization }
+  return { user, organization: { ...organization, role: membership.role } }
 }
