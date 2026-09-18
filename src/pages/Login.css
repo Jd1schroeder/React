@@ -785,6 +785,27 @@
   margin-top: 4px;
 }
 
+.auth-form-error {
+  margin: -8px 0 0;
+  color: var(--danger, #c93636);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.login-page-error {
+  position: fixed;
+  z-index: 10;
+  top: 18px;
+  right: 18px;
+  max-width: min(360px, calc(100vw - 36px));
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid rgb(201 54 54 / 24%);
+  border-radius: var(--radius-md);
+  background: #fff5f5;
+  box-shadow: 0 8px 24px rgb(20 43 94 / 12%);
+}
+
 .signup-card .login-signup {
   margin-top: 18px;
 }

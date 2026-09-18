@@ -10,7 +10,8 @@ Keep the application organized around these boundaries:
 - `src/components/layout` contains application-wide layout and panel primitives.
 - `src/components/ui` contains small reusable controls.
 - `src/pages` contains route-level page composition and page-specific styles.
-- `src/data` contains mock data and page configuration until a backend is introduced.
+- `src/data` contains mock data and page configuration for workflows that are not yet persisted.
+- `src/services` contains backend-facing service boundaries such as authentication and organization provisioning.
 - `src/styles` contains global tokens and reset rules.
 
 Prefer extending an existing primitive over adding a parallel implementation. Keep navigation mappings in `src/App.jsx` and keep reusable page configuration/data outside page components when multiple pages consume it.

@@ -5,7 +5,7 @@ description: Add API-backed behavior to Maintainly when backend contracts become
 
 # API Skill
 
-Supabase is configured through `src/lib/supabase.js` using `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. The repository still has no endpoint definitions, authentication flow, or database contract. Do not invent endpoint shapes or place network calls directly into presentational components.
+Supabase is configured through `src/lib/supabase.js` using `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. Authentication calls belong in `src/services/authService.js`; do not place Supabase calls directly into presentational components. Signup metadata is consumed by the organization-provisioning trigger in `supabase/migrations/20260917000000_create_organizations.sql`.
 
 When API work begins:
 

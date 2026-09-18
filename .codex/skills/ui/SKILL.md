@@ -16,6 +16,8 @@ Use the existing layout primitives before creating page-specific alternatives.
 - `src/styles/tokens.css` contains shared design tokens; prefer tokens over new hardcoded values.
 - `src/styles/globals.css` contains reset and document-level styles.
 - Login and signup use the shared `AuthPage` implementation in `src/pages/AuthPage.jsx`; keep authentication modes as configuration rather than duplicating the full auth layout.
+- The public splash page is the `/` entry route. Branding on unauthenticated pages may return to `Splash`, while the logged-in sidebar brand is static and must not navigate out of the application shell.
+- Keep the left visual column of the splash and signup layouts aligned through the shared `--auth-visual-column` token in `src/styles/tokens.css`.
 
 Every new sidebar destination should use the shared panel shell unless its interaction model genuinely differs. Keep page-specific differences in the page stylesheet, not in `App.css`.
 

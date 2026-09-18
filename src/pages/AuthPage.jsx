@@ -2,6 +2,7 @@ import { CheckCircle2, ChevronDown, Eye, EyeOff, LoaderCircle, LockKeyhole, Mail
 import { AsYouType } from 'libphonenumber-js'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '../components/ui/Button'
+import { signInWithPassword, signUpWithOrganization } from '../services/authService'
 import workbenchIcon from '../assets/workbench-icon.png'
 import workbenchLogo from '../assets/workbench-logo.png'
 import flagAustralia from '../assets/flags/au.svg'
@@ -113,13 +114,49 @@ export function AuthPage({ mode = 'login', onNavigate }) {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const handleSubmit = (event) => {
+  const [submitError, setSubmitError] = useState('')
+  const handleSubmit = async (event) => {
     event.preventDefault()
+    setSubmitError('')
     setIsSubmitting(true)
-    window.setTimeout(() => {
+    if (!isSignup) {
+      const values = Object.fromEntries(new FormData(event.currentTarget).entries())
+      signInWithPassword({ email: values.email, password: values.password })
+        .then(() => onNavigate?.('Work Orders'))
+        .catch((error) => setSubmitError(error.message || 'We could not sign you in. Please try again.'))
+        .finally(() => setIsSubmitting(false))
+      return
+    }
+
+    const values = Object.fromEntries(new FormData(event.currentTarget).entries())
+    if (!values.organization?.trim()) {
+      setSubmitError('Enter your organization name.')
       setIsSubmitting(false)
-      if (isSignup) onNavigate?.('Verify Email')
-    }, 900)
+      return
+    }
+    if (values.password !== values.passwordConfirmation) {
+      setSubmitError('Passwords do not match.')
+      setIsSubmitting(false)
+      return
+    }
+
+    try {
+      const data = await signUpWithOrganization({
+        email: values.email,
+        password: values.password,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        phone: values.phone,
+        phoneCountry: values.phoneCountry,
+        organizationName: values.organization,
+        teamSize: values.teamSize,
+      })
+      onNavigate?.(data.session ? 'Work Orders' : 'Verify Email')
+    } catch (error) {
+      setSubmitError(error.message || 'We could not create your account. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (isSignup) {
@@ -153,6 +190,7 @@ export function AuthPage({ mode = 'login', onNavigate }) {
               <label className="login-field"><span>Team size</span><TeamSizeDropdown /></label>
               <label className="login-field"><span>Password</span><div className="login-input-wrap"><LockKeyhole size={18} aria-hidden="true" /><input type={showPassword ? 'text' : 'password'} name="password" placeholder="Create a password" autoComplete="new-password" /><button type="button" className="login-password-toggle" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div></label>
               <label className="login-field"><span>Confirm password</span><div className="login-input-wrap"><LockKeyhole size={18} aria-hidden="true" /><input type={showConfirmation ? 'text' : 'password'} name="passwordConfirmation" placeholder="Re-enter your password" autoComplete="new-password" /><button type="button" className="login-password-toggle" onClick={() => setShowConfirmation((value) => !value)} aria-label={showConfirmation ? 'Hide password confirmation' : 'Show password confirmation'}>{showConfirmation ? <EyeOff size={18} /> : <Eye size={18} />}</button></div></label>
+              {submitError && <p className="auth-form-error" role="alert">{submitError}</p>}
               <Button type="submit" ripple disabled={isSubmitting} aria-busy={isSubmitting}>{isSubmitting && <LoaderCircle className="auth-loading-spinner" size={17} aria-hidden="true" />}{isSubmitting ? 'Creating account…' : 'Create account'}</Button>
             </form>
             <p className="login-signup">Already have an account? <button type="button" className="login-link" onClick={() => onNavigate?.('Login')}>Log in</button></p>
@@ -166,6 +204,7 @@ export function AuthPage({ mode = 'login', onNavigate }) {
 
   return (
     <main className="login-page">
+      {submitError && <p className="auth-form-error login-page-error" role="alert">{submitError}</p>}
       <section className="login-hero" aria-label="Workbench facility operations">
         <div className="login-hero-grid" /><div className="login-hero-orb login-hero-orb-one" /><div className="login-hero-orb login-hero-orb-two" />
         <div className="login-hero-content"><Brand onNavigate={onNavigate} /><div><p className="login-hero-kicker">FACILITY OPERATIONS</p><h2>Keep every team,<br />tool, and task moving.</h2><p className="login-hero-copy">One clear workspace for the work that keeps your facility running.</p></div><div className="login-hero-illustration" aria-hidden="true"><div className="illustration-building"><span /><span /><span /><span /><span /><span /></div><div className="illustration-floor" /><div className="illustration-tool illustration-tool-one" /><div className="illustration-tool illustration-tool-two" /></div></div>
