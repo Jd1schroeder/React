@@ -16,3 +16,7 @@ npm.cmd run verify
 When adding a test runner, prioritize shared behavior: sidebar navigation, hash/deep-link navigation, panel search clearing, list selection, Work Orders tabs, and responsive layout states. Do not add tests that only snapshot implementation details.
 
 Nested-route checks should cover both generic `PanelView` pages and custom Work Orders pages: valid parent routes with unknown child IDs must preserve the app shell and render the shared detail-pane 404 state.
+
+## Supabase validation
+
+On Windows, run `node scripts/check-supabase-rls.mjs --insecure`; the command prompts for a short-lived token after it starts and handles the local TLS diagnostic issue. Use the token only at the prompt, never commit it or place it in a `VITE_*` variable.

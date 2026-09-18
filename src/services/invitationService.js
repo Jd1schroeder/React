@@ -55,7 +55,7 @@ export async function revokeOrganizationInvitation(invitationId) {
     .from('organization_invitations')
     .update({ status: 'revoked' })
     .eq('id', invitationId)
-    .select('id, status, updated_at')
+    .select('id, organization_id, status, updated_at')
     .single()
   if (error) throw error
   return data

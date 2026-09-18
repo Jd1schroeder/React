@@ -13,13 +13,21 @@ export async function uploadAvatar(file) {
   const path = `${userId}/${crypto.randomUUID()}.${extension}`
   const { error } = await supabase.storage.from('avatars').upload(path, file, { contentType: file.type, upsert: false })
   if (error) throw error
-  const { data } = await supabase.storage.from('avatars').createSignedUrl(path, 60 * 60 * 24 * 30)
-  return data?.signedUrl ?? null
+  const { data, error: signedUrlError } = await supabase.storage.from('avatars').createSignedUrl(path, 60 * 60 * 24 * 30)
+  if (signedUrlError) throw signedUrlError
+  return { path, signedUrl: data?.signedUrl ?? null }
 }
 
-export async function updateProfile({ firstName, lastName, avatarUrl = null }) {
+export async function getAvatarSignedUrl(path) {
+  if (!path || path.startsWith('http')) return path || ''
+  const { data, error } = await supabase.storage.from('avatars').createSignedUrl(path, 60 * 60 * 24 * 30)
+  if (error) throw error
+  return data?.signedUrl ?? ''
+}
+
+export async function updateProfile({ firstName, lastName, phone, avatarUrl }) {
   const userId = await getUserId()
-  const profile = { id: userId, first_name: firstName.trim(), last_name: lastName.trim() }
+  const profile = { id: userId, first_name: firstName.trim(), last_name: lastName.trim(), phone: phone?.trim() || null }
   if (avatarUrl !== undefined) profile.avatar_url = avatarUrl
   const { data, error } = await supabase
     .from('profiles')

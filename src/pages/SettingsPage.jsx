@@ -20,7 +20,7 @@ import {
 import { useEffect, useState } from "react";
 import { Select } from "../components/ui/Select";
 import flagUnitedStates from "../assets/flags/us.svg";
-import { createOrganizationInvitation } from "../services/invitationService";
+import { createOrganizationInvitation, listOrganizationInvitations, revokeOrganizationInvitation } from "../services/invitationService";
 import { listOrganizationMembers, membershipRoles, updateOrganizationMember } from "../services/organizationService";
 import { updateAuthContact, updateProfile, updateUserPreferences, uploadAvatar } from "../services/profileService";
 import { getCurrentWorkspace } from "../services/workspaceService";
@@ -204,6 +204,7 @@ function InviteUsersPage({ onNavigate }) {
   const [notifyInvites, setNotifyInvites] = useState(true);
   const [linkCopied, setLinkCopied] = useState(false);
   const [inviteLink, setInviteLink] = useState("");
+  const [invitations, setInvitations] = useState([]);
   const [organizationId, setOrganizationId] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState("");
@@ -212,7 +213,11 @@ function InviteUsersPage({ onNavigate }) {
   );
 
   useEffect(() => {
-    getCurrentWorkspace().then((workspace) => setOrganizationId(workspace.organization?.id ?? "")).catch(() => setOrganizationId(""));
+    getCurrentWorkspace().then(async (workspace) => {
+      const id = workspace.organization?.id ?? "";
+      setOrganizationId(id);
+      if (id) setInvitations(await listOrganizationInvitations(id));
+    }).catch(() => setOrganizationId(""));
   }, []);
 
   const updateInvite = (index, field, value) => {
@@ -340,6 +345,7 @@ function InviteUsersPage({ onNavigate }) {
                     role: invite.role,
                   })));
                   setInviteLink(createdInvites[0]?.inviteLink ?? "");
+                  setInvitations((current) => [...createdInvites, ...current]);
                   setInvites([{ name: "", contact: "", role: "member" }]);
                 } catch (error) {
                   setSendError(error.message || "Unable to create the invitations.");
@@ -362,6 +368,7 @@ function InviteUsersPage({ onNavigate }) {
             </button>
           </div>
           {sendError && <p className="invite-error" role="alert">{sendError}</p>}
+          {invitations.length > 0 && <div className="invitation-list"><h2>Recent invitations</h2>{invitations.map((invitation) => <div className="invitation-row" key={invitation.id}><div><strong>{[invitation.first_name, invitation.last_name].filter(Boolean).join(" ") || invitation.contact_value}</strong><small>{invitation.contact_type} · {invitation.role} · {invitation.status}</small></div>{invitation.status === "invited" && <button type="button" onClick={async () => { try { await revokeOrganizationInvitation(invitation.id); setInvitations((current) => current.map((item) => item.id === invitation.id ? { ...item, status: "revoked" } : item)); } catch (error) { setSendError(error.message || "Unable to revoke the invitation."); } }}>Revoke</button>}</div>)}</div>}
         </section>
       </div>
     </div>
@@ -374,6 +381,7 @@ function ProfilePreferencesPage({ onNavigate }) {
     organization: null,
   });
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarPath, setAvatarPath] = useState("");
   const [avatarFile, setAvatarFile] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -399,11 +407,12 @@ function ProfilePreferencesPage({ onNavigate }) {
         const savedPreferences = currentWorkspace.preferences;
         setWorkspace(currentWorkspace);
         setAvatarUrl(profile?.avatar_url ?? user?.user_metadata?.avatar_url ?? "");
+        setAvatarPath(profile?.avatar_path ?? "");
         setEditForm({
           firstName: profile?.first_name ?? user?.user_metadata?.first_name ?? "",
           lastName: profile?.last_name ?? user?.user_metadata?.last_name ?? "",
           email: user?.email ?? "",
-          phone: user?.user_metadata?.phone ?? user?.phone ?? "",
+          phone: profile?.phone ?? user?.user_metadata?.phone ?? user?.phone ?? "",
         });
         if (savedPreferences) {
           setPreferences({
@@ -451,18 +460,22 @@ function ProfilePreferencesPage({ onNavigate }) {
     setIsSavingProfile(true);
     setProfileSaveError("");
     try {
-      const persistedAvatarUrl = avatarFile ? await uploadAvatar(avatarFile) : avatarUrl.startsWith("http") ? avatarUrl : undefined;
+      const uploadedAvatar = avatarFile ? await uploadAvatar(avatarFile) : null;
+      const persistedAvatarPath = uploadedAvatar?.path ?? (avatarPath || undefined);
       const profile = await updateProfile({
         firstName: editForm.firstName,
         lastName: editForm.lastName,
-        avatarUrl: persistedAvatarUrl,
+        phone: editForm.phone,
+        avatarUrl: persistedAvatarPath,
       });
-      const user = await updateAuthContact({ email: editForm.email, phone: editForm.phone });
+      const user = await updateAuthContact({ email: editForm.email });
       setWorkspace((current) => ({
         ...current,
         profile,
         user: current.user ? { ...current.user, ...(user ?? {}), email: editForm.email, user_metadata: { ...current.user.user_metadata, first_name: editForm.firstName, last_name: editForm.lastName, phone: editForm.phone } } : current.user,
       }));
+      if (uploadedAvatar?.signedUrl) setAvatarUrl(uploadedAvatar.signedUrl);
+      setAvatarPath(persistedAvatarPath ?? "");
       closeEditModal();
     } catch (error) {
       setProfileSaveError(error.message || "Unable to update your profile.");

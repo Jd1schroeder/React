@@ -121,5 +121,12 @@
 .invite-send-button { border: 0; border-radius: var(--radius-sm); color: #fff; background: var(--blue); font-size: 13px; font-weight: 600; }
 .invite-send-button:disabled { color: #8291a0; background: #dce2e8; cursor: not-allowed; }
 .invite-error { margin: 0; color: var(--danger); font-size: 12px; }
+.invitation-list { display: grid; gap: 0; margin-top: 34px; border-top: 1px solid var(--line); }
+.invitation-list h2 { margin: 20px 0 8px; color: var(--ink); font-size: 15px; }
+.invitation-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.invitation-row div { display: grid; gap: 4px; min-width: 0; }
+.invitation-row strong { color: var(--ink); font-size: 13px; overflow-wrap: anywhere; }
+.invitation-row small { color: var(--muted); font-size: 11px; text-transform: capitalize; }
+.invitation-row button { min-height: 32px; padding: 0 10px; border: 1px solid var(--danger); border-radius: var(--radius-sm); color: var(--danger); background: var(--surface); font-size: 12px; }
 .invite-link-button { width: 100%; }
 @media (max-width: 760px) { .invite-card { padding: 24px 18px; } .invite-table-header { display: none; } .invite-row { grid-template-columns: 1fr 28px; gap: 10px; } .invite-row input, .invite-account-type { grid-column: 1; } .invite-remove { grid-column: 2; grid-row: 1 / span 3; } .invite-actions { margin-top: 34px; } .profile-settings-card { padding: 20px; } .profile-info-grid, .profile-preference-list label { grid-template-columns: 1fr; gap: 8px; } .profile-quit-card { align-items: flex-start; flex-direction: column; } }

@@ -115,6 +115,7 @@ export function AuthPage({ mode = 'login', onNavigate }) {
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const hasPendingInvite = () => Boolean(window.sessionStorage.getItem('workbench.pendingInviteToken'))
   const handleSubmit = async (event) => {
     event.preventDefault()
     setSubmitError('')
@@ -122,7 +123,7 @@ export function AuthPage({ mode = 'login', onNavigate }) {
     if (!isSignup) {
       const values = Object.fromEntries(new FormData(event.currentTarget).entries())
       signInWithPassword({ email: values.email, password: values.password })
-        .then(() => onNavigate?.('Work Orders'))
+        .then(() => onNavigate?.(hasPendingInvite() ? 'Accept Invite' : 'Work Orders'))
         .catch((error) => setSubmitError(error.message || 'We could not sign you in. Please try again.'))
         .finally(() => setIsSubmitting(false))
       return
@@ -151,7 +152,7 @@ export function AuthPage({ mode = 'login', onNavigate }) {
         organizationName: values.organization,
         teamSize: values.teamSize,
       })
-      onNavigate?.(data.session ? 'Work Orders' : 'Verify Email')
+      onNavigate?.(data.session ? (hasPendingInvite() ? 'Accept Invite' : 'Work Orders') : 'Verify Email')
     } catch (error) {
       setSubmitError(error.message || 'We could not create your account. Please try again.')
     } finally {

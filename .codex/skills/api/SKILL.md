@@ -5,11 +5,11 @@ description: Add API-backed behavior to Workbench when backend contracts become 
 
 # API Skill
 
-Supabase is configured through `src/lib/supabase.js` using `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. Authentication calls belong in `src/services/authService.js`; do not place Supabase calls directly into presentational components. Signup metadata is consumed by the organization-provisioning trigger in `supabase/migrations/20260917000000_create_organizations.sql`.
+Supabase is configured through `src/lib/supabase.js` using `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. Authentication calls belong in `src/services/authService.js`; do not place Supabase calls directly into presentational components. Signup metadata is consumed by the organization-provisioning trigger in the latest profile/provisioning migration (`supabase/migrations/20260918080000_add_profile_phone.sql`).
 
 For Vercel deployments, configure both `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` as public Config variables for every required environment, then create a fresh deployment because Vite injects `VITE_*` values at build time. Do not store these browser-exposed values as immutable Secrets if the deployment workflow needs to update them. Never expose a Supabase service-role key in a `VITE_*` variable or in the browser.
 
-The current workspace service returns the authenticated user together with `profile`, `preferences`, all active organizations, and the selected organization. Profile edits should update `profiles` through a service, while email and phone changes should use the appropriate Supabase Auth update flow rather than writing authentication fields directly to a public table.
+The current workspace service returns the authenticated user together with `profile`, `preferences`, all active organizations, and the selected organization. Profile edits should update `profiles` through a service. Email changes use Supabase Auth; application phone contact data belongs in `profiles.phone` because an email-authenticated user is not automatically a verified phone-authenticated user.
 
 Membership administration must use the organization membership service and rely on Supabase RLS for authorization. Membership state is lifecycle-based (`invited`, `active`, or `suspended`); clients must not treat a role check in the UI as sufficient authorization.
 
@@ -17,9 +17,11 @@ Invitation tokens must be stored as hashes and invitation email/SMS delivery mus
 
 Invitation acceptance is enforced by the `accept_organization_invitation` database function: it validates the hashed token, expiry, authenticated contact, and membership transition before marking the invitation accepted.
 
-Audit writes use the `record_audit_event` database function, which derives the actor from `auth.uid()` and checks organization-admin authorization. Do not insert arbitrary audit rows directly from browser code.
+When an invite recipient is signed out, preserve the raw invitation token only in session storage while routing through login or email verification; never persist it in the database or logs. The acceptance page removes it after a successful RPC.
 
-Avatar files must be uploaded through the `avatars` Storage bucket using a user-scoped path and RLS; profile records must not store temporary browser blob URLs.
+Audit writes use the `record_audit_event` database function, which derives the actor from `auth.uid()` and checks organization-admin authorization. Admin mutation services must call this RPC after successful organization, membership, invitation, or similar changes. Do not insert arbitrary audit rows directly from browser code.
+
+Avatar files must be uploaded through the `avatars` Storage bucket using a user-scoped path and RLS. Persist the storage path in the profile and generate signed URLs only when data is loaded for display; never store temporary browser blob URLs or expiring signed URLs.
 
 When API work begins:
 

@@ -34,7 +34,7 @@ export async function listOrganizationMembers(organizationId) {
 
   const { data: profiles, error: profilesError } = await supabase
     .from('profiles')
-    .select('id, first_name, last_name, avatar_url')
+    .select('id, first_name, last_name, phone, avatar_url')
     .in('id', members.map((member) => member.user_id))
   if (profilesError) throw profilesError
 
@@ -52,7 +52,7 @@ export async function updateOrganizationMember({ organizationId, userId, role, s
     .update(updates)
     .eq('organization_id', organizationId)
     .eq('user_id', userId)
-    .select('organization_id, user_id, role, status, invited_by, invited_at, joined_at, updated_at')
+    .select('organization_id, user_id, role, status, invited_by, invited_at, joined_at, updated_at, updated_by')
     .single()
   if (error) throw error
   return data
@@ -63,7 +63,7 @@ export async function updateOrganization({ organizationId, updates }) {
     .from('organizations')
     .update(updates)
     .eq('id', organizationId)
-    .select('id, name, slug, description, logo_url, timezone, status, updated_at')
+    .select('id, name, slug, description, logo_url, timezone, status, updated_at, updated_by')
     .single()
   if (error) throw error
   return data
