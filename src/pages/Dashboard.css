@@ -120,3 +120,36 @@ td small {
     grid-template-columns: 1fr;
   }
 }
+.dashboard-empty-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 96px;
+  padding: 20px;
+  color: var(--muted);
+}
+
+.dashboard-empty-card strong,
+.dashboard-empty-card span {
+  display: block;
+}
+
+.dashboard-empty-card strong {
+  color: var(--ink);
+}
+
+.dashboard-empty-card span {
+  font-size: 13px;
+}
+
+.dashboard-empty-panel {
+  min-height: 220px;
+}
+
+.dashboard-empty-state {
+  display: grid;
+  min-height: 120px;
+  place-items: center;
+  color: var(--muted);
+  font-size: 14px;
+}

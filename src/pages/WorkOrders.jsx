@@ -17,7 +17,6 @@ import {
   Plus,
   Users,
 } from "lucide-react";
-import { workOrderCounts, workOrders } from "../data/mockData";
 import './WorkOrders.css';
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
@@ -30,6 +29,9 @@ const statusTone = {
   Completed: "green",
   "On Hold": "purple",
 };
+
+const workOrders = [];
+const workOrderCounts = { todo: 0, done: 0 };
 
 function DetailRow({ icon: Icon, label, children }) {
   return (

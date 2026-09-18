@@ -290,13 +290,13 @@
 .login-options {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
   margin-top: -4px;
 }
 
 .login-checkbox {
-  display: inline-flex;
+  display: none;
   align-items: center;
   gap: 9px;
   color: #69727f;

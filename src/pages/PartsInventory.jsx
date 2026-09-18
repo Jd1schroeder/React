@@ -1,7 +1,7 @@
 import { PanelView } from '../components/layout/PanelView'
-import { parts } from '../data/mockData'
 
 export function PartsInventory({ recordId, onNavigateRecord }) {
+  const parts = []
   const items = parts.map((part) => ({
     id: part.id,
     name: part.name,

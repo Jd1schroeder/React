@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BarChart3,
   Boxes,
@@ -9,6 +9,7 @@ import {
   FileText,
   HelpCircle,
   Library as LibraryIcon,
+  LogOut,
   MapPin,
   MessageSquare,
   MessagesSquare,
@@ -24,6 +25,8 @@ import {
 } from "lucide-react";
 import "./Sidebar.css";
 import workbenchIcon from "../../assets/workbench-icon.png";
+import { supabase } from "../../lib/supabase";
+import { getCurrentWorkspace } from "../../services/workspaceService";
 
 const groups = [
   {
@@ -184,6 +187,34 @@ function NavGroup({ group, activePage, onNavigate, collapsed }) {
 
 export function Sidebar({ activePage, onNavigate }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [workspace, setWorkspace] = useState({ user: null, organization: null });
+  const settingsMenuRef = useRef(null);
+
+  useEffect(() => {
+    getCurrentWorkspace().then(setWorkspace).catch(() => setWorkspace({ user: null, organization: null }));
+  }, []);
+
+  useEffect(() => {
+    if (!isSettingsOpen) return undefined;
+
+    const handleOutsidePointer = (event) => {
+      if (!settingsMenuRef.current?.contains(event.target)) setIsSettingsOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handleOutsidePointer);
+    return () => document.removeEventListener("pointerdown", handleOutsidePointer);
+  }, [isSettingsOpen]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setIsSettingsOpen(false);
+    onNavigate("Login");
+  };
+
+  const displayName = [workspace.user?.user_metadata?.first_name, workspace.user?.user_metadata?.last_name].filter(Boolean).join(" ") || workspace.user?.email || "Account";
+  const organizationName = workspace.organization?.name || "Workspace";
+
   return (
     <aside className={`sidebar ${collapsed ? "is-collapsed" : ""}`}>
       <div className="sidebar-header">
@@ -208,7 +239,7 @@ export function Sidebar({ activePage, onNavigate }) {
           <button className="workspace-switcher">
             <Building2 size={15} />
             <span className="workspace-dot" />
-            <span className="workspace-name">Acme Facilities</span>
+            <span className="workspace-name">{organizationName}</span>
             <ChevronDown className="chevron" size={15} />
           </button>
         </div>
@@ -231,11 +262,11 @@ export function Sidebar({ activePage, onNavigate }) {
             <span>Support</span>
           </button>
         </div>
-        <div className="settings-menu-root">
-          <button className="account-menu">
+        <div ref={settingsMenuRef} className="settings-menu-root">
+          <button className="account-menu" onClick={() => setIsSettingsOpen((value) => !value)} aria-haspopup="menu" aria-expanded={isSettingsOpen}>
             <div className="avatar avatar-purple account-avatar">JS</div>
             <span className="account-copy">
-              <strong>Joshua Schroeder</strong>
+              <strong>{displayName}</strong>
               <span className="account-secondary">
                 <Settings size={14} />
                 <small>Settings</small>
@@ -243,6 +274,22 @@ export function Sidebar({ activePage, onNavigate }) {
             </span>
             <ChevronRight className="account-chevron" size={20} />
           </button>
+          {isSettingsOpen && (
+            <div className="account-popover" role="menu" aria-label="Account settings">
+              <div className="account-popover-section">
+                <p className="account-popover-heading">Organization Settings</p>
+                {['General', 'Features', 'Subscription', 'Manage Teammates', 'Customizations', 'Integrations'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => setIsSettingsOpen(false)}>{label}</button>)}
+              </div>
+              <div className="account-popover-section">
+                {['My Account', 'Profile Preferences', 'Notification Settings', 'Open Download Center'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => setIsSettingsOpen(false)}>{label}</button>)}
+              </div>
+              <div className="account-popover-section account-popover-links">
+                <button type="button" role="menuitem" onClick={() => setIsSettingsOpen(false)}>Get the Mobile App</button>
+                <button type="button" role="menuitem" onClick={() => setIsSettingsOpen(false)}>Invite Users</button>
+              </div>
+              <button type="button" className="account-popover-logout" role="menuitem" onClick={handleSignOut}><LogOut size={16} /> Log out</button>
+            </div>
+          )}
         </div>
       </div>
     </aside>

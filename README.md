@@ -28,7 +28,7 @@ Redirect URLs, including `http://localhost:5173/verify-email` and
 - Preventive-maintenance schedules
 - Responsive application shell and reusable UI primitives
 
-The app uses local mock data for operations pages. Supabase-backed signup and
-organization provisioning are implemented; operational persistence,
-attachments, and real-time updates can be added as the core workflows are
-finalized.
+Supabase-backed signup, organization provisioning, and workspace identity are
+implemented. Operations pages currently show empty states until their domain
+tables and services are added; attachments and real-time updates can follow
+the same service boundary.
