@@ -12,8 +12,8 @@ import { Signup } from './pages/Signup'
 import { VerifyEmail } from './pages/VerifyEmail'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { Splash } from './pages/Splash'
-import { NotFound } from './pages/NotFound'
 import { SettingsPage } from './pages/SettingsPage'
+import { TorkPage } from './pages/TorkPage'
 import { getPagePath, getRecordPath, getRouteFromLocation, navigateToPath } from './routes'
 import './styles/tokens.css'
 import './styles/globals.css'
@@ -35,7 +35,7 @@ const pages = {
   'Settings / Profile Preferences': SettingsPage,
   'Settings / Notification Settings': SettingsPage,
   'Settings / Invite Users': SettingsPage,
-  NotFound,
+  NotFound: TorkPage,
   Dashboard,
   'Work Orders': WorkOrders,
   Assets,
@@ -43,6 +43,9 @@ const pages = {
   Requests: ScaffoldPage,
   Messages: ScaffoldPage,
   'Purchase Orders': ScaffoldPage,
+  Chat: TorkPage,
+  Routines: TorkPage,
+  History: TorkPage,
   Reporting: ScaffoldPage,
   'Reporting / Work Orders': ScaffoldPage,
   'Reporting / Asset Health': ScaffoldPage,
@@ -92,8 +95,6 @@ function App() {
   if (activePage === 'Verify Email') return <VerifyEmail onNavigate={navigate} />
   if (activePage === 'Forgot Password') return <ForgotPassword onNavigate={navigate} />
   if (activePage === 'Splash') return <Splash onNavigate={navigate} />
-  if (activePage === 'NotFound') return <NotFound onNavigate={navigate} />
-
   return (
     <AppLayout activePage={activePage} onNavigate={navigate}>
       <Page

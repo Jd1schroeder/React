@@ -19,6 +19,9 @@ const pagePaths = {
   Requests: '/requests',
   Messages: '/messages',
   'Purchase Orders': '/purchase-orders',
+  Chat: '/chat',
+  Routines: '/routines',
+  History: '/history',
   Reporting: '/reporting',
   'Reporting / Work Orders': '/reporting/work-orders',
   'Reporting / Asset Health': '/reporting/asset-health',
@@ -47,9 +50,35 @@ const pagesByPath = new Map(
 
 const recordPageByPrefix = {
   workorders: 'Work Orders',
+  requests: 'Requests',
+  messages: 'Messages',
+  'purchase-orders': 'Purchase Orders',
+  reporting: 'Reporting',
+  'reporting/work-orders': 'Reporting / Work Orders',
+  'reporting/asset-health': 'Reporting / Asset Health',
+  'reporting/details': 'Reporting / Details',
+  'reporting/activity': 'Reporting / Activity',
+  'reporting/exports': 'Reporting / Exports',
+  'reporting/dashboards': 'Reporting / Dashboards',
+  automations: 'Automations',
+  meters: 'Meters',
   assets: 'Assets',
   parts: 'Parts Inventory',
+  'maintenance-plans': 'Maintenance Plans',
+  library: 'Library',
+  'library/work-orders': 'Library / Work Orders',
+  'library/procedures': 'Library / Procedures',
+  'library/safety-data-sheets': 'Library / Safety Data Sheets',
+  categories: 'Categories',
+  locations: 'Locations',
+  'teams/users': 'Teams / Users',
+  vendors: 'Vendors',
+  chat: 'Chat',
+  routines: 'Routines',
+  history: 'History',
 }
+
+const recordRoutePrefixes = Object.entries(recordPageByPrefix).sort(([left], [right]) => right.length - left.length)
 
 export function getPagePath(page) {
   return pagePaths[page] ?? '/workorders'
@@ -61,12 +90,13 @@ export function getRecordPath(type, id) {
 
 export function getRouteFromLocation(location = window.location) {
   const pathname = location.pathname.replace(/\/$/, '') || '/'
-  const recordMatch = pathname.match(/^\/(workorders|assets|parts)\/([^/]+)$/)
+  const recordMatch = recordRoutePrefixes.find(([prefix]) => pathname.startsWith(`/${prefix}/`))
 
   if (recordMatch) {
+    const [prefix, page] = recordMatch
     return {
-      page: recordPageByPrefix[recordMatch[1]],
-      recordId: decodeURIComponent(recordMatch[2]),
+      page,
+      recordId: decodeURIComponent(pathname.slice(prefix.length + 2)),
     }
   }
 

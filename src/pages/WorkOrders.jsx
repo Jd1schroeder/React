@@ -21,7 +21,7 @@ import './WorkOrders.css';
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { PanelLayout } from "../components/layout/PanelLayout";
-import { PanelOverflowButton } from "../components/layout/PanelView";
+import { PanelOverflowButton, PanelRecordNotFound } from "../components/layout/PanelView";
 
 const statusTone = {
   Open: "blue",
@@ -57,7 +57,10 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
       ? tabOrders.filter((order) => `${order.title} ${order.id} ${order.location}`.toLowerCase().includes(normalizedSearch))
       : tabOrders;
   }, [activeTab, search]);
-  const selected = visibleOrders.find((order) => order.id === selectedId) ?? visibleOrders[0] ?? workOrders[0];
+  const selected = recordId
+    ? workOrders.find((order) => order.id === selectedId)
+    : visibleOrders[0] ?? workOrders[0];
+  const missingRecord = Boolean(recordId && !selected);
 
   return (
     <PanelLayout
@@ -146,7 +149,9 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
           </div>
         </section>
         <section className="detail-pane">
-          {selected && (
+          {missingRecord ? (
+            <PanelRecordNotFound />
+          ) : selected && (
             <>
               <header className="detail-header">
                 <div className="detail-heading">

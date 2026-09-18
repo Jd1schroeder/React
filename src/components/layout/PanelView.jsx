@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "../ui/Button";
+import workbench404 from "../../assets/workbench-404-clean.png";
 import { PanelLayout } from './PanelLayout';
 import './PanelView.css';
 
@@ -19,6 +20,12 @@ export function PanelOverflowButton({ label = 'More options' }) {
   return <button className="icon-button" aria-label={label}>
     <EllipsisVertical size={17} />
   </button>
+}
+
+export function PanelRecordNotFound() {
+  return <div className="panel-record-not-found">
+    <img src={workbench404} alt="Workbench 404 illustration" />
+  </div>
 }
 
 export function PanelView({
@@ -36,9 +43,10 @@ export function PanelView({
   const selectedId = recordId ?? localSelectedId;
   const [filter, setFilter] = useState("");
   const selected = useMemo(
-    () => items.find((item) => item.id === selectedId) ?? items[0],
-    [items, selectedId],
+    () => recordId ? items.find((item) => item.id === selectedId) : items[0],
+    [items, recordId, selectedId],
   );
+  const missingRecord = Boolean(recordId && !selected);
   const visibleItems = filter
     ? items.filter((item) =>
         `${item.name} ${item.asset} ${item.location}`
@@ -99,7 +107,9 @@ export function PanelView({
           </div>
         </aside>
         <section className="panel-detail">
-          {selected && (
+          {missingRecord ? (
+            <PanelRecordNotFound />
+          ) : selected && (
             <>
               <header className="panel-detail-header">
                 <div>

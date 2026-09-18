@@ -1,6 +1,6 @@
 ---
 name: ui
-description: Build and refactor Maintainly UI pages, navigation, panel layouts, responsive styling, and reusable visual components.
+description: Build and refactor Workbench UI pages, navigation, panel layouts, responsive styling, and reusable visual components.
 ---
 
 # UI Skill
@@ -23,6 +23,8 @@ Use the existing layout primitives before creating page-specific alternatives.
 
 Every new sidebar destination should use the shared panel shell unless its interaction model genuinely differs. Keep page-specific differences in the page stylesheet, not in `App.css`.
 
+Unknown record IDs under a valid section route must preserve the parent `PanelView` and render the shared `PanelRecordNotFound` state in its detail pane. Unknown authenticated top-level routes must preserve `AppLayout` and render only the artwork in the main content area. Public splash and authentication routes remain outside the application shell.
+
 Use Lucide icons already installed in the project. Keep icon sizing controlled by the component that owns the shared UI so changes propagate consistently.
 
 ## Sidebar reference tokens
@@ -40,5 +42,6 @@ Use Lucide icons already installed in the project. Keep icon sizing controlled b
 - Sidebar navigation scrolling is owned by `.sidebar-nav`; keep `.sidebar-bottom` outside the scroll region. For scrollbar styling, scope `scrollbar-color` and `scrollbar-width` to non-WebKit browsers so Chromium `::-webkit-scrollbar` rules can remove native arrow buttons.
 - The account area in `.settings-menu-root` owns the account popover and Supabase sign-out action; close it on outside pointer interaction and keep account identity sourced from `workspaceService.js`.
 - Organization and personal settings use the shared route-backed `src/pages/SettingsPage.jsx`; Invite Users has the initial repeatable-row UI and remains unconnected to the invitation API until its Supabase contract is defined.
+- Tork destinations (`Chat`, `Routines`, and `History`) intentionally render only the Workbench 404 artwork inside the authenticated app shell until their UI is designed.
 
 Validate visual refactors with `npm.cmd run lint` and `npm.cmd run build`.

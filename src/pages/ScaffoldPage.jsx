@@ -15,6 +15,6 @@ const pageActions = {
   Vendors: 'Add vendor',
 }
 
-export function ScaffoldPage({ pageName }) {
-  return <PanelView title={pageName} actionLabel={pageActions[pageName] ?? 'Create item'} items={[]} filters={['Status', 'Owner']} kind="record" />
+export function ScaffoldPage({ pageName, recordId }) {
+  return <PanelView title={pageName} actionLabel={pageActions[pageName] ?? 'Create item'} items={[]} filters={['Status', 'Owner']} kind="record" recordId={recordId} />
 }

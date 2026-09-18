@@ -1,6 +1,6 @@
 ---
 name: database
-description: Guide persistence changes for Maintainly when a backend database is introduced.
+description: Guide persistence changes for Workbench when a backend database is introduced.
 ---
 
 # Database Skill

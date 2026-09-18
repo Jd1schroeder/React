@@ -7,6 +7,7 @@ import {
   ChevronRight,
   ClipboardCheck,
   FileText,
+  History as HistoryIcon,
   HelpCircle,
   Library as LibraryIcon,
   LogOut,
@@ -17,6 +18,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   RefreshCw,
+  Repeat2,
   Settings,
   Tags,
   Users,
@@ -59,6 +61,14 @@ const groups = [
         count: 4,
       },
       { label: "Messages", icon: MessagesSquare, page: "Messages" },
+    ],
+  },
+  {
+    label: "Tork",
+    items: [
+      { label: "Chat", icon: MessageSquare, page: "Chat" },
+      { label: "Routines", icon: Repeat2, page: "Routines" },
+      { label: "History", icon: HistoryIcon, page: "History" },
     ],
   },
   {
