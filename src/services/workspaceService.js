@@ -1,26 +1,33 @@
 import { supabase } from '../lib/supabase'
 
-export async function getCurrentWorkspace() {
+export async function getCurrentWorkspace(organizationId = window.localStorage.getItem('workbench.activeOrganizationId')) {
   const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError) throw userError
 
   const user = userData.user
   if (!user) return { user: null, organization: null }
 
-  const { data: membership, error: membershipError } = await supabase
+  const { data: memberships, error: membershipError } = await supabase
     .from('organization_members')
-    .select('organization_id, role')
+    .select('organization_id, role, status, organizations(id, name, slug, description, logo_url, timezone, status)')
     .eq('user_id', user.id)
-    .maybeSingle()
+    .eq('status', 'active')
+    .order('created_at', { ascending: true })
   if (membershipError) throw membershipError
-  if (!membership) return { user, organization: null }
 
-  const { data: organization, error: organizationError } = await supabase
-    .from('organizations')
-    .select('id, name')
-    .eq('id', membership.organization_id)
-    .maybeSingle()
-  if (organizationError) throw organizationError
+  const [{ data: profile, error: profileError }, { data: preferences, error: preferencesError }] = await Promise.all([
+    supabase.from('profiles').select('id, first_name, last_name, avatar_url').eq('id', user.id).maybeSingle(),
+    supabase.from('user_preferences').select('language, date_format, time_format, week_start, timezone').eq('user_id', user.id).maybeSingle(),
+  ])
+  if (profileError) throw profileError
+  if (preferencesError) throw preferencesError
+  const organizations = (memberships ?? []).map(({ organizations: organization, ...membership }) => ({ ...organization, role: membership.role, membershipStatus: membership.status }))
+  const organization = organizations.find((item) => item.id === organizationId) ?? organizations[0] ?? null
 
-  return { user, organization: { ...organization, role: membership.role } }
+  return { user, profile, preferences, organizations, organization }
+}
+
+export function setActiveOrganization(organizationId) {
+  window.localStorage.setItem('workbench.activeOrganizationId', organizationId)
+  window.dispatchEvent(new CustomEvent('workbench:organization-changed', { detail: organizationId }))
 }

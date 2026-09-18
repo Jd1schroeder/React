@@ -16,6 +16,6 @@ Keep the application organized around these boundaries:
 
 Prefer extending an existing primitive over adding a parallel implementation. Keep navigation mappings in `src/App.jsx` and keep reusable page configuration/data outside page components when multiple pages consume it.
 
-The current backend-backed workspace identity is loaded through `src/services/workspaceService.js`. Domain pages should follow the same service boundary and must not render local fixture records.
+The current backend-backed workspace identity is loaded through `src/services/workspaceService.js`. It returns all active organizations plus the selected organization; the selected ID is stored through the shared active-organization service helper. Domain pages should follow the same service boundary and must not render local fixture records.
 
 The current app uses React state plus browser History API navigation in `src/routes.js`. Record pages use clean parent-child paths such as `/workorders/WO-1048`, `/assets/AST-1001`, and `/parts/PART-2001`; the same pattern applies to other registered sidebar destinations. Unknown child records preserve the parent page shell and use the shared panel-level not-found state. Do not introduce a state-management library without a documented architectural decision.

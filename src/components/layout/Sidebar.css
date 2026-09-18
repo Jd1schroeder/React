@@ -70,6 +70,7 @@
 }
 
 .workspace-section {
+  position: relative;
   padding: 8px;
 }
 
@@ -97,6 +98,10 @@
   margin-left: auto;
   color: #9ca5ae;
 }
+
+.workspace-menu { position: absolute; z-index: 15; top: 54px; left: 8px; right: 8px; display: grid; gap: 2px; padding: 6px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); box-shadow: 0 12px 26px rgb(30 36 41 / 12%); }
+.workspace-menu button { min-height: 34px; padding: 0 9px; border: 0; border-radius: var(--radius-sm); color: var(--ink); background: transparent; font-size: 12px; text-align: left; }
+.workspace-menu button:hover, .workspace-menu button.is-active { color: var(--blue); background: var(--sidebar-hover); }
 
 .sidebar-nav {
   flex: 1 1 auto;

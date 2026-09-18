@@ -4,6 +4,7 @@ const pagePaths = {
   Signup: '/signup',
   'Verify Email': '/verify-email',
   'Forgot Password': '/forgot-password',
+  'Accept Invite': '/accept-invite',
   'Settings / General': '/settings/general',
   'Settings / Features': '/settings/features',
   'Settings / Subscription': '/settings/subscription',

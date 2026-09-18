@@ -28,7 +28,7 @@ import {
 import "./Sidebar.css";
 import workbenchIcon from "../../assets/workbench-icon.png";
 import { supabase } from "../../lib/supabase";
-import { getCurrentWorkspace } from "../../services/workspaceService";
+import { getCurrentWorkspace, setActiveOrganization } from "../../services/workspaceService";
 
 const settingsPageByLabel = {
   General: "Settings / General",
@@ -211,11 +211,18 @@ function NavGroup({ group, activePage, onNavigate, collapsed }) {
 export function Sidebar({ activePage, onNavigate }) {
   const [collapsed, setCollapsed] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
   const [workspace, setWorkspace] = useState({ user: null, organization: null });
   const settingsMenuRef = useRef(null);
 
   useEffect(() => {
     getCurrentWorkspace().then(setWorkspace).catch(() => setWorkspace({ user: null, organization: null }));
+  }, []);
+
+  useEffect(() => {
+    const handleOrganizationChange = () => getCurrentWorkspace().then(setWorkspace).catch(() => undefined)
+    window.addEventListener('workbench:organization-changed', handleOrganizationChange)
+    return () => window.removeEventListener('workbench:organization-changed', handleOrganizationChange)
   }, []);
 
   useEffect(() => {
@@ -260,12 +267,13 @@ export function Sidebar({ activePage, onNavigate }) {
       </div>
       {!collapsed && (
         <div className="workspace-section">
-          <button className="workspace-switcher">
+          <button type="button" className="workspace-switcher" onClick={() => setIsWorkspaceOpen((value) => !value)} aria-haspopup="menu" aria-expanded={isWorkspaceOpen}>
             <Building2 size={15} />
             <span className="workspace-dot" />
             <span className="workspace-name">{organizationName}</span>
             <ChevronDown className="chevron" size={15} />
           </button>
+          {isWorkspaceOpen && workspace.organizations?.length > 1 && <div className="workspace-menu" role="menu">{workspace.organizations.map((organization) => <button type="button" role="menuitem" className={organization.id === workspace.organization?.id ? 'is-active' : ''} key={organization.id} onClick={() => { setActiveOrganization(organization.id); setIsWorkspaceOpen(false) }}>{organization.name}</button>)}</div>}
         </div>
       )}
       <nav className="sidebar-nav" aria-label="Main navigation">

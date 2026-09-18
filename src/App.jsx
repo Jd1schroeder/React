@@ -11,6 +11,7 @@ import { Login } from './pages/Login'
 import { Signup } from './pages/Signup'
 import { VerifyEmail } from './pages/VerifyEmail'
 import { ForgotPassword } from './pages/ForgotPassword'
+import { AcceptInvite } from './pages/AcceptInvite'
 import { Splash } from './pages/Splash'
 import { SettingsPage } from './pages/SettingsPage'
 import { TorkPage } from './pages/TorkPage'
@@ -25,6 +26,7 @@ const pages = {
   Signup,
   'Verify Email': VerifyEmail,
   'Forgot Password': ForgotPassword,
+  'Accept Invite': AcceptInvite,
   'Settings / General': SettingsPage,
   'Settings / Features': SettingsPage,
   'Settings / Subscription': SettingsPage,
@@ -94,6 +96,7 @@ function App() {
   if (activePage === 'Signup') return <Signup onNavigate={navigate} />
   if (activePage === 'Verify Email') return <VerifyEmail onNavigate={navigate} />
   if (activePage === 'Forgot Password') return <ForgotPassword onNavigate={navigate} />
+  if (activePage === 'Accept Invite') return <AcceptInvite onNavigate={navigate} />
   if (activePage === 'Splash') return <Splash onNavigate={navigate} />
   return (
     <AppLayout activePage={activePage} onNavigate={navigate}>
