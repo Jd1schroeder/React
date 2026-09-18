@@ -13,6 +13,7 @@ import { VerifyEmail } from './pages/VerifyEmail'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { Splash } from './pages/Splash'
 import { NotFound } from './pages/NotFound'
+import { SettingsPage } from './pages/SettingsPage'
 import { getPagePath, getRecordPath, getRouteFromLocation, navigateToPath } from './routes'
 import './styles/tokens.css'
 import './styles/globals.css'
@@ -24,6 +25,16 @@ const pages = {
   Signup,
   'Verify Email': VerifyEmail,
   'Forgot Password': ForgotPassword,
+  'Settings / General': SettingsPage,
+  'Settings / Features': SettingsPage,
+  'Settings / Subscription': SettingsPage,
+  'Settings / Manage Teammates': SettingsPage,
+  'Settings / Customizations': SettingsPage,
+  'Settings / Integrations': SettingsPage,
+  'Settings / My Account': SettingsPage,
+  'Settings / Profile Preferences': SettingsPage,
+  'Settings / Notification Settings': SettingsPage,
+  'Settings / Invite Users': SettingsPage,
   NotFound,
   Dashboard,
   'Work Orders': WorkOrders,

@@ -18,6 +18,8 @@ Use the existing layout primitives before creating page-specific alternatives.
 - Login and signup use the shared `AuthPage` implementation in `src/pages/AuthPage.jsx`; keep authentication modes as configuration rather than duplicating the full auth layout.
 - The public splash page is the `/` entry route. Branding on unauthenticated pages may return to `Splash`, while the logged-in sidebar brand is static and must not navigate out of the application shell.
 - Keep the left visual column of the splash and signup layouts aligned through the shared `--auth-visual-column` token in `src/styles/tokens.css`.
+- Use the shared `--focus-border-width` and `--focus-border-color` tokens for focused form controls; the standard focused border is 2px blue without an added focus shadow.
+- Use `--warning-soft` for pale warning surfaces; the current warning surface is `#FEF9EC`.
 
 Every new sidebar destination should use the shared panel shell unless its interaction model genuinely differs. Keep page-specific differences in the page stylesheet, not in `App.css`.
 
@@ -37,5 +39,6 @@ Use Lucide icons already installed in the project. Keep icon sizing controlled b
 - Sidebar expand/collapse uses a short 160ms width transition; preserve this when changing collapsed-state geometry.
 - Sidebar navigation scrolling is owned by `.sidebar-nav`; keep `.sidebar-bottom` outside the scroll region. For scrollbar styling, scope `scrollbar-color` and `scrollbar-width` to non-WebKit browsers so Chromium `::-webkit-scrollbar` rules can remove native arrow buttons.
 - The account area in `.settings-menu-root` owns the account popover and Supabase sign-out action; close it on outside pointer interaction and keep account identity sourced from `workspaceService.js`.
+- Organization and personal settings use the shared route-backed `src/pages/SettingsPage.jsx`; Invite Users has the initial repeatable-row UI and remains unconnected to the invitation API until its Supabase contract is defined.
 
 Validate visual refactors with `npm.cmd run lint` and `npm.cmd run build`.

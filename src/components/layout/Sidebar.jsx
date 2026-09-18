@@ -28,6 +28,19 @@ import workbenchIcon from "../../assets/workbench-icon.png";
 import { supabase } from "../../lib/supabase";
 import { getCurrentWorkspace } from "../../services/workspaceService";
 
+const settingsPageByLabel = {
+  General: "Settings / General",
+  Features: "Settings / Features",
+  Subscription: "Settings / Subscription",
+  "Manage Teammates": "Settings / Manage Teammates",
+  Customizations: "Settings / Customizations",
+  Integrations: "Settings / Integrations",
+  "My Account": "Settings / My Account",
+  "Profile Preferences": "Settings / Profile Preferences",
+  "Notification Settings": "Settings / Notification Settings",
+  "Invite Users": "Settings / Invite Users",
+};
+
 const groups = [
   {
     label: "Work",
@@ -279,13 +292,13 @@ export function Sidebar({ activePage, onNavigate }) {
             <div className="account-popover" role="menu" aria-label="Account settings">
               <div className="account-popover-section">
                 <p className="account-popover-heading">Organization Settings</p>
-                {['General', 'Features', 'Subscription', 'Manage Teammates', 'Customizations', 'Integrations'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => setIsSettingsOpen(false)}>{label}</button>)}
+                {['General', 'Features', 'Subscription', 'Manage Teammates', 'Customizations', 'Integrations'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => { setIsSettingsOpen(false); onNavigate(settingsPageByLabel[label]); }}>{label}</button>)}
               </div>
               <div className="account-popover-section">
-                {['My Account', 'Profile Preferences', 'Notification Settings'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => setIsSettingsOpen(false)}>{label}</button>)}
+                {['My Account', 'Profile Preferences', 'Notification Settings'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => { setIsSettingsOpen(false); onNavigate(settingsPageByLabel[label]); }}>{label}</button>)}
               </div>
               <div className="account-popover-section account-popover-links">
-                <button type="button" role="menuitem" onClick={() => setIsSettingsOpen(false)}>Invite Users</button>
+                <button type="button" role="menuitem" onClick={() => { setIsSettingsOpen(false); onNavigate(settingsPageByLabel['Invite Users']); }}>Invite Users</button>
               </div>
               <button type="button" className="account-popover-logout" role="menuitem" onClick={handleSignOut}><LogOut size={16} /> Log out</button>
             </div>

@@ -13,3 +13,5 @@ When API work begins:
 - isolate transport code from page components;
 - render explicit loading and empty states while a domain service is not yet available;
 - define loading, empty, error, and retry states in the shared panel primitives.
+
+The future invitation contract must resolve account types from the current organization rather than accepting an arbitrary client-provided label. The invite flow should load active organization account types, submit a stable account-type identifier, and let the backend validate membership and permissions.

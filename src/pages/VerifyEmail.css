@@ -9,7 +9,7 @@
 .verify-form { display: grid; gap: 22px; margin-top: 28px; }
 .verify-code-fields { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
 .verify-code-fields input { width: 100%; height: 52px; padding: 0; border: 1px solid var(--colorStrokeDefault); border-radius: var(--radius-sm); outline: 0; color: var(--colorTextPrimary); background: var(--surface); font-size: 22px; font-weight: var(--font-semibold); text-align: center; transition: border-color 140ms ease, box-shadow 140ms ease; }
-.verify-code-fields input:focus { border-color: var(--colorStrokeAccent); box-shadow: 0 0 0 3px var(--blue-focus-ring); }
+.verify-code-fields input:focus { border: var(--focus-border-width) solid var(--focus-border-color); box-shadow: none; }
 .verify-form > .button, .verify-success .button { width: 100%; height: 52px; border-radius: 999px; }
 .verify-card > .button { width: 100%; height: 52px; margin-top: 28px; border-radius: 999px; }
 .verify-resend { margin: 22px 0 0; color: var(--muted); font-size: 13px; }
