@@ -33,7 +33,6 @@ const pages = {
   'Settings / Manage Teammates': SettingsPage,
   'Settings / Customizations': SettingsPage,
   'Settings / Integrations': SettingsPage,
-  'Settings / My Account': SettingsPage,
   'Settings / Profile Preferences': SettingsPage,
   'Settings / Notification Settings': SettingsPage,
   'Settings / Invite Users': SettingsPage,

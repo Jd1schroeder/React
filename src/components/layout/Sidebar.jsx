@@ -39,7 +39,6 @@ const settingsPageByLabel = {
   "Manage Teammates": "Settings / Manage Teammates",
   Customizations: "Settings / Customizations",
   Integrations: "Settings / Integrations",
-  "My Account": "Settings / My Account",
   "Profile Preferences": "Settings / Profile Preferences",
   "Notification Settings": "Settings / Notification Settings",
   "Invite Users": "Settings / Invite Users",
@@ -307,7 +306,7 @@ export function Sidebar({ activePage, onNavigate }) {
                 {['General', 'Features', 'Subscription', 'Manage Teammates', 'Customizations', 'Integrations'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => { setIsSettingsOpen(false); onNavigate(settingsPageByLabel[label]); }}>{label}</button>)}
               </div>
               <div className="account-popover-section">
-                {['My Account', 'Profile Preferences', 'Notification Settings'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => { setIsSettingsOpen(false); onNavigate(settingsPageByLabel[label]); }}>{label}</button>)}
+                {['Profile Preferences', 'Notification Settings'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => { setIsSettingsOpen(false); onNavigate(settingsPageByLabel[label]); }}>{label}</button>)}
               </div>
               <div className="account-popover-section account-popover-links">
                 <button type="button" role="menuitem" onClick={() => { setIsSettingsOpen(false); onNavigate(settingsPageByLabel['Invite Users']); }}>Invite Users</button>

@@ -38,6 +38,9 @@ Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the share
 - Group headings use `0.8571rem` font size and `1.2857rem` line-height.
 - Navigation items use 32px height, 8px padding, and an 8px radius.
 - Standard page content uses a 16px shell inset. Full-bleed `PanelView` pages may offset that inset with matching `-16px` margins, but their visible content must remain one 16px inset from the shell edge.
+- Page headers must remain visible while the page scrolls: use the shared sticky treatment for `.page-heading`, `.panel-view-header`, and `.settings-page-header`, with an opaque surface background and stacking order below the sidebar menus.
+- The settings navigation rail is fixed beside the details column on desktop and remains in-flow on narrow screens; reserve the details grid column when using the fixed rail.
+- Icon-only edit controls use color-only hover feedback with `var(--icon-hover)` (`rgb(97 174 255)`); do not add a hover background behind the icon.
 - Active items use `#E7F3FE` as the background, normal 400 weight, and `#1E2429` for the root text color; active icon and label treatments may apply the accent blue separately.
 - When matching reference designs, compare computed styles and rendered fonts in addition to screenshots.
 - The collapsed sidebar root uses `padding: 0`; section spacing belongs to `.sidebar-header` and `.sidebar-nav`, while `.sidebar-bottom` remains `padding: 0`.

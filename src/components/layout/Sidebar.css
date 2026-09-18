@@ -7,6 +7,7 @@
   max-height: 100vh;
   position: sticky;
   top: 0;
+  z-index: 30;
   overflow: visible;
   background: #fff;
   border-right: 1px solid var(--line);

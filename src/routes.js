@@ -11,7 +11,6 @@ const pagePaths = {
   'Settings / Manage Teammates': '/settings/manage-teammates',
   'Settings / Customizations': '/settings/customizations',
   'Settings / Integrations': '/settings/integrations',
-  'Settings / My Account': '/settings/my-account',
   'Settings / Profile Preferences': '/settings/profile-preferences',
   'Settings / Notification Settings': '/settings/notification-settings',
   'Settings / Invite Users': '/settings/invite-users',

@@ -5,6 +5,7 @@
   --line: #dadfe3;
   --blue: #1887fc;
   --blue-hover: #0f74db;
+  --icon-hover: rgb(97 174 255);
   --blue-focus-ring: rgb(24 135 252 / 14%);
   --focus-border-width: 2px;
   --focus-border-color: var(--blue);

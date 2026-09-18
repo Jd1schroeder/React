@@ -64,12 +64,6 @@ const settings = {
     description: "Connect Workbench with the tools your team uses.",
     icon: Link2,
   },
-  "Settings / My Account": {
-    group: "Personal Settings",
-    title: "My Account",
-    description: "Manage your account details and security.",
-    icon: ShieldCheck,
-  },
   "Settings / Profile Preferences": {
     group: "Personal Settings",
     title: "Profile Preferences",
@@ -99,7 +93,6 @@ const organizationPages = [
   "Settings / Integrations",
 ];
 const personalPages = [
-  "Settings / My Account",
   "Settings / Profile Preferences",
   "Settings / Notification Settings",
   "Settings / Invite Users",
@@ -460,42 +453,42 @@ function ProfilePreferencesPage({ onNavigate }) {
           className="profile-preferences-content"
           aria-label="Profile preferences"
         >
-          <div className="profile-identity">
-            <label className="profile-avatar-upload">
-              <input
-                type="file"
-                accept="image/gif,image/jpeg,image/png,image/heic,image/heif"
-                onChange={handleAvatarChange}
-              />
-              <Avatar className="profile-avatar-display" src={avatarUrl} firstName={editForm.firstName} lastName={editForm.lastName} alt={`${displayName} profile`} />
-              <span className="profile-avatar-overlay">
-                <Camera size={22} />
-              </span>
-            </label>
-            <h2>{displayName}</h2>
-            <p>{role}</p>
-          </div>
-
-          <section className="profile-settings-card">
-            <div className="profile-card-heading">
-              <h2>Personal Info</h2>
-              <button
-                type="button"
-                className="profile-edit-button"
-                onClick={openEditModal}
-              >
-                <Pencil size={16} />
-                <span className="sr-only">Edit personal info</span>
-              </button>
-            </div>
-            <div className="profile-info-grid">
-              <div>
-                <span>Email</span>
-                <strong>{editForm.email || "Not provided"}</strong>
-              </div>
-              <div>
-                <span>Phone Number</span>
-                <strong>{editForm.phone || "Not provided"}</strong>
+          <section className="profile-settings-card profile-personal-info-card">
+            <div className="profile-identity">
+              <label className="profile-avatar-upload">
+                <input
+                  type="file"
+                  accept="image/gif,image/jpeg,image/png,image/heic,image/heif"
+                  onChange={handleAvatarChange}
+                />
+                <Avatar className="profile-avatar-display" src={avatarUrl} firstName={editForm.firstName} lastName={editForm.lastName} alt={`${displayName} profile`} />
+                <span className="profile-avatar-overlay">
+                  <Camera size={22} />
+                </span>
+              </label>
+              <div className="profile-identity-copy">
+                <div className="profile-name-row">
+                  <h2>{displayName}</h2>
+                  <button
+                    type="button"
+                    className="profile-edit-button"
+                    onClick={openEditModal}
+                  >
+                    <Pencil size={16} />
+                    <span className="sr-only">Edit personal info</span>
+                  </button>
+                </div>
+                <p>{role}</p>
+                <div className="profile-info-grid">
+                  <div>
+                    <span>Email</span>
+                    <strong>{editForm.email || "Not provided"}</strong>
+                  </div>
+                  <div>
+                    <span>Phone Number</span>
+                    <strong>{editForm.phone || "Not provided"}</strong>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
@@ -566,7 +559,7 @@ function ProfilePreferencesPage({ onNavigate }) {
             </div>
           </section>
 
-          <section className="profile-settings-card">
+          <section className="profile-settings-card profile-sessions-card">
             <h2>Sessions</h2>
             <h3>Linked Devices</h3>
             <div className="profile-empty-state">
