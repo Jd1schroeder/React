@@ -1,4 +1,5 @@
 const pagePaths = {
+  Splash: '/',
   Login: '/login',
   Signup: '/signup',
   'Verify Email': '/verify-email',
@@ -68,7 +69,7 @@ export function getRouteFromLocation(location = window.location) {
   }
 
   if (pathname === '/' && !location.hash) {
-    return { page: 'Work Orders', recordId: null }
+    return { page: 'Splash', recordId: null }
   }
 
   return { page: 'NotFound', recordId: null }

@@ -1,6 +1,8 @@
 .verify-page { min-height: 100vh; display: grid; place-items: center; padding: 32px 20px; background: var(--surface-subtle); }
 .verify-card { width: min(100%, 470px); padding: 38px 42px 28px; border: 1px solid var(--colorStrokeDefault); border-radius: var(--radius-lg); background: var(--surface); box-shadow: 0 16px 40px rgb(35 61 112 / 10%); text-align: center; }
 .verify-logo { width: 170px; height: 90px; display: block; margin: -14px auto 6px; object-fit: contain; }
+.verify-logo-button { display: block; width: fit-content; margin: 0 auto; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.verify-logo-button:hover { background: transparent; }
 .verify-icon { width: 58px; height: 58px; display: grid; place-items: center; margin: 8px auto 20px; border-radius: 50%; color: var(--blue); background: var(--blue-soft); }
 .verify-heading h1, .verify-success h1 { margin: 0; color: #142b5e; font-size: 28px; line-height: 1.2; }
 .verify-heading p, .verify-success p { margin: 10px auto 0; color: var(--muted); font-size: 14px; line-height: 1.55; }

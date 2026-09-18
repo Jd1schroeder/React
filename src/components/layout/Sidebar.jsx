@@ -190,18 +190,18 @@ export function Sidebar({ activePage, onNavigate }) {
         <div className="brand">
           <img className="brand-mark" src={workbenchIcon} alt="Workbench logo" />
           <span className="brand-name">Workbench</span>
-          <button
-            className="collapse-button"
-            onClick={() => setCollapsed((value) => !value)}
-            aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
-          >
-            {collapsed ? (
-              <PanelLeftOpen size={18} />
-            ) : (
-              <PanelLeftClose size={18} />
-            )}
-          </button>
         </div>
+        <button
+          className="collapse-button"
+          onClick={() => setCollapsed((value) => !value)}
+          aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+        >
+          {collapsed ? (
+            <PanelLeftOpen size={18} />
+          ) : (
+            <PanelLeftClose size={18} />
+          )}
+        </button>
       </div>
       {!collapsed && (
         <div className="workspace-section">

@@ -73,6 +73,12 @@
   display: flex;
   align-items: center;
   gap: 9px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.3px;
@@ -412,7 +418,7 @@
 .signup-page {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(360px, 43%) minmax(480px, 1fr);
+  grid-template-columns: var(--auth-visual-column) minmax(480px, 1fr);
   background: #f7faff;
 }
 
@@ -518,6 +524,20 @@
   display: block;
   margin: -12px auto 4px;
   object-fit: contain;
+}
+
+.signup-card-logo-button {
+  display: block;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.signup-card-logo-button:hover {
+  background: transparent;
 }
 
 .signup-heading {

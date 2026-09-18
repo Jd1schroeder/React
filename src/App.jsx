@@ -11,6 +11,7 @@ import { Login } from './pages/Login'
 import { Signup } from './pages/Signup'
 import { VerifyEmail } from './pages/VerifyEmail'
 import { ForgotPassword } from './pages/ForgotPassword'
+import { Splash } from './pages/Splash'
 import { NotFound } from './pages/NotFound'
 import { getPagePath, getRecordPath, getRouteFromLocation, navigateToPath } from './routes'
 import './styles/tokens.css'
@@ -18,6 +19,7 @@ import './styles/globals.css'
 import './App.css'
 
 const pages = {
+  Splash,
   Login,
   Signup,
   'Verify Email': VerifyEmail,
@@ -78,6 +80,7 @@ function App() {
   if (activePage === 'Signup') return <Signup onNavigate={navigate} />
   if (activePage === 'Verify Email') return <VerifyEmail onNavigate={navigate} />
   if (activePage === 'Forgot Password') return <ForgotPassword onNavigate={navigate} />
+  if (activePage === 'Splash') return <Splash onNavigate={navigate} />
   if (activePage === 'NotFound') return <NotFound onNavigate={navigate} />
 
   return (
