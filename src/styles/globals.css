@@ -33,7 +33,6 @@ button {
 
 html {
   height: 100%;
-  overflow: hidden;
   background: #fff;
   font-size: 14px;
   line-height: 1.2;
@@ -43,5 +42,4 @@ body,
 #root {
   height: 100%;
   min-height: 100%;
-  overflow: hidden;
 }
