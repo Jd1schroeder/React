@@ -170,10 +170,25 @@ export function SettingsPage({ pageName, onNavigate }) {
               We’ll connect this section as its data model is implemented.
             </small>
           </div>
+          {pageName === "Settings / General" && <BuildVersion />}
         </section>
       </SettingsLayout>
     </div>
   );
+}
+
+function BuildVersion() {
+  const [build, setBuild] = useState("");
+
+  useEffect(() => {
+    fetch(`/version.json?ts=${Date.now()}`, { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => setBuild(data?.build ?? ""))
+      .catch(() => setBuild(""));
+  }, []);
+
+  if (!build) return null;
+  return <footer className="settings-build-version">{build}</footer>;
 }
 
 function ManageTeammatesPage({ onNavigate }) {

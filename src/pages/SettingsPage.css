@@ -305,6 +305,14 @@
   color: var(--muted);
   font-size: 13px;
 }
+.settings-build-version {
+  margin-top: 32px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  text-align: right;
+}
 .profile-identity {
   display: flex;
   align-items: center;

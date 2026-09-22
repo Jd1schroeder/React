@@ -44,6 +44,7 @@ Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the share
 - The settings page uses a viewport-based two-row layout: the header occupies the first row, the navigation and details share the second-row top edge, and only the details column scrolls. Do not align these areas with fixed pixel offsets.
 - The authenticated shell owns page scrolling through `.main-shell` and `.page-content`; settings pages must fill that shell rather than allowing the document body to scroll the entire settings layout. Keep overflow containment scoped to the authenticated shell so public splash and authentication pages retain normal document scrolling on mobile.
 - The authenticated shell checks the build-generated `/version.json` and shows a refresh notice only when a newer deployment is detected; keep this update prompt non-blocking and separate from ordinary data refreshes.
+- `/settings/general` displays the human-readable build label from `/version.json` at the bottom of its settings card.
 - The sidebar account popover and settings navigation share the same section headings, divider, item spacing, radius, and hover treatment; keep their navigation groupings synchronized.
 - Notification Settings uses grouped cards with a shared event matrix: event labels in the main column and Email/In-App toggle columns, implemented with the reusable notification row/toggle pattern in `src/pages/SettingsPage.jsx`.
 - The reusable `PanelView` list header is opt-in through `showListHeader`; keep it hidden on scaffolded pages until their list actions are implemented.
