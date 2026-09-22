@@ -29,6 +29,8 @@ Unknown record IDs under a valid section route must preserve the parent `PanelVi
 
 Use Lucide icons already installed in the project. Keep icon sizing controlled by the component that owns the shared UI so changes propagate consistently.
 
+Store production browser and PWA branding assets in `public/`, including the favicon, Apple touch icon, and 192px/512px install icons referenced by `manifest.webmanifest`. Keep icon-set reference sheets outside `public/` so they are not shipped as application assets.
+
 Use `src/components/ui/Avatar.jsx` for every user avatar. Render the uploaded image when available; otherwise derive initials from first and last names, or only the first name when no last name exists, with `A` as the neutral fallback. Do not create page-specific avatar fallback logic.
 
 Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the shared styled trigger, rotating Lucide chevron, focus tokens, outside-click dismissal, keyboard navigation, and listbox semantics. Options may provide `disabled: true` and a Lucide `icon` for unavailable choices or explanatory affordances; disabled options remain muted and non-interactive. Keep specialized selectors, such as phone-country selection, separate only when they need custom option content.
