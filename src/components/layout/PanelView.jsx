@@ -38,6 +38,7 @@ export function PanelView({
   recordId,
   recordType,
   onNavigateRecord,
+  showListHeader = false,
 }) {
   const [localSelectedId, setLocalSelectedId] = useState(items[0]?.id);
   const selectedId = recordId ?? localSelectedId;
@@ -69,10 +70,10 @@ export function PanelView({
         <button className="panel-filter panel-filter-sort">Sort by: Name <ChevronDown size={12} /></button>
       </>}
     >
-        <aside className="panel-list">
-          <div className="panel-list-header">
+        <aside className={`panel-list ${showListHeader ? "" : "panel-list-without-header"}`.trim()}>
+          {showListHeader && <div className="panel-list-header">
             <PanelOverflowButton />
-          </div>
+          </div>}
           <div className="panel-sort">
             <span>Sort by:</span>
             <button>

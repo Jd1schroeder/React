@@ -54,6 +54,9 @@
   color: #8b959e;
   font-size: 10px;
 }
+.panel-list-without-header .panel-sort {
+  border-top: 0;
+}
 .panel-sort button {
   display: inline-flex;
   align-items: center;

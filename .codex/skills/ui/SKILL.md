@@ -45,6 +45,7 @@ Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the share
 - The authenticated shell owns page scrolling through `.main-shell` and `.page-content`; settings pages must fill that shell rather than allowing the document body to scroll the entire settings layout. Keep overflow containment scoped to the authenticated shell so public splash and authentication pages retain normal document scrolling on mobile.
 - The sidebar account popover and settings navigation share the same section headings, divider, item spacing, radius, and hover treatment; keep their navigation groupings synchronized.
 - Notification Settings uses grouped cards with a shared event matrix: event labels in the main column and Email/In-App toggle columns, implemented with the reusable notification row/toggle pattern in `src/pages/SettingsPage.jsx`.
+- The reusable `PanelView` list header is opt-in through `showListHeader`; keep it hidden on scaffolded pages until their list actions are implemented.
 - Icon-only edit controls use color-only hover feedback with `var(--icon-hover)` (`rgb(97 174 255)`); do not add a hover background behind the icon.
 - Sign-out actions use `var(--signout)` (`rgb(236 65 70)`) and `var(--signout-hover)` (`rgb(236 65 70 / 75%)`) with no hover background.
 - Active items use `#E7F3FE` as the background, normal 400 weight, and `#1E2429` for the root text color; active icon and label treatments may apply the accent blue separately.
