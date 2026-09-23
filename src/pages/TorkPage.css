@@ -3,7 +3,7 @@
   display: grid;
   place-items: center;
   padding: var(--spacing-9);
-  background: var(--palette-hex-f7fbff);
+  background: var(--surface-page-soft);
 }
 
 .tork-placeholder img {

@@ -43,7 +43,7 @@
   padding: var(--spacing-3) 0 11px;
   border: 0;
   border-bottom: var(--border-width-emphasis) solid transparent;
-  color: var(--palette-hex-87919b);
+  color: var(--text-control-muted);
   background: none;
   font-size: var(--font-size-sm);
   font-weight: var(--font-semibold);
@@ -56,8 +56,8 @@
   min-width: 21px;
   padding: 3px 6px;
   border-radius: var(--radius-control-lg);
-  color: var(--palette-hex-7d8994);
-  background: var(--palette-hex-e9edf1);
+  color: var(--text-disabled-strong);
+  background: var(--surface-muted-light);
   font-size: var(--font-size-xs);
 }
 .work-order-sort-row {
@@ -67,7 +67,7 @@
   min-height: 40px;
   padding: 0 var(--spacing-4);
   border-bottom: var(--border-width-normal) solid var(--line);
-  color: var(--palette-hex-7a8791);
+  color: var(--text-muted);
   font-size: var(--font-size-sm-compact);
 }
 .work-order-sort-row button:not(.icon-button) {
@@ -91,7 +91,7 @@
   gap: var(--spacing-2);
   min-height: 40px;
   padding: 0 var(--spacing-5);
-  border-bottom: var(--border-width-normal) solid var(--palette-hex-f0f2f4);
+  border-bottom: var(--border-width-normal) solid var(--border-subtle-light);
   color: var(--ink);
   font-size: var(--font-size-sm);
   font-weight: var(--font-semibold);
@@ -107,16 +107,16 @@
 .work-order-item {
   width: 100%;
   display: block;
-  padding: 15px 1var(--spacing-3) 13px;
+  padding: 15px var(--spacing-3) 13px;
   border: 0;
-  border-bottom: var(--border-width-normal) solid var(--palette-hex-f0f2f4);
+  border-bottom: var(--border-width-normal) solid var(--border-subtle-light);
   color: var(--ink);
   background: var(--surface);
   text-align: left;
 }
 .work-order-item:hover,
 .work-order-item.selected {
-  background: var(--palette-hex-f7faff);
+  background: var(--surface-hover);
 }
 .work-order-item.selected {
   box-shadow: inset 3px 0 var(--blue);
@@ -139,14 +139,14 @@
 }
 .order-item-meta {
   margin-top: 7px;
-  color: var(--palette-hex-9aa3ab);
+  color: var(--text-disabled-muted);
   font-size: var(--font-size-xs);
 }
 .order-item-bottom {
   margin-top: 10px;
 }
 .order-item-bottom > span:last-child {
-  color: var(--palette-hex-929ca5);
+  color: var(--text-muted-light);
   font-size: var(--font-size-xs);
 }
 .detail-pane {
@@ -159,7 +159,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--spacing-6);
-  padding: 21px 26px 1var(--spacing-3);
+  padding: 21px 26px var(--spacing-3);
   border-bottom: var(--border-width-normal) solid var(--line);
 }
 .detail-heading {
@@ -187,7 +187,7 @@
   font-size: var(--font-size-sm-compact);
 }
 .detail-meta span {
-  color: var(--palette-hex-c1c7cc);
+  color: var(--border-disabled);
 }
 .detail-actions {
   display: flex;
@@ -203,7 +203,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  margin-bottom: 1var(--spacing-3);
+  margin-bottom: var(--spacing-3);
 }
 .status-select {
   display: inline-flex;
@@ -212,7 +212,7 @@
   padding: 5px var(--spacing-3);
   border: var(--border-width-normal) solid var(--line);
   border-radius: var(--radius-control);
-  color: var(--palette-hex-68737d);
+  color: var(--text-tertiary);
   background: var(--surface);
   font-size: var(--font-size-xs);
 }
@@ -231,8 +231,8 @@
   align-items: center;
   gap: 9px;
   min-height: 37px;
-  border-top: var(--border-width-normal) solid var(--palette-hex-f0f2f4);
-  color: var(--palette-hex-84909a);
+  border-top: var(--border-width-normal) solid var(--border-subtle-light);
+  color: var(--text-secondary-muted);
   font-size: var(--font-size-sm-compact);
 }
 .detail-row:first-of-type {
@@ -266,7 +266,7 @@
 .detail-copy {
   max-width: 620px;
   margin: 0 0 15px;
-  color: var(--palette-hex-66727d);
+  color: var(--text-tertiary-strong);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-loose);
 }
@@ -275,8 +275,8 @@
   align-items: center;
   gap: 7px;
   padding-top: 13px;
-  border-top: var(--border-width-normal) solid var(--palette-hex-f0f2f4);
-  color: var(--palette-hex-929ca5);
+  border-top: var(--border-width-normal) solid var(--border-subtle-light);
+  color: var(--text-muted-light);
   font-size: var(--font-size-sm-compact);
 }
 .activity-card .activity {
@@ -331,6 +331,6 @@
   }
   .detail-header,
   .detail-scroll {
-    padding: 1var(--spacing-3);
+    padding: var(--spacing-3);
   }
 }

@@ -10,12 +10,16 @@ Use the existing layout primitives before creating page-specific alternatives.
 ## Established structure
 
 - `src/components/layout/Sidebar.jsx` and `Sidebar.css` own navigation and sidebar styling.
+- Static sidebar groups and settings menu labels belong in `src/components/layout/sidebarConfig.js`; keep Supabase actions, open/close state, and rendering in `Sidebar.jsx`.
 - `PanelLayout` owns the page header, search, primary action, and subnavigation.
 - `PanelLayout` follows the reusable pane nesting `Navigation → Alert → SubNavigation → MainPanel → ContentSection`; page-specific list/detail content belongs inside `ContentSection`.
 - `PanelView` owns the reusable split list/detail panel.
 - `src/pages/WorkOrders.css` contains Work Orders-only pane/detail styling.
+- Work Orders page orchestration belongs in `WorkOrders.jsx`; list/filter controls and detail content belong in `src/pages/work-orders/WorkOrderList.jsx` and `WorkOrderDetail.jsx`.
 - `src/styles/tokens.css` contains shared design tokens; prefer tokens over new hardcoded values.
+- The document root uses `--font-size-root` at 14px, so `1rem` equals 14px throughout the Workbench UI. Keep the root scale explicit rather than relying on the browser default.
 - Use the standard Workbench type, line-height, spacing, border, radius, transition, elevation, and color tokens in `src/styles/tokens.css`. UI styles outside the token file must not contain raw color literals; use an existing semantic token or add a centralized palette/semantic token first. Migrate repeated values to tokens before introducing new literals. Keep unique brand artwork values centralized in the token file rather than scattering them through component CSS. Native `@media` breakpoints may remain literal because CSS custom properties are not reliably supported in media queries.
+- Name color tokens by UI role (`--surface-*`, `--text-*`, `--border-*`, `--status-*`, `--auth-*`, or feature-specific names such as `--tooltip-surface`), not by encoded hex/RGB values. Keep feature artwork values centralized and explicitly scoped when they cannot be given a shared semantic role.
 - `src/styles/globals.css` contains reset and document-level styles.
 - Login and signup use the shared `AuthPage` implementation in `src/pages/AuthPage.jsx`; keep authentication modes as configuration rather than duplicating the full auth layout.
 - The public splash page is the `/` entry route. Branding on unauthenticated pages may return to `Splash`, while the logged-in sidebar brand is static and must not navigate out of the application shell.
@@ -24,6 +28,8 @@ Use the existing layout primitives before creating page-specific alternatives.
 - Use `--warning-soft` for pale warning surfaces; the current warning surface is `#FEF9EC`.
 
 Every new sidebar destination should use the shared panel shell unless its interaction model genuinely differs. Keep page-specific differences in the page stylesheet, not in `App.css`.
+
+Use the React Router route boundaries in `src/App.jsx` and the route registry in `src/routes/routeConfig.jsx` for navigation. Keep page modules lazy-loaded and render them through the shared loading fallback; do not reintroduce direct `history.pushState` navigation or eager-import every route page.
 
 The authenticated shell is gated by `WorkspaceProvider`. During session/workspace hydration, show the shared neutral loading surface and spinner; render the sidebar and page together only after authoritative workspace data is ready. Workspace failures must show the shared retry state instead of placeholder identity or organization values.
 

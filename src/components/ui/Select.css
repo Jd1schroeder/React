@@ -23,7 +23,7 @@
   color: var(--ink);
 }
 .select-trigger:hover {
-  /* border-color: var(--colorStrokeDefaultHover); */
+  /* border-color: var(--lineHover); */
   border-color: var(--focus-border-color);
 }
 .select-trigger:focus,
@@ -77,11 +77,11 @@
   outline: 0;
 }
 .select-menu button.is-disabled {
-  color: var(--colorTextDisabled);
+  color: var(--text-disabled-control);
   cursor: not-allowed;
 }
 .select-menu button.is-disabled:hover,
 .select-menu button.is-disabled:focus-visible {
-  color: var(--colorTextDisabled);
+  color: var(--text-disabled-control);
   background: transparent;
 }

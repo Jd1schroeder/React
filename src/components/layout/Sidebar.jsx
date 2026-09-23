@@ -1,124 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  BarChart3,
-  Boxes,
   Building2,
   ChevronDown,
   ChevronRight,
-  ClipboardCheck,
-  FileText,
-  History as HistoryIcon,
   HelpCircle,
-  Library as LibraryIcon,
   LogOut,
-  MapPin,
-  MessageSquare,
-  MessagesSquare,
-  Package,
   PanelLeftClose,
   PanelLeftOpen,
-  RefreshCw,
-  Repeat2,
   Settings,
-  Tags,
-  Users,
-  Wrench,
-  Zap,
 } from "lucide-react";
 import "./Sidebar.css";
+import { settingsNavigation, settingsPageByLabel, sidebarGroups } from "./sidebarConfig";
 import workbenchIcon from "../../assets/workbench-icon.png";
 import { supabase } from "../../lib/supabase";
 import { setActiveOrganization } from "../../services/workspaceService";
 import { Avatar } from "../ui/Avatar";
 import { useWorkspace } from "./useWorkspace";
-
-const settingsPageByLabel = {
-  General: "Settings / General",
-  Features: "Settings / Features",
-  Subscription: "Settings / Subscription",
-  "Manage Teammates": "Settings / Manage Teammates",
-  Customizations: "Settings / Customizations",
-  Integrations: "Settings / Integrations",
-  "Profile Preferences": "Settings / Profile Preferences",
-  "Notification Settings": "Settings / Notification Settings",
-  "Invite Users": "Settings / Invite Users",
-};
-
-const groups = [
-  {
-    label: "Work",
-    items: [
-      {
-        label: "Work Orders",
-        icon: ClipboardCheck,
-        page: "Work Orders",
-        count: 24,
-      },
-      { label: "Requests", icon: MessageSquare, page: "Requests", count: 1 },
-      {
-        label: "Purchase Orders",
-        icon: FileText,
-        page: "Purchase Orders",
-        count: 4,
-      },
-      { label: "Messages", icon: MessagesSquare, page: "Messages" },
-    ],
-  },
-  {
-    label: "Tork",
-    items: [
-      { label: "Chat", icon: MessageSquare, page: "Chat" },
-      { label: "Routines", icon: Repeat2, page: "Routines" },
-      { label: "History", icon: HistoryIcon, page: "History" },
-    ],
-  },
-  {
-    label: "Optimize",
-    items: [
-      {
-        label: "Reporting",
-        icon: BarChart3,
-        page: "Reporting",
-        children: [
-          { label: "Work Orders", page: "Reporting / Work Orders" },
-          { label: "Asset Health", page: "Reporting / Asset Health" },
-          { label: "Reporting Details", page: "Reporting / Details" },
-          { label: "Recent Activity", page: "Reporting / Activity" },
-          { label: "Export Data", page: "Reporting / Exports" },
-          { label: "Dashboards", page: "Reporting / Dashboards" },
-        ],
-      },
-      { label: "Automations", icon: Zap, page: "Automations" },
-      { label: "Meters", icon: Wrench, page: "Meters" },
-    ],
-  },
-  {
-    label: "Manage",
-    items: [
-      { label: "Assets", icon: Boxes, page: "Assets" },
-      { label: "Parts Inventory", icon: Settings, page: "Parts Inventory" },
-      {
-        label: "Maintenance Plans",
-        icon: RefreshCw,
-        page: "Maintenance Plans",
-      },
-      {
-        label: "Library",
-        icon: LibraryIcon,
-        page: "Library",
-        children: [
-          { label: "Work Orders", page: "Library / Work Orders" },
-          { label: "Procedures", page: "Library / Procedures" },
-          { label: "Safety Data Sheets", page: "Library / Safety Data Sheets" },
-        ],
-      },
-      { label: "Categories", icon: Tags, page: "Categories" },
-      { label: "Locations", icon: MapPin , page: "Locations" },
-      { label: "Teams / Users", icon: Users, page: "Teams / Users" },
-      { label: "Vendors", icon: Package, page: "Vendors" },
-    ],
-  },
-];
 
 function NavItem({ item, activePage, onNavigate, collapsed, nested = false }) {
   const [expanded, setExpanded] = useState(() =>
@@ -270,7 +167,7 @@ export function Sidebar({ activePage, onNavigate }) {
         </div>
       )}
       <nav className="sidebar-nav" aria-label="Main navigation">
-        {groups.map((group) => (
+        {sidebarGroups.map((group) => (
           <NavGroup
             key={group.label}
             group={group}
@@ -303,12 +200,12 @@ export function Sidebar({ activePage, onNavigate }) {
             <div className="account-popover" role="menu" aria-label="Account settings">
               <div className="account-popover-section">
                 <p className="account-popover-heading">Organization Settings</p>
-                {['General', 'Features', 'Subscription', 'Manage Teammates', 'Customizations', 'Integrations'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => { setIsSettingsOpen(false); onNavigate(settingsPageByLabel[label]); }}>{label}</button>)}
+                {settingsNavigation.organization.map((label) => <button key={label} type="button" role="menuitem" onClick={() => { setIsSettingsOpen(false); onNavigate(settingsPageByLabel[label]); }}>{label}</button>)}
               </div>
               <div className="account-popover-divider" />
               <div className="account-popover-section">
                 <p className="account-popover-heading">Personal Settings</p>
-                {['Profile Preferences', 'Notification Settings', 'Invite Users'].map((label) => <button key={label} type="button" role="menuitem" onClick={() => { setIsSettingsOpen(false); onNavigate(settingsPageByLabel[label]); }}>{label}</button>)}
+                {settingsNavigation.personal.map((label) => <button key={label} type="button" role="menuitem" onClick={() => { setIsSettingsOpen(false); onNavigate(settingsPageByLabel[label]); }}>{label}</button>)}
               </div>
               <button type="button" className="account-popover-logout" role="menuitem" onClick={handleSignOut}><LogOut size={16} /> Sign out</button>
             </div>

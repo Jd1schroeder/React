@@ -3,6 +3,7 @@ import { Info } from "lucide-react";
 import { Select } from "../../components/ui/Select";
 import { SettingsLayout } from "./SettingsLayout";
 import { notificationGroups } from "./settingsConfig";
+import "./NotificationSettingsPage.css";
 
 export function NotificationSettingsPage({ onNavigate }) {
   const [notificationState, setNotificationState] = useState({});

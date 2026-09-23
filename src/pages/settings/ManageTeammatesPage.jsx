@@ -5,6 +5,7 @@ import { Select } from "../../components/ui/Select";
 import { getCurrentWorkspace } from "../../services/workspaceService";
 import { listOrganizationMembers, membershipRoles, updateOrganizationMember } from "../../services/organizationService";
 import { SettingsLayout } from "./SettingsLayout";
+import "./ManageTeammatesPage.css";
 
 export function ManageTeammatesPage({ onNavigate }) {
   const [organizationId, setOrganizationId] = useState("");

@@ -11,13 +11,13 @@
   z-index: 100;
   display: flex;
   align-items: center;
-  gap: 1var(--spacing-2);
+  gap: var(--spacing-2);
   max-width: min(440px, calc(100vw - 32px));
-  padding: var(--spacing-4) 1var(--spacing-2) var(--spacing-4) var(--spacing-5);
-  border: var(--border-width-normal) solid var(--palette-hex-b9d7f5);
+  padding: var(--spacing-4) var(--spacing-2) var(--spacing-4) var(--spacing-5);
+  border: var(--border-width-normal) solid var(--border-info-soft);
   border-radius: var(--radius-md);
   color: var(--ink);
-  background: var(--palette-hex-eef7ff);
+  background: var(--surface-info-muted);
   box-shadow: var(--elevation-2);
   font-size: var(--font-size-body-sm);
 }
@@ -32,18 +32,18 @@
   font-weight: var(--font-semibold);
 }
 .app-update-notice button:hover {
-  background: var(--palette-hex-1d5bc9);
+  background: var(--action-blue-strong);
 }
 .workspace-loading {
   display: grid;
   place-items: center;
   min-height: 100vh;
-  background: var(--surface-subtle, var(--palette-hex-f8fafc));
+  background: var(--surface-subtle, var(--surface-subtle-soft));
 }
 .workspace-loading::after {
   width: 34px;
   height: 34px;
-  border: 3px solid var(--palette-hex-dbe8f5);
+  border: 3px solid var(--border-info);
   border-top-color: var(--blue);
   border-radius: var(--radius-circle);
   content: "";
@@ -58,7 +58,7 @@
   min-height: 100vh;
   padding: var(--spacing-9);
   color: var(--ink);
-  background: var(--surface-subtle, var(--palette-hex-f8fafc));
+  background: var(--surface-subtle, var(--surface-subtle-soft));
   text-align: center;
 }
 .workspace-load-error h1 { margin: 0; font-size: var(--font-size-2xl-compact); }
@@ -70,8 +70,8 @@
   display: inline-grid;
   place-items: center;
   border-radius: var(--radius-circle);
-  color: var(--palette-hex-45515d);
-  background: var(--palette-hex-e8edf2);
+  color: var(--text-secondary-strong);
+  background: var(--surface-muted);
   font-size: var(--font-size-xs);
   font-weight: var(--font-bold);
 }
@@ -82,20 +82,20 @@
   border-radius: inherit;
 }
 .avatar-purple {
-  color: var(--palette-hex-754fc3);
-  background: var(--palette-hex-efe9ff);
+  color: var(--status-purple);
+  background: var(--surface-purple-soft);
 }
 .avatar-green {
-  color: var(--palette-hex-27855c);
-  background: var(--palette-hex-def5e9);
+  color: var(--status-success-dark);
+  background: var(--surface-success-soft);
 }
 .avatar-blue {
-  color: var(--palette-hex-2864d7);
-  background: var(--palette-hex-e7efff);
+  color: var(--status-info);
+  background: var(--surface-info);
 }
 .avatar-orange {
-  color: var(--palette-hex-b66020);
-  background: var(--palette-hex-fff0e4);
+  color: var(--status-warning-strong);
+  background: var(--surface-warning);
 }
 .main-shell {
   min-width: 0;
@@ -109,7 +109,7 @@
   height: 31px;
   border: 0;
   border-radius: var(--radius-button);
-  color: var(--palette-hex-6d7882);
+  color: var(--text-subtle);
   background: transparent;
 }
 .icon-button:hover {
@@ -139,7 +139,7 @@
 }
 .eyebrow {
   margin: 0 0 7px;
-  color: var(--palette-hex-89939d);
+  color: var(--text-control-placeholder);
   font-size: var(--font-size-xs);
   font-weight: var(--font-bold);
   letter-spacing: 1.1px;
@@ -171,7 +171,7 @@
   background: var(--blue);
 }
 .button-primary:hover {
-  background: var(--palette-hex-1e52bd);
+  background: var(--action-blue-hover);
 }
 .button-ripple {
   position: relative;
@@ -182,7 +182,7 @@
   position: absolute;
   z-index: 0;
   border-radius: var(--radius-circle);
-  background: var(--palette-rgb-255-255-255--a--34);
+  background: var(--auth-overlay-white-strong);
   pointer-events: none;
   transform: scale(0);
   animation: button-ripple-expand 560ms ease-out;
@@ -213,24 +213,24 @@
   font-weight: var(--font-semibold);
 }
 .badge-blue {
-  color: var(--palette-hex-2864d7);
-  background: var(--palette-hex-eaf1ff);
+  color: var(--status-info);
+  background: var(--surface-info-soft);
 }
 .badge-orange {
-  color: var(--palette-hex-b86221);
-  background: var(--palette-hex-fff0e4);
+  color: var(--status-warning);
+  background: var(--surface-warning);
 }
 .badge-green {
-  color: var(--palette-hex-268354);
-  background: var(--palette-hex-e4f7ec);
+  color: var(--status-success-strong);
+  background: var(--surface-success);
 }
 .badge-purple {
-  color: var(--palette-hex-7652bb);
-  background: var(--palette-hex-f0eaff);
+  color: var(--status-purple-strong);
+  background: var(--surface-purple);
 }
 .badge-neutral {
-  color: var(--palette-hex-68737d);
-  background: var(--palette-hex-edf0f2);
+  color: var(--text-tertiary);
+  background: var(--border-light);
 }
 .priority {
   display: flex;
@@ -241,26 +241,26 @@
   width: 6px;
   height: 6px;
   border-radius: var(--radius-circle);
-  background: var(--palette-hex-8d98a1);
+  background: var(--status-neutral);
 }
 .priority-high i {
-  background: var(--palette-hex-dc665d);
+  background: var(--status-danger-muted);
 }
 .priority-medium i {
-  background: var(--palette-hex-e9a54e);
+  background: var(--status-warning-muted);
 }
 .priority-low i {
-  background: var(--palette-hex-64b98c);
+  background: var(--status-success-soft);
 }
 .activity {
   display: flex;
   gap: 10px;
-  padding: 13px 2var(--spacing-1);
-  border-top: var(--border-width-normal) solid var(--palette-hex-f0f2f4);
+  padding: 13px var(--spacing-2);
+  border-top: var(--border-width-normal) solid var(--border-subtle-light);
 }
 .activity p {
   margin: 0;
-  color: var(--colorIconSecondary);
+  color: var(--icon-secondary);
   font-size: var(--font-size-sm-compact);
   line-height: var(--line-height-copy-tight);
 }
@@ -272,14 +272,14 @@
 .activity p small {
   display: block;
   margin-top: 3px;
-  color: var(--palette-hex-9aa3ab);
+  color: var(--text-disabled-muted);
   font-size: var(--font-size-xs);
 }
 .filter-button {
   border: 0;
   border-radius: var(--radius-control);
   padding: 7px 11px;
-  color: var(--palette-hex-7c8791);
+  color: var(--text-control-secondary);
   background: transparent;
   font-size: var(--font-size-sm-compact);
 }
@@ -316,11 +316,11 @@
   gap: 7px;
 }
 .button-secondary {
-  color: var(--palette-hex-5e6a75);
-  background: var(--colorBackgroundControlHover);
+  color: var(--text-secondary);
+  background: var(--surface-control-hover);
 }
 .button-secondary:hover {
-  background: var(--palette-hex-e4e8ec);
+  background: var(--border-subtle);
 }
 .filter-button {
   display: inline-flex;

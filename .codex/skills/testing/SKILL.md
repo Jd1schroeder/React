@@ -11,7 +11,7 @@ The project currently has no test runner configured. The required baseline valid
 npm.cmd run verify
 ```
 
-`verify` checks that `AGENTS.md` exists, confirms every sidebar destination is registered in `src/App.jsx`, then runs linting and the production build.
+`verify` checks that `AGENTS.md` exists, confirms every destination in `src/components/layout/sidebarConfig.js` is registered in `src/routes/routeConfig.jsx`, then runs linting and the production build.
 
 When adding a test runner, prioritize shared behavior: sidebar navigation, hash/deep-link navigation, panel search clearing, list selection, Work Orders tabs, and responsive layout states. Do not add tests that only snapshot implementation details.
 

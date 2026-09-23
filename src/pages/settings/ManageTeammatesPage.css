@@ -1,0 +1,99 @@
+.teammates-card {
+  min-height: 420px;
+}
+
+.teammates-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-6);
+  margin-bottom: var(--spacing-7);
+}
+
+.teammates-card-header h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--font-size-2xl-compact);
+}
+
+.teammates-card-header p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: var(--font-size-body-sm);
+}
+
+.teammates-list {
+  display: grid;
+  border-top: var(--border-width-normal) solid var(--line);
+}
+
+.teammate-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px auto;
+  align-items: center;
+  gap: var(--spacing-5);
+  min-height: 68px;
+  border-bottom: var(--border-width-normal) solid var(--line);
+}
+
+.teammate-identity {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.teammate-avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: var(--radius-circle);
+  color: var(--blue);
+  background: var(--blue-soft);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-bold);
+}
+
+.teammate-identity div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.teammate-identity strong {
+  color: var(--ink);
+  font-size: var(--font-size-body-sm);
+  overflow-wrap: anywhere;
+}
+
+.teammate-identity small {
+  color: var(--muted);
+  font-size: var(--font-size-sm-compact);
+  text-transform: capitalize;
+}
+
+.teammate-status-button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  background: var(--surface);
+  font-size: var(--font-size-sm);
+}
+
+.teammate-status-button:hover {
+  border-color: var(--focus-border-color);
+  color: var(--blue);
+}
+
+.teammates-state,
+.teammates-error {
+  margin: var(--spacing-1) 0 0;
+  color: var(--muted);
+  font-size: var(--font-size-body-sm);
+}
+
+.teammates-error { color: var(--danger); }

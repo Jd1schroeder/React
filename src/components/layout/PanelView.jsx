@@ -157,7 +157,7 @@ export function PanelView({
                     </button>
                   </div>
                   <div className="reading-value">
-                    <strong>{selected.value ?? "—"}</strong>
+                    <strong>{selected.value ?? "Ã¢â‚¬â€"}</strong>
                     <span>{selected.unit ?? ""}</span>
                   </div>
                   <div className="chart-placeholder">

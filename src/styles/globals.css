@@ -23,18 +23,18 @@ button {
 
 ::selection {
   color: var(--ink);
-  background: var(--palette-hex-f6e79a);
+  background: var(--selection-surface);
 }
 
 ::-moz-selection {
   color: var(--ink);
-  background: var(--palette-hex-f6e79a);
+  background: var(--selection-surface);
 }
 
 html {
   height: 100%;
   background: var(--surface);
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-root);
   line-height: var(--line-height-body);
 }
 

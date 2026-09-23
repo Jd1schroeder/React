@@ -7,7 +7,7 @@
 .stat-card {
   display: flex;
   align-items: center;
-  gap: 1var(--spacing-2);
+  gap: var(--spacing-2);
   padding: 19px;
   background: var(--surface);
   border: var(--border-width-normal) solid var(--line);
@@ -22,16 +22,16 @@
   background: var(--blue-soft);
 }
 .stat-icon-red {
-  background: var(--palette-hex-fff0ef);
-  color: var(--palette-hex-d35e55);
+  background: var(--surface-danger-soft);
+  color: var(--status-danger);
 }
 .stat-icon-green {
-  background: var(--palette-hex-e4f7ec);
-  color: var(--palette-hex-27885d);
+  background: var(--surface-success);
+  color: var(--status-success-muted);
 }
 .stat-icon-purple {
-  background: var(--palette-hex-f1ebff);
-  color: var(--palette-hex-7652bb);
+  background: var(--surface-purple-muted);
+  color: var(--status-purple-strong);
 }
 .stat-icon-blue {
   color: var(--blue);
@@ -50,7 +50,7 @@
 .content-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.65fr) minmax(290px, 1fr);
-  gap: 2var(--spacing-1);
+  gap: var(--spacing-2);
 }
 .panel {
   overflow: hidden;
@@ -62,7 +62,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 21px 2var(--spacing-1) 17px;
+  padding: 21px var(--spacing-2) 17px;
 }
 .panel h2 {
   margin: 0;
@@ -77,8 +77,8 @@ table {
   text-align: left;
 }
 th {
-  padding: 0 2var(--spacing-1) 11px;
-  color: var(--palette-hex-9ca5ad);
+  padding: 0 var(--spacing-2) 11px;
+  color: var(--status-muted);
   font-size: var(--font-size-3xs);
   font-weight: var(--font-bold);
   letter-spacing: 0.5px;
@@ -86,9 +86,9 @@ th {
   white-space: nowrap;
 }
 td {
-  padding: 1var(--spacing-2) 2var(--spacing-1);
-  border-top: var(--border-width-normal) solid var(--palette-hex-f0f2f4);
-  color: var(--palette-hex-596570);
+  padding: var(--spacing-2) var(--spacing-2);
+  border-top: var(--border-width-normal) solid var(--border-subtle-light);
+  color: var(--text-muted-strong);
   font-size: var(--font-size-sm-compact);
   white-space: nowrap;
 }
@@ -101,11 +101,11 @@ td strong {
 td small {
   display: block;
   margin-top: var(--spacing-2);
-  color: var(--palette-hex-9aa3ab);
+  color: var(--text-disabled-muted);
   font-size: var(--font-size-xs);
 }
 .activity-panel > .text-button {
-  margin: var(--spacing-5) 2var(--spacing-1) 19px;
+  margin: var(--spacing-5) var(--spacing-2) 19px;
 }
 @media (max-width: 900px) {
   .content-grid {

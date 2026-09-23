@@ -10,7 +10,7 @@
   display: grid;
   justify-items: center;
   gap: var(--spacing-5);
-  padding: 4var(--spacing-1) 3var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
   border: var(--border-width-normal) solid var(--line);
   border-radius: var(--radius-md);
   background: var(--surface);
@@ -27,8 +27,8 @@
   background: var(--blue-soft);
 }
 .accept-invite-icon.is-success {
-  color: var(--success, var(--palette-hex-26934a));
-  background: var(--palette-hex-eaf8ef);
+  color: var(--success, var(--status-success));
+  background: var(--surface-success-muted);
 }
 .accept-invite-icon.is-error {
   color: var(--danger);
@@ -48,11 +48,11 @@
 .accept-invite-actions {
   display: flex;
   align-items: center;
-  gap: 1var(--spacing-2);
+  gap: var(--spacing-2);
 }
 .accept-invite-secondary {
   min-height: 40px;
-  padding: 0 1var(--spacing-2);
+  padding: 0 var(--spacing-2);
   border: var(--border-width-normal) solid var(--blue);
   border-radius: var(--radius-sm);
   color: var(--blue);

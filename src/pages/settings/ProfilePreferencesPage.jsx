@@ -7,6 +7,7 @@ import { updateAuthContact, updateProfile, updateUserPreferences, uploadAvatar }
 import { useWorkspace } from "../../components/layout/useWorkspace";
 import flagUnitedStates from "../../assets/flags/us.svg";
 import { SettingsLayout } from "./SettingsLayout";
+import "./ProfilePreferencesPage.css";
 
 export function ProfilePreferencesPage({ onNavigate }) {
   const workspace = useWorkspace();

@@ -5,6 +5,7 @@ import { createOrganizationInvitation, listOrganizationInvitations, revokeOrgani
 import { membershipRoles } from "../../services/organizationService";
 import { getCurrentWorkspace } from "../../services/workspaceService";
 import { SettingsLayout } from "./SettingsLayout";
+import "./InviteUsersPage.css";
 
 export function InviteUsersPage({ onNavigate }) {
   const [invites, setInvites] = useState([{ name: "", contact: "", role: "member" }]);
@@ -83,7 +84,7 @@ export function InviteUsersPage({ onNavigate }) {
           <button type="button" className="invite-link-button" onClick={copyInviteLink}><Link2 size={17} /> {linkCopied ? "Invite link copied" : "Get an invite link to share"}</button>
         </div>
         {sendError && <p className="invite-error" role="alert">{sendError}</p>}
-        {invitations.length > 0 && <div className="invitation-list"><h2>Recent invitations</h2>{invitations.map((invitation) => <div className="invitation-row" key={invitation.id}><div><strong>{[invitation.first_name, invitation.last_name].filter(Boolean).join(" ") || invitation.contact_value}</strong><small>{invitation.contact_type} · {invitation.role} · {invitation.status}</small></div>{invitation.status === "invited" && <button type="button" onClick={() => revokeInvitation(invitation.id)}>Revoke</button>}</div>)}</div>}
+        {invitations.length > 0 && <div className="invitation-list"><h2>Recent invitations</h2>{invitations.map((invitation) => <div className="invitation-row" key={invitation.id}><div><strong>{[invitation.first_name, invitation.last_name].filter(Boolean).join(" ") || invitation.contact_value}</strong><small>{invitation.contact_type} Ã‚Â· {invitation.role} Ã‚Â· {invitation.status}</small></div>{invitation.status === "invited" && <button type="button" onClick={() => revokeInvitation(invitation.id)}>Revoke</button>}</div>)}</div>}
       </section>
     </SettingsLayout>
   </div>;

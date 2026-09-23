@@ -8,14 +8,20 @@ description: Extend the Workbench frontend architecture while preserving shared 
 Keep the application organized around these boundaries:
 
 - `src/components/layout` contains application-wide layout and panel primitives.
+- `src/components/layout/sidebarConfig.js` contains the static sidebar and account-settings navigation model; `Sidebar.jsx` owns rendering and interaction state.
 - `src/components/ui` contains small reusable controls.
 - `src/pages` contains route-level page composition and page-specific styles.
+- Large route pages should keep orchestration in the page module and place feature regions in nearby subcomponents, such as `src/pages/work-orders/WorkOrderList.jsx` and `WorkOrderDetail.jsx`.
+- Authentication controls and signup-only styling live under `src/pages/auth/` and `src/pages/Signup.css`; shared login layout remains in `AuthPage.jsx` and `Login.css`.
 - Settings route composition stays in `src/pages/SettingsPage.jsx`; individual settings features live under `src/pages/settings/`, with shared navigation/layout in `SettingsLayout.jsx` and shared page metadata/data in `settingsConfig.js`.
 - `src/data` contains mock data and page configuration for workflows that are not yet persisted.
 - `src/services` contains backend-facing service boundaries such as authentication and organization provisioning.
 - `src/styles` contains global tokens and reset rules.
 
-Prefer extending an existing primitive over adding a parallel implementation. Keep navigation mappings in `src/App.jsx` and keep reusable page configuration/data outside page components when multiple pages consume it.
+Prefer extending an existing primitive over adding a parallel implementation. Keep route definitions in `src/routes/routeConfig.jsx` and reusable page configuration/data outside page components when multiple pages consume it.
+
+Routing is implemented with `react-router-dom` in `src/App.jsx`, with the page registry and route definitions in `src/routes/routeConfig.jsx`; `src/routes.js` remains the canonical page-name-to-path map and URL builder. Preserve existing public, authenticated, settings, and record URLs when adding routes. Page modules are loaded with `React.lazy` so new route-level pages do not enlarge the initial bundle unnecessarily.
+Define each lazy page wrapper once in `src/routes/routeConfig.jsx` and reuse it for every route name that points to the same module. This preserves one component identity and avoids duplicating lazy loader declarations for settings, scaffold, or shared placeholder pages.
 
 The current backend-backed workspace identity is loaded through `src/services/workspaceService.js`. It returns all active organizations plus the selected organization; the selected ID is stored through the shared active-organization service helper. Domain pages should follow the same service boundary and must not render local fixture records.
 

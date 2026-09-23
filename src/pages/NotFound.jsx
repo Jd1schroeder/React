@@ -14,8 +14,8 @@ export function NotFound({ onNavigate }) {
         <img className="not-found-art" src={workbench404} alt="Workbench maintenance illustration with error 404" />
       </div>
       <div className="not-found-content">
-        <h1>Oops! Looks like you’re lost.</h1>
-        <p>The page you’re looking for doesn’t exist or has been moved.<br />Let’s get you back on track.</p>
+        <h1>Oops! Looks like youÃ¢â‚¬â„¢re lost.</h1>
+        <p>The page youÃ¢â‚¬â„¢re looking for doesnÃ¢â‚¬â„¢t exist or has been moved.<br />LetÃ¢â‚¬â„¢s get you back on track.</p>
         <Button onClick={() => onNavigate('Work Orders')}><ArrowLeft size={17} /> Go to Workbench</Button>
       </div>
     </main>

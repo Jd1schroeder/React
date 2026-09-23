@@ -7,8 +7,8 @@
 }
 .verify-card {
   width: min(100%, 470px);
-  padding: 3var(--spacing-3) 4var(--spacing-1) var(--spacing-8);
-  border: var(--border-width-normal) solid var(--colorStrokeDefault);
+  padding: var(--spacing-7) var(--spacing-3) var(--spacing-8);
+  border: var(--border-width-normal) solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--elevation-4);
@@ -18,7 +18,7 @@
   width: 170px;
   height: 90px;
   display: block;
-  margin: -1var(--spacing-2) auto 6px;
+  margin: -var(--spacing-2) auto 6px;
   object-fit: contain;
 }
 .verify-logo-button {
@@ -46,7 +46,7 @@
 .verify-heading h1,
 .verify-success h1 {
   margin: 0;
-  color: var(--palette-hex-142b5e);
+  color: var(--auth-heading);
   font-size: var(--font-size-display-sm);
   line-height: var(--line-height-body);
 }
@@ -59,7 +59,7 @@
 }
 .verify-form {
   display: grid;
-  gap: 2var(--spacing-1);
+  gap: var(--spacing-2);
   margin-top: var(--spacing-8);
 }
 .verify-code-fields {
@@ -71,10 +71,10 @@
   width: 100%;
   height: 52px;
   padding: 0;
-  border: var(--border-width-normal) solid var(--colorStrokeDefault);
+  border: var(--border-width-normal) solid var(--line);
   border-radius: var(--radius-sm);
   outline: 0;
-  color: var(--colorTextPrimary);
+  color: var(--ink);
   background: var(--surface);
   font-size: var(--font-size-2xl-compact);
   font-weight: var(--font-semibold);
@@ -100,7 +100,7 @@
   border-radius: var(--radius-pill);
 }
 .verify-resend {
-  margin: 2var(--spacing-1) 0 0;
+  margin: var(--spacing-2) 0 0;
   color: var(--muted);
   font-size: var(--font-size-body-sm);
 }
@@ -127,7 +127,7 @@
 .verify-legal {
   max-width: 340px;
   margin: var(--spacing-10) auto 0;
-  color: var(--colorTextSecondary);
+  color: var(--muted);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-md-px);
 }
@@ -135,7 +135,7 @@
   display: flex;
   justify-content: space-between;
   gap: var(--spacing-5);
-  margin-top: 2var(--spacing-1);
+  margin-top: var(--spacing-2);
   color: var(--blue);
   font-size: var(--font-size-body-sm);
 }

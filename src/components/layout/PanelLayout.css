@@ -8,7 +8,7 @@
   min-width: 300px;
   max-width: 300px;
   padding: 9px 11px;
-  color: var(--colorTextControlPlaceholder);
+  color: var(--text-input-placeholder);
   background: var(--surface);
   border: var(--border-width-normal) solid var(--line);
   border-radius: var(--radius-md-compact);
@@ -33,13 +33,13 @@
   padding: 0;
   border: 0;
   border-radius: var(--radius-circle);
-  color: var(--colorTextControlClear);
+  color: var(--text-control-clear);
   background: transparent;
   transform: translateY(-50%);
 }
 .clear-search:hover {
   color: var(--ink);
-  background: var(--colorBackgroundControlHover);
+  background: var(--surface-control-hover);
 }
 .panel-subnavigation {
   min-height: 52px;
@@ -122,7 +122,7 @@
 .panel-title-line {
   display: flex;
   align-items: center;
-  gap: 1var(--spacing-2);
+  gap: var(--spacing-2);
 }
 .panel-view-mode-selector {
   display: inline-flex;
@@ -134,7 +134,7 @@
   gap: 6px;
   padding: var(--spacing-3);
   border: 0;
-  color: var(--colorIconSecondary);
+  color: var(--icon-secondary);
   background: transparent;
   font-size: var(--font-size-md);
   font-weight: var(--font-normal);
@@ -156,7 +156,7 @@
 .panel-view-mode-chevron {
   display: block;
   width: 12px;
-  color: var(--colorIconSecondary);
+  color: var(--icon-secondary);
   font-size: var(--font-size-md);
   line-height: normal;
   text-align: center;

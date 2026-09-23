@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises'
 
-const [appSource, sidebarSource] = await Promise.all([
-  readFile('src/App.jsx', 'utf8'),
-  readFile('src/components/layout/Sidebar.jsx', 'utf8'),
+const [routeConfigSource, sidebarSource] = await Promise.all([
+  readFile('src/routes/routeConfig.jsx', 'utf8'),
+  readFile('src/components/layout/sidebarConfig.js', 'utf8'),
 ])
 
-const pagesBlock = appSource.match(/const pages = \{([\s\S]*?)\n\}/)?.[1] ?? ''
+const pagesBlock = routeConfigSource.match(/const pages = \{([\s\S]*?)\n\}/)?.[1] ?? ''
 const routeMatches = [...pagesBlock.matchAll(/^\s*(?:'([^']+)'|([A-Za-z][\w ]*))\s*:/gm)]
 const registeredRoutes = new Set(
   routeMatches.map(([, quoted, identifier]) => quoted ?? identifier),

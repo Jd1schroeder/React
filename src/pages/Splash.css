@@ -8,7 +8,7 @@
   position: relative;
   overflow: hidden;
   color: var(--white);
-  background: var(--palette-hex-273a82);
+  background: var(--auth-surface);
   isolation: isolate;
 }
 .splash-grid {
@@ -16,8 +16,8 @@
   inset: 0;
   opacity: 0.18;
   background-image:
-    linear-gradient(var(--palette-rgb-255-255-255--a--12) 1px, transparent 1px),
-    linear-gradient(90deg, var(--palette-rgb-255-255-255--a--12) 1px, transparent 1px);
+    linear-gradient(var(--auth-overlay-white-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--auth-overlay-white-grid) 1px, transparent 1px);
   background-size: 42px 42px;
   transform: perspective(500px) rotateY(-14deg) scale(1.35);
   transform-origin: bottom left;
@@ -25,7 +25,7 @@
 .splash-orb {
   position: absolute;
   border-radius: var(--radius-circle);
-  background: var(--palette-hex-6886e8);
+  background: var(--auth-glow);
   opacity: 0.42;
   filter: blur(2px);
 }
@@ -40,7 +40,7 @@
   bottom: 4%;
   width: 400px;
   height: 400px;
-  background: var(--palette-hex-5c69c3);
+  background: var(--auth-surface-secondary);
 }
 .splash-visual-content {
   position: relative;
@@ -49,7 +49,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 4var(--spacing-1) clamp(var(--spacing-10), 7vw, 100px) 6var(--spacing-3) clamp(var(--spacing-9), 7vw, 96px);
+  padding: var(--spacing-3) clamp(var(--spacing-10), 7vw, 100px) var(--spacing-12) clamp(var(--spacing-9), 7vw, 96px);
 }
 .splash-brand {
   display: flex;
@@ -69,8 +69,8 @@
 }
 .splash-message p,
 .splash-eyebrow {
-  margin: 0 0 1var(--spacing-2);
-  color: var(--palette-hex-c7d1ff);
+  margin: 0 0 var(--spacing-2);
+  color: var(--auth-text-secondary);
   font-size: var(--font-size-sm-compact);
   font-weight: var(--font-bold);
   letter-spacing: 1.8px;
@@ -86,25 +86,25 @@
   display: block;
   max-width: 410px;
   margin-top: var(--spacing-6);
-  color: var(--palette-hex-d8e0ff);
+  color: var(--auth-text-muted-light);
   font-size: var(--font-size-lg);
   line-height: var(--line-height-loose);
 }
 .splash-dashboard {
   width: min(100%, 410px);
   margin: var(--spacing-6-negative) 0 0 auto;
-  padding: var(--spacing-5) 1var(--spacing-3);
-  border: var(--border-width-emphasis) solid var(--palette-rgb-255-255-255--a--48);
+  padding: var(--spacing-5) var(--spacing-3);
+  border: var(--border-width-emphasis) solid var(--auth-border);
   border-radius: var(--radius-lg) var(--radius-lg) var(--radius-none) var(--radius-none);
-  background: var(--palette-rgb-255-255-255--a--10);
+  background: var(--auth-overlay-white-subtle);
   transform: perspective(500px) rotateY(-10deg);
 }
 .splash-dashboard-top {
   width: 42%;
   height: 9px;
-  margin-bottom: 1var(--spacing-3);
+  margin-bottom: var(--spacing-3);
   border-radius: var(--radius-pill);
-  background: var(--palette-rgb-255-255-255--a--66);
+  background: var(--auth-overlay-white-brighter);
 }
 .splash-dashboard-row {
   display: grid;
@@ -112,22 +112,22 @@
   align-items: center;
   gap: 11px;
   height: 42px;
-  border-top: var(--border-width-normal) solid var(--palette-rgb-255-255-255--a--18);
+  border-top: var(--border-width-normal) solid var(--auth-border-subtle);
 }
 .splash-dashboard-row svg {
-  color: var(--palette-hex-b9d8ff);
+  color: var(--auth-text-light);
 }
 .splash-dashboard-row span {
   width: 70%;
   height: 7px;
   border-radius: var(--radius-pill);
-  background: var(--palette-rgb-255-255-255--a--42);
+  background: var(--auth-overlay-white-medium);
 }
 .splash-dashboard-row i {
   width: 10px;
   height: 10px;
   border-radius: var(--radius-circle);
-  background: var(--palette-hex-78d36b);
+  background: var(--auth-success);
 }
 .splash-content {
   display: flex;
@@ -135,7 +135,7 @@
   justify-content: center;
   width: min(100%, 530px);
   margin: 0 auto;
-  padding: 4var(--spacing-3) var(--spacing-9);
+  padding: var(--spacing-9) var(--spacing-9);
 }
 .splash-logo {
   width: 190px;
@@ -144,11 +144,11 @@
   align-self: center;
 }
 .splash-copy {
-  margin-top: 4var(--spacing-3);
+  margin-top: var(--spacing-9);
 }
 .splash-copy h2 {
   margin: 0;
-  color: var(--palette-hex-27347d);
+  color: var(--auth-link);
   font-size: var(--font-size-fluid-auth-md);
   line-height: var(--line-height-compact);
   letter-spacing: -1px;
@@ -162,7 +162,7 @@
 .splash-actions {
   display: grid;
   gap: var(--spacing-5);
-  margin-top: 3var(--spacing-2);
+  margin-top: var(--spacing-4);
 }
 .splash-actions > .button {
   width: 100%;
@@ -187,7 +187,7 @@
 .splash-checklist {
   display: grid;
   gap: 13px;
-  margin: 4var(--spacing-3) 0 0;
+  margin: var(--spacing-9) 0 0;
   padding: 0;
   color: var(--muted);
   list-style: none;
@@ -210,7 +210,7 @@
   }
   .splash-visual-content {
     min-height: 47vh;
-    padding: var(--spacing-8) var(--spacing-7) 3var(--spacing-2);
+    padding: var(--spacing-8) var(--spacing-7) var(--spacing-4);
   }
   .splash-message {
     margin-top: 50px;
@@ -223,12 +223,12 @@
   }
   .splash-content {
     width: auto;
-    padding: 3var(--spacing-3) var(--spacing-7) 4var(--spacing-3);
+    padding: var(--spacing-7) var(--spacing-7) var(--spacing-9);
   }
   .splash-copy {
     margin-top: var(--spacing-8);
   }
   .splash-checklist {
-    margin-top: 3var(--spacing-2);
+    margin-top: var(--spacing-4);
   }
 }
