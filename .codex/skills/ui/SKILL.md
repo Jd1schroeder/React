@@ -11,6 +11,7 @@ Use the existing layout primitives before creating page-specific alternatives.
 
 - `src/components/layout/Sidebar.jsx` and `Sidebar.css` own navigation and sidebar styling.
 - `PanelLayout` owns the page header, search, primary action, and subnavigation.
+- `PanelLayout` follows the reusable pane nesting `Navigation → Alert → SubNavigation → MainPanel → ContentSection`; page-specific list/detail content belongs inside `ContentSection`.
 - `PanelView` owns the reusable split list/detail panel.
 - `src/pages/WorkOrders.css` contains Work Orders-only pane/detail styling.
 - `src/styles/tokens.css` contains shared design tokens; prefer tokens over new hardcoded values.
@@ -35,11 +36,13 @@ Use `src/components/ui/Avatar.jsx` for every user avatar. Render the uploaded im
 
 Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the shared styled trigger, rotating Lucide chevron, focus tokens, outside-click dismissal, keyboard navigation, and listbox semantics. Options may provide `disabled: true` and a Lucide `icon` for unavailable choices or explanatory affordances; disabled options remain muted and non-interactive. Keep specialized selectors, such as phone-country selection, separate only when they need custom option content.
 
+`PanelViewSelector` owns the reusable panel/table view menu. Its default options are Panel View and a muted, locked Table View until table rendering exists; modules may pass additional view options without copying the selector interaction or menu markup.
+
 ## Sidebar reference tokens
 
 - Group headings use `0.8571rem` font size and `1.2857rem` line-height.
 - Navigation items use 32px height, 8px padding, and an 8px radius.
-- Standard page content uses a 16px shell inset. Full-bleed `PanelView` pages may offset that inset with matching `-16px` margins, but their visible content must remain one 16px inset from the shell edge.
+- `.page-content` owns scrolling; `.page-content-inner` owns the standard 16px shell inset. Full-bleed `PanelView` pages may offset that inset with matching `-16px` margins, but their visible content must remain one 16px inset from the shell edge.
 - Page headers must remain visible while the page scrolls: use the shared sticky treatment for `.page-heading`, `.panel-view-header`, and `.settings-page-header`, with an opaque surface background and stacking order below the sidebar menus.
 - The settings page uses a viewport-based two-row layout: the header occupies the first row, the navigation and details share the second-row top edge, and only the details column scrolls. Do not align these areas with fixed pixel offsets.
 - The authenticated shell owns page scrolling through `.main-shell` and `.page-content`; settings pages must fill that shell rather than allowing the document body to scroll the entire settings layout. Keep overflow containment scoped to the authenticated shell so public splash and authentication pages retain normal document scrolling on mobile.

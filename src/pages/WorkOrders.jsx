@@ -66,7 +66,6 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
   return (
     <PanelLayout
       title="Work orders"
-      modeLabel="To Do View"
       modeIcon={PanelLeft}
       searchValue={search}
       onSearch={setSearch}

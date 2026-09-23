@@ -7,7 +7,9 @@ export function AppLayout({ activePage, onNavigate, children }) {
       <div className="app-shell">
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
         <div className="main-shell">
-          <main className="page-content page-content-full">{children}</main>
+          <main className="page-content page-content-full">
+            <div className="page-content-inner">{children}</div>
+          </main>
         </div>
         <UpdateNotice />
       </div>
