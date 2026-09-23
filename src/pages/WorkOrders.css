@@ -1,15 +1,15 @@
 .work-orders-layout {
-  gap: 16px;
+  gap: var(--spacing-5);
   overflow: visible;
   border: 0;
-  border-radius: 0;
+  border-radius: var(--radius-none);
   background: transparent;
 }
 .inbox-pane,
 .detail-pane {
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  background: #fff;
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
   overflow: hidden;
 }
 .inbox-pane {
@@ -24,7 +24,7 @@
   margin-left: -1px;
   gap: 0;
   padding: 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: var(--border-width-normal) solid var(--line);
 }
 .inbox-pane > .work-order-tabs button {
   width: 100%;
@@ -34,19 +34,19 @@
 }
 .work-order-tabs {
   display: flex;
-  gap: 24px;
+  gap: var(--spacing-7);
 }
 .work-order-tabs button {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 8px 0 11px;
+  padding: var(--spacing-3) 0 11px;
   border: 0;
-  border-bottom: 2px solid transparent;
-  color: #87919b;
+  border-bottom: var(--border-width-emphasis) solid transparent;
+  color: var(--palette-hex-87919b);
   background: none;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-semibold);
 }
 .work-order-tabs button.selected {
   color: var(--blue);
@@ -55,30 +55,30 @@
 .work-order-tabs span {
   min-width: 21px;
   padding: 3px 6px;
-  border-radius: 10px;
-  color: #7d8994;
-  background: #e9edf1;
-  font-size: 10px;
+  border-radius: var(--radius-control-lg);
+  color: var(--palette-hex-7d8994);
+  background: var(--palette-hex-e9edf1);
+  font-size: var(--font-size-xs);
 }
 .work-order-sort-row {
   display: flex;
   align-items: center;
   gap: 6px;
   min-height: 40px;
-  padding: 0 12px;
-  border-bottom: 1px solid var(--line);
-  color: #7a8791;
-  font-size: 11px;
+  padding: 0 var(--spacing-4);
+  border-bottom: var(--border-width-normal) solid var(--line);
+  color: var(--palette-hex-7a8791);
+  font-size: var(--font-size-sm-compact);
 }
 .work-order-sort-row button:not(.icon-button) {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--spacing-2);
   padding: 0;
   border: 0;
   color: var(--blue);
   background: transparent;
-  font-size: 11px;
+  font-size: var(--font-size-sm-compact);
 }
 .work-order-sort-row .icon-button {
   width: 26px;
@@ -88,18 +88,18 @@
 .work-order-assignment-heading {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--spacing-2);
   min-height: 40px;
-  padding: 0 16px;
-  border-bottom: 1px solid #f0f2f4;
+  padding: 0 var(--spacing-5);
+  border-bottom: var(--border-width-normal) solid var(--palette-hex-f0f2f4);
   color: var(--ink);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-semibold);
 }
 .work-order-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-3);
 }
 .work-order-list {
   overflow: auto;
@@ -107,16 +107,16 @@
 .work-order-item {
   width: 100%;
   display: block;
-  padding: 15px 18px 13px;
+  padding: 15px 1var(--spacing-3) 13px;
   border: 0;
-  border-bottom: 1px solid #f0f2f4;
+  border-bottom: var(--border-width-normal) solid var(--palette-hex-f0f2f4);
   color: var(--ink);
-  background: #fff;
+  background: var(--surface);
   text-align: left;
 }
 .work-order-item:hover,
 .work-order-item.selected {
-  background: #f7faff;
+  background: var(--palette-hex-f7faff);
 }
 .work-order-item.selected {
   box-shadow: inset 3px 0 var(--blue);
@@ -127,27 +127,27 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--spacing-3);
 }
 .order-title {
   overflow: hidden;
   color: var(--ink);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-semibold);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .order-item-meta {
   margin-top: 7px;
-  color: #9aa3ab;
-  font-size: 10px;
+  color: var(--palette-hex-9aa3ab);
+  font-size: var(--font-size-xs);
 }
 .order-item-bottom {
   margin-top: 10px;
 }
 .order-item-bottom > span:last-child {
-  color: #929ca5;
-  font-size: 10px;
+  color: var(--palette-hex-929ca5);
+  font-size: var(--font-size-xs);
 }
 .detail-pane {
   min-width: 0;
@@ -158,9 +158,9 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
-  padding: 21px 26px 18px;
-  border-bottom: 1px solid var(--line);
+  gap: var(--spacing-6);
+  padding: 21px 26px 1var(--spacing-3);
+  border-bottom: var(--border-width-normal) solid var(--line);
 }
 .detail-heading {
   min-width: 0;
@@ -168,12 +168,12 @@
 .detail-title-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-3);
 }
 .detail-title-row h2 {
   margin: 0;
   overflow: hidden;
-  font-size: 18px;
+  font-size: var(--font-size-xl-compact);
   letter-spacing: -0.3px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -182,58 +182,58 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 8px;
+  margin-top: var(--spacing-3);
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--font-size-sm-compact);
 }
 .detail-meta span {
-  color: #c1c7cc;
+  color: var(--palette-hex-c1c7cc);
 }
 .detail-actions {
   display: flex;
   align-items: center;
   flex: none;
-  gap: 8px;
+  gap: var(--spacing-3);
 }
 .detail-scroll {
   overflow: auto;
-  padding: 20px 26px 50px;
+  padding: var(--spacing-6) 26px 50px;
 }
 .detail-status-row {
   display: flex;
   align-items: center;
   gap: 9px;
-  margin-bottom: 18px;
+  margin-bottom: 1var(--spacing-3);
 }
 .status-select {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 8px;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  color: #68737d;
-  background: #fff;
-  font-size: 10px;
+  padding: 5px var(--spacing-3);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-control);
+  color: var(--palette-hex-68737d);
+  background: var(--surface);
+  font-size: var(--font-size-xs);
 }
 .detail-card {
   margin-bottom: 17px;
-  padding: 19px 20px;
-  border: 1px solid var(--line);
-  border-radius: 9px;
+  padding: 19px var(--spacing-6);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-card);
 }
 .detail-card h3 {
   margin: 0 0 15px;
-  font-size: 13px;
+  font-size: var(--font-size-body-sm);
 }
 .detail-row {
   display: flex;
   align-items: center;
   gap: 9px;
   min-height: 37px;
-  border-top: 1px solid #f0f2f4;
-  color: #84909a;
-  font-size: 11px;
+  border-top: var(--border-width-normal) solid var(--palette-hex-f0f2f4);
+  color: var(--palette-hex-84909a);
+  font-size: var(--font-size-sm-compact);
 }
 .detail-row:first-of-type {
   border-top: 0;
@@ -253,7 +253,7 @@
 .detail-person .avatar {
   width: 22px;
   height: 22px;
-  font-size: 8px;
+  font-size: var(--font-size-2xs);
 }
 .section-heading {
   display: flex;
@@ -266,38 +266,38 @@
 .detail-copy {
   max-width: 620px;
   margin: 0 0 15px;
-  color: #66727d;
-  font-size: 12px;
-  line-height: 1.6;
+  color: var(--palette-hex-66727d);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-loose);
 }
 .attachment-row {
   display: flex;
   align-items: center;
   gap: 7px;
   padding-top: 13px;
-  border-top: 1px solid #f0f2f4;
-  color: #929ca5;
-  font-size: 11px;
+  border-top: var(--border-width-normal) solid var(--palette-hex-f0f2f4);
+  color: var(--palette-hex-929ca5);
+  font-size: var(--font-size-sm-compact);
 }
 .activity-card .activity {
-  margin: 0 -20px;
-  padding-left: 20px;
-  padding-right: 20px;
+  margin: 0 var(--spacing-5-negative);
+  padding-left: var(--spacing-6);
+  padding-right: var(--spacing-6);
 }
 .comment-box {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 16px;
-  padding: 7px 8px 7px 11px;
-  border: 1px solid var(--line);
-  border-radius: 7px;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-5);
+  padding: 7px var(--spacing-3) 7px 11px;
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-button);
 }
 .comment-box input {
   flex: 1;
   border: 0;
   outline: 0;
-  font-size: 11px;
+  font-size: var(--font-size-sm-compact);
 }
 .comment-box button {
   display: grid;
@@ -305,8 +305,8 @@
   width: 26px;
   height: 26px;
   border: 0;
-  border-radius: 5px;
-  color: #fff;
+  border-radius: var(--radius-control);
+  color: var(--white);
   background: var(--blue);
 }
 @media (max-width: 900px) {
@@ -324,13 +324,13 @@
   .inbox-pane {
     max-height: 390px;
     border-right: 0;
-    border-bottom: 1px solid var(--line);
+    border-bottom: var(--border-width-normal) solid var(--line);
   }
   .detail-pane {
     min-height: 620px;
   }
   .detail-header,
   .detail-scroll {
-    padding: 18px;
+    padding: 1var(--spacing-3);
   }
 }

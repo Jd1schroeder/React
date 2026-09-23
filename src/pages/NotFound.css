@@ -4,10 +4,10 @@
   place-items: center;
   align-content: center;
   gap: 0;
-  padding: 28px 24px 48px;
+  padding: var(--spacing-8) var(--spacing-7) 4var(--spacing-3);
   overflow: hidden;
   color: var(--ink);
-  background: #f7fbff;
+  background: var(--palette-hex-f7fbff);
 }
 
 .not-found-brand {
@@ -17,9 +17,9 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #12315d;
-  font-size: 20px;
-  font-weight: 700;
+  color: var(--palette-hex-12315d);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-bold);
 }
 
 .not-found-brand-mark {
@@ -27,10 +27,10 @@
   height: 34px;
   display: grid;
   place-items: center;
-  border-radius: 9px;
-  color: #fff;
+  border-radius: var(--radius-card);
+  color: var(--white);
   background: var(--blue);
-  font-size: 17px;
+  font-size: var(--font-size-lg-plus);
 }
 
 .not-found-art-frame {
@@ -47,33 +47,33 @@
 .not-found-content {
   position: relative;
   z-index: 1;
-  margin-top: -48px;
+  margin-top: -4var(--spacing-3);
   text-align: center;
 }
 
 .not-found-content h1 {
   margin: 0;
-  color: #09295c;
-  font-size: clamp(24px, 3vw, 40px);
-  line-height: 1.15;
+  color: var(--palette-hex-09295c);
+  font-size: var(--font-size-fluid-not-found);
+  line-height: var(--line-height-display-tight);
   letter-spacing: -0.8px;
 }
 
 .not-found-content p {
-  margin: 12px 0 22px;
-  color: #536778;
-  font-size: 14px;
-  line-height: 1.55;
+  margin: var(--spacing-4) 0 2var(--spacing-1);
+  color: var(--palette-hex-536778);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-copy-relaxed);
 }
 
 .not-found-content .button {
   min-width: 190px;
-  border-radius: 999px;
-  background: #087cf2;
+  border-radius: var(--radius-pill);
+  background: var(--palette-hex-087cf2);
 }
 
 .not-found-content .button:hover {
-  background: #0769ca;
+  background: var(--palette-hex-0769ca);
 }
 
 @media (max-width: 640px) {
@@ -83,7 +83,7 @@
   }
 
   .not-found-page {
-    padding: 76px 18px 28px;
+    padding: 76px 1var(--spacing-3) var(--spacing-8);
   }
 
   .not-found-art-frame {
@@ -92,7 +92,7 @@
   }
 
   .not-found-content {
-    margin-top: -14px;
+    margin-top: -1var(--spacing-2);
   }
 
   .not-found-content p br {

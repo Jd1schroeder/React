@@ -2,61 +2,61 @@
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: var(--spacing-7);
   background: var(--surface-subtle);
 }
 .accept-invite-card {
   width: min(100%, 460px);
   display: grid;
   justify-items: center;
-  gap: 16px;
-  padding: 42px 34px;
-  border: 1px solid var(--line);
+  gap: var(--spacing-5);
+  padding: 4var(--spacing-1) 3var(--spacing-2);
+  border: var(--border-width-normal) solid var(--line);
   border-radius: var(--radius-md);
   background: var(--surface);
   text-align: center;
-  box-shadow: 0 18px 42px rgb(30 36 41 / 8%);
+  box-shadow: var(--elevation-8);
 }
 .accept-invite-icon {
   display: grid;
   place-items: center;
   width: 64px;
   height: 64px;
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   color: var(--blue);
   background: var(--blue-soft);
 }
 .accept-invite-icon.is-success {
-  color: var(--success, #26934a);
-  background: #eaf8ef;
+  color: var(--success, var(--palette-hex-26934a));
+  background: var(--palette-hex-eaf8ef);
 }
 .accept-invite-icon.is-error {
   color: var(--danger);
-  background: #fff1f1;
+  background: var(--danger-soft);
 }
 .accept-invite-card h1 {
   margin: 0;
   color: var(--ink);
-  font-size: 24px;
+  font-size: var(--font-size-2xl);
 }
 .accept-invite-card p {
   margin: 0;
   color: var(--muted);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
 }
 .accept-invite-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 1var(--spacing-2);
 }
 .accept-invite-secondary {
   min-height: 40px;
-  padding: 0 14px;
-  border: 1px solid var(--blue);
+  padding: 0 1var(--spacing-2);
+  border: var(--border-width-normal) solid var(--blue);
   border-radius: var(--radius-sm);
   color: var(--blue);
   background: var(--surface);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-semibold);
 }

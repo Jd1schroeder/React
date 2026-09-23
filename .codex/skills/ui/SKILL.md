@@ -15,6 +15,7 @@ Use the existing layout primitives before creating page-specific alternatives.
 - `PanelView` owns the reusable split list/detail panel.
 - `src/pages/WorkOrders.css` contains Work Orders-only pane/detail styling.
 - `src/styles/tokens.css` contains shared design tokens; prefer tokens over new hardcoded values.
+- Use the standard Workbench type, line-height, spacing, border, radius, transition, elevation, and color tokens in `src/styles/tokens.css`. UI styles outside the token file must not contain raw color literals; use an existing semantic token or add a centralized palette/semantic token first. Migrate repeated values to tokens before introducing new literals. Keep unique brand artwork values centralized in the token file rather than scattering them through component CSS. Native `@media` breakpoints may remain literal because CSS custom properties are not reliably supported in media queries.
 - `src/styles/globals.css` contains reset and document-level styles.
 - Login and signup use the shared `AuthPage` implementation in `src/pages/AuthPage.jsx`; keep authentication modes as configuration rather than duplicating the full auth layout.
 - The public splash page is the `/` entry route. Branding on unauthenticated pages may return to `Splash`, while the logged-in sidebar brand is static and must not navigate out of the application shell.

@@ -9,13 +9,13 @@
   justify-content: space-between;
   width: 100%;
   min-height: 40px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
+  padding: 0 var(--spacing-4);
+  border: var(--border-width-normal) solid var(--line);
   border-radius: var(--radius-sm);
   color: var(--muted);
   background: var(--surface);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-body-sm);
   text-align: left;
   outline: 0;
 }
@@ -28,13 +28,13 @@
 }
 .select-trigger:focus,
 .select-trigger[aria-expanded="true"] {
-  border: 1px solid var(--focus-border-color);
+  border: var(--border-width-normal) solid var(--focus-border-color);
   box-shadow: 0 0 0 calc(var(--focus-border-width) - 1px) var(--focus-border-color);
 }
 .select-chevron {
   flex: none;
   color: var(--muted);
-  transition: transform 160ms ease;
+  transition: transform var(--transition-normal);
 }
 .select-trigger[aria-expanded="true"] .select-chevron {
   transform: rotate(180deg);
@@ -50,15 +50,15 @@
   max-height: 240px;
   overflow-y: auto;
   /* padding: 6px; */
-  border: 1px solid var(--line);
+  border: var(--border-width-normal) solid var(--line);
   border-radius: var(--radius-sm);
   background: var(--surface);
-  box-shadow: 0 12px 26px rgb(35 61 112 / 16%);
+  box-shadow: var(--elevation-3);
 }
 .select-menu button {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-3);
   min-height: 36px;
   padding: 0 10px;
   border: 0;
@@ -66,7 +66,7 @@
   color: var(--ink);
   background: transparent;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-body-sm);
   text-align: left;
 }
 .select-menu button:hover,

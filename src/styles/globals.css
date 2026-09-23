@@ -23,19 +23,19 @@ button {
 
 ::selection {
   color: var(--ink);
-  background: #f6e79a;
+  background: var(--palette-hex-f6e79a);
 }
 
 ::-moz-selection {
   color: var(--ink);
-  background: #f6e79a;
+  background: var(--palette-hex-f6e79a);
 }
 
 html {
   height: 100%;
-  background: #fff;
-  font-size: 14px;
-  line-height: 1.2;
+  background: var(--surface);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-body);
 }
 
 body,

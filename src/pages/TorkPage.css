@@ -2,8 +2,8 @@
   min-height: calc(100vh - 99px);
   display: grid;
   place-items: center;
-  padding: 32px;
-  background: #f7fbff;
+  padding: var(--spacing-9);
+  background: var(--palette-hex-f7fbff);
 }
 
 .tork-placeholder img {
@@ -15,6 +15,6 @@
 @media (max-width: 640px) {
   .tork-placeholder {
     min-height: calc(100vh - 50px);
-    padding: 20px;
+    padding: var(--spacing-6);
   }
 }
