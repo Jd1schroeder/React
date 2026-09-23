@@ -10,6 +10,7 @@ Keep the application organized around these boundaries:
 - `src/components/layout` contains application-wide layout and panel primitives.
 - `src/components/ui` contains small reusable controls.
 - `src/pages` contains route-level page composition and page-specific styles.
+- Settings route composition stays in `src/pages/SettingsPage.jsx`; individual settings features live under `src/pages/settings/`, with shared navigation/layout in `SettingsLayout.jsx` and shared page metadata/data in `settingsConfig.js`.
 - `src/data` contains mock data and page configuration for workflows that are not yet persisted.
 - `src/services` contains backend-facing service boundaries such as authentication and organization provisioning.
 - `src/styles` contains global tokens and reset rules.
