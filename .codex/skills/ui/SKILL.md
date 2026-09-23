@@ -29,7 +29,15 @@ Use the existing layout primitives before creating page-specific alternatives.
 
 Every new sidebar destination should use the shared panel shell unless its interaction model genuinely differs. Keep page-specific differences in the page stylesheet, not in `App.css`.
 
+People management uses dedicated `/users` and `/teams` pages with a shared Users/Teams tab switcher; the sidebar label remains “Teams / Users” but lands on `/users`.
+
+User rows navigate to `/users/profile/:userId`, whose detail scaffold uses real organization-member/profile data for identity fields. Keep activity, work-order history, permissions, teams, and unavailable account actions as explicit empty or disabled states until their data models and services exist; never fill the profile scaffold with mock records.
+
 Use the React Router route boundaries in `src/App.jsx` and the route registry in `src/routes/routeConfig.jsx` for navigation. Keep page modules lazy-loaded and render them through the shared loading fallback; do not reintroduce direct `history.pushState` navigation or eager-import every route page.
+
+Date and time values must use the saved `workspace.preferences.date_format`, `workspace.preferences.timezone`, and related localization preferences. Use `src/utils/dateFormatting.js` rather than browser-locale defaults or page-specific date formatters so every module renders dates consistently.
+
+Last Visit-style values use `formatLastVisitForUser`: show `Today` and `Yesterday`, use the weekday for earlier dates in the current configured week, and use the selected date format for older dates.
 
 The authenticated shell is gated by `WorkspaceProvider`. During session/workspace hydration, show the shared neutral loading surface and spinner; render the sidebar and page together only after authoritative workspace data is ready. Workspace failures must show the shared retry state instead of placeholder identity or organization values.
 
@@ -42,6 +50,8 @@ Store production browser and PWA branding assets in `public/`, including the fav
 Use `src/components/ui/Avatar.jsx` for every user avatar. Render the uploaded image when available; otherwise derive initials from first and last names, or only the first name when no last name exists, with `A` as the neutral fallback. Do not create page-specific avatar fallback logic.
 
 Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the shared styled trigger, rotating Lucide chevron, focus tokens, outside-click dismissal, keyboard navigation, and listbox semantics. Options may provide `disabled: true` and a Lucide `icon` for unavailable choices or explanatory affordances; disabled options remain muted and non-interactive. Keep specialized selectors, such as phone-country selection, separate only when they need custom option content.
+
+Use `src/components/ui/DataTable.jsx` for reusable sortable tables. Supply column definitions and row renderers rather than copying table markup; the component owns sort state, sortable header icons, responsive overflow, and the empty state.
 
 `PanelViewSelector` owns the reusable panel/table view menu. Its default options are Panel View and a muted, locked Table View until table rendering exists; modules may pass additional view options without copying the selector interaction or menu markup.
 The panel view selector uses only a pointer cursor on hover and has no trigger hover or focus visual state; do not add color, background, border, or outline changes for those states. Its label uses primary ink while the view icon and chevron use secondary gray.

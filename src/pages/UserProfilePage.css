@@ -1,0 +1,25 @@
+.user-profile-page { min-height: 100%; padding: var(--spacing-6); background: var(--surface-subtle); }
+.user-profile-header { display: flex; align-items: center; gap: var(--spacing-4); min-height: 48px; }
+.user-profile-header h1 { margin: 0; color: var(--ink); font-size: var(--font-size-xl); font-weight: var(--font-semibold); }
+.user-profile-back { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
+.user-profile-back:hover { color: var(--ink); }
+.user-profile-layout { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(360px, 1.15fr); gap: var(--spacing-4); max-width: 1180px; margin-top: var(--spacing-6); }
+.user-profile-left-column, .user-profile-right-column { display: grid; align-content: start; gap: var(--spacing-4); min-width: 0; }
+.user-profile-card { border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-md-compact); background: var(--surface); }
+.user-summary-card { padding: var(--spacing-6); }
+.user-summary-header { display: flex; align-items: center; gap: var(--spacing-4); padding-bottom: var(--spacing-6); }
+.user-summary-avatar { width: 96px; height: 96px; flex: none; font-size: var(--font-size-xl); }
+.user-summary-header h2 { margin: 0; color: var(--ink); font-size: var(--font-size-lg); }
+.user-summary-header p { margin: var(--spacing-1) 0 0; color: var(--muted); }
+.user-team-empty { margin-top: var(--spacing-3); color: var(--muted); font-size: var(--font-size-sm); }
+.user-summary-details { display: grid; gap: var(--spacing-4); margin: 0; }
+.user-summary-details div { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(0, 1.3fr); gap: var(--spacing-4); }
+.user-summary-details dt, .user-summary-details dd { overflow: hidden; margin: 0; text-overflow: ellipsis; white-space: nowrap; }
+.user-summary-details dt { color: var(--muted); }.user-summary-details dd { color: var(--ink); text-align: right; }
+.user-action-card { padding: var(--spacing-4) var(--spacing-6); }
+.user-action-row { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 42px; padding: 0; border: 0; border-bottom: var(--border-width-normal) solid var(--line); color: var(--muted); background: transparent; font: inherit; text-align: left; cursor: not-allowed; }
+.user-action-row:last-child { border-bottom: 0; }.user-action-row svg { color: var(--muted); }.user-action-danger { color: var(--muted); }
+.user-profile-tabs { display: flex; border-bottom: var(--border-width-normal) solid var(--line); padding: 0 var(--spacing-5); }.user-profile-tabs button { position: relative; flex: 1; min-height: 48px; padding: 0 var(--spacing-2); border: 0; color: var(--muted); background: transparent; font: inherit; cursor: not-allowed; }.user-profile-tabs button.is-active { color: var(--blue); }.user-profile-tabs button.is-active::after { content: ''; position: absolute; right: 0; bottom: -1px; left: 0; height: var(--border-width-emphasis); background: var(--blue); }
+.user-profile-section-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-4); padding: var(--spacing-6) var(--spacing-6) var(--spacing-4); }.user-profile-section-heading h2 { margin: 0; color: var(--ink); font-size: var(--font-size-lg); }.user-profile-section-heading > svg { color: var(--muted); }.user-profile-toggle-summary { display: flex; align-items: center; gap: var(--spacing-2); color: var(--muted); font-size: var(--font-size-sm); }
+.user-profile-empty, .user-profile-state { display: grid; justify-items: center; gap: var(--spacing-3); margin: 0; padding: var(--spacing-9); color: var(--muted); text-align: center; }.user-profile-empty p { margin: 0; }.user-profile-empty svg { color: var(--muted); }.user-profile-state { display: block; margin-top: var(--spacing-6); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-md-compact); background: var(--surface); }.user-profile-error { color: var(--danger); }
+@media (max-width: 800px) { .user-profile-layout { grid-template-columns: 1fr; }.user-profile-page { padding: var(--spacing-4); }.user-profile-toggle-summary { display: none; } }

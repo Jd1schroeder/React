@@ -1,5 +1,5 @@
 import { Component, Suspense, useCallback, useEffect } from 'react'
-import { BrowserRouter, Route, Routes, useNavigate, useParams } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom'
 import { AppLayout } from './components/layout/AppLayout'
 import { getPagePath, getRecordPath, pagePaths } from './routes.js'
 import { authenticatedRoutes, pages, publicRoutes, recordPageNames, recordRoutes } from './routes/routeConfig.jsx'
@@ -29,10 +29,10 @@ class RouteErrorBoundary extends Component {
 function PageRoute({ pageName, isPublic = false }) {
   const Page = pages[pageName] ?? pages.NotFound
   const navigate = useNavigate()
-  const { recordId } = useParams()
+  const { recordId, userId } = useParams()
   const onNavigate = useCallback((target) => navigate(target.startsWith('/') ? target : getPagePath(target)), [navigate])
   const onNavigateRecord = useCallback((type, id) => navigate(getRecordPath(type, id)), [navigate])
-  const content = <RouteErrorBoundary><Page pageName={pageName} recordId={recordId} onNavigate={onNavigate} onNavigateRecord={onNavigateRecord} /></RouteErrorBoundary>
+  const content = <RouteErrorBoundary><Page pageName={pageName} recordId={recordId} userId={userId} onNavigate={onNavigate} onNavigateRecord={onNavigateRecord} /></RouteErrorBoundary>
 
   if (isPublic) return content
   return <AppLayout activePage={pageName} onNavigate={onNavigate}>{content}</AppLayout>
@@ -53,6 +53,8 @@ function AppRoutes() {
   return <Suspense fallback={<PageLoading />}>
     <Routes>
       <Route path="/" element={<LegacyHashRedirect />} />
+      <Route path="/teams/users" element={<Navigate to="/users" replace />} />
+      <Route path="/users/profile/:userId" element={<PageRoute pageName="User Profile" />} />
       {publicRoutes.slice(1).map(([path, page]) => <Route key={path} path={path} element={<PageRoute pageName={page} isPublic />} />)}
       {authenticatedRoutes.map(({ path, page }) => <Route key={path} path={path} element={<PageRoute pageName={page} />} />)}
       {recordRoutes.map((type) => <Route key={`${type}-record`} path={`/${type}/:recordId`} element={<PageRoute pageName={recordPageNames[type]} />} />)}

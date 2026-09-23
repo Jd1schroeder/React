@@ -18,6 +18,9 @@ const ScaffoldPage = lazyNamed(() => import('../pages/ScaffoldPage'), 'ScaffoldP
 const TorkPage = lazyNamed(() => import('../pages/TorkPage'), 'TorkPage')
 const MetersPage = lazyNamed(() => import('../pages/Meters'), 'Meters')
 const PartsInventoryPage = lazyNamed(() => import('../pages/PartsInventory'), 'PartsInventory')
+const UsersPage = lazyNamed(() => import('../pages/UsersPage'), 'UsersPage')
+const TeamsPage = lazyNamed(() => import('../pages/TeamsPage'), 'TeamsPage')
+const UserProfilePage = lazyNamed(() => import('../pages/UserProfilePage'), 'UserProfilePage')
 
 export const pages = {
   Splash: SplashPage,
@@ -62,7 +65,9 @@ export const pages = {
   'Library / Safety Data Sheets': ScaffoldPage,
   Categories: ScaffoldPage,
   Locations: ScaffoldPage,
-  'Teams / Users': ScaffoldPage,
+  Users: UsersPage,
+  Teams: TeamsPage,
+  'User Profile': UserProfilePage,
   Vendors: ScaffoldPage,
   NotFound: TorkPage,
 }
@@ -86,7 +91,7 @@ export const recordRoutes = [
   'reporting/activity', 'reporting/exports', 'reporting/dashboards',
   'automations', 'meters', 'assets', 'parts', 'maintenance-plans', 'library',
   'library/work-orders', 'library/procedures', 'library/safety-data-sheets',
-  'categories', 'locations', 'teams/users', 'vendors', 'chat', 'routines', 'history',
+  'categories', 'locations', 'vendors', 'chat', 'routines', 'history',
 ]
 
 export const recordPageNames = {
@@ -112,7 +117,6 @@ export const recordPageNames = {
   'library/safety-data-sheets': 'Library / Safety Data Sheets',
   categories: 'Categories',
   locations: 'Locations',
-  'teams/users': 'Teams / Users',
   vendors: 'Vendors',
   chat: 'Chat',
   routines: 'Routines',

@@ -39,7 +39,32 @@ export async function listOrganizationMembers(organizationId) {
   if (profilesError) throw profilesError
 
   const profilesById = new Map((profiles ?? []).map((profile) => [profile.id, profile]))
-  return members.map((member) => ({ ...member, profile: profilesById.get(member.user_id) ?? null }))
+  const avatarPaths = [...new Set((profiles ?? [])
+    .map((profile) => profile.avatar_url)
+    .filter((avatarUrl) => avatarUrl && !avatarUrl.startsWith('http')))]
+  const signedAvatarUrlsByPath = new Map()
+  if (avatarPaths.length) {
+    const { data: signedAvatars } = await supabase.storage
+      .from('avatars')
+      .createSignedUrls(avatarPaths, 60 * 60)
+    for (const avatar of signedAvatars ?? []) {
+      if (avatar.path && avatar.signedUrl) signedAvatarUrlsByPath.set(avatar.path, avatar.signedUrl)
+    }
+  }
+  const { data: lastVisits, error: lastVisitsError } = await supabase.rpc('get_organization_member_last_visits', {
+    target_organization_id: organizationId,
+  })
+  const lastVisitsByUserId = new Map((lastVisitsError ? [] : lastVisits ?? []).map((visit) => [visit.user_id, visit.last_sign_in_at]))
+  return members.map((member) => ({
+    ...member,
+    profile: profilesById.has(member.user_id)
+      ? {
+          ...profilesById.get(member.user_id),
+          avatar_url: signedAvatarUrlsByPath.get(profilesById.get(member.user_id).avatar_url) ?? profilesById.get(member.user_id).avatar_url,
+        }
+      : null,
+    last_sign_in_at: lastVisitsByUserId.get(member.user_id) ?? null,
+  }))
 }
 
 export async function updateOrganizationMember({ organizationId, userId, role, status }) {

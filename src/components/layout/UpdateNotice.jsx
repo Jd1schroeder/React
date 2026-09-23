@@ -17,6 +17,8 @@ export function UpdateNotice() {
   const [updateAvailable, setUpdateAvailable] = useState(false)
 
   useEffect(() => {
+    if (import.meta.env.DEV) return undefined
+
     let active = true
 
     const checkForUpdate = async () => {

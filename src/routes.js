@@ -40,7 +40,8 @@ export const pagePaths = {
   'Library / Safety Data Sheets': '/library/safety-data-sheets',
   Categories: '/categories',
   Locations: '/locations',
-  'Teams / Users': '/teams/users',
+  Users: '/users',
+  Teams: '/teams',
   Vendors: '/vendors',
 };
 

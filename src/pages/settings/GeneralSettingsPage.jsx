@@ -32,9 +32,11 @@ export function GeneralSettingsPage({ pageName, onNavigate }) {
 }
 
 function BuildVersion() {
-  const [build, setBuild] = useState("");
+  const [build, setBuild] = useState(import.meta.env.DEV ? "Build: local development" : "");
 
   useEffect(() => {
+    if (import.meta.env.DEV) return undefined;
+
     fetch(`/version.json?ts=${Date.now()}`, { cache: "no-store" })
       .then((response) => response.ok ? response.json() : null)
       .then((data) => setBuild(data?.build ?? ""))

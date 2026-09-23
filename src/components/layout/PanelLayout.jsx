@@ -17,6 +17,7 @@ export function PanelLayout({
   children,
   className = '',
   bodyClassName = '',
+  showViewSelector = true,
 }) {
   return <div className={`panel-view-page ${className}`.trim()}>
     <div className="panel-navigation">
@@ -24,7 +25,7 @@ export function PanelLayout({
         <div className="panel-view-title">
           <div className="panel-title-line">
             <h1>{title}</h1>
-            <PanelViewSelector activeView={activeView} options={viewOptions} onViewChange={onViewChange} />
+            {showViewSelector && <PanelViewSelector activeView={activeView} options={viewOptions} onViewChange={onViewChange} />}
           </div>
         </div>
         <div className="panel-view-header-actions">

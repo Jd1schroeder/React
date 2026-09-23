@@ -43,6 +43,6 @@ export const sidebarGroups = [
       { label: 'Safety Data Sheets', page: 'Library / Safety Data Sheets' },
     ] },
     { label: 'Categories', icon: Tags, page: 'Categories' }, { label: 'Locations', icon: MapPin, page: 'Locations' },
-    { label: 'Teams / Users', icon: Users, page: 'Teams / Users' }, { label: 'Vendors', icon: Package, page: 'Vendors' },
+    { label: 'Teams / Users', icon: Users, page: 'Users' }, { label: 'Vendors', icon: Package, page: 'Vendors' },
   ] },
 ]

@@ -12,6 +12,7 @@ Keep the application organized around these boundaries:
 - `src/components/ui` contains small reusable controls.
 - `src/pages` contains route-level page composition and page-specific styles.
 - Large route pages should keep orchestration in the page module and place feature regions in nearby subcomponents, such as `src/pages/work-orders/WorkOrderList.jsx` and `WorkOrderDetail.jsx`.
+- The Teams / Users sidebar destination maps to the `/users` route; `/teams` is a separate sibling route reached through the shared Users/Teams tabs. Do not restore the old `/teams/users` page as the primary destination.
 - Authentication controls and signup-only styling live under `src/pages/auth/` and `src/pages/Signup.css`; shared login layout remains in `AuthPage.jsx` and `Login.css`.
 - Settings route composition stays in `src/pages/SettingsPage.jsx`; individual settings features live under `src/pages/settings/`, with shared navigation/layout in `SettingsLayout.jsx` and shared page metadata/data in `settingsConfig.js`.
 - `src/data` contains mock data and page configuration for workflows that are not yet persisted.
