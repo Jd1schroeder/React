@@ -1,7 +1,7 @@
 .people-page .panel-view-header { align-items: center; }
 .people-page .panel-view-body { display: block; }
 .people-page .panel-subnavigation { min-height: 38px; margin: 0 var(--spacing-5) var(--spacing-5); padding: 0; background: transparent; border: 0; }
-.people-tabs { display: flex; width: 100%; min-height: 38px; border-bottom: var(--border-width-normal) solid var(--line); }
+.people-tabs { display: flex; width: 100%; min-height: 38px; }
 .people-tabs button { position: relative; width: 200px; min-width: 200px; padding: 0 var(--spacing-2); border: 0; color: var(--muted); background: transparent; font-size: var(--font-size-body-sm); }
 .people-tabs button.is-active { color: var(--blue); }
 .people-tabs button.is-active::after { content: ''; position: absolute; right: 0; bottom: -1px; left: 0; height: var(--border-width-emphasis); background: var(--blue); }

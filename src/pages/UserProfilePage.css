@@ -251,10 +251,26 @@
 }
 .user-profile-state {
   display: block;
-  margin-top: var(--spacing-6);
+  margin: var(--spacing-6) var(--spacing-5) 0;
   border: var(--border-width-normal) solid var(--line);
   border-radius: var(--radius-md-compact);
   background: var(--surface);
+}
+.user-profile-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-3);
+}
+.user-profile-loading-spinner {
+  flex: none;
+  color: var(--muted);
+  animation: user-profile-spinner 760ms linear infinite;
+}
+@keyframes user-profile-spinner {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .user-profile-error {
   color: var(--danger);

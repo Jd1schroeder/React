@@ -44,6 +44,7 @@ The authenticated shell is gated by `WorkspaceProvider`. During session/workspac
 Unknown record IDs under a valid section route must preserve the parent `PanelView` and render the shared `PanelRecordNotFound` state in its detail pane. Unknown authenticated top-level routes must preserve `AppLayout` and render only the artwork in the main content area. Public splash and authentication routes remain outside the application shell.
 
 Use Lucide icons already installed in the project. Keep icon sizing controlled by the component that owns the shared UI so changes propagate consistently.
+Use the Lucide `LoaderCircle` with a scoped rotation animation for page-level loading states; keep the loading container’s layout and spacing stable while data is fetched.
 
 Store production browser and PWA branding assets in `public/`, including the favicon, Apple touch icon, and 192px/512px install icons referenced by `manifest.webmanifest`. Keep icon-set reference sheets outside `public/` so they are not shipped as application assets.
 

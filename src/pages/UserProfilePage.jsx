@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, Clock3, LockKeyhole, MessageSquare, ShieldCheck, UserRound } from 'lucide-react'
+import { ArrowLeft, Clock3, LoaderCircle, LockKeyhole, MessageSquare, ShieldCheck, UserRound } from 'lucide-react'
 import { Avatar } from '../components/ui/Avatar'
 import { getCurrentWorkspace } from '../services/workspaceService'
 import { listOrganizationMembers, membershipRoles } from '../services/organizationService'
@@ -62,7 +62,7 @@ export function UserProfilePage({ userId, onNavigate }) {
           </div>
         </header>
 
-        {isLoading && <p className="user-profile-state">Loading user profile…</p>}
+        {isLoading && <p className="user-profile-state user-profile-loading" aria-busy="true"><LoaderCircle className="user-profile-loading-spinner" size={18} aria-hidden="true" /><span>Loading user profile…</span></p>}
         {!isLoading && error && <p className="user-profile-state user-profile-error" role="alert">{error}</p>}
         {!isLoading && !error && !user && <p className="user-profile-state">User profile not found.</p>}
         {!isLoading && !error && user && <div className="user-profile-content-max-width">

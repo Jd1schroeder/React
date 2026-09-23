@@ -75,9 +75,9 @@ export function UsersPage({ onNavigate }) {
   ]
 
   return <PanelLayout title="Teams / Users" searchValue={search} onSearch={setSearch} searchPlaceholder="Search Users" actionLabel="Invite users" onAction={() => onNavigate('Settings / Invite Users')} showViewSelector={false} className="people-page users-page" bodyClassName="people-body" subnavigation={<PeopleTabs active="users" onNavigate={onNavigate} />}>
-    <section className="people-table-card" aria-label="Users">
+    {!isLoading && <section className="people-table-card" aria-label="Users">
       {error && <p className="people-state people-error" role="alert">{error}</p>}
-      {!isLoading && !error && <DataTable ariaLabel="Users" columns={userColumns} rows={filteredMembers} rowKey={(member) => `${member.organization_id}-${member.user_id}`} initialSortKey="name" emptyState="No users found." />}
-    </section>
+      {!error && <DataTable ariaLabel="Users" columns={userColumns} rows={filteredMembers} rowKey={(member) => `${member.organization_id}-${member.user_id}`} initialSortKey="name" emptyState="No users found." />}
+    </section>}
   </PanelLayout>
 }
