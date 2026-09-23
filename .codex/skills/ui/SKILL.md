@@ -37,6 +37,7 @@ Use `src/components/ui/Avatar.jsx` for every user avatar. Render the uploaded im
 Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the shared styled trigger, rotating Lucide chevron, focus tokens, outside-click dismissal, keyboard navigation, and listbox semantics. Options may provide `disabled: true` and a Lucide `icon` for unavailable choices or explanatory affordances; disabled options remain muted and non-interactive. Keep specialized selectors, such as phone-country selection, separate only when they need custom option content.
 
 `PanelViewSelector` owns the reusable panel/table view menu. Its default options are Panel View and a muted, locked Table View until table rendering exists; modules may pass additional view options without copying the selector interaction or menu markup.
+The panel view selector uses only a pointer cursor on hover and has no trigger hover or focus visual state; do not add color, background, border, or outline changes for those states. Its label uses primary ink while the view icon and chevron use secondary gray.
 
 ## Sidebar reference tokens
 

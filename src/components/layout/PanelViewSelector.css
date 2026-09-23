@@ -12,31 +12,35 @@
   padding: 0 10px;
   border: 1px solid transparent;
   border-radius: 8px;
-  color: #65717b;
+  color: var(--ink);
   background: transparent;
   font: inherit;
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
+  cursor: pointer;
   white-space: nowrap;
 }
 
-.panel-view-selector-trigger:hover,
-.panel-view-selector-trigger[aria-expanded='true'] {
-  border-color: var(--blue);
-  color: var(--ink);
-  background: var(--surface);
-}
-
+.panel-view-selector-trigger:focus,
 .panel-view-selector-trigger:focus-visible {
-  outline: 2px solid var(--focus-border-color);
-  outline-offset: 1px;
+  border-color: transparent;
+  color: var(--ink);
+  background: transparent;
+  box-shadow: none;
+  outline: 0;
 }
 
 .panel-view-selector-current {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  color: var(--ink);
+}
+
+.panel-view-selector-current svg,
+.panel-view-selector-chevron {
+  color: #65717b;
 }
 
 .panel-view-selector-chevron {
