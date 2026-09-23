@@ -70,6 +70,9 @@
 .page-content-inner:has(> .panel-view-page) {
   padding: 0;
 }
+.page-content-inner:has(> .user-profile-page) {
+  padding: 0;
+}
 .panel-navigation,
 .panel-main-panel,
 .panel-content-section {

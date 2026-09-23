@@ -51,48 +51,65 @@ export function UserProfilePage({ userId, onNavigate }) {
   const displayName = [firstName, lastName].filter(Boolean).join(' ') || 'User profile'
 
   return <main className="user-profile-page">
-    <header className="user-profile-header">
-      <button type="button" className="user-profile-back" onClick={() => onNavigate('/users')} aria-label="Back to users"><ArrowLeft size={20} /></button>
-      <h1>Manage User</h1>
-    </header>
-
-    {isLoading && <p className="user-profile-state">Loading user profile…</p>}
-    {!isLoading && error && <p className="user-profile-state user-profile-error" role="alert">{error}</p>}
-    {!isLoading && !error && !user && <p className="user-profile-state">User profile not found.</p>}
-    {!isLoading && !error && user && <div className="user-profile-layout">
-      <div className="user-profile-left-column">
-        <section className="user-profile-card user-summary-card" aria-labelledby="user-summary-title">
-          <div className="user-summary-header">
-            <Avatar src={user.profile?.avatar_url?.startsWith('http') ? user.profile.avatar_url : ''} firstName={firstName} lastName={lastName} alt={displayName} className="user-summary-avatar" />
-            <div><h2 id="user-summary-title">{displayName}</h2><p>{roleLabel(user.role)}</p><div className="user-team-empty">No teams assigned</div></div>
+    <div className="user-profile-scroll">
+      <div className="user-profile-content-inner">
+        <header className="user-profile-header">
+          <div className="user-profile-header-texts">
+            <div className="user-profile-header-text-wrapper">
+              <button type="button" className="user-profile-back" onClick={() => onNavigate('/users')} aria-label="Back to users"><ArrowLeft size={20} /></button>
+              <button type="button" className="user-profile-title-button" onClick={() => onNavigate('/users')}><h1>Manage User</h1></button>
+            </div>
           </div>
-          <dl className="user-summary-details">
-            <div><dt>Email</dt><dd>{valueOrUnavailable(user.email)}</dd></div>
-            <div><dt>Phone Number</dt><dd>{valueOrUnavailable(user.profile?.phone)}</dd></div>
-            <div><dt>Last Visit</dt><dd>{formatLastVisit(user.last_sign_in_at, dateFormat, timeZone, weekStart)}</dd></div>
-            <div><dt>Authentication Type</dt><dd>Not available</dd></div>
-            <div><dt>Work Orders Assigned</dt><dd>Not available</dd></div>
-            <div><dt>% Completed</dt><dd>Not available</dd></div>
-          </dl>
-        </section>
+        </header>
 
-        <section className="user-profile-card user-action-card" aria-label="User actions">
-          {['Send Message', 'Edit Account', 'Edit PIN for Workstation Mode', 'Edit Role/Permissions', 'Remove from Organization'].map((label) => <button key={label} type="button" className={label === 'Remove from Organization' ? 'user-action-row user-action-danger' : 'user-action-row'} disabled><span>{label}</span><LockKeyhole size={15} aria-hidden="true" /></button>)}
-        </section>
+        {isLoading && <p className="user-profile-state">Loading user profile…</p>}
+        {!isLoading && error && <p className="user-profile-state user-profile-error" role="alert">{error}</p>}
+        {!isLoading && !error && !user && <p className="user-profile-state">User profile not found.</p>}
+        {!isLoading && !error && user && <div className="user-profile-content-max-width">
+          <div className="user-profile-wrapper">
+            <div className="user-profile-container">
+              <section className="user-profile-card user-summary-card" aria-labelledby="user-summary-title">
+                <div className="user-summary-card-inner">
+                  <div className="user-summary-header">
+                    <Avatar src={user.profile?.avatar_url?.startsWith('http') ? user.profile.avatar_url : ''} firstName={firstName} lastName={lastName} alt={displayName} className="user-summary-avatar" />
+                    <div><h2 id="user-summary-title">{displayName}</h2><p>{roleLabel(user.role)}</p><div className="user-team-empty">No teams assigned</div></div>
+                  </div>
+                  <dl className="user-summary-details">
+                    <div><dt>Email</dt><dd>{valueOrUnavailable(user.email)}</dd></div>
+                    <div><dt>Phone Number</dt><dd>{valueOrUnavailable(user.profile?.phone)}</dd></div>
+                    <div><dt>Last Visit</dt><dd>{formatLastVisit(user.last_sign_in_at, dateFormat, timeZone, weekStart)}</dd></div>
+                    <div><dt>Authentication Type</dt><dd>Not available</dd></div>
+                    <div><dt>Work Orders Assigned</dt><dd>Not available</dd></div>
+                    <div><dt>% Completed</dt><dd>Not available</dd></div>
+                  </dl>
+                </div>
+              </section>
+
+              <section className="user-profile-card user-action-card" aria-label="User actions">
+                {['Send Message', 'Edit Account', 'Edit PIN for Workstation Mode', 'Edit Role/Permissions', 'Remove from Organization'].map((label) => <button key={label} type="button" className={label === 'Remove from Organization' ? 'user-action-row user-action-danger' : 'user-action-row'} disabled><span>{label}</span><LockKeyhole size={15} aria-hidden="true" /></button>)}
+              </section>
+            </div>
+
+            <div className="user-profile-right-column-wrapper">
+              <section className="user-profile-card user-activity-card" aria-labelledby="recent-activity-title">
+                <div className="user-profile-right-container">
+                  <div className="user-profile-tabs"><button type="button" className="is-active" disabled>Recent Activity</button><button type="button" disabled>Work Order History</button></div>
+                  <div className="user-profile-activity-scroll">
+                    <div className="user-profile-activity-header"><div className="user-profile-section-heading"><h2 id="recent-activity-title">Recent Activity</h2><div className="user-profile-toggle-summary"><MessageSquare size={16} /> Show Comments <Clock3 size={16} /> Show All Updates</div></div></div>
+                    <div className="user-profile-empty"><Clock3 size={30} aria-hidden="true" /><p>No recent activity available.</p></div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="user-profile-card user-permissions-card" aria-labelledby="user-permissions-title">
+                <div className="user-profile-permissions-title"><h2 id="user-permissions-title">User Permissions</h2><ShieldCheck size={20} aria-hidden="true" /></div>
+                <div className="user-profile-permissions-divider" />
+                <div className="user-profile-empty"><UserRound size={30} aria-hidden="true" /><p>Permissions will appear here when the permission model is connected.</p></div>
+              </section>
+            </div>
+          </div>
+        </div>}
       </div>
-
-      <div className="user-profile-right-column">
-        <section className="user-profile-card user-activity-card" aria-labelledby="recent-activity-title">
-          <div className="user-profile-tabs"><button type="button" className="is-active" disabled>Recent Activity</button><button type="button" disabled>Work Order History</button></div>
-          <div className="user-profile-section-heading"><h2 id="recent-activity-title">Recent Activity</h2><div className="user-profile-toggle-summary"><MessageSquare size={16} /> Show Comments <Clock3 size={16} /> Show All Updates</div></div>
-          <div className="user-profile-empty"><Clock3 size={30} aria-hidden="true" /><p>No recent activity available.</p></div>
-        </section>
-
-        <section className="user-profile-card user-permissions-card" aria-labelledby="user-permissions-title">
-          <div className="user-profile-section-heading"><h2 id="user-permissions-title">User Permissions</h2><ShieldCheck size={20} aria-hidden="true" /></div>
-          <div className="user-profile-empty"><UserRound size={30} aria-hidden="true" /><p>Permissions will appear here when the permission model is connected.</p></div>
-        </section>
-      </div>
-    </div>}
+    </div>
   </main>
 }
