@@ -11,7 +11,10 @@
     "check:instructions": "node scripts/check-instructions.mjs",
     "check:routes": "node scripts/check-routes.mjs",
     "check:permissions": "node scripts/check-permissions.mjs",
-    "verify": "npm run check:instructions && npm run check:routes && npm run check:permissions && npm run lint && npm run build",
+    "check:security-config": "node scripts/check-security-config.mjs",
+    "check:security-headers": "node scripts/check-security-headers.mjs",
+    "check:security": "node scripts/check-security-boundaries.mjs",
+    "verify": "npm run check:instructions && npm run check:routes && npm run check:permissions && npm run check:security-config && npm run lint && npm run build",
     "preview": "vite preview"
   },
   "dependencies": {

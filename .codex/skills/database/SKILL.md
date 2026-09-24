@@ -23,6 +23,12 @@ Work Order authorization must distinguish core record editing from execution upd
 
 The role-management policy migration `20260923200000_authorize_role_management_by_permission.sql` keeps role definitions and role grants behind the granular role-management permission instead of the legacy text-role helper.
 
+The forward-only hardening migration `20260923220000_harden_role_and_organization_authorization.sql` is required after the role foundation: database authorization must verify that role IDs belong to the same organization, direct membership creation cannot bypass invitations, invitations must reference organization-local roles, and permission checks must reject suspended organizations. The client workspace gate is UX only and must not be treated as the security boundary.
+
+The follow-up migration `20260923230000_harden_legacy_admin_policies.sql` keeps suspended organizations out of legacy admin policies while allowing only a server-managed platform Superadmin claim to perform recovery. Do not expose that platform role in organization membership rows or normal user settings.
+
+If `20260923240000_harden_avatar_storage.sql` has already run, apply `20260923250000_reconcile_avatar_storage_policy_cast.sql` for the null-safe Storage metadata size predicate; never edit or rerun the applied migration.
+
 Deployments missing the original audit hardening migration can restore `record_audit_event(...)` through the forward-only repair migration `20260923210000_restore_record_audit_event.sql`; its access is governed by the organization reporting permission.
 
 Membership lifecycle is represented by `organization_members.status` (`invited`, `active`, or `suspended`), with `invited_by`, `invited_at`, `joined_at`, and `updated_at` tracking state changes. Owners and admins are the only membership administrators; enforce that boundary through the shared `is_organization_admin()` function and RLS policies rather than frontend checks alone.

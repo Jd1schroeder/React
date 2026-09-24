@@ -21,7 +21,9 @@ When an invite recipient is signed out, preserve the raw invitation token only i
 
 Explicit audit writes use the `record_audit_event` database function, which derives the actor from `auth.uid()` and checks organization-admin authorization. Organization, membership, and invitation mutation triggers record their own audit events atomically; client mutation services must not add duplicate audit calls. Do not insert arbitrary audit rows directly from browser code.
 
-Avatar files must be uploaded through the private `avatars` Storage bucket using a user-scoped path and RLS. Organization-owned files should use a separate private bucket with organization-scoped paths and membership-backed Storage RLS. Use buckets for access or lifecycle boundaries rather than creating one bucket per organization. Persist storage paths in profiles or domain rows and generate signed URLs only when data is loaded for display; never store temporary browser blob URLs or expiring signed URLs.
+Avatar files must be uploaded through the `upload-avatar` Supabase Edge Function, which authenticates the caller, checks the file's detected content type and size, and writes to the private `avatars` Storage bucket using a user-scoped path. The bucket configuration and Storage RLS provide a second server-side enforcement layer. Organization-owned files should use a separate private bucket with organization-scoped paths and membership-backed Storage RLS. Use buckets for access or lifecycle boundaries rather than creating one bucket per organization. Persist storage paths in profiles or domain rows and generate short-lived signed URLs only when data is loaded for display; never store temporary browser blob URLs or expiring signed URLs.
+
+The avatar upload function requires the deployment environment variable `WORKBENCH_ALLOWED_ORIGINS` to contain the exact Workbench origins that may call it. It must not use a service-role key in browser code; the function forwards the caller's access token so Storage RLS remains effective.
 
 When API work begins:
 

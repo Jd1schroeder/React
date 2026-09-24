@@ -8,19 +8,17 @@ async function getUserId() {
 }
 
 export async function uploadAvatar(file) {
-  const userId = await getUserId()
-  const extension = file.name.split('.').pop()?.toLowerCase() || 'bin'
-  const path = `${userId}/${crypto.randomUUID()}.${extension}`
-  const { error } = await supabase.storage.from('avatars').upload(path, file, { contentType: file.type, upsert: false })
+  await getUserId()
+  const formData = new FormData()
+  formData.append('file', file)
+  const { data, error } = await supabase.functions.invoke('upload-avatar', { body: formData })
   if (error) throw error
-  const { data, error: signedUrlError } = await supabase.storage.from('avatars').createSignedUrl(path, 60 * 60 * 24 * 30)
-  if (signedUrlError) throw signedUrlError
-  return { path, signedUrl: data?.signedUrl ?? null }
+  return data
 }
 
 export async function getAvatarSignedUrl(path) {
   if (!path || path.startsWith('http')) return path || ''
-  const { data, error } = await supabase.storage.from('avatars').createSignedUrl(path, 60 * 60 * 24 * 30)
+  const { data, error } = await supabase.storage.from('avatars').createSignedUrl(path, 60 * 60)
   if (error) throw error
   return data?.signedUrl ?? ''
 }
