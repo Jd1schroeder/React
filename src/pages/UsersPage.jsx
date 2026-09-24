@@ -30,7 +30,8 @@ function UserRowActions({ member, onNavigate }) {
   </div>
 }
 
-function roleLabel(role) {
+function roleLabel(role, assignedRole) {
+  if (assignedRole?.name) return assignedRole.name
   return membershipRoles.find((option) => option.value === role)?.label ?? role ?? '—'
 }
 
@@ -61,13 +62,13 @@ export function UsersPage({ onNavigate }) {
     if (!query) return members
     return members.filter((member) => {
       const name = [member.profile?.first_name, member.profile?.last_name].filter(Boolean).join(' ')
-      return `${name} ${roleLabel(member.role)} ${member.status}`.toLowerCase().includes(query)
+      return `${name} ${roleLabel(member.role, member.organization_roles)} ${member.status}`.toLowerCase().includes(query)
     })
   }, [members, search])
 
   const userColumns = [
     { key: 'name', label: 'Full Name', width: '28%', sortValue: (member) => [member.profile?.first_name, member.profile?.last_name].filter(Boolean).join(' ') || 'Unnamed user', render: (member) => { const firstName = member.profile?.first_name ?? ''; const lastName = member.profile?.last_name ?? ''; const name = [firstName, lastName].filter(Boolean).join(' ') || 'Unnamed user'; return <button type="button" className="people-user-cell people-user-link" onClick={() => onNavigate(`/users/profile/${encodeURIComponent(member.user_id)}`)}><Avatar src={member.profile?.avatar_url?.startsWith('http') ? member.profile.avatar_url : ''} firstName={firstName} lastName={lastName} alt="" /><span>{name}</span></button> } },
-    { key: 'role', label: 'Role', width: '17%', sortValue: (member) => roleLabel(member.role), render: (member) => roleLabel(member.role) },
+    { key: 'role', label: 'Role', width: '17%', sortValue: (member) => roleLabel(member.role, member.organization_roles), render: (member) => roleLabel(member.role, member.organization_roles) },
     { key: 'teams', label: 'Teams', width: '18%', sortable: false, render: () => '—' },
     { key: 'lastVisit', label: 'Last Visit', width: '17%', sortValue: (member) => member.last_sign_in_at ?? '', render: (member) => formatLastVisit(member.last_sign_in_at, dateFormat, timeZone, weekStart) },
     { key: 'quota', label: 'Work Quota', width: '17%', sortValue: () => '', render: () => '—' },

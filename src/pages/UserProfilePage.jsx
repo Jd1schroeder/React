@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, Clock3, LoaderCircle, LockKeyhole, MessageSquare, ShieldCheck, UserRound } from 'lucide-react'
+import { ArrowLeft, CircleCheck, CircleX, Clock3, LoaderCircle, LockKeyhole, MessageSquare, ShieldCheck } from 'lucide-react'
 import { Avatar } from '../components/ui/Avatar'
 import { getCurrentWorkspace } from '../services/workspaceService'
-import { listOrganizationMembers, membershipRoles } from '../services/organizationService'
+import { listOrganizationMembers, listOrganizationRolePermissions, membershipRoles } from '../services/organizationService'
+import { permissionCatalog } from '../services/permissionCatalog'
 import { formatLastVisitForUser } from '../utils/dateFormatting'
 import './UserProfilePage.css'
 
-function roleLabel(role) {
+function roleLabel(role, assignedRole) {
+  if (assignedRole?.name) return assignedRole.name
   return membershipRoles.find((option) => option.value === role)?.label ?? role ?? 'Not available'
 }
 
@@ -19,6 +21,15 @@ function valueOrUnavailable(value) {
   return value || 'Not available'
 }
 
+function permissionGroups() {
+  return permissionCatalog.reduce((groups, permission) => {
+    const group = groups.find((item) => item.module === permission.module)
+    if (group) group.permissions.push(permission)
+    else groups.push({ module: permission.module, permissions: [permission] })
+    return groups
+  }, [])
+}
+
 export function UserProfilePage({ userId, onNavigate }) {
   const [user, setUser] = useState(null)
   const [dateFormat, setDateFormat] = useState('MM/DD/YYYY')
@@ -26,6 +37,7 @@ export function UserProfilePage({ userId, onNavigate }) {
   const [weekStart, setWeekStart] = useState('Sunday')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [permissions, setPermissions] = useState([])
 
   useEffect(() => {
     let active = true
@@ -38,6 +50,7 @@ export function UserProfilePage({ userId, onNavigate }) {
         const members = await listOrganizationMembers(workspace.organization.id)
         const member = members.find((item) => item.user_id === userId)
         if (!member) return null
+        if (member.role_id) setPermissions(await listOrganizationRolePermissions(member.role_id))
         return { ...member, email: workspace.user?.id === userId ? workspace.user.email : null }
       })
       .then((member) => { if (active) setUser(member) })
@@ -49,6 +62,7 @@ export function UserProfilePage({ userId, onNavigate }) {
   const firstName = user?.profile?.first_name ?? ''
   const lastName = user?.profile?.last_name ?? ''
   const displayName = [firstName, lastName].filter(Boolean).join(' ') || 'User profile'
+  const grantedPermissions = new Map(permissions.map((permission) => [permission.permission_key, permission]))
 
   return <main className="user-profile-page">
     <div className="user-profile-scroll">
@@ -72,7 +86,7 @@ export function UserProfilePage({ userId, onNavigate }) {
                 <div className="user-summary-card-inner">
                   <div className="user-summary-header">
                     <Avatar src={user.profile?.avatar_url?.startsWith('http') ? user.profile.avatar_url : ''} firstName={firstName} lastName={lastName} alt={displayName} className="user-summary-avatar" />
-                    <div><h2 id="user-summary-title">{displayName}</h2><p>{roleLabel(user.role)}</p><div className="user-team-empty">No teams assigned</div></div>
+                    <div><h2 id="user-summary-title">{displayName}</h2><p>{roleLabel(user.role, user.organization_roles)}</p><div className="user-team-empty">No teams assigned</div></div>
                   </div>
                   <dl className="user-summary-details">
                     <div><dt>Email</dt><dd>{valueOrUnavailable(user.email)}</dd></div>
@@ -104,7 +118,22 @@ export function UserProfilePage({ userId, onNavigate }) {
               <section className="user-profile-card user-permissions-card" aria-labelledby="user-permissions-title">
                 <div className="user-profile-permissions-title"><h2 id="user-permissions-title">User Permissions</h2><ShieldCheck size={20} aria-hidden="true" /></div>
                 <div className="user-profile-permissions-divider" />
-                <div className="user-profile-empty"><UserRound size={30} aria-hidden="true" /><p>Permissions will appear here when the permission model is connected.</p></div>
+                <div className="user-profile-permissions-list">
+                  {permissionGroups().map((group) => <section className="user-profile-permission-group" key={group.module} aria-labelledby={`user-permission-group-${group.module}`}>
+                    <h3 id={`user-permission-group-${group.module}`}>{group.module}</h3>
+                    <div className="user-profile-permission-group-rows">
+                      {group.permissions.map((definition) => {
+                        const grant = grantedPermissions.get(definition.key)
+                        const isGranted = Boolean(grant)
+                        const scopeLabel = definition.actionOnly ? 'Allowed' : grant?.scope ?? 'Not granted'
+                        return <div className={`user-profile-permission-row${isGranted ? ' is-granted' : ''}`} key={definition.key} aria-label={`${definition.label}: ${scopeLabel}`}>
+                          {isGranted ? <CircleCheck size={20} aria-hidden="true" /> : <CircleX size={20} aria-hidden="true" />}
+                          <span>{definition.label}</span>
+                        </div>
+                      })}
+                    </div>
+                  </section>)}
+                </div>
               </section>
             </div>
           </div>

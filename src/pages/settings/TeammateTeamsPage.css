@@ -1,0 +1,17 @@
+.teammate-teams-card { min-height: 520px; }
+.teammate-section-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--spacing-6); }
+.teammate-section-actions { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: var(--spacing-3); }
+.teammate-search { position: relative; display: flex; align-items: center; gap: var(--spacing-3); width: 300px; min-height: 40px; padding: 0 var(--spacing-3); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-md-compact); color: var(--text-input-placeholder); background: var(--surface); }
+.teammate-search:focus-within { border: var(--focus-border-width) solid var(--focus-border-color); }
+.teammate-search input { min-width: 0; flex: 1; padding-right: var(--spacing-6); border: 0; outline: 0; color: var(--ink); background: transparent; font: inherit; font-size: var(--font-size-sm); }
+.teammate-clear-search { position: absolute; top: 50%; right: var(--spacing-2); display: grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: var(--radius-circle); color: var(--muted); background: transparent; transform: translateY(-50%); }
+.teammate-clear-search:hover { color: var(--ink); background: var(--surface-control-hover); }
+.teammate-section-header h2 { margin: 0; color: var(--ink); font-size: var(--font-size-2xl-compact); }
+.teammate-section-header p { margin: var(--spacing-2) 0 0; color: var(--muted); font-size: var(--font-size-body-sm); }
+.teammate-primary-action, .teammate-secondary-action { min-height: 38px; padding: 0 var(--spacing-4); border: var(--border-width-normal) solid var(--blue); border-radius: var(--radius-sm); color: var(--white); background: var(--blue); font: inherit; font-size: var(--font-size-body-sm); font-weight: var(--font-semibold); }
+.teammate-primary-action:disabled { opacity: .55; cursor: not-allowed; }
+.teammate-empty-state { display: grid; justify-items: center; gap: var(--spacing-3); min-height: 240px; padding: var(--spacing-9); color: var(--muted); text-align: center; }
+.teammate-empty-state h3 { margin: 0; color: var(--ink); font-size: var(--font-size-lg); }
+.teammate-empty-state p { max-width: 380px; margin: 0; }
+.teammate-secondary-action { border-color: var(--line); color: var(--ink); background: var(--surface-subtle); }
+@media (max-width: 800px) { .teammate-section-header { flex-direction: column; }.teammate-section-actions, .teammate-search { width: 100%; }.teammate-section-actions > button { width: 100%; } }

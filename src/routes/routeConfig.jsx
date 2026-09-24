@@ -33,6 +33,8 @@ export const pages = {
   'Settings / Features': SettingsPage,
   'Settings / Subscription': SettingsPage,
   'Settings / Manage Teammates': SettingsPage,
+  'Settings / Teammates / Teams': SettingsPage,
+  'Settings / Teammates / Roles': SettingsPage,
   'Settings / Customizations': SettingsPage,
   'Settings / Integrations': SettingsPage,
   'Settings / Profile Preferences': SettingsPage,

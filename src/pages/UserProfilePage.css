@@ -233,6 +233,45 @@
   margin: 0 var(--spacing-6);
   background: var(--line);
 }
+.user-profile-permissions-list {
+  display: grid;
+  gap: 0;
+  padding: 0 var(--spacing-6) var(--spacing-4);
+}
+.user-profile-permission-group {
+  padding: var(--spacing-5) 0;
+  border-bottom: var(--border-width-normal) solid var(--line);
+}
+.user-profile-permission-group:last-child {
+  border-bottom: 0;
+}
+.user-profile-permission-group h3 {
+  margin: 0 0 var(--spacing-3);
+  color: var(--ink);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-semibold);
+}
+.user-profile-permission-group-rows {
+  display: grid;
+  gap: var(--spacing-3);
+}
+.user-profile-permission-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  color: var(--ink);
+  font-size: var(--font-size-body-sm);
+  line-height: var(--line-height-md);
+}
+.user-profile-permission-row > svg {
+  flex: none;
+  color: var(--muted);
+}
+.user-profile-permission-row.is-granted > svg {
+  color: var(--success);
+  fill: var(--success);
+  stroke: var(--surface);
+}
 .user-profile-empty,
 .user-profile-state {
   display: grid;

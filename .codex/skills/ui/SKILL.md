@@ -16,6 +16,7 @@ Use the existing layout primitives before creating page-specific alternatives.
 - `PanelView` owns the reusable split list/detail panel.
 - `src/pages/WorkOrders.css` contains Work Orders-only pane/detail styling.
 - Work Orders page orchestration belongs in `WorkOrders.jsx`; list/filter controls and detail content belong in `src/pages/work-orders/WorkOrderList.jsx` and `WorkOrderDetail.jsx`.
+- Work Orders read and execution mutations use `src/services/workOrderService.js`; keep the page free of mock records. Database authorization controls core edits separately from assigned execution updates.
 - `src/styles/tokens.css` contains shared design tokens; prefer tokens over new hardcoded values.
 - The document root uses `--font-size-root` at 14px, so `1rem` equals 14px throughout the Workbench UI. Keep the root scale explicit rather than relying on the browser default.
 - Use the standard Workbench type, line-height, spacing, border, radius, transition, elevation, and color tokens in `src/styles/tokens.css`. UI styles outside the token file must not contain raw color literals; use an existing semantic token or add a centralized palette/semantic token first. Migrate repeated values to tokens before introducing new literals. Keep unique brand artwork values centralized in the token file rather than scattering them through component CSS. Native `@media` breakpoints may remain literal because CSS custom properties are not reliably supported in media queries.
@@ -31,7 +32,21 @@ Every new sidebar destination should use the shared panel shell unless its inter
 
 People management uses dedicated `/users` and `/teams` pages with a shared Users/Teams tab switcher; the sidebar label remains “Teams / Users” but lands on `/users`.
 
+Teammate administration uses `/settings/teammates/users`, `/settings/teammates/teams`, and `/settings/teammates/roles` as subpages within the Manage Teammates settings area. Show the built-in organization roles Requester, Technician, Supervisor, and Organization Admin separately from persisted custom roles; do not present application-level Superadmin as an organization role. Custom roles use the real granular permission catalog and must not render fabricated permission toggles.
+
+Manage Teammates subpages use a consistent header action pattern: place the standard tokenized search field with a clear `X` beside the primary action, filter loaded records when a data model exists, and preserve the search affordance on scaffolded pages until persistence is connected.
+
+User role assignment uses persisted `organization_members.role_id` values and the organization role list; do not use the legacy text role as the selector value. Custom-role deletion must require a replacement role in a reassignment modal.
+
+Every module or feature must own a permission catalog before its authorization UI is built. A user has one effective organization role. Custom roles use a "Create from" baseline and copy its permissions at creation time. Deleting a role with assigned users must use a reassignment modal and must not complete until every affected user has a replacement role. Superadmin is platform-only and must never appear in organization-facing UI.
+
+The current cross-module catalog and built-in-role baselines live in `src/services/permissionCatalog.js`; extend that catalog when adding a feature instead of inventing permission keys inside a page component. Use granular action keys, including nested feature actions, and render organization-wide actions as allow/deny rather than a misleading record scope.
+
+For Work Orders, Technician permissions distinguish core editing from execution: technicians may change execution state on work orders assigned to them, including status and procedure progress, but may not edit core details on work orders they did not create.
+
 User rows navigate to `/users/profile/:userId`, whose detail scaffold uses real organization-member/profile data for identity fields. Keep activity, work-order history, permissions, teams, and unavailable account actions as explicit empty or disabled states until their data models and services exist; never fill the profile scaffold with mock records.
+
+The user profile permission panel renders the complete MaintainX-style catalog grouped by module, using enabled and disabled status icons; do not render only the permissions currently granted because the panel is an audit view.
 
 Use the React Router route boundaries in `src/App.jsx` and the route registry in `src/routes/routeConfig.jsx` for navigation. Keep page modules lazy-loaded and render them through the shared loading fallback; do not reintroduce direct `history.pushState` navigation or eager-import every route page.
 

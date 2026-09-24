@@ -16,14 +16,14 @@ async function getUserId() {
 export async function listOrganizationInvitations(organizationId) {
   const { data, error } = await supabase
     .from('organization_invitations')
-    .select('id, organization_id, contact_type, contact_value, first_name, last_name, role, status, invited_by, invited_at, expires_at, accepted_by, accepted_at, created_at, updated_at')
+    .select('id, organization_id, contact_type, contact_value, first_name, last_name, role, role_id, status, invited_by, invited_at, expires_at, accepted_by, accepted_at, created_at, updated_at, organization_roles(name)')
     .eq('organization_id', organizationId)
     .order('created_at', { ascending: false })
   if (error) throw error
   return data ?? []
 }
 
-export async function createOrganizationInvitation({ organizationId, contactType, contactValue, firstName, lastName, role }) {
+export async function createOrganizationInvitation({ organizationId, contactType, contactValue, firstName, lastName, role, roleId }) {
   const userId = await getUserId()
   const token = crypto.randomUUID()
   const { data, error } = await supabase
@@ -35,10 +35,11 @@ export async function createOrganizationInvitation({ organizationId, contactType
       first_name: firstName?.trim() || null,
       last_name: lastName?.trim() || null,
       role,
+      role_id: roleId,
       invited_by: userId,
       token_hash: await hashToken(token),
     })
-    .select('id, organization_id, contact_type, contact_value, first_name, last_name, role, status, invited_at, expires_at')
+    .select('id, organization_id, contact_type, contact_value, first_name, last_name, role, role_id, status, invited_at, expires_at')
     .single()
   if (error) throw error
   return { ...data, inviteLink: `${window.location.origin}/accept-invite?token=${encodeURIComponent(token)}` }

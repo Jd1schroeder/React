@@ -334,3 +334,4 @@
     padding: var(--spacing-3);
   }
 }
+.work-orders-loading { display: grid; place-items: center; min-height: 240px; color: var(--muted); font-size: var(--font-size-body-sm); }

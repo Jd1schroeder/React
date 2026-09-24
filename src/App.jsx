@@ -54,6 +54,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<LegacyHashRedirect />} />
       <Route path="/teams/users" element={<Navigate to="/users" replace />} />
+      <Route path="/settings/manage-teammates" element={<Navigate to="/settings/teammates/users" replace />} />
       <Route path="/users/profile/:userId" element={<PageRoute pageName="User Profile" />} />
       {publicRoutes.slice(1).map(([path, page]) => <Route key={path} path={path} element={<PageRoute pageName={page} isPublic />} />)}
       {authenticatedRoutes.map(({ path, page }) => <Route key={path} path={path} element={<PageRoute pageName={page} />} />)}
