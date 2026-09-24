@@ -13,7 +13,6 @@ export async function getCurrentWorkspace(organizationId = window.localStorage.g
       .from('organization_members')
       .select('organization_id, role, status, organizations(id, name, slug, description, logo_url, timezone, status)')
       .eq('user_id', user.id)
-      .eq('status', 'active')
       .order('created_at', { ascending: true }),
     supabase.from('profiles').select('id, first_name, last_name, phone, avatar_url').eq('id', user.id).maybeSingle(),
     supabase.from('user_preferences').select('language, date_format, time_format, week_start, timezone').eq('user_id', user.id).maybeSingle(),
@@ -38,10 +37,23 @@ export async function getCurrentWorkspace(organizationId = window.localStorage.g
     }
     profileWithAvatar = { ...profile, avatar_path: profile.avatar_url, avatar_url: signedAvatarUrl }
   }
-  const organizations = (memberships ?? []).map(({ organizations: organization, ...membership }) => ({ ...organization, role: membership.role, membershipStatus: membership.status }))
-  const organization = organizations.find((item) => item.id === organizationId) ?? organizations[0] ?? null
+  const organizations = (memberships ?? []).map(({ organizations: organization, ...membership }) => ({
+    ...organization,
+    role: membership.role,
+    membershipStatus: membership.status,
+    organizationStatus: organization?.status ?? 'active',
+  }))
+  const activeOrganizations = organizations.filter((item) => item.membershipStatus === 'active' && item.organizationStatus !== 'suspended')
+  const organization = activeOrganizations.find((item) => item.id === organizationId)
+    ?? activeOrganizations[0]
+    ?? organizations.find((item) => item.id === organizationId)
+    ?? organizations[0]
+    ?? null
+  const hasActiveOrganization = activeOrganizations.length > 0
+  const hasSuspendedOrganization = organizations.some((item) => item.membershipStatus === 'suspended' || item.organizationStatus === 'suspended')
+  const accessStatus = hasActiveOrganization ? 'active' : hasSuspendedOrganization ? 'suspended' : 'none'
 
-  return { user, profile: profileWithAvatar, preferences, organizations, organization }
+  return { user, profile: profileWithAvatar, preferences, organizations, organization, accessStatus }
 }
 
 export function setActiveOrganization(organizationId) {

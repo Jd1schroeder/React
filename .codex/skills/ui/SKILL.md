@@ -54,7 +54,7 @@ Date and time values must use the saved `workspace.preferences.date_format`, `wo
 
 Last Visit-style values use `formatLastVisitForUser`: show `Today` and `Yesterday`, use the weekday for earlier dates in the current configured week, and use the selected date format for older dates.
 
-The authenticated shell is gated by `WorkspaceProvider`. During session/workspace hydration, show the shared neutral loading surface and spinner; render the sidebar and page together only after authoritative workspace data is ready. Workspace failures must show the shared retry state instead of placeholder identity or organization values.
+The authenticated shell is gated by `WorkspaceProvider`. During session/workspace hydration, show the shared neutral loading surface and spinner; render the sidebar and page together only after authoritative workspace data is ready. Workspace failures must show the shared retry state instead of placeholder identity or organization values. Authenticated users without an active organization membership must receive a centralized no-access or suspended-access state before the shell renders; do not duplicate this gate in individual pages.
 
 Unknown record IDs under a valid section route must preserve the parent `PanelView` and render the shared `PanelRecordNotFound` state in its detail pane. Unknown authenticated top-level routes must preserve `AppLayout` and render only the artwork in the main content area. Public splash and authentication routes remain outside the application shell.
 

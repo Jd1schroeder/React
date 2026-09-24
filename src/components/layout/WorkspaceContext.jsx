@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Building2, LogOut, ShieldAlert } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { getCurrentWorkspace } from "../../services/workspaceService";
 
@@ -15,7 +16,12 @@ export function WorkspaceProvider({ children, onNavigate }) {
         setState({ status: "unauthenticated", workspace: null, error: null });
         return;
       }
-      setState({ status: "ready", workspace, error: null });
+      const status = workspace.accessStatus === "active"
+        ? "ready"
+        : workspace.accessStatus === "suspended"
+          ? "suspended"
+          : "no-organization";
+      setState({ status, workspace, error: null });
     } catch (error) {
       setState((current) => ({ ...current, status: "error", error }));
     }
@@ -55,5 +61,49 @@ export function WorkspaceProvider({ children, onNavigate }) {
     );
   }
 
+  if (state.status === "suspended") {
+    return (
+      <WorkspaceAccessState
+        icon={ShieldAlert}
+        title="Organization access suspended"
+        message="Your organization membership or workspace is suspended. Contact an organization administrator to restore access."
+        onSignOut={async () => {
+          await supabase.auth.signOut();
+          onNavigate("Login");
+        }}
+      />
+    );
+  }
+
+  if (state.status === "no-organization") {
+    return (
+      <WorkspaceAccessState
+        icon={Building2}
+        title="No organization access"
+        message="You do not have an active organization membership. Accept an invitation from an organization administrator, then sign in again."
+        onSignOut={async () => {
+          await supabase.auth.signOut();
+          onNavigate("Login");
+        }}
+      />
+    );
+  }
+
   return <WorkspaceContext.Provider value={{ ...state.workspace, refreshWorkspace: loadWorkspace }}>{children}</WorkspaceContext.Provider>;
+}
+
+function WorkspaceAccessState({ icon: Icon, title, message, onSignOut }) {
+  return (
+    <main className="workspace-access-state" aria-labelledby="workspace-access-title">
+      <section className="workspace-access-card">
+        <Icon size={32} aria-hidden="true" />
+        <h1 id="workspace-access-title">{title}</h1>
+        <p>{message}</p>
+        <button type="button" onClick={onSignOut}>
+          <LogOut size={16} aria-hidden="true" />
+          Sign out
+        </button>
+      </section>
+    </main>
+  );
 }

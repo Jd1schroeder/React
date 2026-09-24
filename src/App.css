@@ -64,6 +64,43 @@
 .workspace-load-error h1 { margin: 0; font-size: var(--font-size-2xl-compact); }
 .workspace-load-error p { margin: 8px 0 20px; color: var(--muted); }
 .workspace-load-error button { justify-self: center; padding: 9px 14px; border: 0; border-radius: var(--radius-md-compact); color: var(--white); background: var(--blue); font-weight: var(--font-semibold); }
+.workspace-access-state {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: var(--spacing-6);
+  background: var(--surface-page);
+}
+.workspace-access-card {
+  display: grid;
+  justify-items: center;
+  gap: var(--spacing-3);
+  width: min(100%, 460px);
+  padding: var(--spacing-8);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--elevation-2);
+  text-align: center;
+}
+.workspace-access-card > svg { color: var(--muted); }
+.workspace-access-card h1 { margin: 0; color: var(--ink); font-size: var(--font-size-xl); }
+.workspace-access-card p { margin: 0; color: var(--muted); line-height: var(--line-height-normal); }
+.workspace-access-card button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-height: 38px;
+  padding: 0 var(--spacing-4);
+  border: 0;
+  border-radius: var(--radius-md-compact);
+  color: var(--white);
+  background: var(--blue);
+  font: inherit;
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+}
 .avatar {
   width: 29px;
   height: 29px;
