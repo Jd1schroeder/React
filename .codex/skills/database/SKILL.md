@@ -17,9 +17,13 @@ The current persistence boundary is `organization_role_permissions` (migration `
 
 System roles and their initial grants are seeded by `20260923150000_seed_system_organization_roles.sql`. Use `organization_members.role_id` as the authoritative assignment and keep the legacy text role only as a compatibility field. Shared database authorization begins with `has_organization_permission(...)`; role CRUD and custom-role deletion use `organization.edit_user_roles`, and `delete_custom_organization_role(...)` reassigns memberships and deletes the role in one transaction.
 
+New organizations must also receive system roles at signup. The forward-only provisioning repair `20260928130000_provision_system_roles_for_new_organizations.sql` seeds the four built-in roles and grants before inserting the owner membership, preventing role-validation failures and avoiding a fail-closed workspace with no assigned `role_id`.
+
 Work Order authorization is defined by `20260923190000_create_work_orders_authorization.sql`. The `work_orders_enforce_permissions` trigger permits Technician core edits only for records they created, while status and procedure-progress changes use assigned-record grants. Keep this distinction in database mutations, not only in UI button visibility.
 
 Work Order authorization must distinguish core record editing from execution updates. Technician grants may allow status and procedure-progress changes on assigned work orders while restricting core edits to work orders created by that technician.
+
+Team-scoped Work Order access uses `organization_teams`, `organization_team_members`, and the nullable `work_orders.team_id` column from `20260928120000_add_team_scoped_work_order_authorization.sql`. Do not derive team access from a client boolean; database authorization must verify the authenticated user is an active member of the record's organization team.
 
 The role-management policy migration `20260923200000_authorize_role_management_by_permission.sql` keeps role definitions and role grants behind the granular role-management permission instead of the legacy text-role helper.
 

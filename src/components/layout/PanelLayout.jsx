@@ -18,6 +18,8 @@ export function PanelLayout({
   className = '',
   bodyClassName = '',
   showViewSelector = true,
+  showHeaderSearch = true,
+  showAction = true,
 }) {
   return <div className={`panel-view-page ${className}`.trim()}>
     <div className="panel-navigation">
@@ -29,12 +31,12 @@ export function PanelLayout({
           </div>
         </div>
         <div className="panel-view-header-actions">
-          <label className="header-search">
+          {showHeaderSearch && <label className="header-search">
             <Search size={16} aria-hidden="true" />
             <input value={searchValue} onChange={(event) => onSearch?.(event.target.value)} placeholder={searchPlaceholder ?? `Search ${title.toLowerCase()}`} aria-label={searchPlaceholder ?? `Search ${title.toLowerCase()}`} />
             {searchValue && <button type="button" className="clear-search" onClick={() => onSearch?.('')} aria-label="Clear search"><X size={15} /></button>}
-          </label>
-          <Button onClick={onAction}><Plus size={15} /> {actionLabel}</Button>
+          </label>}
+          {showAction && <Button onClick={onAction}><Plus size={15} /> {actionLabel}</Button>}
         </div>
       </header>
     </div>

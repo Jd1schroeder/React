@@ -13,6 +13,10 @@ The current workspace service returns the authenticated user together with `prof
 
 Membership administration must use the organization membership service and rely on Supabase RLS for authorization. Membership state is lifecycle-based (`invited`, `active`, or `suspended`); clients must not treat a role check in the UI as sufficient authorization.
 
+Feature services should use `src/services/authorizationService.js` for fail-closed client preflight checks, but never treat those checks as a replacement for Supabase RLS. Work Order service methods require the current role grants and record context before issuing reads or mutations.
+
+The workspace service also loads the current user's team IDs for the selected organization. Pass team context to Work Order UI authorization only as a rendering aid; the Work Order service and RLS remain authoritative.
+
 Invitation tokens must be stored as hashes and invitation email/SMS delivery must run in a trusted backend or Edge Function; never generate or persist service-role credentials in the browser. Audit events should be written through an authorized service and include the organization, actor, action, entity, and structured metadata.
 
 Invitation acceptance is enforced by the `accept_organization_invitation` database function: it validates the hashed token, expiry, authenticated contact, and membership transition before marking the invitation accepted.

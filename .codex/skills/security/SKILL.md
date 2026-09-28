@@ -7,6 +7,10 @@ description: Maintain Workbench authentication, authorization, storage, headers,
 
 Supabase RLS and database functions are the security boundary. Client route gates, hidden buttons, role labels, and `WorkspaceProvider` states are UX controls only and must never be the only authorization check.
 
+The shared client evaluator lives in `src/services/authorizationService.js`. It supports `own`, `assigned`, `team`, and `any` record scopes and must fail closed for missing or invalid grants. Use it to hide unauthorized actions while keeping database RLS authoritative.
+
+For team scope, the client may use the authenticated user's loaded team IDs for responsive UI decisions, but Supabase must derive the final decision from `organization_team_members` and the Work Order's `team_id`. Never trust a caller-supplied `is_team_record` flag; the forward-only Work Order migration replaces that boolean path with membership-backed authorization.
+
 Organization authorization must verify all of the following in the database:
 
 - the caller has an active membership;
@@ -21,4 +25,4 @@ Avatar uploads must go through `supabase/functions/upload-avatar/index.ts`, whic
 
 Production deployments must provide CSP, clickjacking protection, `nosniff`, referrer policy, and a restrictive permissions policy through the deployment configuration. Keep `script-src` free of `unsafe-eval`; document any unavoidable `unsafe-inline` use. Validate the checked-in policy with `npm.cmd run check:security-config`, then validate deployed response headers with `SECURITY_HEADERS_URL` and `npm.cmd run check:security-headers`.
 
-Security changes must be verified with `npm.cmd run verify` plus `npm.cmd run check:security`; follow `docs/security-verification.md` for the required migration-history and live two-organization checks. Use separate short-lived authenticated test identities and organization/role IDs supplied through environment variables. Tests must prove that cross-organization role assignment, suspended-organization reads/writes, unauthorized membership creation, and unauthorized role changes are denied. Never commit those credentials or place them in `VITE_*` variables.
+Security changes must be verified with `npm.cmd run verify` plus the interactive Windows helper `powershell -ExecutionPolicy Bypass -File .\scripts\run-security-check.ps1`; follow `docs/security-verification.md` for the required migration-history and live two-organization checks. The helper uses Node's Windows system certificate store and removes any inherited `NODE_TLS_REJECT_UNAUTHORIZED` override so local certificate-inspection environments do not weaken the live check. Use separate short-lived authenticated test identities and organization/role IDs supplied through environment variables. Tests must prove that cross-organization role assignment, suspended-organization reads/writes, unauthorized membership creation, and unauthorized role changes are denied. Never commit those credentials or place them in `VITE_*` variables.

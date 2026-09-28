@@ -16,9 +16,11 @@ export function WorkspaceProvider({ children, onNavigate }) {
         setState({ status: "unauthenticated", workspace: null, error: null });
         return;
       }
-      const status = workspace.accessStatus === "active"
-        ? "ready"
-        : workspace.accessStatus === "suspended"
+      const status = workspace.authorization?.status === "error"
+        ? "error"
+        : workspace.accessStatus === "active" && workspace.authorization?.status === "ready"
+          ? "ready"
+          : workspace.accessStatus === "suspended"
           ? "suspended"
           : "no-organization";
       setState({ status, workspace, error: null });

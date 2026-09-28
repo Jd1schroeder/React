@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { getAvatarSignedUrl } from './profileService'
+import { permissionMap } from './authorizationService'
 
 export async function getCurrentWorkspace(organizationId = window.localStorage.getItem('workbench.activeOrganizationId')) {
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
@@ -11,7 +12,7 @@ export async function getCurrentWorkspace(organizationId = window.localStorage.g
   const [membershipResult, profileResult, preferencesResult] = await Promise.allSettled([
     supabase
       .from('organization_members')
-      .select('organization_id, role, status, organizations(id, name, slug, description, logo_url, timezone, status)')
+      .select('organization_id, role, role_id, status, organization_roles(id, name, system_key, is_system), organizations(id, name, slug, description, logo_url, timezone, status)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: true }),
     supabase.from('profiles').select('id, first_name, last_name, phone, avatar_url').eq('id', user.id).maybeSingle(),
@@ -37,9 +38,11 @@ export async function getCurrentWorkspace(organizationId = window.localStorage.g
     }
     profileWithAvatar = { ...profile, avatar_path: profile.avatar_url, avatar_url: signedAvatarUrl }
   }
-  const organizations = (memberships ?? []).map(({ organizations: organization, ...membership }) => ({
+  const organizations = (memberships ?? []).map(({ organizations: organization, organization_roles: roleDefinition, ...membership }) => ({
     ...organization,
     role: membership.role,
+    roleId: membership.role_id,
+    roleDefinition,
     membershipStatus: membership.status,
     organizationStatus: organization?.status ?? 'active',
   }))
@@ -53,7 +56,27 @@ export async function getCurrentWorkspace(organizationId = window.localStorage.g
   const hasSuspendedOrganization = organizations.some((item) => item.membershipStatus === 'suspended' || item.organizationStatus === 'suspended')
   const accessStatus = hasActiveOrganization ? 'active' : hasSuspendedOrganization ? 'suspended' : 'none'
 
-  return { user, profile: profileWithAvatar, preferences, organizations, organization, accessStatus }
+  let authorization = { status: 'error', roleId: organization?.roleId ?? null, grants: {} }
+  let teamIds = []
+  if (organization?.roleId && organization.membershipStatus === 'active' && organization.organizationStatus !== 'suspended') {
+    const [{ data: permissionRows, error: permissionError }, { data: teamMembershipRows, error: teamMembershipError }] = await Promise.all([
+      supabase
+        .from('organization_role_permissions')
+        .select('permission_key, scope')
+        .eq('role_id', organization.roleId),
+      supabase
+        .from('organization_team_members')
+        .select('team_id, organization_teams!inner(organization_id)')
+        .eq('user_id', user.id)
+        .eq('organization_teams.organization_id', organization.id),
+    ])
+    if (permissionError) throw permissionError
+    if (teamMembershipError) throw teamMembershipError
+    teamIds = (teamMembershipRows ?? []).map((row) => row.team_id)
+    authorization = { status: 'ready', roleId: organization.roleId, grants: permissionMap(permissionRows ?? []) }
+  }
+
+  return { user, profile: profileWithAvatar, preferences, organizations, organization, accessStatus, authorization, teamIds }
 }
 
 export function setActiveOrganization(organizationId) {

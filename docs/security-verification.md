@@ -26,12 +26,14 @@ where version in (
   '20260923220000',
   '20260923230000',
   '20260923240000',
-  '20260923250000'
+  '20260923250000',
+  '20260928120000',
+  '20260928130000'
 )
 order by version;
 ```
 
-The result must contain all four versions. The final two migrations are forward-only repairs; do not edit or rerun earlier applied migrations.
+The result must contain all six versions. The final four migrations are forward-only repairs or authorization extensions; do not edit or rerun earlier applied migrations.
 
 ## Live two-organization checks
 
@@ -48,13 +50,30 @@ SUPABASE_TEST_ORGANIZATION_A_ALTERNATE_ROLE_ID
 SUPABASE_TEST_ORGANIZATION_B_ROLE_ID
 ```
 
+Optional release-scope fixtures:
+
+```text
+SUPABASE_TEST_TEAM_WORK_ORDER_ID
+SUPABASE_TEST_NON_TEAM_WORK_ORDER_ID
+```
+
 Then run:
 
 ```powershell
 npm.cmd run check:security
 ```
 
-The check must deny cross-organization membership reads and inserts, cross-organization role assignment, self-role changes, and suspended-organization work-order reads.
+On Windows, use the interactive helper to avoid copying credentials or email addresses into shell commands:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run-security-check.ps1
+```
+
+On Windows, the helper enables Node's Windows system certificate store and clears any inherited `NODE_TLS_REJECT_UNAUTHORIZED` override. This keeps the live check encrypted and avoids false `self-signed certificate in certificate chain` failures caused by local certificate inspection. Do not solve this by permanently disabling TLS verification.
+
+The check must deny cross-organization membership reads and inserts, cross-organization role assignment, self-role changes, and suspended-organization work-order reads. Work Order fixtures should also cover own, assigned, team-member, non-team-member, and any-scope access; the database must be the source of truth for each result.
+
+The two Work Order fixture IDs are optional for the baseline check but should be supplied for release verification. Identity A must use a role with a team-scoped Work Order view grant, belong to the team assigned to `SUPABASE_TEST_TEAM_WORK_ORDER_ID`, and not belong to the team assigned to `SUPABASE_TEST_NON_TEAM_WORK_ORDER_ID`.
 
 ## Edge Function deployment
 

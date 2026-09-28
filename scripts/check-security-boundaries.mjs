@@ -26,20 +26,27 @@ if (missing.length) {
   process.exit(1)
 }
 
-const baseUrl = env.VITE_SUPABASE_URL
-const publishableKey = env.VITE_SUPABASE_PUBLISHABLE_KEY
-const organizationA = env.SUPABASE_TEST_ORGANIZATION_A_ID
-const organizationB = env.SUPABASE_TEST_ORGANIZATION_B_ID
+const baseUrl = env.VITE_SUPABASE_URL.trim().replace(/\/$/, '')
+const publishableKey = env.VITE_SUPABASE_PUBLISHABLE_KEY.trim()
+const organizationA = env.SUPABASE_TEST_ORGANIZATION_A_ID.trim()
+const organizationB = env.SUPABASE_TEST_ORGANIZATION_B_ID.trim()
 
 function headers(token, extra = {}) {
   return { apikey: publishableKey, Authorization: `Bearer ${token}`, ...extra }
 }
 
 async function request(path, token, options = {}) {
-  const response = await fetch(`${baseUrl}${path}`, {
-    ...options,
-    headers: headers(token, options.headers),
-  })
+  const url = `${baseUrl}${path}`
+  let response
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers: headers(token, options.headers),
+    })
+  } catch (error) {
+    const cause = error?.cause?.message ? ` Cause: ${error.cause.message}` : ''
+    throw new Error(`Request failed for ${options.method || 'GET'} ${url}: ${error.message}.${cause}`)
+  }
   const text = await response.text()
   let body = null
   try { body = text ? JSON.parse(text) : null } catch { body = text }
@@ -55,6 +62,8 @@ function assertDenied(result, label) {
 
 const tokenA = env.SUPABASE_TEST_ACCESS_TOKEN
 const tokenB = env.SUPABASE_TEST_SECOND_ACCESS_TOKEN
+const teamWorkOrderId = env.SUPABASE_TEST_TEAM_WORK_ORDER_ID
+const nonTeamWorkOrderId = env.SUPABASE_TEST_NON_TEAM_WORK_ORDER_ID
 
 try {
   const ownA = await request(`/rest/v1/organization_members?select=organization_id&organization_id=eq.${organizationA}`, tokenA)
@@ -99,6 +108,19 @@ try {
     body: JSON.stringify({ organization_id: organizationB, title: 'Security verification probe', created_by: userB.id }),
   })
   assertDenied(suspendedWrite, 'suspended organization work-order write')
+
+  if (teamWorkOrderId || nonTeamWorkOrderId) {
+    if (!teamWorkOrderId || !nonTeamWorkOrderId) throw new Error('Both team and non-team Work Order fixture IDs are required for scope checks.')
+    const teamMembership = await request(`/rest/v1/organization_team_members?select=team_id&user_id=eq.${(await (await fetch(`${baseUrl}/auth/v1/user`, { headers: headers(tokenA) })).json()).id}`, tokenA)
+    if (!teamMembership.response.ok || !Array.isArray(teamMembership.body) || !teamMembership.body.length) throw new Error('Identity A needs an active team membership for team-scope verification.')
+    const teamRead = await request(`/rest/v1/work_orders?select=id&id=eq.${teamWorkOrderId}&organization_id=eq.${organizationA}`, tokenA)
+    if (!teamRead.response.ok || teamRead.body.length !== 1) throw new Error('Team member could not read the team-scoped Work Order.')
+    const nonTeamRead = await request(`/rest/v1/work_orders?select=id&id=eq.${nonTeamWorkOrderId}&organization_id=eq.${organizationA}`, tokenA)
+    if (!nonTeamRead.response.ok || nonTeamRead.body.length !== 0) throw new Error('Team-scoped role read a Work Order outside its team.')
+    console.log('Work Order team-scope checks passed.')
+  } else {
+    console.log('Skipped optional Work Order team-scope fixture checks; set SUPABASE_TEST_TEAM_WORK_ORDER_ID and SUPABASE_TEST_NON_TEAM_WORK_ORDER_ID to enable them.')
+  }
 
   console.log('Security boundary checks passed.')
 } catch (error) {
