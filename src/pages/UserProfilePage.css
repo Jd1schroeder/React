@@ -255,6 +255,11 @@
   display: grid;
   gap: var(--spacing-3);
 }
+.user-profile-permission-subgroup {
+  display: grid;
+  gap: var(--spacing-3);
+  padding-left: 28px;
+}
 .user-profile-permission-row {
   display: flex;
   align-items: center;

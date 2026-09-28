@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { ArrowLeft, CircleCheck, CircleX, Clock3, LoaderCircle, LockKeyhole, MessageSquare, ShieldCheck } from 'lucide-react'
 import { Avatar } from '../components/ui/Avatar'
 import { getCurrentWorkspace } from '../services/workspaceService'
@@ -28,6 +28,22 @@ function permissionGroups() {
     else groups.push({ module: permission.module, permissions: [permission] })
     return groups
   }, [])
+}
+
+const partStatusPermissionKeys = [
+  'work_orders.part_status_assigned',
+  'work_orders.part_status_reserved',
+  'work_orders.part_status_issued',
+]
+
+function permissionRow(definition, grantedPermissions) {
+  const grant = grantedPermissions.get(definition.key)
+  const isGranted = Boolean(grant)
+  const scopeLabel = definition.actionOnly ? 'Allowed' : grant?.scope ?? 'Not granted'
+  return <div className={`user-profile-permission-row${isGranted ? ' is-granted' : ''}`} key={definition.key} aria-label={`${definition.label}: ${scopeLabel}`}>
+    {isGranted ? <CircleCheck size={20} aria-hidden="true" /> : <CircleX size={20} aria-hidden="true" />}
+    <span>{definition.label}</span>
+  </div>
 }
 
 export function UserProfilePage({ userId, onNavigate }) {
@@ -123,13 +139,14 @@ export function UserProfilePage({ userId, onNavigate }) {
                     <h3 id={`user-permission-group-${group.module}`}>{group.module}</h3>
                     <div className="user-profile-permission-group-rows">
                       {group.permissions.map((definition) => {
-                        const grant = grantedPermissions.get(definition.key)
-                        const isGranted = Boolean(grant)
-                        const scopeLabel = definition.actionOnly ? 'Allowed' : grant?.scope ?? 'Not granted'
-                        return <div className={`user-profile-permission-row${isGranted ? ' is-granted' : ''}`} key={definition.key} aria-label={`${definition.label}: ${scopeLabel}`}>
-                          {isGranted ? <CircleCheck size={20} aria-hidden="true" /> : <CircleX size={20} aria-hidden="true" />}
-                          <span>{definition.label}</span>
-                        </div>
+                        if (partStatusPermissionKeys.includes(definition.key)) return null
+                        const nestedRows = definition.key === 'work_orders.change_part_status'
+                          ? group.permissions.filter((item) => partStatusPermissionKeys.includes(item.key)).map((item) => permissionRow(item, grantedPermissions))
+                          : null
+                        return <Fragment key={definition.key}>
+                          {permissionRow(definition, grantedPermissions)}
+                          {nestedRows && <div className="user-profile-permission-subgroup">{nestedRows}</div>}
+                        </Fragment>
                       })}
                     </div>
                   </section>)}
