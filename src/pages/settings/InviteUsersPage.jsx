@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, Link2, Plus, X } from "lucide-react";
 import { Select } from "../../components/ui/Select";
-import { createOrganizationInvitation, listOrganizationInvitations, revokeOrganizationInvitation } from "../../services/invitationService";
+import { createOrganizationInvitation } from "../../services/invitationService";
 import { listOrganizationRoles } from "../../services/organizationService";
 import { getCurrentWorkspace } from "../../services/workspaceService";
 import { SettingsLayout } from "./SettingsLayout";
@@ -12,7 +12,6 @@ export function InviteUsersPage({ onNavigate }) {
   const [notifyInvites, setNotifyInvites] = useState(true);
   const [linkCopied, setLinkCopied] = useState(false);
   const [inviteLink, setInviteLink] = useState("");
-  const [invitations, setInvitations] = useState([]);
   const [organizationId, setOrganizationId] = useState("");
   const [roles, setRoles] = useState([]);
   const [isSending, setIsSending] = useState(false);
@@ -24,8 +23,7 @@ export function InviteUsersPage({ onNavigate }) {
       const id = workspace.organization?.id ?? "";
       setOrganizationId(id);
       if (id) {
-        const [invitationRows, roleRows] = await Promise.all([listOrganizationInvitations(id), listOrganizationRoles(id)]);
-        setInvitations(invitationRows);
+        const roleRows = await listOrganizationRoles(id);
         setRoles(roleRows);
         setInvites([{ name: "", contact: "", role: "member", roleId: roleRows.find((role) => role.system_key === "requester")?.id ?? "" }]);
       }
@@ -55,21 +53,11 @@ export function InviteUsersPage({ onNavigate }) {
         notifyInvites,
       })));
       setInviteLink(createdInvites[0]?.inviteLink ?? "");
-      setInvitations((current) => [...createdInvites, ...current]);
       setInvites([{ name: "", contact: "", role: "member", roleId: roles.find((role) => role.system_key === "requester")?.id ?? "" }]);
     } catch (error) {
       setSendError(error.message || "Unable to create the invitations.");
     } finally {
       setIsSending(false);
-    }
-  };
-
-  const revokeInvitation = async (invitationId) => {
-    try {
-      await revokeOrganizationInvitation(invitationId);
-      setInvitations((current) => current.map((item) => item.id === invitationId ? { ...item, status: "revoked" } : item));
-    } catch (error) {
-      setSendError(error.message || "Unable to revoke the invitation.");
     }
   };
 
@@ -92,7 +80,6 @@ export function InviteUsersPage({ onNavigate }) {
           <button type="button" className="invite-link-button" onClick={copyInviteLink}><Link2 size={17} /> {linkCopied ? "Invite link copied" : "Get an invite link to share"}</button>
         </div>
         {sendError && <p className="invite-error" role="alert">{sendError}</p>}
-        {invitations.length > 0 && <div className="invitation-list"><h2>Recent invitations</h2>{invitations.map((invitation) => <div className="invitation-row" key={invitation.id}><div><strong>{[invitation.first_name, invitation.last_name].filter(Boolean).join(" ") || invitation.contact_value}</strong><small>{invitation.contact_type} · {invitation.role} · {invitation.status}</small></div>{invitation.status === "invited" && <button type="button" onClick={() => revokeInvitation(invitation.id)}>Revoke</button>}</div>)}</div>}
       </section>
     </SettingsLayout>
   </div>;

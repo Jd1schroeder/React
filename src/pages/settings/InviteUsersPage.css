@@ -161,56 +161,6 @@
   font-size: var(--font-size-sm);
 }
 
-.invitation-list {
-  display: grid;
-  gap: 0;
-  margin-top: var(--spacing-3);
-  border-top: var(--border-width-normal) solid var(--line);
-}
-
-.invitation-list h2 {
-  margin: var(--spacing-6) 0 var(--spacing-3);
-  color: var(--ink);
-  font-size: var(--font-size-md-plus);
-}
-
-.invitation-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-5);
-  padding: var(--spacing-4) 0;
-  border-bottom: var(--border-width-normal) solid var(--line);
-}
-
-.invitation-row div {
-  display: grid;
-  gap: var(--spacing-2);
-  min-width: 0;
-}
-
-.invitation-row strong {
-  color: var(--ink);
-  font-size: var(--font-size-body-sm);
-  overflow-wrap: anywhere;
-}
-
-.invitation-row small {
-  color: var(--muted);
-  font-size: var(--font-size-sm-compact);
-  text-transform: capitalize;
-}
-
-.invitation-row button {
-  min-height: 32px;
-  padding: 0 10px;
-  border: var(--border-width-normal) solid var(--danger);
-  border-radius: var(--radius-sm);
-  color: var(--danger);
-  background: var(--surface);
-  font-size: var(--font-size-sm);
-}
-
 .invite-link-button { width: 100%; }
 
 @media (max-width: 760px) {

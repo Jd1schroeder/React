@@ -155,7 +155,7 @@ export function Sidebar({ activePage, onNavigate }) {
           )}
         </button>
       </div>
-      {!collapsed && (
+      {!collapsed && workspace.organizations?.length > 1 && (
         <div className="workspace-section">
           <button type="button" className="workspace-switcher" onClick={() => setIsWorkspaceOpen((value) => !value)} aria-haspopup="menu" aria-expanded={isWorkspaceOpen}>
             <Building2 size={15} />
