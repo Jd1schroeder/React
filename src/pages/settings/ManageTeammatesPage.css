@@ -147,6 +147,12 @@
   color: var(--blue);
 }
 
+.teammate-pending-role,
+.teammate-pending-status {
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+}
+
 .teammates-state,
 .teammates-error {
   margin: var(--spacing-1) 0 0;

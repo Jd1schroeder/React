@@ -126,6 +126,9 @@
   color: var(--ink);
   text-align: right;
 }
+.user-profile-pending-visit {
+  color: var(--status-info);
+}
 .user-action-card {
   padding: var(--spacing-4) var(--spacing-6);
 }

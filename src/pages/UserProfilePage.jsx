@@ -2,7 +2,7 @@ import { Fragment, useEffect, useState } from 'react'
 import { ArrowLeft, CircleCheck, CircleX, Clock3, LoaderCircle, LockKeyhole, MessageSquare, ShieldCheck } from 'lucide-react'
 import { Avatar } from '../components/ui/Avatar'
 import { getCurrentWorkspace } from '../services/workspaceService'
-import { listOrganizationMembers, listOrganizationRolePermissions, membershipRoles } from '../services/organizationService'
+import { getOrganizationMemberProfile, listOrganizationRolePermissions, membershipRoles } from '../services/organizationService'
 import { permissionCatalog } from '../services/permissionCatalog'
 import { formatLastVisitForUser } from '../utils/dateFormatting'
 import './UserProfilePage.css'
@@ -63,11 +63,10 @@ export function UserProfilePage({ userId, onNavigate }) {
         setDateFormat(workspace.preferences?.date_format ?? 'MM/DD/YYYY')
         setTimeZone(workspace.preferences?.timezone || undefined)
         setWeekStart(workspace.preferences?.week_start ?? 'Sunday')
-        const members = await listOrganizationMembers(workspace.organization.id)
-        const member = members.find((item) => item.user_id === userId)
+        const member = await getOrganizationMemberProfile(workspace.organization.id, userId)
         if (!member) return null
         if (member.role_id) setPermissions(await listOrganizationRolePermissions(member.role_id))
-        return { ...member, email: workspace.user?.id === userId ? workspace.user.email : null }
+        return { ...member, email: workspace.user?.id === userId ? workspace.user.email : member.email ?? null }
       })
       .then((member) => { if (active) setUser(member) })
       .catch((loadError) => { if (active) setError(loadError.message || 'Unable to load this user.') })
@@ -107,7 +106,7 @@ export function UserProfilePage({ userId, onNavigate }) {
                   <dl className="user-summary-details">
                     <div><dt>Email</dt><dd>{valueOrUnavailable(user.email)}</dd></div>
                     <div><dt>Phone Number</dt><dd>{valueOrUnavailable(user.profile?.phone)}</dd></div>
-                    <div><dt>Last Visit</dt><dd>{formatLastVisit(user.last_sign_in_at, dateFormat, timeZone, weekStart)}</dd></div>
+                    <div><dt>Last Visit</dt><dd>{user.invitation_id ? <span className="user-profile-pending-visit">Invited</span> : formatLastVisit(user.last_sign_in_at, dateFormat, timeZone, weekStart)}</dd></div>
                     <div><dt>Authentication Type</dt><dd>Not available</dd></div>
                     <div><dt>Work Orders Assigned</dt><dd>Not available</dd></div>
                     <div><dt>% Completed</dt><dd>Not available</dd></div>

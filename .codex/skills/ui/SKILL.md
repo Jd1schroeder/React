@@ -46,6 +46,8 @@ For Work Orders, Technician permissions distinguish core editing from execution:
 
 User rows navigate to `/users/profile/:userId`, whose detail scaffold uses real organization-member/profile data for identity fields. Keep activity, work-order history, permissions, teams, and unavailable account actions as explicit empty or disabled states until their data models and services exist; never fill the profile scaffold with mock records.
 
+People-table names, last-visit cells, and row action menus are shared through `src/components/people/UserTableCells.jsx` and `src/components/people/UserRowActions.jsx`; keep row behavior out of dense page-level column definitions.
+
 The user profile permission panel renders the complete MaintainX-style catalog grouped by module, using enabled and disabled status icons; do not render only the permissions currently granted because the panel is an audit view.
 
 Use the React Router route boundaries in `src/App.jsx` and the route registry in `src/routes/routeConfig.jsx` for navigation. Keep page modules lazy-loaded and render them through the shared loading fallback; do not reintroduce direct `history.pushState` navigation or eager-import every route page.

@@ -28,12 +28,13 @@ where version in (
   '20260923240000',
   '20260923250000',
   '20260928120000',
-  '20260928130000'
+  '20260928130000',
+  '20260928140000'
 )
 order by version;
 ```
 
-The result must contain all six versions. The final four migrations are forward-only repairs or authorization extensions; do not edit or rerun earlier applied migrations.
+The result must contain all seven versions. The final five migrations are forward-only repairs or authorization extensions; do not edit or rerun earlier applied migrations.
 
 ## Live two-organization checks
 
@@ -81,8 +82,10 @@ From the repository root, deploy the function and configure the exact browser or
 
 ```powershell
 npx.cmd supabase functions deploy upload-avatar
-npx.cmd supabase secrets set WORKBENCH_ALLOWED_ORIGINS=http://localhost:5173,https://app.getmaintainx.com
+npx.cmd supabase functions deploy invite-user
+npx.cmd supabase secrets set WORKBENCH_ALLOWED_ORIGINS=http://localhost:5173
+npx.cmd supabase secrets set WORKBENCH_APP_ORIGIN=http://localhost:5173
 npx.cmd supabase functions list
 ```
 
-The function must be `ACTIVE` with JWT verification enabled. After changing function code, deploy again. Verify that an approved image succeeds, an oversized file fails, a renamed non-image file fails content detection, an approved-origin `OPTIONS` request returns `204`, and an unauthenticated `POST` returns `401`.
+Both functions must be `ACTIVE` with JWT verification enabled. After changing function code, deploy again. Verify that an approved image succeeds, an oversized file fails, a renamed non-image file fails content detection, an approved-origin `OPTIONS` request returns `204`, and unauthenticated requests return `401`. For `invite-user`, verify that an authorized email invitation creates an unconfirmed Auth user and an invited membership, while an unauthorized caller or cross-organization role ID is rejected.

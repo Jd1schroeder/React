@@ -52,6 +52,7 @@ export function InviteUsersPage({ onNavigate }) {
         lastName: invite.name.trim().split(/\s+/).slice(1).join(" "),
         role: invite.role,
         roleId: invite.roleId,
+        notifyInvites,
       })));
       setInviteLink(createdInvites[0]?.inviteLink ?? "");
       setInvitations((current) => [...createdInvites, ...current]);
