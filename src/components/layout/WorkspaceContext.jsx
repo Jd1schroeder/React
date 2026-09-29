@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Building2, LogOut, ShieldAlert } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { getCurrentWorkspace } from "../../services/workspaceService";
-import { registerCurrentSession } from "../../services/sessionService";
+import { isCurrentSessionValid, registerCurrentSession, subscribeToSessionRevocations } from "../../services/sessionService";
 
 import { WorkspaceContext } from "./WorkspaceContextValue";
 
@@ -54,6 +54,40 @@ export function WorkspaceProvider({ children, onNavigate }) {
   useEffect(() => {
     if (state.status === "unauthenticated") onNavigate("Login");
   }, [onNavigate, state.status]);
+
+  useEffect(() => {
+    if (!["ready", "suspended", "no-organization"].includes(state.status)) return undefined;
+
+    let isMounted = true;
+    const validateSession = async () => {
+      try {
+        if (await isCurrentSessionValid() || !isMounted) return;
+        await supabase.auth.signOut({ scope: "local" });
+      } catch {
+        // A temporary validation failure must not sign the user out.
+      }
+    };
+    let unsubscribeFromRevocations;
+    subscribeToSessionRevocations(state.workspace?.user?.id, validateSession)
+      .then((unsubscribe) => {
+        if (isMounted) unsubscribeFromRevocations = unsubscribe;
+        else unsubscribe();
+      })
+      .catch(() => {
+        // Realtime is an immediate notification enhancement; polling remains the fallback.
+      });
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") validateSession();
+    };
+    const intervalId = window.setInterval(validateSession, 30000);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      unsubscribeFromRevocations?.();
+    };
+  }, [state.status, state.workspace?.user?.id]);
 
   if (state.status === "loading" || state.status === "unauthenticated") {
     return <div className="workspace-loading" aria-busy="true" aria-label="Loading workspace" />;

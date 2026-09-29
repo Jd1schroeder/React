@@ -62,6 +62,28 @@ export async function listCurrentUserSessions() {
   return (sessions ?? []).map((session) => ({ ...session, is_current: session.session_id === currentSessionId }));
 }
 
+export async function isCurrentSessionValid() {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  const sessionId = decodeSessionId(data.session?.access_token);
+  if (!sessionId) return false;
+
+  const { data: isValid, error: validationError } = await supabase.rpc("is_current_user_session_valid", {
+    target_session_id: sessionId,
+  });
+  if (validationError) throw validationError;
+  return isValid === true;
+}
+
+export async function subscribeToSessionRevocations(userId, onRevoked) {
+  await supabase.realtime.setAuth();
+  const channel = supabase
+    .channel(`user-session:${userId}`, { config: { private: true } })
+    .on("broadcast", { event: "session-revoked" }, onRevoked);
+  channel.subscribe();
+  return () => { supabase.removeChannel(channel); };
+}
+
 export async function revokeCurrentUserSession(sessionId) {
   const { error } = await supabase.rpc("revoke_current_user_session", { target_session_id: sessionId });
   if (error) throw error;
