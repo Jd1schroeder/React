@@ -75,13 +75,21 @@ export async function isCurrentSessionValid() {
   return isValid === true;
 }
 
-export async function subscribeToSessionRevocations(userId, onRevoked) {
+async function subscribeToSessionEvent(userId, event, onEvent) {
   await supabase.realtime.setAuth();
   const channel = supabase
     .channel(`user-session:${userId}`, { config: { private: true } })
-    .on("broadcast", { event: "session-revoked" }, onRevoked);
+    .on("broadcast", { event }, onEvent);
   channel.subscribe();
   return () => { supabase.removeChannel(channel); };
+}
+
+export function subscribeToSessionRevocations(userId, onRevoked) {
+  return subscribeToSessionEvent(userId, "session-revoked", onRevoked);
+}
+
+export function subscribeToSessionUpdates(userId, onUpdated) {
+  return subscribeToSessionEvent(userId, "session-updated", onUpdated);
 }
 
 export async function revokeCurrentUserSession(sessionId) {

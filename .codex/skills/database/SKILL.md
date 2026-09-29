@@ -51,6 +51,8 @@ Linked-device metadata is stored in `public.user_sessions`, one row per user/dev
 
 The security-definer `is_current_user_session_valid(uuid)` function is the narrow browser-facing check for cross-device revocation. It verifies the caller's JWT identity and session ID against `auth.sessions`; application code must use this RPC instead of querying the Auth schema directly.
 
+Session registry inserts and updates broadcast a generic private `session-updated` event so an open Profile Preferences page can refresh its linked-device list without navigation. Keep the payload metadata-free; the page must requery through `list_current_user_sessions()`.
+
 Authentication metadata such as `auth.users.last_sign_in_at` must be exposed through a narrowly scoped `security definer` function with an organization-admin authorization check; never query `auth.users` directly from browser code.
 
 Mutable organization, membership, profile, preference, and invitation rows carry `updated_at` plus nullable `updated_by`; the shared trigger derives the actor from `auth.uid()` when a user context exists. Use query-driven indexing rather than indexing every column. Primary keys and unique constraints already provide indexes. The `organization_members` composite primary key covers lookups beginning with `organization_id`; keep the separate `organization_members_user_id_idx` migration because workspace loading and future multi-organization views look up memberships by `user_id`. Add additional indexes only when an established filter, join, sort, or RLS policy justifies them; avoid speculative indexes on low-cardinality fields such as role or language.

@@ -4,7 +4,7 @@ import { Avatar } from "../../components/ui/Avatar";
 import { Select } from "../../components/ui/Select";
 import { supabase } from "../../lib/supabase";
 import { updateAuthContact, updateProfile, updateUserPreferences, uploadAvatar } from "../../services/profileService";
-import { listCurrentUserSessions, registerCurrentSession, revokeCurrentUserSession } from "../../services/sessionService";
+import { isCurrentSessionValid, listCurrentUserSessions, registerCurrentSession, revokeCurrentUserSession, subscribeToSessionUpdates } from "../../services/sessionService";
 import { formatDateForUser } from "../../utils/dateFormatting";
 import { useWorkspace } from "../../components/layout/useWorkspace";
 import flagUnitedStates from "../../assets/flags/us.svg";
@@ -76,14 +76,60 @@ export function ProfilePreferencesPage({ onNavigate }) {
 
   useEffect(() => {
     let isMounted = true;
-    Promise.resolve()
-      .then(() => registerCurrentSession())
-      .then(() => listCurrentUserSessions())
-      .then((rows) => { if (isMounted) setSessions(rows); })
-      .catch((error) => { if (isMounted) setSessionError(error.message || "Unable to load linked devices."); })
-      .finally(() => { if (isMounted) setSessionsLoading(false); });
-    return () => { isMounted = false; };
-  }, []);
+    let unsubscribeFromUpdates;
+    const refreshSessions = async () => {
+      try {
+        const rows = await listCurrentUserSessions();
+        if (isMounted) {
+          setSessions(rows);
+          setSessionError("");
+        }
+      } catch (error) {
+        if (isMounted) setSessionError(error.message || "Unable to load linked devices.");
+      } finally {
+        if (isMounted) setSessionsLoading(false);
+      }
+    };
+
+    registerCurrentSession()
+      .then(refreshSessions)
+      .catch((error) => {
+        isCurrentSessionValid()
+          .then(async (isValid) => {
+            if (!isValid) {
+              await supabase.auth.signOut({ scope: "local" });
+              if (isMounted) onNavigate("Login");
+              return;
+            }
+            if (isMounted) setSessionError(error.message || "Unable to load linked devices.");
+          })
+          .catch(() => {
+            if (isMounted) setSessionError(error.message || "Unable to load linked devices.");
+          })
+          .finally(() => {
+            if (isMounted) setSessionsLoading(false);
+          });
+      });
+    subscribeToSessionUpdates(user?.id, refreshSessions)
+      .then((unsubscribe) => {
+        if (isMounted) unsubscribeFromUpdates = unsubscribe;
+        else unsubscribe();
+      })
+      .catch(() => {
+        // The initial list remains usable when Realtime is unavailable.
+      });
+    const refreshIntervalId = window.setInterval(refreshSessions, 10000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") refreshSessions();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      isMounted = false;
+      window.clearInterval(refreshIntervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      unsubscribeFromUpdates?.();
+    };
+  }, [onNavigate, user?.id]);
 
   const revokeSession = async () => {
     if (!selectedSession) return;

@@ -13,7 +13,7 @@ Linked-device session management must use the authenticated `register-session` E
 
 Cross-device revocation must be reflected in the client through the authenticated `is_current_user_session_valid(uuid)` RPC. `WorkspaceProvider` checks it on visibility changes and a short interval; validation failures are ignored as transient errors, while a confirmed missing Auth session signs out the local client. Do not rely on cached access-token expiry alone for revoked-device UX.
 
-For immediate cross-device UX, session-row deletion also emits a generic private Supabase Realtime Broadcast on `user-session:<user_id>`. Clients must revalidate their own session after receiving it; the broadcast is a notification only and must not replace the server-side validity check.
+For immediate cross-device UX, session-row insert/update/delete emits a generic private Supabase Realtime Broadcast on `user-session:<user_id>`. Clients use update events to refresh visible session lists and revalidate their own session after revoke events; broadcasts are notifications only and must not replace the server-side validity check.
 
 For team scope, the client may use the authenticated user's loaded team IDs for responsive UI decisions, but Supabase must derive the final decision from `organization_team_members` and the Work Order's `team_id`. Never trust a caller-supplied `is_team_record` flag; the forward-only Work Order migration replaces that boolean path with membership-backed authorization.
 
