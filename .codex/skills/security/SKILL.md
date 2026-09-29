@@ -9,6 +9,8 @@ Supabase RLS and database functions are the security boundary. Client route gate
 
 The shared client evaluator lives in `src/services/authorizationService.js`. It supports `own`, `assigned`, `team`, and `any` record scopes and must fail closed for missing or invalid grants. Use it to hide unauthorized actions while keeping database RLS authoritative.
 
+Linked-device session management must use the authenticated `register-session` Edge Function and `user_sessions` RPC boundary. The browser may register and list the signed-in user's sanitized device metadata, grouped by the non-sensitive `workbench.deviceId`, but it must not submit or access IP/session authority directly, query `auth.sessions`, or receive a service-role key. Session revocation functions must verify both `auth.uid()` and ownership of the target device's sessions.
+
 For team scope, the client may use the authenticated user's loaded team IDs for responsive UI decisions, but Supabase must derive the final decision from `organization_team_members` and the Work Order's `team_id`. Never trust a caller-supplied `is_team_record` flag; the forward-only Work Order migration replaces that boolean path with membership-backed authorization.
 
 Organization authorization must verify all of the following in the database:

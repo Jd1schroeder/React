@@ -101,6 +101,7 @@ The panel view selector uses only a pointer cursor on hover and has no trigger h
 - The account area in `.settings-menu-root` owns the account popover and Supabase sign-out action; close it on outside pointer interaction and keep account identity sourced from `workspaceService.js`.
 - Organization and personal settings use the shared route-backed `src/pages/SettingsPage.jsx`; Manage Teammates and Invite Users use the organization and invitation services for membership administration and generated invite links. Keep Invite Users form-only; invitation history and revocation belong in the user-management views.
 - Profile Preferences uses workspace identity from `src/services/workspaceService.js`; profile, phone, avatar, and localization controls persist through `src/services/profileService.js`.
+- Profile Preferences renders MaintainX-style linked devices from `src/services/sessionService.js`: device rows open a modal with device name/type, browser, operating system, last connection, optional IP address, current-device state, and a per-device logout action; keep loading, empty, and error states explicit.
 - Tork destinations (`Chat`, `Routines`, and `History`) intentionally render only the Workbench 404 artwork inside the authenticated app shell until their UI is designed.
 
 Validate visual refactors with `npm.cmd run lint` and `npm.cmd run build`.

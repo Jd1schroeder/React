@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { Camera, LockKeyhole, LogOut, Mail, Monitor, Pencil, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Camera, ChevronRight, LockKeyhole, LogOut, Mail, Monitor, Pencil, Smartphone, X } from "lucide-react";
 import { Avatar } from "../../components/ui/Avatar";
 import { Select } from "../../components/ui/Select";
 import { supabase } from "../../lib/supabase";
 import { updateAuthContact, updateProfile, updateUserPreferences, uploadAvatar } from "../../services/profileService";
+import { listCurrentUserSessions, registerCurrentSession, revokeCurrentUserSession } from "../../services/sessionService";
+import { formatDateForUser } from "../../utils/dateFormatting";
 import { useWorkspace } from "../../components/layout/useWorkspace";
 import flagUnitedStates from "../../assets/flags/us.svg";
 import { SettingsLayout } from "./SettingsLayout";
@@ -29,6 +31,11 @@ export function ProfilePreferencesPage({ onNavigate }) {
     timeFormat: workspace.preferences?.time_format ?? "11:59 PM",
     weekStart: workspace.preferences?.week_start ?? "Sunday",
   }));
+  const [sessions, setSessions] = useState([]);
+  const [selectedSession, setSelectedSession] = useState(null);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [sessionError, setSessionError] = useState("");
+  const [isRevokingSession, setIsRevokingSession] = useState(false);
 
   const user = workspace.user;
   const displayName = [user?.user_metadata?.first_name, user?.user_metadata?.last_name].filter(Boolean).join(" ") || user?.email || "Your profile";
@@ -67,6 +74,37 @@ export function ProfilePreferencesPage({ onNavigate }) {
     }
   };
 
+  useEffect(() => {
+    let isMounted = true;
+    Promise.resolve()
+      .then(() => registerCurrentSession())
+      .then(() => listCurrentUserSessions())
+      .then((rows) => { if (isMounted) setSessions(rows); })
+      .catch((error) => { if (isMounted) setSessionError(error.message || "Unable to load linked devices."); })
+      .finally(() => { if (isMounted) setSessionsLoading(false); });
+    return () => { isMounted = false; };
+  }, []);
+
+  const revokeSession = async () => {
+    if (!selectedSession) return;
+    setIsRevokingSession(true);
+    setSessionError("");
+    try {
+      await revokeCurrentUserSession(selectedSession.session_id);
+      if (selectedSession.is_current) {
+        await supabase.auth.signOut({ scope: "local" });
+        onNavigate("Login");
+        return;
+      }
+      setSessions((current) => current.filter((session) => session.session_id !== selectedSession.session_id));
+      setSelectedSession(null);
+    } catch (error) {
+      setSessionError(error.message || "Unable to log out from this device.");
+    } finally {
+      setIsRevokingSession(false);
+    }
+  };
+
   return <div className="settings-page profile-preferences-page">
     <header className="settings-page-header"><p className="eyebrow">Personal Settings</p><h1>Profile Preferences</h1><p>Manage your profile and personal workspace preferences.</p></header>
     <SettingsLayout pageName="Settings / Profile Preferences" onNavigate={onNavigate}>
@@ -84,11 +122,12 @@ export function ProfilePreferencesPage({ onNavigate }) {
           <PreferenceSelect label="Time Format" value={preferences.timeFormat} onChange={(value) => savePreferences({ ...preferences, timeFormat: value })} ariaLabel="Time Format" options={["11:59 PM", "23:59"]} />
           <PreferenceSelect label="Beginning of Week" value={preferences.weekStart} onChange={(value) => savePreferences({ ...preferences, weekStart: value })} ariaLabel="Beginning of Week" options={["Sunday", "Monday"]} />
         </div></section>
-        <section className="profile-settings-card profile-sessions-card"><h2>Sessions</h2><h3>Linked Devices</h3><div className="profile-empty-state"><Monitor size={18} /><span>No linked devices available.</span></div></section>
+        <section className="profile-settings-card profile-sessions-card"><h2>Sessions</h2><h3>Linked Devices</h3>{sessionsLoading ? <div className="profile-empty-state"><Monitor size={18} /><span>Loading linked devices...</span></div> : sessions.length ? <div className="profile-session-list">{sessions.map((session) => <button type="button" className="profile-session-row" key={session.session_id} onClick={() => setSelectedSession(session)}><span className="profile-session-icon">{session.device_type === "mobile" || session.device_type === "tablet" ? <Smartphone size={17} /> : <Monitor size={17} />}</span><strong>{session.device_name}</strong>{session.is_current && <span className="profile-session-current">This device</span>}<ChevronRight size={18} aria-hidden="true" /></button>)}</div> : <div className="profile-empty-state"><Monitor size={18} /><span>No linked devices available.</span></div>}{sessionError && <p className="profile-session-error" role="alert">{sessionError}</p>}</section>
         <section className="profile-settings-card profile-quit-card"><div className="profile-quit-copy"><LogOut size={22} /><div><h2>Quit Organization</h2><p>If you quit, you will lose access to this organization and will need to be re-invited to join again.</p></div></div><button type="button" className="profile-danger-button" disabled>Quit Organization</button></section>
       </section>
     </SettingsLayout>
     {isEditModalOpen && <ProfileEditModal avatarUrl={avatarUrl} editForm={editForm} onAvatarChange={handleAvatarChange} onChange={(field, value) => setEditForm((current) => ({ ...current, [field]: value }))} onClose={() => setIsEditModalOpen(false)} onSave={saveProfile} isSaving={isSavingProfile} error={profileSaveError} />}
+    {selectedSession && <LinkedDeviceModal session={selectedSession} timeZone={preferences.timezone ?? workspace.preferences?.timezone} dateFormat={preferences.dateFormat} isRevoking={isRevokingSession} onClose={() => setSelectedSession(null)} onRevoke={revokeSession} />}
   </div>;
 }
 
@@ -117,4 +156,21 @@ function ProfileEditModal({ avatarUrl, editForm, error, isSaving, onAvatarChange
 function ProfileModalField({ label, required = false, value, onChange }) {
   const id = `profile-edit-${label.toLowerCase().replaceAll(" ", "-")}`;
   return <div className="profile-modal-field"><label htmlFor={id}>{label} {required && <span>(Required)</span>}</label><input id={id} type="text" value={value} onChange={(event) => onChange(event.target.value)} /></div>;
+}
+
+function LinkedDeviceModal({ session, timeZone, dateFormat, isRevoking, onClose, onRevoke }) {
+  const DeviceIcon = session.device_type === "mobile" || session.device_type === "tablet" ? Smartphone : Monitor;
+  return <div className="profile-edit-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section className="profile-device-modal" role="dialog" aria-modal="true" aria-labelledby="linked-device-title" onMouseDown={(event) => event.stopPropagation()}>
+      <header className="profile-edit-modal-header"><h2 id="linked-device-title">Linked Device</h2><button type="button" className="profile-modal-close" onClick={onClose} aria-label="Close"><X size={20} /></button></header>
+      <div className="profile-device-modal-content"><span className="profile-device-modal-icon"><DeviceIcon size={30} /><span className="sr-only">{session.device_type}</span></span><h3>{session.device_name}</h3><div className="profile-device-details"><div><span>Device type</span><strong>{session.device_type}</strong></div><div><span>Browser</span><strong>{session.browser_name}</strong></div><div><span>Operating system</span><strong>{session.operating_system}</strong></div><div><span>Last connection</span><strong>{formatSessionConnection(session.last_connection, dateFormat, timeZone)}</strong></div>{session.last_ip && <div><span>Last IP address</span><strong>{session.last_ip}</strong></div>}</div>{session.is_current && <p className="profile-device-current">This device</p>}</div>
+      <footer className="profile-edit-modal-footer"><button type="button" className="profile-modal-cancel" onClick={onClose} disabled={isRevoking}>Cancel</button><button type="button" className="profile-modal-update" onClick={onRevoke} disabled={isRevoking}>{isRevoking ? "Logging out..." : "Log Out from this Device"}</button></footer>
+    </section>
+  </div>;
+}
+
+function formatSessionConnection(value, dateFormat, timeZone) {
+  const date = formatDateForUser(value, dateFormat, timeZone);
+  const time = new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", minute: "2-digit" }).format(new Date(value));
+  return `${date}, ${time}`;
 }

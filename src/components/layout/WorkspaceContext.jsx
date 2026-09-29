@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Building2, LogOut, ShieldAlert } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { getCurrentWorkspace } from "../../services/workspaceService";
+import { registerCurrentSession } from "../../services/sessionService";
 
 import { WorkspaceContext } from "./WorkspaceContextValue";
 
@@ -15,6 +16,11 @@ export function WorkspaceProvider({ children, onNavigate }) {
       if (!workspace.user) {
         setState({ status: "unauthenticated", workspace: null, error: null });
         return;
+      }
+      try {
+        await registerCurrentSession();
+      } catch {
+        // Session registry availability must not block workspace access.
       }
       const status = workspace.authorization?.status === "error"
         ? "error"

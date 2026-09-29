@@ -11,6 +11,8 @@ For Vercel deployments, configure both `VITE_SUPABASE_URL` and `VITE_SUPABASE_PU
 
 The current workspace service returns the authenticated user together with `profile`, `preferences`, all active organizations, and the selected organization. Profile edits should update `profiles` through a service. Email changes use Supabase Auth; application phone contact data belongs in `profiles.phone` because an email-authenticated user is not automatically a verified phone-authenticated user.
 
+Linked-device sessions use `src/services/sessionService.js` and the `register-session` Edge Function plus `user_sessions` RPC boundary. Register the current Supabase session after workspace hydration, group rows by the durable non-sensitive `workbench.deviceId` browser key, capture IP metadata only server-side, keep device metadata user-scoped, and never query or expose `auth.sessions` from browser code.
+
 Membership administration must use the organization membership service and rely on Supabase RLS for authorization. Membership state is lifecycle-based (`invited`, `active`, or `suspended`); clients must not treat a role check in the UI as sufficient authorization.
 
 User-list views show pending invitations through `src/services/organizationService.js`. Email invitations provision an unconfirmed Auth user through the trusted `invite-user` Edge Function, so the pending membership has a real `user_id` and can expose its account/profile and role assignment before acceptance. Phone-only legacy invitations may still lack a `user_id`; keep account navigation and member-only actions unavailable for those rows.
