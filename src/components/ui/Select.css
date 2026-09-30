@@ -22,9 +22,43 @@
 .select-trigger.has-value {
   color: var(--ink);
 }
+.select-trigger-icon {
+  flex: none;
+  color: var(--icon-secondary);
+}
+.select-selected-values {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: var(--spacing-2);
+  overflow: hidden;
+}
+.select-selected-value {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: var(--spacing-2);
+  white-space: nowrap;
+}
+.select-selected-value > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.select-trigger.is-disabled {
+  color: var(--text-disabled-control);
+  background: var(--surface-control-disabled);
+  cursor: not-allowed;
+}
+.select-trigger.is-disabled .select-trigger-icon,
+.select-trigger.is-disabled .select-chevron {
+  color: var(--text-disabled-control);
+}
 .select-trigger:hover {
   /* border-color: var(--lineHover); */
   border-color: var(--focus-border-color);
+}
+.select-trigger.is-disabled:hover {
+  border-color: var(--line);
 }
 .select-trigger:focus,
 .select-trigger[aria-expanded="true"] {
@@ -68,6 +102,27 @@
   font: inherit;
   font-size: var(--font-size-body-sm);
   text-align: left;
+}
+.select-option-avatar {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  font-size: var(--font-size-3xs);
+}
+.select-option-check {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-left: auto;
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-control);
+  color: var(--white);
+  font-size: var(--font-size-xs);
+}
+.select-menu button.is-selected .select-option-check {
+  border-color: var(--blue);
+  background: var(--blue);
 }
 .select-menu button:hover,
 .select-menu button:focus-visible,

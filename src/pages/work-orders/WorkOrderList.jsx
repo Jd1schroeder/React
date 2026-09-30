@@ -22,7 +22,6 @@ export function WorkOrderList({
   visibleOrders,
   selected,
   onSelect,
-  counts,
 }) {
   return (
     <section className="inbox-pane">
@@ -31,13 +30,13 @@ export function WorkOrderList({
           className={activeTab === "To Do" ? "selected" : ""}
           onClick={() => setActiveTab("To Do")}
         >
-          To Do <span>{counts.todo}</span>
+          To Do
         </button>
         <button
           className={activeTab === "Done" ? "selected" : ""}
           onClick={() => setActiveTab("Done")}
         >
-          Done <span>{counts.done}</span>
+          Done
         </button>
       </div>
       <div className="work-order-sort-row">

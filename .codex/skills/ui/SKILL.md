@@ -16,6 +16,7 @@ Use the existing layout primitives before creating page-specific alternatives.
 - `PanelView` owns the reusable split list/detail panel.
 - `src/pages/WorkOrders.css` contains Work Orders-only pane/detail styling.
 - Work Orders page orchestration belongs in `WorkOrders.jsx`; list/filter controls and detail content belong in `src/pages/work-orders/WorkOrderList.jsx` and `WorkOrderDetail.jsx`.
+- Work Order creation belongs in `src/pages/work-orders/NewWorkOrderForm.jsx` as the detail-pane state; keep its header and footer fixed within the pane and let only the form body scroll. Reuse the shared `Select`, `Button`, and Workbench tokens for field controls.
 - Work Orders read and execution mutations use `src/services/workOrderService.js`; keep the page free of mock records. Database authorization controls core edits separately from assigned execution updates.
 - `src/styles/tokens.css` contains shared design tokens; prefer tokens over new hardcoded values.
 - The document root uses `--font-size-root` at 14px, so `1rem` equals 14px throughout the Workbench UI. Keep the root scale explicit rather than relying on the browser default.
@@ -67,7 +68,11 @@ Store production browser and PWA branding assets in `public/`, including the fav
 
 Use `src/components/ui/Avatar.jsx` for every user avatar. Render the uploaded image when available; otherwise derive initials from first and last names, or only the first name when no last name exists, with `A` as the neutral fallback. Do not create page-specific avatar fallback logic.
 
+Use `src/components/ui/ImageDropzone.jsx` for reusable image selection and drag/drop areas. It owns accepted-image filtering, drag-over state, local previews, removal, and the hidden file input; feature pages provide the `onChange` boundary.
+
 Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the shared styled trigger, rotating Lucide chevron, focus tokens, outside-click dismissal, keyboard navigation, and listbox semantics. Options may provide `disabled: true` and a Lucide `icon` for unavailable choices or explanatory affordances; disabled options remain muted and non-interactive. Keep specialized selectors, such as phone-country selection, separate only when they need custom option content.
+
+`Select` also supports reusable multi-select values and option avatars through the `multiple` and `avatar` option props. Use this for assignment controls that need user avatars/initials; do not build page-specific multi-select menus.
 
 Use `src/components/ui/DataTable.jsx` for reusable sortable tables. Supply column definitions and row renderers rather than copying table markup; the component owns sort state, sortable header icons, responsive overflow, and the empty state.
 
@@ -91,6 +96,7 @@ The panel view selector uses only a pointer cursor on hover and has no trigger h
 - Account sign-out and destructive removal actions use `var(--signout)` (`rgb(236 65 70)`) and `var(--signout-hover)` (`rgb(236 65 70 / 75%)`) with no hover background. The MaintainX-style linked-device modal keeps its reversible per-device `Sign out` action as a blue primary button.
 - Active items use `#E7F3FE` as the background, normal 400 weight, and `#1E2429` for the root text color; active icon and label treatments may apply the accent blue separately.
 - When matching reference designs, compare computed styles and rendered fonts in addition to screenshots.
+- When the user provides computed CSS values from a reference UI, reproduce those values exactly in the corresponding Workbench-owned styles unless they conflict with an explicit Workbench token or accessibility requirement; do not substitute approximate spacing or dimensions.
 - The collapsed sidebar root uses `padding: 0`; section spacing belongs to `.sidebar-header` and `.sidebar-nav`, while `.sidebar-bottom` remains `padding: 0`.
 - The collapsed sidebar width is `50px`, exposed as `--sidebar-collapsed-width`; preserve the legacy `--sidebarCollapsedWidth` alias when changing sidebar geometry.
 - The expanded sidebar width is `246px`, exposed as `--sidebar-expanded-width` and the alias `--sidebarWidth`.
