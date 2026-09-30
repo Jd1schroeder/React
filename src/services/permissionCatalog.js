@@ -87,6 +87,7 @@ export const permissionCatalog = [
   permission('Maintenance Plans', 'maintenance_plans.manage_settings', 'Manage maintenance plan settings', 'Manage maintenance-plan settings.', ['any']),
   permission('Organization', 'organization.invite_users', 'Invite users', 'Invite people to the organization.', actionOnly, { actionOnly: true }),
   permission('Organization', 'organization.remove_users', 'Remove users', 'Remove people from the organization.', actionOnly, { actionOnly: true }),
+  permission('Organization', 'organization.edit_user_accounts', 'Edit user accounts', 'Update organization user profile and contact information.', actionOnly, { actionOnly: true }),
   permission('Organization', 'organization.edit_user_roles', 'Edit user roles', 'Assign organization roles to users.', actionOnly, { actionOnly: true }),
   permission('Organization', 'organization.manage_billing', 'Manage billing', 'Manage subscription and billing.', actionOnly, { actionOnly: true }),
   permission('Organization', 'organization.reporting_view', 'Reporting view', 'View organization reports.', actionOnly, { actionOnly: true }),

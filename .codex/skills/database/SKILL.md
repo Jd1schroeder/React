@@ -39,6 +39,8 @@ Membership lifecycle is represented by `organization_members.status` (`invited`,
 
 Membership identity fields (`organization_id` and `user_id`) are immutable. The database must preserve at least one active owner per organization. Organization invitations and audit events are organization-owned tables and must be accessed through admin-authorized services. Profile visibility for member administration is granted through organization-admin RLS, while personal preference rows remain user-owned.
 
+Member account editing is permissioned separately through `organization.edit_user_accounts`. Profile/contact changes and Auth email changes must pass through `manage-user-account`; do not broaden browser profile-update policies to let one member update another member's record.
+
 Invitation tokens are stored only as SHA-256 hashes. Acceptance must use the `accept_organization_invitation()` security-definer function so expiry, contact matching, membership creation, and invitation status changes happen atomically.
 
 The forward-only migration `20260928140000_provision_invited_auth_users.sql` adds `organization_invitations.invited_user_id`, supports acceptance of provisioned invites through `accept_organization_invitation_for_current_user()`, and keeps the pre-acceptance membership at `status = 'invited'`. Pending role changes must use `update_pending_organization_invitation_role()` so the invitation and invited membership role IDs stay synchronized.

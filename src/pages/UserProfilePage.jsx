@@ -1,8 +1,9 @@
 import { Fragment, useEffect, useState } from 'react'
-import { ArrowLeft, CircleCheck, CircleX, Clock3, LoaderCircle, LockKeyhole, MessageSquare, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Camera, ChevronRight, CircleCheck, CircleX, Clock3, LoaderCircle, LockKeyhole, Mail, MessageSquare, Phone, ShieldCheck } from 'lucide-react'
 import { Avatar } from '../components/ui/Avatar'
 import { getCurrentWorkspace } from '../services/workspaceService'
 import { getOrganizationMemberProfile, listOrganizationRolePermissions, membershipRoles } from '../services/organizationService'
+import { getOrganizationMemberAccount, updateOrganizationMemberAccount } from '../services/userAccountService'
 import { permissionCatalog } from '../services/permissionCatalog'
 import { formatLastVisitForUser } from '../utils/dateFormatting'
 import './UserProfilePage.css'
@@ -54,12 +55,23 @@ export function UserProfilePage({ userId, onNavigate }) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [permissions, setPermissions] = useState([])
+  const [organizationId, setOrganizationId] = useState('')
+  const [canEditAccount, setCanEditAccount] = useState(false)
+  const [isEditAccountOpen, setIsEditAccountOpen] = useState(false)
+  const [isLoadingAccount, setIsLoadingAccount] = useState(false)
+  const [isSavingAccount, setIsSavingAccount] = useState(false)
+  const [accountError, setAccountError] = useState('')
+  const [accountForm, setAccountForm] = useState({ firstName: '', lastName: '', phone: '', email: '' })
+  const [initialAccountForm, setInitialAccountForm] = useState({ firstName: '', lastName: '', phone: '', email: '' })
+  const [accountAvatarUrl, setAccountAvatarUrl] = useState('')
 
   useEffect(() => {
     let active = true
     getCurrentWorkspace()
       .then(async (workspace) => {
         if (!workspace.organization?.id) return null
+        setOrganizationId(workspace.organization.id)
+        setCanEditAccount(Boolean(workspace.authorization?.grants?.['organization.edit_user_accounts']))
         setDateFormat(workspace.preferences?.date_format ?? 'MM/DD/YYYY')
         setTimeZone(workspace.preferences?.timezone || undefined)
         setWeekStart(workspace.preferences?.week_start ?? 'Sunday')
@@ -78,6 +90,50 @@ export function UserProfilePage({ userId, onNavigate }) {
   const lastName = user?.profile?.last_name ?? ''
   const displayName = [firstName, lastName].filter(Boolean).join(' ') || 'User profile'
   const grantedPermissions = new Map(permissions.map((permission) => [permission.permission_key, permission]))
+  const isAccountDirty = JSON.stringify(accountForm) !== JSON.stringify(initialAccountForm)
+
+  const openEditAccount = async () => {
+    if (!organizationId || !userId || !canEditAccount) return
+    setIsEditAccountOpen(true)
+    setIsLoadingAccount(true)
+    setAccountError('')
+    setAccountAvatarUrl(user?.profile?.avatar_url?.startsWith('http') ? user.profile.avatar_url : '')
+    try {
+      const account = await getOrganizationMemberAccount({ organizationId, userId })
+      const nextForm = {
+        firstName: account.firstName ?? '',
+        lastName: account.lastName ?? '',
+        phone: account.phone ?? '',
+        email: account.email ?? '',
+      }
+      setAccountForm(nextForm)
+      setInitialAccountForm(nextForm)
+    } catch (loadError) {
+      setAccountError(loadError.message || 'Unable to load the user account.')
+    } finally {
+      setIsLoadingAccount(false)
+    }
+  }
+
+  const saveAccount = async () => {
+    setIsSavingAccount(true)
+    setAccountError('')
+    try {
+      const updated = await updateOrganizationMemberAccount({ organizationId, userId, ...accountForm })
+      setAccountForm(updated)
+      setInitialAccountForm(updated)
+      setUser((current) => current ? {
+        ...current,
+        email: updated.email,
+        profile: { ...current.profile, first_name: updated.firstName, last_name: updated.lastName, phone: updated.phone },
+      } : current)
+      setIsEditAccountOpen(false)
+    } catch (saveError) {
+      setAccountError(saveError.message || 'Unable to update the user account.')
+    } finally {
+      setIsSavingAccount(false)
+    }
+  }
 
   return <main className="user-profile-page">
     <div className="user-profile-scroll">
@@ -115,11 +171,15 @@ export function UserProfilePage({ userId, onNavigate }) {
               </section>
 
               <section className="user-profile-card user-action-card" aria-label="User actions">
-                {['Send Message', 'Edit Account', 'Edit PIN for Workstation Mode', 'Edit Role/Permissions', 'Remove from Organization'].map((label) => <button key={label} type="button" className={label === 'Remove from Organization' ? 'user-action-row user-action-danger' : 'user-action-row'} disabled><span>{label}</span><LockKeyhole size={15} aria-hidden="true" /></button>)}
+                {['Send Message', 'Edit Account', 'Edit PIN for Workstation Mode', 'Edit Role/Permissions', 'Remove from Organization'].map((label) => {
+                  const isEditable = label === 'Edit Account' && canEditAccount
+                  return <button key={label} type="button" className={`${label === 'Remove from Organization' ? 'user-action-row user-action-danger' : 'user-action-row'}${isEditable ? ' is-available' : ''}`} disabled={!isEditable} onClick={label === 'Edit Account' ? openEditAccount : undefined}><span>{label}</span>{isEditable ? <ChevronRight size={17} aria-hidden="true" /> : <LockKeyhole size={15} aria-hidden="true" />}</button>
+                })}
               </section>
             </div>
 
             <div className="user-profile-right-column-wrapper">
+              {isEditAccountOpen ? <EditAccountPanel accountForm={accountForm} avatarUrl={accountAvatarUrl} accountError={accountError} isLoading={isLoadingAccount} isSaving={isSavingAccount} isDirty={isAccountDirty} onBack={() => setIsEditAccountOpen(false)} onAvatarChange={(file) => { if (file) setAccountAvatarUrl(URL.createObjectURL(file)) }} onChange={(field, value) => setAccountForm((current) => ({ ...current, [field]: value }))} onSave={saveAccount} /> : <>
               <section className="user-profile-card user-activity-card" aria-labelledby="recent-activity-title">
                 <div className="user-profile-right-container">
                   <div className="user-profile-tabs"><button type="button" className="is-active" disabled>Recent Activity</button><button type="button" disabled>Work Order History</button></div>
@@ -151,10 +211,31 @@ export function UserProfilePage({ userId, onNavigate }) {
                   </section>)}
                 </div>
               </section>
+              </>}
             </div>
           </div>
         </div>}
       </div>
     </div>
   </main>
+}
+
+function EditAccountPanel({ accountForm, avatarUrl, accountError, isLoading, isSaving, isDirty, onBack, onAvatarChange, onChange, onSave }) {
+  const [isDraggingAvatar, setIsDraggingAvatar] = useState(false)
+  const handleAvatarDrop = (event) => {
+    event.preventDefault()
+    setIsDraggingAvatar(false)
+    onAvatarChange(event.dataTransfer.files?.[0])
+  }
+  return <section className="user-profile-card user-edit-account-card" aria-labelledby="edit-account-title">
+    <header className="user-edit-account-header"><button type="button" className="user-edit-account-back" onClick={onBack} aria-label="Back to user details"><ArrowLeft size={18} /></button><h2 id="edit-account-title">Edit Account</h2></header>
+    {isLoading ? <p className="user-profile-state user-profile-loading" aria-busy="true"><LoaderCircle className="user-profile-loading-spinner" size={18} aria-hidden="true" /><span>Loading account...</span></p> : <form className="user-edit-account-form" onSubmit={(event) => { event.preventDefault(); onSave() }}>
+      <label className={`user-edit-account-avatar-upload${isDraggingAvatar ? ' is-dragging' : ''}`} aria-label="Upload avatar" onDragOver={(event) => { event.preventDefault(); setIsDraggingAvatar(true) }} onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setIsDraggingAvatar(false) }} onDrop={handleAvatarDrop}><input type="file" accept="image/gif,image/jpeg,image/png,image/heic,image/heif" aria-label="Choose an avatar image" onChange={(event) => onAvatarChange(event.target.files?.[0])} /><Avatar className="user-edit-account-avatar-display" src={avatarUrl} firstName={accountForm.firstName} lastName={accountForm.lastName} alt={`${accountForm.firstName} ${accountForm.lastName}`.trim() || 'User profile'} /><span className="user-edit-account-avatar-overlay"><Camera size={22} aria-hidden="true" /></span></label>
+      <div className="user-edit-account-name-fields"><label><span>First Name <em>(Required)</em></span><input required value={accountForm.firstName} onChange={(event) => onChange('firstName', event.target.value)} /></label><label><span>Last Name</span><input value={accountForm.lastName} onChange={(event) => onChange('lastName', event.target.value)} /></label></div>
+      <label className="user-edit-account-field"><span>Phone Number</span><div className="user-edit-account-input"><Phone size={17} aria-hidden="true" /><input value={accountForm.phone} onChange={(event) => onChange('phone', event.target.value)} /></div></label>
+      <label className="user-edit-account-field"><span>Email <em>(Required)</em></span><div className="user-edit-account-input"><Mail size={17} aria-hidden="true" /><input required type="email" value={accountForm.email} onChange={(event) => onChange('email', event.target.value)} /></div></label>
+      {accountError && <p className="user-edit-account-error" role="alert">{accountError}</p>}
+      <footer className="user-edit-account-footer"><button type="submit" disabled={!isDirty || isSaving}>{isSaving ? 'Updating...' : 'Update'}</button></footer>
+    </form>}
+  </section>
 }
