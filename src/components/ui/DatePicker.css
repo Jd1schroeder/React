@@ -81,36 +81,100 @@
   margin-bottom: var(--spacing-3);
 }
 .date-picker-popover .react-calendar__navigation button {
-  min-width: 36px;
+  display: block;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  min-width: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
   color: var(--blue);
   background: transparent;
   font: inherit;
   font-size: var(--font-size-md);
+  font-weight: var(--font-normal);
+  line-height: var(--line-height-sm-px);
+  text-align: center;
 }
 .date-picker-popover .react-calendar__navigation button:enabled:hover,
 .date-picker-popover .react-calendar__navigation button:enabled:focus {
+  color: var(--blue);
   background: var(--blue-soft);
 }
 .date-picker-popover .react-calendar__navigation__label {
-  flex: 1;
-  font-weight: var(--font-semibold);
+  display: block;
+  flex: 0 0 auto;
+  height: 32px;
+  padding: 0 var(--spacing-4);
+  border: 0;
+  border-radius: 0;
+  color: var(--blue);
+  background: transparent;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-bold);
+  line-height: var(--line-height-sm-px);
+  text-align: center;
+}
+.date-picker-popover .react-calendar__navigation__label:enabled:hover,
+.date-picker-popover .react-calendar__navigation__label:enabled:focus {
+  color: var(--blue);
+  background: transparent;
 }
 .date-picker-popover .react-calendar__month-view__weekdays {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 32px;
+  flex-wrap: nowrap;
+  gap: var(--spacing-3);
+  padding: 0;
   color: var(--muted);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-medium);
+  font-size: var(--font-size-md);
+  font-style: normal;
+  font-weight: var(--font-normal);
+  letter-spacing: var(--letter-spacing-normal);
+  line-height: var(--line-height-sm-px);
   text-align: center;
   text-transform: none;
 }
-.date-picker-popover .react-calendar__month-view__weekdays__weekday { padding: var(--spacing-2); }
+.date-picker-popover .react-calendar__month-view__weekdays__weekday {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 48px;
+  height: 32px;
+  flex-basis: 48px;
+  padding: 0;
+  color: var(--ink);
+  font-size: var(--font-size-md);
+  font-style: normal;
+  font-weight: var(--font-normal);
+  letter-spacing: var(--letter-spacing-normal);
+  line-height: var(--line-height-sm-px);
+  text-align: center;
+}
+.date-picker-popover .react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none;
+}
 .date-picker-popover .react-calendar__tile {
+  display: block;
+  box-sizing: border-box;
+  width: 40px;
   height: 40px;
-  padding: var(--spacing-2);
-  border-radius: var(--radius-control);
+  flex-basis: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
   color: var(--ink);
   background: transparent;
   font: inherit;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-normal);
+  line-height: var(--line-height-sm-px);
+  text-align: center;
 }
 .date-picker-popover .react-calendar__tile:enabled:hover,
 .date-picker-popover .react-calendar__tile:enabled:focus,
@@ -136,3 +200,6 @@
   text-align: center;
 }
 .date-picker-popover .react-calendar__month-view__days__day--neighboringMonth { color: var(--muted); }
+.date-picker-popover .react-calendar__month-view__days {
+  row-gap: var(--spacing-3);
+}
