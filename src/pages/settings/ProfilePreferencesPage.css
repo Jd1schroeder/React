@@ -587,7 +587,12 @@
 @media (max-width: 760px) {
   .profile-preferences-content {
     grid-template-columns: 1fr;
-    grid-template-areas: "personal" "sessions" "localization" "quit";
+    grid-template-areas:
+      "personal"
+      "localization"
+      "passkeys"
+      "sessions"
+      "quit";
   }
 
   .profile-identity { justify-content: center; text-align: center; }
