@@ -338,6 +338,34 @@
   background: var(--blue-hover);
 }
 
+.login-passkey-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  min-height: 48px;
+  margin-top: var(--spacing-4);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+}
+
+.login-passkey-button:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.login-passkey-button:disabled {
+  color: var(--text-disabled);
+  background: var(--surface-disabled);
+  cursor: not-allowed;
+}
+
 .auth-loading-spinner {
   animation: auth-spinner-rotate 700ms linear infinite;
 }

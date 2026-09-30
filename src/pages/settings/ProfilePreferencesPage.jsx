@@ -3,6 +3,7 @@ import { Camera, ChevronRight, LockKeyhole, LogOut, Mail, Monitor, Pencil, Smart
 import { Avatar } from "../../components/ui/Avatar";
 import { Select } from "../../components/ui/Select";
 import { supabase } from "../../lib/supabase";
+import { listPasskeys, registerPasskey } from "../../services/authService";
 import { updateAuthContact, updateProfile, updateUserPreferences, uploadAvatar } from "../../services/profileService";
 import { isCurrentSessionValid, listCurrentUserSessions, registerCurrentSession, revokeCurrentUserSession, subscribeToSessionUpdates } from "../../services/sessionService";
 import { formatDateForUser } from "../../utils/dateFormatting";
@@ -36,6 +37,10 @@ export function ProfilePreferencesPage({ onNavigate }) {
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [sessionError, setSessionError] = useState("");
   const [isRevokingSession, setIsRevokingSession] = useState(false);
+  const [passkeys, setPasskeys] = useState([]);
+  const [passkeyError, setPasskeyError] = useState("");
+  const [passkeyNotice, setPasskeyNotice] = useState("");
+  const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
 
   const user = workspace.user;
   const displayName = [user?.user_metadata?.first_name, user?.user_metadata?.last_name].filter(Boolean).join(" ") || user?.email || "Your profile";
@@ -71,6 +76,21 @@ export function ProfilePreferencesPage({ onNavigate }) {
       await updateUserPreferences({ ...nextPreferences, timezone: workspace.preferences?.timezone ?? "America/New_York" });
     } catch (error) {
       setProfileSaveError(error.message || "Unable to save this preference.");
+    }
+  };
+  const addPasskey = async () => {
+    setIsRegisteringPasskey(true);
+    setPasskeyError("");
+    setPasskeyNotice("");
+    try {
+      await registerPasskey();
+      setPasskeys(await listPasskeys());
+    } catch (error) {
+      const message = error.message || "";
+      if (error.name === "NotAllowedError" || error.name === "AbortError" || /timed out|not allowed to finish|cancel/i.test(message)) setPasskeyNotice("Passkey setup was canceled.");
+      else setPasskeyError(message || "Unable to register this passkey.");
+    } finally {
+      setIsRegisteringPasskey(false);
     }
   };
 
@@ -131,6 +151,11 @@ export function ProfilePreferencesPage({ onNavigate }) {
     };
   }, [onNavigate, user?.id]);
 
+  useEffect(() => {
+    if (!user?.id) return;
+    listPasskeys().then(setPasskeys).catch((error) => setPasskeyError(error.message || "Unable to load passkeys."));
+  }, [user?.id]);
+
   const revokeSession = async () => {
     if (!selectedSession) return;
     setIsRevokingSession(true);
@@ -168,6 +193,7 @@ export function ProfilePreferencesPage({ onNavigate }) {
           <PreferenceSelect label="Time Format" value={preferences.timeFormat} onChange={(value) => savePreferences({ ...preferences, timeFormat: value })} ariaLabel="Time Format" options={["11:59 PM", "23:59"]} />
           <PreferenceSelect label="Beginning of Week" value={preferences.weekStart} onChange={(value) => savePreferences({ ...preferences, weekStart: value })} ariaLabel="Beginning of Week" options={["Sunday", "Monday"]} />
         </div></section>
+        <section className="profile-settings-card profile-passkeys-card"><div className="profile-card-heading"><div><h2>Passkeys</h2><p>Use your phone's biometrics or device PIN to sign in securely.</p></div><button type="button" className="profile-passkey-button" onClick={addPasskey} disabled={isRegisteringPasskey}>{isRegisteringPasskey ? "Waiting for verification..." : "Add passkey"}</button></div>{passkeys.length > 0 && <div className="profile-passkey-list">{passkeys.map((passkey) => <div className="profile-passkey-row" key={passkey.id}><strong>{passkey.friendly_name || "Passkey"}</strong><span>Added {formatDateForUser(passkey.created_at, preferences.dateFormat, workspace.preferences?.timezone)}</span></div>)}</div>}{passkeyNotice && <p className="profile-passkey-notice">{passkeyNotice}</p>}{passkeyError && <p className="profile-session-error" role="alert">{passkeyError}</p>}</section>
         <section className="profile-settings-card profile-sessions-card"><h2>Sessions</h2><h3>Linked Devices</h3>{sessionsLoading ? <div className="profile-empty-state"><Monitor size={18} /><span>Loading linked devices...</span></div> : sessions.length ? <div className="profile-session-list">{sessions.map((session) => <button type="button" className="profile-session-row" key={session.session_id} onClick={() => setSelectedSession(session)}><span className="profile-session-icon">{session.device_type === "mobile" || session.device_type === "tablet" ? <Smartphone size={17} /> : <Monitor size={17} />}</span><strong>{session.device_name}</strong>{session.is_current && <span className="profile-session-current">This device</span>}<ChevronRight size={18} aria-hidden="true" /></button>)}</div> : <div className="profile-empty-state"><Monitor size={18} /><span>No linked devices available.</span></div>}{sessionError && <p className="profile-session-error" role="alert">{sessionError}</p>}</section>
         <section className="profile-settings-card profile-quit-card"><div className="profile-quit-copy"><LogOut size={22} /><div><h2>Quit Organization</h2><p>If you quit, you will lose access to this organization and will need to be re-invited to join again.</p></div></div><button type="button" className="profile-danger-button" disabled>Quit Organization</button></section>
       </section>

@@ -4,6 +4,7 @@
   grid-template-areas:
     "personal personal"
     "localization localization"
+    "passkeys passkeys"
     "sessions sessions"
     "quit quit";
   gap: var(--spacing-5);
@@ -122,6 +123,7 @@
 
 .profile-personal-info-card { grid-area: personal; }
 .profile-preferences-card { grid-area: localization; }
+.profile-passkeys-card { grid-area: passkeys; }
 .profile-sessions-card { grid-area: sessions; }
 
 .profile-signout-button {
@@ -145,6 +147,50 @@
   justify-content: space-between;
   gap: var(--spacing-4);
 }
+
+.profile-card-heading p {
+  margin: var(--spacing-2) 0 0;
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+}
+
+.profile-passkey-button {
+  flex: none;
+  min-height: 36px;
+  padding: 0 var(--spacing-4);
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--white);
+  background: var(--blue);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+}
+
+.profile-passkey-button:hover { background: var(--blue-hover); }
+.profile-passkey-button:disabled { color: var(--text-disabled); background: var(--surface-disabled); cursor: wait; }
+
+.profile-passkey-list {
+  display: grid;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-5);
+}
+
+.profile-passkey-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  min-height: 40px;
+  padding: 0 var(--spacing-3);
+  border-top: var(--border-width-normal) solid var(--line);
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+}
+
+.profile-passkey-row strong { color: var(--ink); }
+.profile-passkey-notice { margin: var(--spacing-3) 0 0; color: var(--muted); font-size: var(--font-size-sm); }
 
 .profile-settings-card h2 {
   margin: 0;

@@ -1,7 +1,7 @@
-import { CheckCircle2, ChevronDown, Eye, EyeOff, LoaderCircle, LockKeyhole, Mail, MessageCircle, UserRound, UsersRound } from 'lucide-react'
+import { CheckCircle2, ChevronDown, Eye, EyeOff, Fingerprint, LoaderCircle, LockKeyhole, Mail, MessageCircle, UserRound, UsersRound } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '../components/ui/Button'
-import { signInWithPassword, signUpWithOrganization } from '../services/authService'
+import { signInWithPasskey, signInWithPassword, signUpWithOrganization } from '../services/authService'
 import workbenchLogo from '../assets/workbench-logo.png'
 import './Login.css'
 import './Signup.css'
@@ -13,8 +13,21 @@ export function AuthPage({ mode = 'login', onNavigate }) {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isPasskeySubmitting, setIsPasskeySubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const hasPendingInvite = () => Boolean(window.sessionStorage.getItem('workbench.pendingInviteToken'))
+  const handlePasskeySignIn = async () => {
+    setSubmitError('')
+    setIsPasskeySubmitting(true)
+    try {
+      await signInWithPasskey()
+      onNavigate?.(hasPendingInvite() ? 'Accept Invite' : 'Work Orders')
+    } catch (error) {
+      setSubmitError(error.message || 'We could not sign you in with your passkey.')
+    } finally {
+      setIsPasskeySubmitting(false)
+    }
+  }
   const handleSubmit = async (event) => {
     event.preventDefault()
     setSubmitError('')
@@ -109,7 +122,7 @@ export function AuthPage({ mode = 'login', onNavigate }) {
         <div className="login-hero-grid" /><div className="login-hero-orb login-hero-orb-one" /><div className="login-hero-orb login-hero-orb-two" />
         <div className="login-hero-content"><Brand onNavigate={onNavigate} /><div><p className="login-hero-kicker">FACILITY OPERATIONS</p><h2>Keep every team,<br />tool, and task moving.</h2><p className="login-hero-copy">One clear workspace for the work that keeps your facility running.</p></div><div className="login-hero-illustration" aria-hidden="true"><div className="illustration-building"><span /><span /><span /><span /><span /><span /></div><div className="illustration-floor" /><div className="illustration-tool illustration-tool-one" /><div className="illustration-tool illustration-tool-two" /></div></div>
       </section>
-      <section className="login-panel" aria-labelledby="auth-title"><div className="login-panel-inner"><div className="login-brand login-brand-panel"><img className="login-full-logo" src={workbenchLogo} alt="Workbench CMMS" /></div><div className="login-heading"><h1 id="auth-title">Welcome back</h1><p>Sign in to manage your facility operations.</p></div><form className="login-form" onSubmit={handleSubmit}><label className="login-field"><span>Email address</span><div className="login-input-wrap"><Mail size={18} aria-hidden="true" /><input type="email" name="email" placeholder="Enter your email" autoComplete="email" /></div></label><label className="login-field"><span>Password</span><div className="login-input-wrap"><LockKeyhole size={18} aria-hidden="true" /><input type={showPassword ? 'text' : 'password'} name="password" placeholder="Enter your password" autoComplete="current-password" /><button type="button" className="login-password-toggle" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div></label><div className="login-options"><label className="login-checkbox"><input type="checkbox" name="remember" /><span>Remember me</span></label><button type="button" className="login-link" onClick={() => onNavigate?.('Forgot Password')}>Forgot password?</button></div><Button type="submit" ripple disabled={isSubmitting} aria-busy={isSubmitting}>{isSubmitting && <LoaderCircle className="auth-loading-spinner" size={17} aria-hidden="true" />}{isSubmitting ? 'Logging in...' : 'Log in'}</Button></form><p className="login-signup"><span className="login-signup-prompt">Don't have an account? </span><button type="button" className="login-link" onClick={() => onNavigate?.('Signup')}><span className="login-signup-desktop">Sign up.</span><span className="login-signup-mobile">Create account</span></button></p><p className="login-legal">By creating an account or logging in, you agree to the current <button type="button" className="login-link">Terms of Service</button> and <button type="button" className="login-link">Privacy Policy</button>.</p><div className="login-panel-footer"><button type="button" className="login-language">English <ChevronDown size={14} /></button><button type="button" className="login-support"><MessageCircle size={16} /> Get support</button></div></div></section>
+      <section className="login-panel" aria-labelledby="auth-title"><div className="login-panel-inner"><div className="login-brand login-brand-panel"><img className="login-full-logo" src={workbenchLogo} alt="Workbench CMMS" /></div><div className="login-heading"><h1 id="auth-title">Welcome back</h1><p>Sign in to manage your facility operations.</p></div><form className="login-form" onSubmit={handleSubmit}><label className="login-field"><span>Email address</span><div className="login-input-wrap"><Mail size={18} aria-hidden="true" /><input type="email" name="email" placeholder="Enter your email" autoComplete="email webauthn" /></div></label><label className="login-field"><span>Password</span><div className="login-input-wrap"><LockKeyhole size={18} aria-hidden="true" /><input type={showPassword ? 'text' : 'password'} name="password" placeholder="Enter your password" autoComplete="current-password" /><button type="button" className="login-password-toggle" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div></label><div className="login-options"><label className="login-checkbox"><input type="checkbox" name="remember" /><span>Remember me</span></label><button type="button" className="login-link" onClick={() => onNavigate?.('Forgot Password')}>Forgot password?</button></div><Button type="submit" ripple disabled={isSubmitting || isPasskeySubmitting} aria-busy={isSubmitting}>{isSubmitting && <LoaderCircle className="auth-loading-spinner" size={17} aria-hidden="true" />}{isSubmitting ? 'Logging in...' : 'Log in'}</Button></form><button type="button" className="login-passkey-button" onClick={handlePasskeySignIn} disabled={isSubmitting || isPasskeySubmitting}>{isPasskeySubmitting ? <LoaderCircle className="auth-loading-spinner" size={17} aria-hidden="true" /> : <Fingerprint size={18} aria-hidden="true" />} {isPasskeySubmitting ? 'Waiting for passkey...' : 'Sign in with passkey'}</button><p className="login-signup"><span className="login-signup-prompt">Don't have an account? </span><button type="button" className="login-link" onClick={() => onNavigate?.('Signup')}><span className="login-signup-desktop">Sign up.</span><span className="login-signup-mobile">Create account</span></button></p><p className="login-legal">By creating an account or logging in, you agree to the current <button type="button" className="login-link">Terms of Service</button> and <button type="button" className="login-link">Privacy Policy</button>.</p><div className="login-panel-footer"><button type="button" className="login-language">English <ChevronDown size={14} /></button><button type="button" className="login-support"><MessageCircle size={16} /> Get support</button></div></div></section>
     </main>
   )
 }

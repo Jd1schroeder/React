@@ -7,4 +7,8 @@ if (!supabaseUrl || !supabasePublishableKey) {
   throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY.')
 }
 
-export const supabase = createClient(supabaseUrl, supabasePublishableKey)
+export const supabase = createClient(supabaseUrl, supabasePublishableKey, {
+  auth: {
+    experimental: { passkey: true },
+  },
+})
