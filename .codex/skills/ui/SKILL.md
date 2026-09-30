@@ -88,7 +88,7 @@ The panel view selector uses only a pointer cursor on hover and has no trigger h
 - Notification Settings uses grouped cards with a shared event matrix: event labels in the main column and Email/In-App toggle columns, implemented with the reusable notification row/toggle pattern in `src/pages/SettingsPage.jsx`.
 - The reusable `PanelView` list header is opt-in through `showListHeader`; keep it hidden on scaffolded pages until their list actions are implemented.
 - Icon-only edit controls use color-only hover feedback with `var(--icon-hover)` (`rgb(97 174 255)`); do not add a hover background behind the icon.
-- Sign-out actions use `var(--signout)` (`rgb(236 65 70)`) and `var(--signout-hover)` (`rgb(236 65 70 / 75%)`) with no hover background.
+- Account sign-out and destructive removal actions use `var(--signout)` (`rgb(236 65 70)`) and `var(--signout-hover)` (`rgb(236 65 70 / 75%)`) with no hover background. The MaintainX-style linked-device modal keeps its reversible per-device `Sign out` action as a blue primary button.
 - Active items use `#E7F3FE` as the background, normal 400 weight, and `#1E2429` for the root text color; active icon and label treatments may apply the accent blue separately.
 - When matching reference designs, compare computed styles and rendered fonts in addition to screenshots.
 - The collapsed sidebar root uses `padding: 0`; section spacing belongs to `.sidebar-header` and `.sidebar-nav`, while `.sidebar-bottom` remains `padding: 0`.
@@ -101,7 +101,7 @@ The panel view selector uses only a pointer cursor on hover and has no trigger h
 - The account area in `.settings-menu-root` owns the account popover and Supabase sign-out action; close it on outside pointer interaction and keep account identity sourced from `workspaceService.js`.
 - Organization and personal settings use the shared route-backed `src/pages/SettingsPage.jsx`; Manage Teammates and Invite Users use the organization and invitation services for membership administration and generated invite links. Keep Invite Users form-only; invitation history and revocation belong in the user-management views.
 - Profile Preferences uses workspace identity from `src/services/workspaceService.js`; profile, phone, avatar, and localization controls persist through `src/services/profileService.js`.
-- Profile Preferences renders MaintainX-style linked devices from `src/services/sessionService.js`: device rows open a modal with device name/type, browser, operating system, last connection, optional IP address, current-device state, and a per-device logout action; keep loading, empty, and error states explicit.
+- Profile Preferences renders MaintainX-style linked devices from `src/services/sessionService.js`: device rows open a modal with device name/type, browser, operating system, last connection, optional IP address, current-device state, and a per-device logout action; keep loading, empty, and error states explicit. The modal action uses an inline-flex `LogOut` icon and label, while Cancel gets blue hover/focus border feedback without changing its neutral default appearance.
 - Tork destinations (`Chat`, `Routines`, and `History`) intentionally render only the Workbench 404 artwork inside the authenticated app shell until their UI is designed.
 
 Validate visual refactors with `npm.cmd run lint` and `npm.cmd run build`.

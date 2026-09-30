@@ -407,8 +407,10 @@
   font-weight: var(--font-semibold);
 }
 
-.profile-modal-cancel { border: 0; color: var(--blue); background: transparent; }
-.profile-modal-update { min-width: 80px; border: 0; color: var(--white); background: var(--blue); }
+.profile-modal-cancel { border: var(--border-width-normal) solid transparent; color: var(--blue); background: transparent; }
+.profile-modal-cancel:hover,
+.profile-modal-cancel:focus-visible { border-color: var(--blue); }
+.profile-modal-update { display: inline-flex; min-width: 80px; align-items: center; justify-content: center; gap: var(--spacing-2); border: 0; color: var(--white); background: var(--blue); }
 .profile-modal-update:disabled { color: var(--text-disabled); background: var(--surface-disabled); cursor: not-allowed; }
 
 .profile-preference-list {
