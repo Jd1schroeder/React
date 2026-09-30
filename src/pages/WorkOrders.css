@@ -454,6 +454,12 @@
   outline: var(--border-width-normal) solid var(--focus-border-color);
   outline-offset: -2px;
 }
+.new-work-order-two-column .new-work-order-field input:focus {
+  border-width: var(--border-width-normal);
+  border-color: var(--focus-border-color);
+  outline: var(--border-width-normal) solid var(--focus-border-color);
+  outline-offset: -2px;
+}
 .new-work-order-title-field input {
   box-sizing: border-box;
   height: 39px;
@@ -542,10 +548,22 @@
 }
 .new-work-order-date > svg { flex: none; color: var(--icon-secondary); }
 .new-work-order-date input { flex: 1; padding-left: 0; border: 0; }
+.new-work-order-field .date-picker-trigger input,
+.new-work-order-field .date-picker-trigger input:focus {
+  width: auto;
+  box-sizing: border-box;
+  min-height: 0;
+  padding: 0 var(--spacing-2);
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  box-shadow: none;
+}
 .new-work-order-fieldset { min-width: 0; padding: 0; border: 0; }
 .new-work-order-fieldset legend { padding: 0; }
 .new-work-order-two-column { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-3); }
 .new-work-order-two-column .new-work-order-field { margin-bottom: 0; }
+.new-work-order-recurrence .select-menu { max-height: none; }
 .new-work-order-priority { display: inline-flex; max-width: 100%; }
 .new-work-order-priority button {
   min-width: 64px;

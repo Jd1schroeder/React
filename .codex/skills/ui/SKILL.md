@@ -74,6 +74,8 @@ Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the share
 
 `Select` also supports reusable multi-select values and option avatars through the `multiple` and `avatar` option props. Use this for assignment controls that need user avatars/initials; do not build page-specific multi-select menus.
 
+Use `src/components/ui/DatePicker.jsx` for date fields that need the shared calendar experience. Its calendar opens only from the calendar icon; the adjacent date text remains manually editable and emits ISO date values.
+
 Use `src/components/ui/DataTable.jsx` for reusable sortable tables. Supply column definitions and row renderers rather than copying table markup; the component owns sort state, sortable header icons, responsive overflow, and the empty state.
 
 `PanelViewSelector` owns the reusable panel/table view menu. Its default options are Panel View and a muted, locked Table View until table rendering exists; modules may pass additional view options without copying the selector interaction or menu markup.

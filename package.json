@@ -23,6 +23,7 @@
     "libphonenumber-js": "^1.13.13",
     "lucide-react": "^1.46.0",
     "react": "^19.2.8",
+    "react-calendar": "^6.0.1",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4"
   },

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import {
-  CalendarDays,
   LockKeyhole,
   Paperclip,
   Plus,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
+import { DatePicker } from "../../components/ui/DatePicker";
 import { ImageDropzone } from "../../components/ui/ImageDropzone";
 import { Select } from "../../components/ui/Select";
 
@@ -44,14 +44,7 @@ function SearchSelect({ label, required, placeholder, value, onChange, options =
 function DateField({ label, required, value, onChange }) {
   return (
     <FormField label={label} required={required}>
-      <div className="new-work-order-date">
-        <CalendarDays size={17} aria-hidden="true" />
-        <input
-          type="date"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-        />
-      </div>
+      <DatePicker ariaLabel={label} value={value} onChange={onChange} />
     </FormField>
   );
 }
@@ -203,6 +196,7 @@ export function NewWorkOrderForm({
           <div className="new-work-order-two-column">
             <FormField label="Recurrence">
               <Select
+                className="new-work-order-recurrence"
                 ariaLabel="Recurrence"
                 value={form.recurrence}
                 onChange={(value) => update("recurrence", value)}
@@ -210,6 +204,10 @@ export function NewWorkOrderForm({
                   { value: "none", label: "Does not repeat" },
                   { value: "daily", label: "Daily" },
                   { value: "weekly", label: "Weekly" },
+                  { value: "monthly-date", label: "Monthly by date" },
+                  { value: "monthly-weekday", label: "Monthly by weekday" },
+                  { value: "yearly", label: "Yearly" },
+                  { value: "periodically", label: "Periodically" },
                 ]}
               />
             </FormField>
