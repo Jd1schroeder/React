@@ -17,7 +17,7 @@ export const settingsNavigation = {
 
 export const sidebarGroups = [
   { label: 'Work', items: [
-    { label: 'Work Orders', icon: ClipboardCheck, page: 'Work Orders', count: 24 },
+    { label: 'Work Orders', icon: ClipboardCheck, page: 'Work Orders' },
     { label: 'Requests', icon: MessageSquare, page: 'Requests', count: 1 },
     { label: 'Purchase Orders', icon: FileText, page: 'Purchase Orders', count: 4 },
     { label: 'Messages', icon: MessagesSquare, page: 'Messages' },

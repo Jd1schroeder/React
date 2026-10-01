@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PanelLeft, UsersRound } from 'lucide-react'
 import './WorkOrders.css'
 import { PanelLayout } from '../components/layout/PanelLayout'
 import { WorkOrderDetail } from './work-orders/WorkOrderDetail'
 import { WorkOrderFilters, WorkOrderList } from './work-orders/WorkOrderList'
-import { hasPermission } from '../services/authorizationService'
+import { canAccessRecord, hasPermission } from '../services/authorizationService'
 import { listOrganizationMembers, listOrganizationTeamMemberships, listOrganizationTeams } from '../services/organizationService'
 import { useWorkspace } from '../components/layout/useWorkspace'
-import { createWorkOrder, listWorkOrders, updateWorkOrderExecution } from '../services/workOrderService'
+import { createWorkOrder, getWorkOrderById, listWorkOrderInboxCounts, listWorkOrderInboxPage, markWorkOrderInboxRead, markWorkOrderRead, markWorkOrderUnread, updateWorkOrderExecution } from '../services/workOrderService'
 import { NewWorkOrderForm } from './work-orders/NewWorkOrderForm'
 import { formatCalendarDateForUser, formatDateForUser } from '../utils/dateFormatting'
 
@@ -45,35 +45,123 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
   const canCreateWorkOrders = canViewWorkOrders && hasPermission(grants, 'work_orders.create')
   const userId = workspace.user?.id
   const [activeTab, setActiveTab] = useState('To Do')
-  const [workOrders, setWorkOrders] = useState([])
+  const [workOrdersById, setWorkOrdersById] = useState({})
+  const [groupCounts, setGroupCounts] = useState({})
+  const [refreshVersion, setRefreshVersion] = useState(0)
   const [localSelectedId, setLocalSelectedId] = useState()
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [loadState, setLoadState] = useState('loading')
   const [error, setError] = useState('')
+  const [readError, setReadError] = useState('')
+  const [readNotice, setReadNotice] = useState('')
+  const [isSavingReadState, setIsSavingReadState] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [createError, setCreateError] = useState('')
   const [assigneeOptions, setAssigneeOptions] = useState([])
+  const pendingReadIds = useRef(new Set())
   const isLoading = canViewWorkOrders && loadState === 'loading'
   const selectedId = recordId ?? localSelectedId
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedSearch(search), 250)
+    return () => window.clearTimeout(timeout)
+  }, [search])
   useEffect(() => {
     if (!canViewWorkOrders || !organizationId) {
       return undefined
     }
     let active = true
-    listWorkOrders(organizationId, grants)
-      .then((orders) => { if (active) setWorkOrders(orders.map((order) => normalizeWorkOrder(order, workspace.preferences))) })
+    listWorkOrderInboxCounts({ organizationId, tab: activeTab, search: debouncedSearch, grants })
+      .then((counts) => { if (active) setGroupCounts(counts) })
       .catch((loadError) => { if (active) setError(loadError.message || 'Unable to load Work Orders.') })
       .finally(() => { if (active) setLoadState('ready') })
     return () => { active = false }
-  }, [canViewWorkOrders, grants, organizationId, workspace.preferences])
-  const visibleOrders = useMemo(() => {
-    const tabOrders = activeTab === 'Done' ? workOrders.filter((order) => order.status === 'Completed') : workOrders.filter((order) => order.status !== 'Completed')
-    const normalizedSearch = search.trim().toLowerCase()
-    return normalizedSearch ? tabOrders.filter((order) => `${order.title} ${order.id} ${order.location}`.toLowerCase().includes(normalizedSearch)) : tabOrders
-  }, [activeTab, search, workOrders])
-  const selected = recordId ? workOrders.find((order) => order.id === selectedId) : visibleOrders[0] ?? workOrders[0]
+  }, [activeTab, canViewWorkOrders, debouncedSearch, grants, organizationId, refreshVersion])
+  const selected = workOrdersById[selectedId]
   const missingRecord = Boolean(recordId && !selected)
+  const markViewed = useCallback(async (order) => {
+    if (!order || (workOrdersById[order.id]?.is_read ?? order.is_read) || pendingReadIds.current.has(order.id)) return
+    pendingReadIds.current.add(order.id)
+    try {
+      await markWorkOrderRead({ workOrderId: order.id, grants })
+      setWorkOrdersById((current) => ({ ...current, [order.id]: { ...current[order.id], is_read: true } }))
+      setReadError('')
+    } catch (readFailure) {
+      setReadError(readFailure.message || 'Unable to save Work Order review status.')
+    } finally {
+      pendingReadIds.current.delete(order.id)
+    }
+  }, [grants, workOrdersById])
+  const toggleReadState = async (order) => {
+    if (!order || isSavingReadState) return
+    setIsSavingReadState(true)
+    setReadError('')
+    setReadNotice('')
+    try {
+      if (workOrdersById[order.id]?.is_read ?? order.is_read) {
+        await markWorkOrderUnread({ workOrderId: order.id, grants })
+        setWorkOrdersById((current) => ({ ...current, [order.id]: { ...current[order.id], is_read: false } }))
+      } else {
+        await markWorkOrderRead({ workOrderId: order.id, grants })
+        setWorkOrdersById((current) => ({ ...current, [order.id]: { ...current[order.id], is_read: true } }))
+      }
+    } catch (readFailure) {
+      setReadError(readFailure.message || 'Unable to update Work Order review status.')
+    } finally {
+      setIsSavingReadState(false)
+    }
+  }
+  const readAll = async () => {
+    setIsSavingReadState(true)
+    setReadError('')
+    setReadNotice('')
+    try {
+      await markWorkOrderInboxRead({ organizationId, tab: activeTab, search: debouncedSearch, grants })
+      const normalizedSearch = debouncedSearch.trim().toLowerCase()
+      setWorkOrdersById((current) => Object.fromEntries(Object.entries(current).map(([id, order]) => {
+        const inTab = activeTab === 'Done' ? order.status === 'Completed' : order.status !== 'Completed'
+        const matchesSearch = !normalizedSearch || `${order.title} ${order.id} ${order.work_order_number}`.toLowerCase().includes(normalizedSearch)
+        return [id, inTab && matchesSearch ? { ...order, is_read: true } : order]
+      })))
+      setReadNotice('All matching Work Orders are marked as read.')
+      setRefreshVersion((version) => version + 1)
+    } catch (readFailure) {
+      setReadError(readFailure.message || 'Unable to mark Work Orders as read.')
+    } finally {
+      setIsSavingReadState(false)
+    }
+  }
+  useEffect(() => {
+    if (!recordId || !canViewWorkOrders || !organizationId || workOrdersById[recordId]) return undefined
+    let active = true
+    getWorkOrderById({ organizationId, workOrderId: recordId, grants })
+      .then((order) => {
+        if (!active || !order) return
+        const normalized = normalizeWorkOrder(order, workspace.preferences)
+        setWorkOrdersById((current) => ({ ...current, [order.id]: normalized }))
+        void markViewed(normalized)
+      })
+      .catch((loadError) => { if (active) setError(loadError.message || 'Unable to load this Work Order.') })
+    return () => { active = false }
+  }, [canViewWorkOrders, grants, markViewed, organizationId, recordId, workOrdersById, workspace.preferences])
+  const loadGroupPage = async ({ tab, group, sort, offset }) => {
+    const orders = await listWorkOrderInboxPage({ organizationId, tab, group, search: debouncedSearch, sort, offset, grants })
+    return orders.map((order) => normalizeWorkOrder(order, workspace.preferences))
+  }
+  const storeOrders = (orders) => {
+    setWorkOrdersById((current) => ({ ...current, ...Object.fromEntries(orders.map((order) => [order.id, order])) }))
+    if (!recordId && !localSelectedId && orders[0]) {
+      setLocalSelectedId(orders[0].id)
+      void markViewed(orders[0])
+    }
+  }
+  const selectOrder = (order) => {
+    setIsCreating(false)
+    setLocalSelectedId(order.id)
+    onNavigateRecord?.('workorders', order.id)
+    void markViewed(order)
+  }
   useEffect(() => {
     if (!organizationId) return undefined
     let active = true
@@ -112,22 +200,39 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
       })
     return () => { active = false }
   }, [assignScope, canAssignWorkOrders, organizationId, teamIds])
-  const markDone = async () => {
-    if (!organizationId || !selected) return
+  const changeStatus = async (order, status) => {
+    if (!organizationId || !order) return
     try {
-      const updated = normalizeWorkOrder(await updateWorkOrderExecution({ organizationId, workOrderId: selected.id, status: 'Completed', grants, record: { userId, ownerId: selected.created_by, assigneeId: selected.assigned_to, assigneeIds: selected.work_order_assignments?.map((assignment) => assignment.user_id).filter(Boolean), teamId: selected.team_id, assignedTeamIds: selected.work_order_assignments?.map((assignment) => assignment.team_id).filter(Boolean), teamIds } }), workspace.preferences)
-      setWorkOrders((current) => current.map((order) => order.id === updated.id ? updated : order))
-    } catch (updateError) { setError(updateError.message || 'Unable to update this Work Order.') }
+      const updated = normalizeWorkOrder(await updateWorkOrderExecution({ organizationId, workOrderId: order.id, status, grants, record: { userId, ownerId: order.created_by, assigneeId: order.assigned_to, assigneeIds: order.work_order_assignments?.map((assignment) => assignment.user_id).filter(Boolean), teamId: order.team_id, assignedTeamIds: order.work_order_assignments?.map((assignment) => assignment.team_id).filter(Boolean), teamIds } }), workspace.preferences)
+      setWorkOrdersById((current) => ({ ...current, [updated.id]: updated }))
+      setRefreshVersion((version) => version + 1)
+      return updated
+    } catch (updateError) {
+      setError(updateError.message || 'Unable to update this Work Order.')
+      throw updateError
+    }
   }
+  const markDone = async () => { if (selected) await changeStatus(selected, 'Completed') }
+  const canChangeStatusForOrder = (order) => canAccessRecord(grants, 'work_orders.change_status', {
+    userId,
+    ownerId: order.created_by,
+    assigneeId: order.assigned_to,
+    assigneeIds: order.work_order_assignments?.map((assignment) => assignment.user_id).filter(Boolean),
+    teamId: order.team_id,
+    assignedTeamIds: order.work_order_assignments?.map((assignment) => assignment.team_id).filter(Boolean),
+    teamIds,
+  })
   const handleCreate = async (values) => {
     if (!organizationId) return
     setIsSaving(true)
     setCreateError('')
     try {
       const created = normalizeWorkOrder(await createWorkOrder({ organizationId, ...values, grants }), workspace.preferences)
-      setWorkOrders((current) => [created, ...current])
+      setWorkOrdersById((current) => ({ ...current, [created.id]: created }))
       setIsCreating(false)
       setLocalSelectedId(created.id)
+      void markViewed(created)
+      setRefreshVersion((version) => version + 1)
     } catch (createLoadError) {
       setCreateError(createLoadError.message || 'Unable to create this Work Order.')
     } finally {
@@ -139,6 +244,6 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
     {isLoading && <div className="work-orders-loading">Loading Work Orders...</div>}
     {!isLoading && error && <div className="work-orders-loading" role="alert">{error}</div>}
     {!isLoading && !error && !canViewWorkOrders && <div className="work-orders-loading" role="status">You do not have permission to view Work Orders.</div>}
-    {!isLoading && !error && canViewWorkOrders && <><WorkOrderList activeTab={activeTab} setActiveTab={setActiveTab} visibleOrders={visibleOrders} selected={selected} onSelect={(order) => { setIsCreating(false); setLocalSelectedId(order.id); onNavigateRecord?.('workorders', order.id) }} />{isCreating ? <NewWorkOrderForm onCancel={() => setIsCreating(false)} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : <WorkOrderDetail selected={selected} missingRecord={missingRecord} onMarkDone={markDone} grants={grants} userId={userId} teamIds={teamIds} />}</>}
+    {!isLoading && !error && canViewWorkOrders && <>{readError && <div className="work-orders-loading" role="alert">{readError}</div>}{readNotice && <div className="work-orders-read-notice" role="status">{readNotice}</div>}<WorkOrderList activeTab={activeTab} setActiveTab={setActiveTab} search={debouncedSearch} groupCounts={groupCounts} readStatusById={workOrdersById} selected={selected} onOrdersLoaded={storeOrders} onLoadGroupPage={loadGroupPage} refreshVersion={refreshVersion} onSelect={selectOrder} onStatusChange={changeStatus} onReadAll={readAll} isReadAllSaving={isSavingReadState || search !== debouncedSearch} canChangeStatusForOrder={canChangeStatusForOrder} />{isCreating ? <NewWorkOrderForm onCancel={() => setIsCreating(false)} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : <WorkOrderDetail selected={selected} missingRecord={missingRecord} onMarkDone={markDone} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} />}</>}
   </PanelLayout>
 }

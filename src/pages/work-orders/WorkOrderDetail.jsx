@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import {
   CalendarDays,
   Check,
@@ -5,6 +6,8 @@ import {
   ClipboardList,
   Clock3,
   Copy,
+  EllipsisVertical,
+  MailOpen,
   MapPin,
   MessageCircle,
   Paperclip,
@@ -14,10 +17,7 @@ import {
 import { Avatar } from "../../components/ui/Avatar";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
-import {
-  PanelOverflowButton,
-  PanelRecordNotFound,
-} from "../../components/layout/PanelView";
+import { PanelRecordNotFound } from "../../components/layout/PanelView";
 import { canAccessRecord } from "../../services/authorizationService";
 
 const statusTone = {
@@ -43,10 +43,29 @@ export function WorkOrderDetail({
   selected,
   missingRecord,
   onMarkDone,
+  onToggleRead,
+  isSavingReadState = false,
   grants,
   userId,
   teamIds = [],
 }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  useEffect(() => {
+    if (!isMenuOpen) return undefined;
+    const dismiss = (event) => {
+      if (!menuRef.current?.contains(event.target)) setIsMenuOpen(false);
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setIsMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", dismiss);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", dismiss);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMenuOpen]);
   if (missingRecord)
     return (
       <section className="detail-pane">
@@ -75,8 +94,7 @@ export function WorkOrderDetail({
     "work_orders.view_comments",
     record,
   );
-  const canUseMoreActions =
-    canEditDetails || canChangeStatus || canViewComments;
+  const canUseMoreActions = canEditDetails || canChangeStatus || canViewComments || onToggleRead;
   return (
     <section className="detail-pane">
       <header className="detail-header">
@@ -89,7 +107,7 @@ export function WorkOrderDetail({
           </div>
           <div className="detail-meta">
             <CalendarDays size={14} /> Due by {selected.due} <span>·</span>{" "}
-            {selected.id}
+            #{selected.work_order_number}
           </div>
         </div>
         <div className="detail-actions">
@@ -108,7 +126,16 @@ export function WorkOrderDetail({
             </Button>
           )}
           {canUseMoreActions && (
-            <PanelOverflowButton label="More work order actions" />
+            <div className="work-order-review-menu" ref={menuRef}>
+              <button type="button" className="icon-button" aria-label="More work order actions" aria-haspopup="menu" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen((open) => !open)}>
+                <EllipsisVertical size={17} />
+              </button>
+              {isMenuOpen && <div className="work-order-detail-menu" role="menu" aria-label="Work Order actions">
+                <button type="button" role="menuitem" disabled={isSavingReadState} onClick={async () => { await onToggleRead(selected); setIsMenuOpen(false); }}>
+                  <MailOpen size={15} /> Mark as {selected.is_read ? "unread" : "read"}
+                </button>
+              </div>}
+            </div>
           )}
         </div>
       </header>

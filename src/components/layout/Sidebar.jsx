@@ -14,6 +14,8 @@ import { settingsNavigation, settingsPageByLabel, sidebarGroups } from "./sideba
 import workbenchIcon from "../../assets/workbench-icon.png";
 import { supabase } from "../../lib/supabase";
 import { setActiveOrganization } from "../../services/workspaceService";
+import { getUnreadWorkOrderCount } from "../../services/workOrderService";
+import { hasPermission } from "../../services/authorizationService";
 import { Avatar } from "../ui/Avatar";
 import { useWorkspace } from "./useWorkspace";
 
@@ -40,7 +42,7 @@ function NavItem({ item, activePage, onNavigate, collapsed, nested = false }) {
           </span>
         )}
         <span className="nav-label-text">{item.label}</span>
-        {item.count && <span className="nav-count">{item.count}</span>}
+        {Number(item.count) > 0 && <span className="nav-count">{item.count}</span>}
         {hasChildren && !collapsed && (
           <ChevronDown
             size={13}
@@ -108,6 +110,7 @@ function NavGroup({ group, activePage, onNavigate, collapsed }) {
 
 export function Sidebar({ activePage, onNavigate }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [unreadWorkOrderBadge, setUnreadWorkOrderBadge] = useState({ organizationId: null, count: null });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
   const workspace = useWorkspace();
@@ -135,6 +138,36 @@ export function Sidebar({ activePage, onNavigate }) {
   const lastName = workspace.profile?.last_name || workspace.user?.user_metadata?.last_name || "";
   const displayName = [firstName, lastName].filter(Boolean).join(" ") || workspace.user?.email || "Account";
   const organizationName = workspace.organization?.name || "Workspace";
+  const organizationId = workspace.organization?.id;
+  const canViewWorkOrders = workspace.authorization?.status === "ready" && hasPermission(workspace.authorization.grants, "work_orders.view");
+  const unreadWorkOrderCount = unreadWorkOrderBadge.organizationId === organizationId ? unreadWorkOrderBadge.count : null;
+
+  useEffect(() => {
+    if (!organizationId || !workspace.user?.id || !canViewWorkOrders) return undefined;
+    let active = true;
+    let requestSequence = 0;
+    const refreshCount = () => {
+      const currentRequest = ++requestSequence;
+      getUnreadWorkOrderCount({ organizationId, grants: workspace.authorization.grants })
+        .then((count) => { if (active && currentRequest === requestSequence) setUnreadWorkOrderBadge({ organizationId, count }); })
+        .catch(() => { if (active && currentRequest === requestSequence) setUnreadWorkOrderBadge({ organizationId, count: null }); });
+    };
+    refreshCount();
+    window.addEventListener("workbench:unread-work-order-count-invalidated", refreshCount);
+    window.addEventListener("focus", refreshCount);
+    return () => {
+      active = false;
+      window.removeEventListener("workbench:unread-work-order-count-invalidated", refreshCount);
+      window.removeEventListener("focus", refreshCount);
+    };
+  }, [canViewWorkOrders, organizationId, workspace.authorization?.grants, workspace.user?.id]);
+
+  const groupsWithUnreadCount = sidebarGroups.map((group) => ({
+    ...group,
+    items: group.items.map((item) => item.page === "Work Orders"
+      ? { ...item, count: unreadWorkOrderCount }
+      : item),
+  }));
 
   return (
     <aside className={`sidebar ${collapsed ? "is-collapsed" : ""}`}>
@@ -167,7 +200,7 @@ export function Sidebar({ activePage, onNavigate }) {
         </div>
       )}
       <nav className="sidebar-nav" aria-label="Main navigation">
-        {sidebarGroups.map((group) => (
+        {groupsWithUnreadCount.map((group) => (
           <NavGroup
             key={group.label}
             group={group}

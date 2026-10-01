@@ -2,18 +2,32 @@ import { supabase } from '../lib/supabase'
 import { assertPermission } from './authorizationService'
 import { WORK_ORDER_ATTACHMENT_MAX_BYTES, getSafeAttachmentExtension } from '../utils/workOrderAttachments'
 
-const workOrderFields = 'id, organization_id, title, description, status, priority, procedure_progress, due_at, due_date, due_time, start_date, estimated_duration_minutes, work_type, requester_id, assigned_to, team_id, created_by, created_at, updated_at, updated_by'
+const workOrderFields = 'id, work_order_number, organization_id, title, description, status, priority, procedure_progress, due_at, due_date, due_time, start_date, estimated_duration_minutes, work_type, requester_id, assigned_to, team_id, created_by, created_at, updated_at, updated_by'
 const attachmentBucket = 'work-order-attachments'
+
+function notifyUnreadWorkOrderCountInvalidated() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('workbench:unread-work-order-count-invalidated'))
+  }
+}
 
 async function loadWorkOrderRelations(orders) {
   if (!orders.length) return orders
   const workOrderIds = orders.map((order) => order.id)
-  const [{ data: assignments, error: assignmentsError }, { data: attachments, error: attachmentsError }] = await Promise.all([
+  const { data: sessionData } = await supabase.auth.getSession()
+  const userId = sessionData.session?.user?.id
+  const readStateQuery = userId
+    ? supabase.from('work_order_reads').select('work_order_id').eq('user_id', userId).in('work_order_id', workOrderIds)
+    : Promise.resolve({ data: [], error: null })
+  const [{ data: assignments, error: assignmentsError }, { data: attachments, error: attachmentsError }, { data: readStates, error: readStatesError }] = await Promise.all([
     supabase.from('work_order_assignments').select('id, work_order_id, user_id, team_id').in('work_order_id', workOrderIds),
     supabase.from('work_order_attachments').select('id, work_order_id, kind, storage_path, file_name, content_type, byte_size, is_thumbnail, created_at').in('work_order_id', workOrderIds),
+    readStateQuery,
   ])
   if (assignmentsError) throw assignmentsError
   if (attachmentsError) throw attachmentsError
+  if (readStatesError) throw readStatesError
+  const readWorkOrderIds = new Set((readStates ?? []).map((readState) => readState.work_order_id))
   const assignmentsByWorkOrder = new Map()
   const attachmentsByWorkOrder = new Map()
   for (const assignment of assignments ?? []) {
@@ -28,6 +42,7 @@ async function loadWorkOrderRelations(orders) {
   }
   const ordersWithRelations = orders.map((order) => ({
     ...order,
+    is_read: readWorkOrderIds.has(order.id),
     work_order_assignments: assignmentsByWorkOrder.get(order.id) ?? [],
     work_order_attachments: attachmentsByWorkOrder.get(order.id) ?? [],
   }))
@@ -42,15 +57,78 @@ async function loadWorkOrderRelations(orders) {
   }))
 }
 
-export async function listWorkOrders(organizationId, grants) {
+export async function listWorkOrderInboxCounts({ organizationId, tab, search, grants }) {
+  assertPermission(grants, 'work_orders.view')
+  const { data, error } = await supabase.rpc('get_work_order_inbox_counts', {
+    target_organization_id: organizationId,
+    target_tab: tab,
+    target_search: search?.trim() || null,
+  })
+  if (error) throw error
+  return data ?? {}
+}
+
+export async function getUnreadWorkOrderCount({ organizationId, grants }) {
+  assertPermission(grants, 'work_orders.view')
+  const { data, error } = await supabase.rpc('get_unread_work_order_count', {
+    target_organization_id: organizationId,
+  })
+  if (error) throw error
+  return Number(data ?? 0)
+}
+
+export async function markWorkOrderRead({ workOrderId, grants }) {
+  assertPermission(grants, 'work_orders.view')
+  const { error } = await supabase.rpc('mark_work_order_read', { target_work_order_id: workOrderId })
+  if (error) throw error
+  notifyUnreadWorkOrderCountInvalidated()
+}
+
+export async function markWorkOrderUnread({ workOrderId, grants }) {
+  assertPermission(grants, 'work_orders.view')
+  const { error } = await supabase.rpc('mark_work_order_unread', { target_work_order_id: workOrderId })
+  if (error) throw error
+  notifyUnreadWorkOrderCountInvalidated()
+}
+
+export async function markWorkOrderInboxRead({ organizationId, tab, search, grants }) {
+  assertPermission(grants, 'work_orders.view')
+  const { data, error } = await supabase.rpc('mark_work_order_inbox_read', {
+    target_organization_id: organizationId,
+    target_tab: tab,
+    target_search: search?.trim() || null,
+  })
+  if (error) throw error
+  notifyUnreadWorkOrderCountInvalidated()
+  return data ?? 0
+}
+
+export async function listWorkOrderInboxPage({ organizationId, tab, group, search, sort, offset, grants }) {
+  assertPermission(grants, 'work_orders.view')
+  const { data, error } = await supabase.rpc('get_work_order_inbox_page', {
+    target_organization_id: organizationId,
+    target_tab: tab,
+    target_group: group,
+    target_search: search?.trim() || null,
+    target_sort: sort,
+    target_offset: offset,
+    target_page_size: 50,
+  })
+  if (error) throw error
+  return loadWorkOrderRelations(data ?? [])
+}
+
+export async function getWorkOrderById({ organizationId, workOrderId, grants }) {
   assertPermission(grants, 'work_orders.view')
   const { data, error } = await supabase
     .from('work_orders')
     .select(workOrderFields)
     .eq('organization_id', organizationId)
-    .order('created_at', { ascending: false })
+    .eq('id', workOrderId)
+    .maybeSingle()
   if (error) throw error
-  return loadWorkOrderRelations(data ?? [])
+  if (!data) return null
+  return (await loadWorkOrderRelations([data]))[0]
 }
 
 export async function createWorkOrder({ organizationId, title, description, priority, dueDate, dueTime, startDate, estimatedDurationMinutes, workType = 'reactive', assignments = [], pictures = [], thumbnail = null, files = [], grants }) {
@@ -134,6 +212,7 @@ export async function createWorkOrder({ organizationId, title, description, prio
       }))
     }
   }
+  notifyUnreadWorkOrderCountInvalidated()
   return createdWorkOrder
 }
 
