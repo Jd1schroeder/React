@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { PanelLeft, UsersRound } from 'lucide-react'
+import { CheckCircle2, PanelLeft, UsersRound, X } from 'lucide-react'
+import { createPortal } from 'react-dom'
 import './WorkOrders.css'
 import { PanelLayout } from '../components/layout/PanelLayout'
 import { WorkOrderDetail } from './work-orders/WorkOrderDetail'
@@ -45,6 +46,7 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
   const canCreateWorkOrders = canViewWorkOrders && hasPermission(grants, 'work_orders.create')
   const userId = workspace.user?.id
   const [activeTab, setActiveTab] = useState('To Do')
+  const [unreadFirst, setUnreadFirst] = useState(false)
   const [workOrdersById, setWorkOrdersById] = useState({})
   const [groupCounts, setGroupCounts] = useState({})
   const [refreshVersion, setRefreshVersion] = useState(0)
@@ -54,7 +56,8 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
   const [loadState, setLoadState] = useState('loading')
   const [error, setError] = useState('')
   const [readError, setReadError] = useState('')
-  const [readNotice, setReadNotice] = useState('')
+  const [isReadAllConfirmOpen, setIsReadAllConfirmOpen] = useState(false)
+  const [readToast, setReadToast] = useState('')
   const [isSavingReadState, setIsSavingReadState] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -86,18 +89,18 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
     try {
       await markWorkOrderRead({ workOrderId: order.id, grants })
       setWorkOrdersById((current) => ({ ...current, [order.id]: { ...current[order.id], is_read: true } }))
+      if (unreadFirst) setRefreshVersion((version) => version + 1)
       setReadError('')
     } catch (readFailure) {
       setReadError(readFailure.message || 'Unable to save Work Order review status.')
     } finally {
       pendingReadIds.current.delete(order.id)
     }
-  }, [grants, workOrdersById])
+  }, [grants, unreadFirst, workOrdersById])
   const toggleReadState = async (order) => {
     if (!order || isSavingReadState) return
     setIsSavingReadState(true)
     setReadError('')
-    setReadNotice('')
     try {
       if (workOrdersById[order.id]?.is_read ?? order.is_read) {
         await markWorkOrderUnread({ workOrderId: order.id, grants })
@@ -106,6 +109,7 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
         await markWorkOrderRead({ workOrderId: order.id, grants })
         setWorkOrdersById((current) => ({ ...current, [order.id]: { ...current[order.id], is_read: true } }))
       }
+      if (unreadFirst) setRefreshVersion((version) => version + 1)
     } catch (readFailure) {
       setReadError(readFailure.message || 'Unable to update Work Order review status.')
     } finally {
@@ -115,7 +119,6 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
   const readAll = async () => {
     setIsSavingReadState(true)
     setReadError('')
-    setReadNotice('')
     try {
       await markWorkOrderInboxRead({ organizationId, tab: activeTab, search: debouncedSearch, grants })
       const normalizedSearch = debouncedSearch.trim().toLowerCase()
@@ -124,14 +127,34 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
         const matchesSearch = !normalizedSearch || `${order.title} ${order.id} ${order.work_order_number}`.toLowerCase().includes(normalizedSearch)
         return [id, inTab && matchesSearch ? { ...order, is_read: true } : order]
       })))
-      setReadNotice('All matching Work Orders are marked as read.')
+      const tabLabel = activeTab === 'Done' ? 'Done' : 'To Do'
+      const searchLabel = debouncedSearch.trim() ? 'matching ' : ''
+      setReadToast(`All ${searchLabel}${tabLabel} Work Orders have been marked as read.`)
       setRefreshVersion((version) => version + 1)
+      return true
     } catch (readFailure) {
       setReadError(readFailure.message || 'Unable to mark Work Orders as read.')
+      return false
     } finally {
       setIsSavingReadState(false)
     }
   }
+  const confirmReadAll = async () => {
+    if (await readAll()) setIsReadAllConfirmOpen(false)
+  }
+  useEffect(() => {
+    if (!readToast) return undefined
+    const timeout = window.setTimeout(() => setReadToast(''), 5000)
+    return () => window.clearTimeout(timeout)
+  }, [readToast])
+  useEffect(() => {
+    if (!isReadAllConfirmOpen) return undefined
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && !isSavingReadState) setIsReadAllConfirmOpen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isReadAllConfirmOpen, isSavingReadState])
   useEffect(() => {
     if (!recordId || !canViewWorkOrders || !organizationId || workOrdersById[recordId]) return undefined
     let active = true
@@ -145,8 +168,8 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
       .catch((loadError) => { if (active) setError(loadError.message || 'Unable to load this Work Order.') })
     return () => { active = false }
   }, [canViewWorkOrders, grants, markViewed, organizationId, recordId, workOrdersById, workspace.preferences])
-  const loadGroupPage = async ({ tab, group, sort, offset }) => {
-    const orders = await listWorkOrderInboxPage({ organizationId, tab, group, search: debouncedSearch, sort, offset, grants })
+  const loadGroupPage = async ({ tab, group, sort, unreadFirst, offset }) => {
+    const orders = await listWorkOrderInboxPage({ organizationId, tab, group, search: debouncedSearch, sort, unreadFirst, offset, grants })
     return orders.map((order) => normalizeWorkOrder(order, workspace.preferences))
   }
   const storeOrders = (orders) => {
@@ -240,10 +263,22 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
     }
   }
 
-  return <PanelLayout title="Work orders" modeIcon={PanelLeft} searchValue={search} onSearch={setSearch} searchPlaceholder="Search Work Orders" actionLabel="New work order" onAction={() => { setCreateError(''); setIsCreating(true) }} showHeaderSearch={canViewWorkOrders} showAction={canCreateWorkOrders} className="work-orders-page" bodyClassName="work-orders-layout" subnavigation={canViewWorkOrders ? <WorkOrderFilters /> : null}>
+  return <>
+  <PanelLayout title="Work orders" modeIcon={PanelLeft} searchValue={search} onSearch={setSearch} searchPlaceholder="Search Work Orders" actionLabel="New work order" onAction={() => { setCreateError(''); setIsCreating(true) }} showHeaderSearch={canViewWorkOrders} showAction={canCreateWorkOrders} className="work-orders-page" bodyClassName="work-orders-layout" subnavigation={canViewWorkOrders ? <WorkOrderFilters /> : null}>
     {isLoading && <div className="work-orders-loading">Loading Work Orders...</div>}
     {!isLoading && error && <div className="work-orders-loading" role="alert">{error}</div>}
     {!isLoading && !error && !canViewWorkOrders && <div className="work-orders-loading" role="status">You do not have permission to view Work Orders.</div>}
-    {!isLoading && !error && canViewWorkOrders && <>{readError && <div className="work-orders-loading" role="alert">{readError}</div>}{readNotice && <div className="work-orders-read-notice" role="status">{readNotice}</div>}<WorkOrderList activeTab={activeTab} setActiveTab={setActiveTab} search={debouncedSearch} groupCounts={groupCounts} readStatusById={workOrdersById} selected={selected} onOrdersLoaded={storeOrders} onLoadGroupPage={loadGroupPage} refreshVersion={refreshVersion} onSelect={selectOrder} onStatusChange={changeStatus} onReadAll={readAll} isReadAllSaving={isSavingReadState || search !== debouncedSearch} canChangeStatusForOrder={canChangeStatusForOrder} />{isCreating ? <NewWorkOrderForm onCancel={() => setIsCreating(false)} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : <WorkOrderDetail selected={selected} missingRecord={missingRecord} onMarkDone={markDone} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} />}</>}
+    {!isLoading && !error && canViewWorkOrders && <>{readError && <div className="work-orders-loading" role="alert">{readError}</div>}<WorkOrderList activeTab={activeTab} setActiveTab={setActiveTab} search={debouncedSearch} groupCounts={groupCounts} readStatusById={workOrdersById} selected={selected} onOrdersLoaded={storeOrders} onLoadGroupPage={loadGroupPage} refreshVersion={refreshVersion} onSelect={selectOrder} onStatusChange={changeStatus} onReadAll={() => { setReadError(''); setIsReadAllConfirmOpen(true) }} isReadAllSaving={isSavingReadState || search !== debouncedSearch} canChangeStatusForOrder={canChangeStatusForOrder} unreadFirst={unreadFirst} onUnreadFirstChange={setUnreadFirst} />{isCreating ? <NewWorkOrderForm onCancel={() => setIsCreating(false)} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : <WorkOrderDetail selected={selected} missingRecord={missingRecord} onMarkDone={markDone} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} />}</>}
   </PanelLayout>
+  {isReadAllConfirmOpen && createPortal(<div className="work-order-read-confirm-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !isSavingReadState) setIsReadAllConfirmOpen(false) }}>
+    <section className="work-order-read-confirm" role="dialog" aria-modal="true" aria-labelledby="work-order-read-confirm-title">
+      <button type="button" className="work-order-read-confirm-close" aria-label="Close confirmation" onClick={() => setIsReadAllConfirmOpen(false)} disabled={isSavingReadState}><X size={18} /></button>
+      <p id="work-order-read-confirm-title">Are you sure you want to mark all {activeTab === 'Done' ? 'Done' : 'To Do'} Work Orders as read?</p>
+      {readError && <p className="work-order-read-confirm-error" role="alert">{readError}</p>}
+      <button type="button" className="work-order-read-confirm-primary" onClick={() => { void confirmReadAll() }} disabled={isSavingReadState}>{isSavingReadState ? 'Marking as read...' : 'Confirm'}</button>
+      <button type="button" className="work-order-read-confirm-cancel" onClick={() => setIsReadAllConfirmOpen(false)} disabled={isSavingReadState}>Cancel</button>
+    </section>
+  </div>, document.body)}
+  {readToast && createPortal(<div className="work-order-read-toast" role="status" aria-live="polite"><CheckCircle2 size={18} /><span>{readToast}</span><button type="button" onClick={() => setReadToast('')} aria-label="Dismiss notification"><X size={18} /></button></div>, document.body)}
+  </>
 }

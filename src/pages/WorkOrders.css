@@ -72,7 +72,7 @@
   color: var(--text-muted);
   font-size: var(--font-size-sm-compact);
 }
-.work-order-sort-row button:not(.icon-button) {
+.work-order-sort-row button:not(.icon-button):not(.sort-unread-toggle) {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-2);
@@ -85,16 +85,18 @@
 .work-order-sort-row .icon-button {
   width: 26px;
   height: 26px;
-  margin-left: auto;
+  margin-left: 0;
 }
 .work-order-sort-control {
   position: relative;
+}
+.work-order-list-options {
+  margin-left: auto;
 }
 .work-order-list-options,
 .work-order-review-menu {
   position: relative;
 }
-.work-order-list-options-menu,
 .work-order-detail-menu {
   position: absolute;
   z-index: 50;
@@ -108,7 +110,6 @@
   background: var(--surface);
   box-shadow: var(--elevation-menu);
 }
-.work-order-list-options-menu button,
 .work-order-detail-menu button {
   display: flex !important;
   align-items: center;
@@ -125,13 +126,37 @@
   white-space: nowrap;
   cursor: pointer;
 }
-.work-order-list-options-menu button:hover,
 .work-order-detail-menu button:hover {
   background: var(--surface-hover) !important;
 }
-.work-order-list-options-menu button:disabled,
 .work-order-detail-menu button:disabled {
   color: var(--text-disabled-muted) !important;
+  cursor: wait;
+}
+.work-order-read-tooltip {
+  position: fixed;
+  z-index: 1000;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--white);
+  background: var(--tooltip-surface);
+  box-shadow: var(--elevation-tooltip);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-copy);
+  pointer-events: none;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.work-order-read-tooltip::before {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  border: 6px solid transparent;
+  border-bottom-color: var(--tooltip-surface);
+  content: "";
+  transform: translateX(-50%);
+}
+.work-order-list-options button:disabled {
   cursor: wait;
 }
 .work-order-sort-row .work-order-sort-trigger {
@@ -166,13 +191,17 @@
 }
 .work-order-sort-row .sort-unread-toggle {
   position: relative;
+  display: block;
+  flex: none;
   width: 40px;
   height: 23px;
   padding: 0;
   border: 0;
   border-radius: 20px;
+  color: inherit;
   background: var(--border-muted);
-  cursor: not-allowed;
+  cursor: pointer;
+  transition: background-color 160ms ease;
 }
 .sort-unread-toggle::after {
   position: absolute;
@@ -183,6 +212,13 @@
   border-radius: 50%;
   background: var(--surface);
   content: "";
+  transition: transform 160ms ease;
+}
+.sort-unread-toggle[aria-checked="true"] {
+  background: var(--blue);
+}
+.sort-unread-toggle[aria-checked="true"]::after {
+  transform: translateX(17px);
 }
 .sort-menu-group-heading {
   display: flex !important;
@@ -496,11 +532,117 @@
   flex: none;
   gap: var(--spacing-3);
 }
-.work-orders-read-notice {
-  padding: var(--spacing-2) var(--spacing-4);
-  color: var(--success);
+.work-order-read-confirm-backdrop {
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--spacing-6);
+  background: var(--overlay-modal);
+}
+.work-order-read-confirm {
+  position: relative;
+  display: flex;
+  width: min(100%, 500px);
+  flex-direction: column;
+  align-items: center;
+  padding: 52px 48px 28px;
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  box-shadow: var(--elevation-5);
+  text-align: center;
+}
+.work-order-read-confirm > p:first-of-type {
+  margin: 0 0 var(--spacing-6);
+  color: var(--ink);
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-copy);
+}
+.work-order-read-confirm-close {
+  position: absolute;
+  top: var(--spacing-3);
+  right: var(--spacing-3);
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+.work-order-read-confirm-close:hover { color: var(--ink); background: var(--surface-control-hover); }
+.work-order-read-confirm-primary {
+  width: min(100%, 320px);
+  min-height: 42px;
+  border: 0;
+  border-radius: var(--radius-button);
+  color: var(--white);
+  background: var(--blue);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.work-order-read-confirm-primary:hover { background: var(--blue-hover); }
+.work-order-read-confirm-primary:disabled,
+.work-order-read-confirm-cancel:disabled,
+.work-order-read-confirm-close:disabled { cursor: wait; opacity: 0.65; }
+.work-order-read-confirm-cancel {
+  margin-top: var(--spacing-4);
+  padding: var(--spacing-1) var(--spacing-3);
+  border: 0;
+  color: var(--blue);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.work-order-read-confirm-cancel:hover { color: var(--blue-hover); text-decoration: underline; }
+.work-order-read-confirm-error {
+  width: 100%;
+  margin: calc(-1 * var(--spacing-3)) 0 var(--spacing-4);
+  color: var(--danger);
   font-size: var(--font-size-sm);
 }
+.work-order-read-toast {
+  position: fixed;
+  z-index: 1200;
+  top: var(--spacing-5);
+  left: 50%;
+  display: flex;
+  width: max-content;
+  max-width: min(600px, calc(100vw - 32px));
+  min-height: 44px;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-control);
+  color: var(--white);
+  background: var(--status-success-strong);
+  box-shadow: var(--elevation-5);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  transform: translateX(-50%);
+}
+.work-order-read-toast > svg { flex: none; }
+.work-order-read-toast > span { overflow-wrap: anywhere; }
+.work-order-read-toast button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+.work-order-read-toast button:hover { background: var(--surface-toast-action-hover); }
 .detail-scroll {
   overflow: auto;
   padding: var(--spacing-6) 26px 50px;

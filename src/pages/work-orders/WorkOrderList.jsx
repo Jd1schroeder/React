@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   CalendarDays,
   Check,
@@ -10,7 +11,7 @@ import {
   LockKeyhole,
   Filter,
   Image as ImageIcon,
-  MoreHorizontal,
+  MailCheck,
   Plus,
   RotateCw,
   Users,
@@ -144,6 +145,8 @@ export function WorkOrderList({
   canChangeStatusForOrder,
   onReadAll,
   isReadAllSaving = false,
+  unreadFirst,
+  onUnreadFirstChange,
 }) {
   const [expandedGroups, setExpandedGroups] = useState({});
   const [groupPages, setGroupPages] = useState({});
@@ -151,11 +154,38 @@ export function WorkOrderList({
   const [groupErrors, setGroupErrors] = useState({});
   const queryGeneration = useRef(0);
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
-  const [listOptionsOpen, setListOptionsOpen] = useState(false);
-  const [expandedSortGroups, setExpandedSortGroups] = useState({ creation: true, due: true, updated: true, priority: true });
+  const [expandedSortGroup, setExpandedSortGroup] = useState("priority");
   const [sortId, setSortId] = useState("priority-highest");
   const sortMenuRef = useRef(null);
-  const listOptionsRef = useRef(null);
+  const readAllButtonRef = useRef(null);
+  const [isReadAllTooltipVisible, setIsReadAllTooltipVisible] = useState(false);
+  const [readAllTooltipPosition, setReadAllTooltipPosition] = useState(null);
+  const measureReadAllTooltip = useCallback(() => {
+    const rect = readAllButtonRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const tooltipHalfWidth = 76;
+    setReadAllTooltipPosition({
+      left: Math.min(Math.max(rect.left + rect.width / 2, tooltipHalfWidth + 8), window.innerWidth - tooltipHalfWidth - 8),
+      top: rect.bottom + 8,
+    });
+  }, []);
+  useEffect(() => {
+    if (!isReadAllTooltipVisible) return undefined;
+    window.addEventListener("resize", measureReadAllTooltip);
+    window.addEventListener("scroll", measureReadAllTooltip, true);
+    return () => {
+      window.removeEventListener("resize", measureReadAllTooltip);
+      window.removeEventListener("scroll", measureReadAllTooltip, true);
+    };
+  }, [isReadAllTooltipVisible, measureReadAllTooltip]);
+  const showReadAllTooltip = () => {
+    measureReadAllTooltip();
+    setIsReadAllTooltipVisible(true);
+  };
+  const hideReadAllTooltip = () => {
+    setIsReadAllTooltipVisible(false);
+    setReadAllTooltipPosition(null);
+  };
   const groups = activeTab === "Done"
     ? [{ id: "completed", label: "Completed work orders" }]
     : [
@@ -172,7 +202,7 @@ export function WorkOrderList({
     setGroupLoading((current) => ({ ...current, [group]: true }));
     setGroupErrors((current) => ({ ...current, [group]: "" }));
     try {
-      const orders = await onLoadGroupPage({ tab: activeTab, group, sort: sortId, offset });
+      const orders = await onLoadGroupPage({ tab: activeTab, group, sort: sortId, unreadFirst, offset });
       if (generation !== queryGeneration.current) return;
       setGroupPages((current) => ({ ...current, [group]: { orders: reset ? orders : [...(current[group]?.orders ?? []), ...orders] } }));
       onOrdersLoaded(orders);
@@ -193,7 +223,7 @@ export function WorkOrderList({
     }
     // Changing filters/sort/records invalidates the page cursor and reloads open groups.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, search, sortId, refreshVersion]);
+  }, [activeTab, search, sortId, unreadFirst, refreshVersion]);
 
   useEffect(() => {
     if (!sortMenuOpen) return undefined;
@@ -210,22 +240,6 @@ export function WorkOrderList({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [sortMenuOpen]);
-
-  useEffect(() => {
-    if (!listOptionsOpen) return undefined;
-    const dismiss = (event) => {
-      if (!listOptionsRef.current?.contains(event.target)) setListOptionsOpen(false);
-    };
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") setListOptionsOpen(false);
-    };
-    document.addEventListener("pointerdown", dismiss);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", dismiss);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [listOptionsOpen]);
 
   const renderOrder = (order) => (
     <WorkOrderListItem
@@ -258,24 +272,29 @@ export function WorkOrderList({
       <div className="work-order-sort-row">
         <span>Sort By:</span>
         <div className="work-order-sort-control" ref={sortMenuRef}>
-          <button className="work-order-sort-trigger" aria-expanded={sortMenuOpen} aria-haspopup="menu" onClick={() => setSortMenuOpen((open) => !open)}>
+          <button className="work-order-sort-trigger" aria-expanded={sortMenuOpen} aria-haspopup="menu" onClick={() => {
+            if (!sortMenuOpen) {
+              setExpandedSortGroup(sortGroups.find((group) => group.options.some((option) => option.id === sortId))?.id ?? "priority");
+            }
+            setSortMenuOpen((open) => !open);
+          }}>
             {sortLabels[sortId]} {sortMenuOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
           {sortMenuOpen && (
             <div className="work-order-sort-menu" role="menu" aria-label="Sort Work Orders">
               <div className="sort-unread-row">
                 <span>Unread first</span>
-                <button type="button" className="sort-unread-toggle" role="switch" aria-checked="false" aria-label="Unread first" disabled title="Unread tracking is not available yet" />
+                <button type="button" className="sort-unread-toggle" role="switch" aria-checked={unreadFirst} aria-label="Unread first" onClick={() => onUnreadFirstChange((value) => !value)} />
               </div>
               {sortGroups.map((group) => (
                 <section className="sort-menu-group" key={group.id}>
-                  <button type="button" className="sort-menu-group-heading" aria-expanded={expandedSortGroups[group.id] ?? false} onClick={() => setExpandedSortGroups((current) => ({ ...current, [group.id]: !(current[group.id] ?? false) }))}>
-                    <ChevronDown size={13} className={expandedSortGroups[group.id] ? "expanded" : ""} />
+                  <button type="button" className="sort-menu-group-heading" aria-expanded={expandedSortGroup === group.id} onClick={() => setExpandedSortGroup((current) => current === group.id ? null : group.id)}>
+                    <ChevronDown size={13} className={expandedSortGroup === group.id ? "expanded" : ""} />
                     {group.label}
                   </button>
-                  {expandedSortGroups[group.id] && <div className="sort-menu-options">
+                  {expandedSortGroup === group.id && <div className="sort-menu-options">
                     {group.options.map((option) => (
-                      <button type="button" role="menuitemradio" aria-checked={sortId === option.id} className={`sort-menu-option ${sortId === option.id ? "selected" : ""}`} key={option.id} onClick={() => setSortId(option.id)}>
+                      <button type="button" role="menuitemradio" aria-checked={sortId === option.id} className={`sort-menu-option ${sortId === option.id ? "selected" : ""}`} key={option.id} onClick={() => { setSortId(option.id); setExpandedSortGroup(group.id); }}>
                         {option.label}
                       </button>
                     ))}
@@ -285,15 +304,10 @@ export function WorkOrderList({
             </div>
           )}
         </div>
-        <div className="work-order-list-options" ref={listOptionsRef}>
-          <button type="button" className="icon-button" aria-label="List options" aria-haspopup="menu" aria-expanded={listOptionsOpen} onClick={() => setListOptionsOpen((open) => !open)}>
-            <MoreHorizontal size={17} />
+        <div className="work-order-list-options">
+          <button ref={readAllButtonRef} type="button" className="icon-button" aria-label="Mark all as read" disabled={isReadAllSaving || (groupCounts[activeTab === "Done" ? "completed" : "all-open"] ?? 0) === 0} onMouseEnter={showReadAllTooltip} onMouseLeave={hideReadAllTooltip} onFocus={showReadAllTooltip} onBlur={hideReadAllTooltip} onClick={() => { void onReadAll(); }}>
+            <MailCheck size={17} />
           </button>
-          {listOptionsOpen && <div className="work-order-list-options-menu" role="menu" aria-label="Inbox actions">
-            <button type="button" role="menuitem" disabled={isReadAllSaving || (groupCounts[activeTab === "Done" ? "completed" : "all-open"] ?? 0) === 0} onClick={() => { setListOptionsOpen(false); void onReadAll(); }}>
-              Mark all as read
-            </button>
-          </div>}
         </div>
       </div>
       <div className="work-order-list">
@@ -323,6 +337,10 @@ export function WorkOrderList({
           );
         })}
       </div>
+      {isReadAllTooltipVisible && readAllTooltipPosition && createPortal(
+        <div className="work-order-read-tooltip" role="tooltip" style={{ left: readAllTooltipPosition.left, top: readAllTooltipPosition.top }}>Mark all as read</div>,
+        document.body,
+      )}
     </section>
   );
 }
