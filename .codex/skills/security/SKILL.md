@@ -17,6 +17,10 @@ For immediate cross-device UX, session-row insert/update/delete emits a generic 
 
 For team scope, the client may use the authenticated user's loaded team IDs for responsive UI decisions, but Supabase must derive the final decision from `organization_team_members` and the Work Order's `team_id`. Never trust a caller-supplied `is_team_record` flag; the forward-only Work Order migration replaces that boolean path with membership-backed authorization.
 
+Multi-target Work Order assignment uses `work_order_assignments`; enforce `work_orders.assign` scope and active organization membership for each user/team target in database policies/triggers. The client-filtered assignee menu is only a convenience. Work Order attachment objects live in the private `work-order-attachments` bucket; validate organization/uploader/work-order path segments and create permission on upload, and authorize reads through attachment metadata plus Work Order view permission. Never make this bucket public or persist signed URLs.
+
+`create_work_order_with_assignments` is a narrow `SECURITY DEFINER` RPC because authenticated Work Order inserts were rejected despite a matching create grant. Its function body must explicitly verify authenticated identity and create permission, authorize each assignment target, and validate each attachment's scoped path and existing private Storage object before inserting metadata. Do not weaken table RLS or add broad `SECURITY DEFINER` access as a workaround.
+
 Organization authorization must verify all of the following in the database:
 
 - the caller has an active membership;

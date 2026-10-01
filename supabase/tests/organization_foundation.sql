@@ -13,8 +13,11 @@ declare
     'public.organization_roles',
     'public.organization_role_permissions'
     ,'public.work_orders'
+    ,'public.work_order_assignments'
+    ,'public.work_order_attachments'
   ];
   required_function text;
+  work_order_creation_is_security_definer boolean;
   required_functions text[] := array[
     'public.provision_user_organization()',
     'public.set_updated_at()',
@@ -27,6 +30,12 @@ declare
     ,'public.has_organization_permission(uuid,text,text)'
     ,'public.has_organization_record_permission(uuid,text,uuid,uuid,boolean)'
     ,'public.delete_custom_organization_role(uuid,uuid)'
+    ,'public.has_work_order_permission(uuid,text)'
+    ,'public.can_assign_work_order_target(uuid,uuid,uuid)'
+    ,'public.is_work_order_creator_with_create_permission(uuid,uuid)'
+    ,'public.can_add_work_order_assignment(uuid,uuid)'
+    ,'public.can_add_work_order_attachment(uuid,uuid)'
+    ,'public.create_work_order_with_assignments(uuid,uuid,text,text,text,date,time,date,integer,text,jsonb,jsonb)'
   ];
 begin
   foreach required_table in array required_tables loop
@@ -40,6 +49,24 @@ begin
       raise exception 'Missing required function: %', required_function;
     end if;
   end loop;
+
+  select prosecdef into work_order_creation_is_security_definer
+  from pg_proc
+  where oid = to_regprocedure('public.create_work_order_with_assignments(uuid,uuid,text,text,text,date,time,date,integer,text,jsonb,jsonb)');
+  if not coalesce(work_order_creation_is_security_definer, false) then
+    raise exception 'Work Order creation RPC must use its narrow SECURITY DEFINER boundary';
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'work_order_assignments_work_order_fk'
+      and contype = 'f'
+      and conrelid = 'public.work_order_assignments'::regclass
+      and confrelid = 'public.work_orders'::regclass
+  ) then
+    raise exception 'Missing Work Order assignment foreign key';
+  end if;
 
   if not exists (
     select 1
@@ -89,6 +116,31 @@ begin
   end if;
   if not (select relrowsecurity from pg_class where oid = 'public.work_orders'::regclass) then
     raise exception 'RLS is not enabled for work_orders';
+  end if;
+  if not (select relrowsecurity from pg_class where oid = 'public.work_order_assignments'::regclass) then
+    raise exception 'RLS is not enabled for work_order_assignments';
+  end if;
+  if not (select relrowsecurity from pg_class where oid = 'public.work_order_attachments'::regclass) then
+    raise exception 'RLS is not enabled for work_order_attachments';
+  end if;
+
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'work_orders' and column_name = 'estimated_duration_minutes'
+  ) or not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'work_orders' and column_name = 'due_date'
+  ) or not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'work_orders' and column_name = 'work_type'
+  ) then
+    raise exception 'Missing Work Order creation fields';
+  end if;
+
+  if to_regclass('public.work_order_assignments_user_unique_idx') is null
+    or to_regclass('public.work_order_assignments_team_unique_idx') is null
+    or to_regclass('public.work_order_attachments_thumbnail_unique_idx') is null then
+    raise exception 'Missing Work Order assignment or thumbnail uniqueness indexes';
   end if;
 
   if not exists (
@@ -176,6 +228,21 @@ begin
       and tgname = 'work_orders_enforce_permissions'
   ) then
     raise exception 'Missing Work Order authorization trigger';
+  end if;
+  if not exists (
+    select 1 from pg_trigger
+    where tgrelid = 'public.work_orders'::regclass
+      and tgname = 'work_orders_sync_due_at'
+  ) then
+    raise exception 'Missing legacy-compatible Work Order due date/time synchronization';
+  end if;
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'work_order_attachments'
+      and policyname = 'Authorized members can add Work Order attachments'
+  ) then
+    raise exception 'Missing Work Order attachment creation policy';
   end if;
 
   if not exists (

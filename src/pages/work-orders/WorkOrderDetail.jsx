@@ -58,7 +58,9 @@ export function WorkOrderDetail({
     userId,
     ownerId: selected.created_by,
     assigneeId: selected.assigned_to,
+    assigneeIds: selected.work_order_assignments?.map((assignment) => assignment.user_id).filter(Boolean),
     teamId: selected.team_id,
+    assignedTeamIds: selected.work_order_assignments?.map((assignment) => assignment.team_id).filter(Boolean),
     teamIds,
   };
   const canEditDetails = canAccessRecord(grants, "work_orders.edit", record);
@@ -115,7 +117,7 @@ export function WorkOrderDetail({
           <Badge tone={statusTone[selected.status]}>{selected.status}</Badge>
           {canEditPriority && (
             <button className="status-select">
-              <CircleDot size={13} /> {selected.priority} priority{" "}
+              <CircleDot size={13} /> {selected.priority ?? "None"} priority{" "}
               <ChevronDown size={13} />
             </button>
           )}

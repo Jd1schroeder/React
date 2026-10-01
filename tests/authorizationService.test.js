@@ -26,6 +26,27 @@ describe('authorizationService', () => {
     expect(canAccessRecord({ 'work_orders.view': 'any' }, 'work_orders.view', { userId })).toBe(true)
   })
 
+  it('resolves assignment scopes across multiple direct users and teams', () => {
+    expect(canAccessRecord({ 'work_orders.change_status': 'assigned' }, 'work_orders.change_status', {
+      userId,
+      assigneeIds: ['user-b', userId],
+    })).toBe(true)
+    expect(canAccessRecord({ 'work_orders.change_status': 'assigned' }, 'work_orders.change_status', {
+      userId: 'user-c',
+      assigneeIds: ['user-a', 'user-b'],
+    })).toBe(false)
+    expect(canAccessRecord({ 'work_orders.view': 'team' }, 'work_orders.view', {
+      userId,
+      assignedTeamIds: ['team-a', 'team-b'],
+      teamIds: ['team-b'],
+    })).toBe(true)
+    expect(canAccessRecord({ 'work_orders.view': 'team' }, 'work_orders.view', {
+      userId,
+      assignedTeamIds: ['team-a'],
+      teamIds: ['team-b'],
+    })).toBe(false)
+  })
+
   it('fails closed for missing or invalid grants', () => {
     expect(hasPermission({}, 'work_orders.view')).toBe(false)
     expect(canAccessRecord({}, 'work_orders.view', { userId, ownerId: userId })).toBe(false)

@@ -145,6 +145,25 @@ export async function listOrganizationRoles(organizationId) {
   return data ?? []
 }
 
+export async function listOrganizationTeams(organizationId) {
+  const { data, error } = await supabase
+    .from('organization_teams')
+    .select('id, name')
+    .eq('organization_id', organizationId)
+    .order('name', { ascending: true })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function listOrganizationTeamMemberships(organizationId) {
+  const { data, error } = await supabase
+    .from('organization_team_members')
+    .select('team_id, user_id, organization_teams!inner(organization_id)')
+    .eq('organization_teams.organization_id', organizationId)
+  if (error) throw error
+  return data ?? []
+}
+
 export async function assignOrganizationMemberRole({ organizationId, userId, roleId }) {
   const { data: role, error: roleError } = await supabase
     .from('organization_roles')

@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import './PresetNumberInput.css'
 
-export function PresetNumberInput({ ariaLabel, defaultValue = '', maxValue, options = [] }) {
+export function PresetNumberInput({ ariaLabel, defaultValue = '', maxValue, onChange, options = [], value: controlledValue }) {
   const optionsId = useId()
   const rootRef = useRef(null)
   const inputRef = useRef(null)
@@ -10,7 +10,8 @@ export function PresetNumberInput({ ariaLabel, defaultValue = '', maxValue, opti
   const scrollbarRef = useRef(null)
   const dragRef = useRef(null)
   const suppressFocusOpenRef = useRef(false)
-  const [value, setValue] = useState(String(defaultValue))
+  const [internalValue, setInternalValue] = useState(String(defaultValue))
+  const value = controlledValue === undefined ? internalValue : String(controlledValue)
   const [isOpen, setIsOpen] = useState(false)
   const [scrollThumb, setScrollThumb] = useState({ height: 0, top: 0, visible: false })
 
@@ -54,6 +55,11 @@ export function PresetNumberInput({ ariaLabel, defaultValue = '', maxValue, opti
   }
 
   const handleScrollbarPointerUp = () => { dragRef.current = null }
+
+  const setValue = (nextValue) => {
+    if (controlledValue === undefined) setInternalValue(nextValue)
+    onChange?.(nextValue)
+  }
 
   const selectOption = (option) => {
     setValue(String(option))

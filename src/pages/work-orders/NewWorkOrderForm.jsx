@@ -1,14 +1,17 @@
 import { useState } from "react";
 import {
+  CirclePlus,
   List,
   LockKeyhole,
   Paperclip,
+  X,
 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { DatePicker } from "../../components/ui/DatePicker";
 import { ImageDropzone } from "../../components/ui/ImageDropzone";
 import { PresetNumberInput } from "../../components/ui/PresetNumberInput";
 import { Select } from "../../components/ui/Select";
+import { WORK_ORDER_ATTACHMENT_MAX_BYTES } from "../../utils/workOrderAttachments";
 
 const priorityOptions = ["None", "Low", "Medium", "High"];
 
@@ -47,10 +50,16 @@ function SearchSelect({ label, placeholder, value, onChange, options = [], disab
   );
 }
 
-function DateField({ label, value, onChange }) {
+function DateField({ label, value, onChange, dateFormat, timeValue = "", onTimeChange }) {
+  const [showTime, setShowTime] = useState(Boolean(timeValue));
+
   return (
     <FormField label={label}>
-      <DatePicker ariaLabel={label} value={value} onChange={onChange} />
+      <div className="new-work-order-date-controls">
+        <DatePicker ariaLabel={label} dateFormat={dateFormat} value={value} onChange={onChange} />
+        {label === "Due Date" && value && !showTime && <button type="button" className="new-work-order-add-time" onClick={() => setShowTime(true)}><CirclePlus size={17} aria-hidden="true" /> Add due time</button>}
+        {label === "Due Date" && value && showTime && <div className="new-work-order-time-control"><input type="time" aria-label="Due time" value={timeValue} onChange={(event) => onTimeChange(event.target.value)} /><button type="button" aria-label="Remove due time" onClick={() => { onTimeChange(""); setShowTime(false); }}><X size={17} aria-hidden="true" /></button></div>}
+      </div>
     </FormField>
   );
 }
@@ -61,6 +70,8 @@ export function NewWorkOrderForm({
   isSaving = false,
   error = "",
   assigneeOptions = [],
+  canAssign = true,
+  dateFormat,
 }) {
   const [form, setForm] = useState({
     title: "",
@@ -69,6 +80,7 @@ export function NewWorkOrderForm({
     asset: "",
     assignee: [],
     dueDate: "",
+    dueTime: "",
     startDate: "",
     recurrence: "none",
     workType: "reactive",
@@ -76,21 +88,51 @@ export function NewWorkOrderForm({
     parts: "",
     categories: "",
     vendors: "",
+    hours: "0",
+    minutes: "0",
   });
-  const [, setPictures] = useState([]);
-  const [, setThumbnail] = useState(null);
+  const [pictures, setPictures] = useState([]);
+  const [thumbnail, setThumbnail] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [fileError, setFileError] = useState("");
   const update = (field, value) =>
     setForm((current) => ({ ...current, [field]: value }));
+  const handleFilesSelected = (event) => {
+    const selectedFiles = Array.from(event.target.files ?? []);
+    const oversizedFile = selectedFiles.find((file) => file.size > WORK_ORDER_ATTACHMENT_MAX_BYTES);
+    if (oversizedFile) setFileError(`${oversizedFile.name} exceeds the 10 MB per-file limit.`);
+    else {
+      setFileError("");
+      setFiles((current) => {
+        const combined = [...current];
+        for (const file of selectedFiles) {
+          if (!combined.some((candidate) => candidate.name === file.name && candidate.size === file.size && candidate.lastModified === file.lastModified)) combined.push(file);
+        }
+        return combined;
+      });
+    }
+    event.target.value = "";
+  };
   const submit = (event) => {
     event.preventDefault();
+    if (fileError) return;
+    const durationMinutes = (Number(form.hours) || 0) * 60 + (Number(form.minutes) || 0);
     onCreate({
       title: form.title,
       description: form.description,
-      priority: form.priority === "None" ? "Medium" : form.priority,
-      assignedTo: form.assignee[0] || null,
-      dueAt: form.dueDate
-        ? new Date(`${form.dueDate}T23:59:59`).toISOString()
-        : null,
+      priority: form.priority === "None" ? null : form.priority,
+      assignments: form.assignee.map((value) => {
+        const [kind, id] = value.split(":", 2);
+        return kind === "team" ? { teamId: id } : { userId: id };
+      }),
+      dueDate: form.dueDate || null,
+      dueTime: form.dueDate && form.dueTime ? form.dueTime : null,
+      startDate: form.startDate || null,
+      estimatedDurationMinutes: durationMinutes || null,
+      workType: form.workType,
+      pictures,
+      thumbnail,
+      files,
     });
   };
 
@@ -141,26 +183,26 @@ export function NewWorkOrderForm({
               <button type="button" className="new-work-order-secondary" disabled><LockKeyhole size={15} aria-hidden="true" /> Add Procedure</button>
             </section>
           </FormRow>
-          <FormRow><SearchSelect label="Assign to" placeholder="Type name" value={form.assignee} onChange={(value) => update("assignee", value)} options={assigneeOptions} multiple /></FormRow>
+          <FormRow><SearchSelect label="Assign to" placeholder={canAssign ? "Type name" : "Assignment unavailable"} value={form.assignee} onChange={(value) => update("assignee", value)} options={assigneeOptions} multiple disabled={!canAssign} /></FormRow>
           <FormRow>
             <fieldset className="new-work-order-fieldset">
               <legend>Estimated Time</legend>
               <div className="new-work-order-two-column">
                 <FormField label="Hours">
-                  <PresetNumberInput ariaLabel="Hours" defaultValue="0" options={[1, 2, 3, 4, 5, 6, 8, 10, 12, 24]} />
+                  <PresetNumberInput ariaLabel="Hours" value={form.hours} onChange={(value) => update("hours", value)} options={[1, 2, 3, 4, 5, 6, 8, 10, 12, 24]} />
                 </FormField>
                 <FormField label="Minutes">
-                  <PresetNumberInput ariaLabel="Minutes" defaultValue="0" maxValue={59} options={[0, 5, 10, 15, 20, 30, 45]} />
+                  <PresetNumberInput ariaLabel="Minutes" value={form.minutes} onChange={(value) => update("minutes", value)} maxValue={59} options={[0, 5, 10, 15, 20, 30, 45]} />
                 </FormField>
               </div>
             </fieldset>
           </FormRow>
-          <FormRow><DateField label="Due Date" value={form.dueDate} onChange={(value) => update("dueDate", value)} /></FormRow>
-          <FormRow><DateField label="Start Date" value={form.startDate} onChange={(value) => update("startDate", value)} /></FormRow>
+          <FormRow><DateField key={form.dueDate ? "due-date-selected" : "due-date-empty"} label="Due Date" dateFormat={dateFormat} value={form.dueDate} onChange={(value) => { update("dueDate", value); if (!value) update("dueTime", ""); }} timeValue={form.dueTime} onTimeChange={(value) => update("dueTime", value)} /></FormRow>
+          <FormRow><DateField label="Start Date" dateFormat={dateFormat} value={form.startDate} onChange={(value) => update("startDate", value)} /></FormRow>
           <FormRow className="new-work-order-recurrence-row">
             <div className="new-work-order-two-column new-work-order-recurrence-fields">
               <FormField label="Recurrence">
-                <Select className="new-work-order-recurrence" ariaLabel="Recurrence" value={form.recurrence} onChange={(value) => update("recurrence", value)} options={[
+                <Select className="new-work-order-recurrence" ariaLabel="Recurrence" disabled icon={LockKeyhole} value={form.recurrence} onChange={(value) => update("recurrence", value)} options={[
                   { value: "none", label: "Does not repeat" },
                   { value: "daily", label: "Daily" },
                   { value: "weekly", label: "Weekly" },
@@ -189,7 +231,9 @@ export function NewWorkOrderForm({
           <FormRow>
             <section className="new-work-order-section">
               <h3>Files</h3>
-              <label className="new-work-order-secondary new-work-order-file-button"><Paperclip size={16} /> Attach files<input type="file" multiple /></label>
+            <label className="new-work-order-secondary new-work-order-file-button"><Paperclip size={16} /> Attach files<input type="file" multiple onChange={handleFilesSelected} /></label>
+            {files.length > 0 && <ul className="new-work-order-attachment-list">{files.map((file) => <li key={`${file.name}-${file.size}-${file.lastModified}`}>{file.name}<button type="button" aria-label={`Remove ${file.name}`} onClick={() => setFiles((current) => current.filter((candidate) => candidate !== file))}><X size={14} aria-hidden="true" /></button></li>)}</ul>}
+            {fileError && <p className="new-work-order-error" role="alert">{fileError}</p>}
             </section>
           </FormRow>
           <FormRow><SearchSelect label="Parts" placeholder="Start typing..." value={form.parts} onChange={(value) => update("parts", value)} disabled icon={LockKeyhole} /></FormRow>

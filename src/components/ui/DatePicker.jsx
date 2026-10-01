@@ -4,6 +4,14 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "./DatePicker.css";
 
+function displayDate(value, dateFormat = "MM/DD/YYYY") {
+  if (!value) return "";
+  const [year, month, day] = value.split("-");
+  if (dateFormat === "DD/MM/YYYY") return `${day}/${month}/${year}`;
+  if (dateFormat === "YYYY-MM-DD") return `${year}-${month}-${day}`;
+  return `${month}/${day}/${year}`;
+}
+
 function parseDate(value) {
   if (!value) return null;
   const [year, month, day] = value.split("-").map(Number);
@@ -17,28 +25,27 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-function formatDisplayDate(value) {
-  const date = parseDate(value);
-  return date ? date.toLocaleDateString("en-US") : "";
-}
-
-function parseManualDate(value) {
-  const match = value.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+function parseManualDate(value, dateFormat = "MM/DD/YYYY") {
+  const pattern = dateFormat === "YYYY-MM-DD"
+    ? /^(\d{4})-(\d{1,2})-(\d{1,2})$/
+    : /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+  const match = value.trim().match(pattern);
   if (!match) return null;
-  const [, monthText, dayText, yearText] = match;
-  const month = Number(monthText);
-  const day = Number(dayText);
-  const year = Number(yearText);
+  const [, first, second, third] = match;
+  const year = Number(dateFormat === "YYYY-MM-DD" ? first : third);
+  const month = Number(dateFormat === "DD/MM/YYYY" ? second : dateFormat === "YYYY-MM-DD" ? second : first);
+  const day = Number(dateFormat === "DD/MM/YYYY" ? first : dateFormat === "YYYY-MM-DD" ? third : second);
   const date = new Date(year, month - 1, day);
   if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
   return date;
 }
 
-export function DatePicker({ ariaLabel, onChange, placeholder = "mm/dd/yyyy", value = "" }) {
+export function DatePicker({ ariaLabel, dateFormat = "MM/DD/YYYY", onChange, placeholder, value = "" }) {
   const rootRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [draftValue, setDraftValue] = useState(() => formatDisplayDate(value));
+  const [draftValue, setDraftValue] = useState(() => displayDate(value, dateFormat));
   const selectedDate = parseDate(value);
+  const datePlaceholder = placeholder ?? (dateFormat === "DD/MM/YYYY" ? "dd/mm/yyyy" : dateFormat === "YYYY-MM-DD" ? "yyyy-mm-dd" : "mm/dd/yyyy");
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -64,15 +71,15 @@ export function DatePicker({ ariaLabel, onChange, placeholder = "mm/dd/yyyy", va
         </button>
         <input
           value={draftValue}
-          placeholder={placeholder}
+          placeholder={datePlaceholder}
           aria-label={ariaLabel}
           onChange={(event) => setDraftValue(event.target.value)}
           onBlur={() => {
-            const manualDate = parseManualDate(draftValue);
+            const manualDate = parseManualDate(draftValue, dateFormat);
             if (manualDate) {
-              setDraftValue(manualDate.toLocaleDateString("en-US"));
+              setDraftValue(displayDate(formatDate(manualDate), dateFormat));
               onChange(formatDate(manualDate));
-            } else setDraftValue(formatDisplayDate(value));
+            } else setDraftValue(displayDate(value, dateFormat));
           }}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
@@ -102,7 +109,7 @@ export function DatePicker({ ariaLabel, onChange, placeholder = "mm/dd/yyyy", va
             value={selectedDate}
             onChange={(date) => {
               onChange(formatDate(date));
-              setDraftValue(date.toLocaleDateString("en-US"));
+              setDraftValue(displayDate(formatDate(date), dateFormat));
               setIsOpen(false);
             }}
             next2Label="»"

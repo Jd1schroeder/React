@@ -8,6 +8,15 @@ export function formatDateForUser(value, dateFormat = 'MM/DD/YYYY', timeZone) {
   return `${values.month}/${values.day}/${values.year}`
 }
 
+export function formatCalendarDateForUser(value, dateFormat = 'MM/DD/YYYY') {
+  if (!value) return 'Not available'
+  const [year, month, day] = String(value).slice(0, 10).split('-')
+  if (!year || !month || !day) return 'Not available'
+  if (dateFormat === 'DD/MM/YYYY') return `${day}/${month}/${year}`
+  if (dateFormat === 'YYYY-MM-DD') return `${year}-${month}-${day}`
+  return `${month}/${day}/${year}`
+}
+
 function getCalendarParts(value, timeZone) {
   const parts = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(value))
   return Object.fromEntries(parts.filter((part) => part.type !== 'literal').map((part) => [part.type, part.value]))

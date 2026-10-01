@@ -3,6 +3,7 @@ import {
   ChevronDown,
   ChevronUp,
   Filter,
+  Image as ImageIcon,
   MoreHorizontal,
   Plus,
   Users,
@@ -57,30 +58,42 @@ export function WorkOrderList({
         <ChevronUp size={15} />
       </div>
       <div className="work-order-list">
-        {visibleOrders.map((order) => (
-          <button
-            key={order.id}
-            className={`work-order-item ${selected?.id === order.id ? "selected" : ""}`}
-            onClick={() => onSelect(order)}
-          >
-            <div className="order-item-top">
-              <span className="order-title">{order.title}</span>
-              <span
-                className={`priority priority-${order.priority.toLowerCase()}`}
-              >
-                <i />
+        {visibleOrders.map((order) => {
+          const thumbnail = order.work_order_attachments?.find((attachment) => attachment.kind === "image" && attachment.is_thumbnail)
+            ?? order.work_order_attachments?.find((attachment) => attachment.kind === "image");
+          return (
+            <button
+              key={order.id}
+              className={`work-order-item ${selected?.id === order.id ? "selected" : ""}`}
+              onClick={() => onSelect(order)}
+            >
+              <span className="work-order-item-thumbnail" aria-hidden="true">
+                {thumbnail?.signed_url
+                  ? <img src={thumbnail.signed_url} alt="" loading="lazy" />
+                  : <ImageIcon size={20} strokeWidth={1.7} />}
               </span>
-            </div>
-            <div className="order-item-meta">
-              <span>Requested by {order.requester}</span>
-              <span>{order.id}</span>
-            </div>
-            <div className="order-item-bottom">
-              <Badge tone={statusTone[order.status]}>{order.status}</Badge>
-              <span>{order.due}</span>
-            </div>
-          </button>
-        ))}
+              <span className="work-order-item-content">
+                <span className="order-item-top">
+                  <span className="order-title">{order.title}</span>
+                  <span
+                    className={`priority priority-${(order.priority ?? "none").toLowerCase()}`}
+                    aria-label={`${order.priority ?? "None"} priority`}
+                  >
+                    <i />
+                  </span>
+                </span>
+                <span className="order-item-meta">
+                  <span>Requested by {order.requester}</span>
+                  <span>{order.id}</span>
+                </span>
+                <span className="order-item-bottom">
+                  <Badge tone={statusTone[order.status]}>{order.status}</Badge>
+                  <span>{order.due}</span>
+                </span>
+              </span>
+            </button>
+          );
+        })}
         {visibleOrders.length === 0 && (
           <div className="list-empty">No work orders match this view.</div>
         )}

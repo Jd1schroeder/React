@@ -19,6 +19,10 @@ User-list views show pending invitations through `src/services/organizationServi
 
 Feature services should use `src/services/authorizationService.js` for fail-closed client preflight checks, but never treat those checks as a replacement for Supabase RLS. Work Order service methods require the current role grants and record context before issuing reads or mutations.
 
+New Work Orders are created through `src/services/workOrderService.js`, not directly from the form. The service uploads images and files to the private `work-order-attachments` bucket under `{organization_id}/{uploader_id}/{work_order_id}/{attachment_id}.{ext}`, then calls `create_work_order_with_assignments` so the Work Order, assignment targets, and attachment metadata commit atomically. If the RPC fails, remove just-uploaded objects best-effort. Persist paths and generate short-lived signed URLs for display. The per-file limit is 10 MiB and is enforced by both bucket configuration and the database metadata constraint. Assignments are a list of `{ userId }` / `{ teamId }` targets; database RLS validates permission scope and organization membership. The due date is an ISO calendar date with optional `HH:mm` local time; estimated duration is total minutes or null.
+
+The creation RPC is `SECURITY DEFINER` only as a narrow workaround for an authenticated INSERT RLS failure; it must validate the caller's create permission, each assignment target, and each uploaded attachment's organization/uploader/Work Order path and object existence before writing. Keep direct table RLS restrictive.
+
 The workspace service also loads the current user's team IDs for the selected organization. Pass team context to Work Order UI authorization only as a rendering aid; the Work Order service and RLS remain authoritative.
 
 Invitation tokens must be stored as hashes and invitation email/SMS delivery must run in a trusted backend or Edge Function; never generate or persist service-role credentials in the browser. Audit events should be written through an authorized service and include the organization, actor, action, entity, and structured metadata.
