@@ -113,49 +113,6 @@
   padding: var(--spacing-3);
 }
 
-@supports not selector(::-webkit-scrollbar) {
-  .sidebar-nav {
-    scrollbar-color: var(--scrollbar-thumb) transparent;
-    scrollbar-width: thin;
-  }
-}
-
-.sidebar-nav::-webkit-scrollbar {
-  width: 6px;
-  -webkit-appearance: none;
-}
-
-.sidebar-nav::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sidebar-nav::-webkit-scrollbar-thumb {
-  border: var(--border-width-normal) solid transparent;
-  border-radius: var(--radius-pill);
-  background: var(--scrollbar-thumb);
-  background-clip: padding-box;
-}
-
-.sidebar-nav::-webkit-scrollbar-button,
-.sidebar-nav::-webkit-scrollbar-button:single-button,
-.sidebar-nav::-webkit-scrollbar-button:vertical:decrement,
-.sidebar-nav::-webkit-scrollbar-button:vertical:increment,
-.sidebar-nav::-webkit-scrollbar-button:vertical:start:decrement,
-.sidebar-nav::-webkit-scrollbar-button:vertical:end:increment,
-.sidebar-nav::-webkit-scrollbar-button:horizontal:decrement,
-.sidebar-nav::-webkit-scrollbar-button:horizontal:increment,
-.sidebar-nav::-webkit-scrollbar-button:horizontal:start:decrement,
-.sidebar-nav::-webkit-scrollbar-button:horizontal:end:increment,
-.sidebar-nav::-webkit-scrollbar-button:start:decrement,
-.sidebar-nav::-webkit-scrollbar-button:end:increment {
-  display: none;
-  width: 0;
-  height: 0;
-  border: 0;
-  background: transparent;
-  -webkit-appearance: none;
-}
-
 .sidebar-group {
   margin: 0;
   padding: 0 0 7px;

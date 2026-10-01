@@ -400,30 +400,6 @@
   flex: 1;
   overflow: auto;
   padding: 0 0 var(--spacing-12);
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-hover) transparent;
-}
-.new-work-order-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
-.new-work-order-scroll::-webkit-scrollbar-track { background: transparent; }
-.new-work-order-scroll::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: var(--radius-pill); background: var(--border-hover); background-clip: content-box; }
-.new-work-order-scroll::-webkit-scrollbar-button,
-.new-work-order-scroll::-webkit-scrollbar-button:single-button,
-.new-work-order-scroll::-webkit-scrollbar-button:vertical:decrement,
-.new-work-order-scroll::-webkit-scrollbar-button:vertical:increment,
-.new-work-order-scroll::-webkit-scrollbar-button:vertical:start:decrement,
-.new-work-order-scroll::-webkit-scrollbar-button:vertical:end:increment,
-.new-work-order-scroll::-webkit-scrollbar-button:horizontal:decrement,
-.new-work-order-scroll::-webkit-scrollbar-button:horizontal:increment,
-.new-work-order-scroll::-webkit-scrollbar-button:horizontal:start:decrement,
-.new-work-order-scroll::-webkit-scrollbar-button:horizontal:end:increment,
-.new-work-order-scroll::-webkit-scrollbar-button:start:decrement,
-.new-work-order-scroll::-webkit-scrollbar-button:end:increment {
-  display: none;
-  width: 0;
-  height: 0;
-  border: 0;
-  background: transparent;
-  -webkit-appearance: none;
 }
 .new-work-order-row {
   display: flex;
