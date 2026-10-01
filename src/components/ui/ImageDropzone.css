@@ -5,8 +5,10 @@
   display: block;
   margin: 0 0 var(--spacing-3);
   color: var(--ink);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-medium);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-semibold);
+  letter-spacing: var(--letter-spacing-normal);
+  line-height: var(--line-height-lg-px);
 }
 .image-dropzone {
   position: relative;

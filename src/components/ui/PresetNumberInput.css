@@ -1,0 +1,96 @@
+.preset-number-input {
+  position: relative;
+  min-width: 0;
+}
+
+.new-work-order-field .preset-number-input input {
+  padding-right: 40px;
+}
+
+.new-work-order-field .preset-number-input input:not(:focus):hover {
+  border-color: var(--focus-border-color);
+}
+
+.preset-number-input-trigger {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: grid;
+  width: 36px;
+  height: calc(100% - 2px);
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  color: var(--icon-secondary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.preset-number-input-trigger svg {
+  transition: transform 120ms ease;
+}
+.preset-number-input-trigger[aria-expanded='true'] svg { transform: rotate(180deg); }
+
+.preset-number-input-menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + var(--spacing-1));
+  right: 0;
+  left: 0;
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  box-shadow: var(--elevation-menu);
+}
+
+.preset-number-input-options {
+  display: grid;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: var(--spacing-1) var(--spacing-5) var(--spacing-1) 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.preset-number-input-options::-webkit-scrollbar {
+  width: 8px;
+  display: none;
+}
+
+.preset-number-input-scrollbar {
+  position: absolute;
+  top: var(--spacing-1);
+  right: var(--spacing-1);
+  bottom: var(--spacing-1);
+  width: 8px;
+  touch-action: none;
+}
+
+.preset-number-input-scrollbar-thumb {
+  width: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--border-hover);
+  cursor: grab;
+}
+
+.preset-number-input-scrollbar-thumb:active {
+  background: var(--muted);
+  cursor: grabbing;
+}
+
+.preset-number-input-menu button {
+  min-height: 36px;
+  padding: 0 var(--spacing-3);
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.preset-number-input-menu button:hover,
+.preset-number-input-menu button[aria-selected='true'] {
+  background: var(--blue-soft);
+}

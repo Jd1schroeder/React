@@ -399,20 +399,57 @@
   min-height: 0;
   flex: 1;
   overflow: auto;
-  padding: var(--spacing-7) var(--spacing-7) var(--spacing-12);
+  padding: 0 0 var(--spacing-12);
   scrollbar-width: thin;
   scrollbar-color: var(--border-hover) transparent;
 }
 .new-work-order-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
 .new-work-order-scroll::-webkit-scrollbar-track { background: transparent; }
 .new-work-order-scroll::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: var(--radius-pill); background: var(--border-hover); background-clip: content-box; }
-.new-work-order-scroll::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+.new-work-order-scroll::-webkit-scrollbar-button,
+.new-work-order-scroll::-webkit-scrollbar-button:single-button,
+.new-work-order-scroll::-webkit-scrollbar-button:vertical:decrement,
+.new-work-order-scroll::-webkit-scrollbar-button:vertical:increment,
+.new-work-order-scroll::-webkit-scrollbar-button:vertical:start:decrement,
+.new-work-order-scroll::-webkit-scrollbar-button:vertical:end:increment,
+.new-work-order-scroll::-webkit-scrollbar-button:horizontal:decrement,
+.new-work-order-scroll::-webkit-scrollbar-button:horizontal:increment,
+.new-work-order-scroll::-webkit-scrollbar-button:horizontal:start:decrement,
+.new-work-order-scroll::-webkit-scrollbar-button:horizontal:end:increment,
+.new-work-order-scroll::-webkit-scrollbar-button:start:decrement,
+.new-work-order-scroll::-webkit-scrollbar-button:end:increment {
+  display: none;
+  width: 0;
+  height: 0;
+  border: 0;
+  background: transparent;
+  -webkit-appearance: none;
+}
+.new-work-order-row {
+  display: flex;
+  flex-direction: row;
+  min-width: 0;
+  margin: var(--spacing-4) var(--spacing-5) 0 0;
+}
+.new-work-order-row-content {
+  display: block;
+  min-width: 0;
+  flex: 1 1 0%;
+  margin: var(--spacing-4) 0;
+  margin-left: var(--spacing-7);
+}
 .new-work-order-field,
 .new-work-order-fieldset,
 .new-work-order-section,
 .new-work-order-suborders {
   display: block;
   margin: 0 0 var(--spacing-8);
+}
+.new-work-order-row-content > .new-work-order-field,
+.new-work-order-row-content > .new-work-order-fieldset,
+.new-work-order-row-content > .new-work-order-section,
+.new-work-order-row-content > .image-dropzone-field {
+  margin-bottom: 0;
 }
 .new-work-order-field > span,
 .new-work-order-fieldset legend,
@@ -421,8 +458,10 @@
   display: block;
   margin: 0 0 var(--spacing-3);
   color: var(--ink);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-medium);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-semibold);
+  letter-spacing: var(--letter-spacing-normal);
+  line-height: var(--line-height-lg-px);
 }
 .new-work-order-field > span em { color: var(--muted); font-style: normal; font-weight: var(--font-normal); }
 .new-work-order-field input,
@@ -485,11 +524,14 @@
   padding: var(--spacing-2) 0 3px;
 }
 .new-work-order-title-row {
+  display: flex;
+  flex-direction: row;
+}
+.new-work-order-title-row .new-work-order-row-content {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   gap: var(--spacing-5);
-  margin-bottom: var(--spacing-8);
 }
 .new-work-order-title-row .new-work-order-field { margin-bottom: 0; }
 .new-work-order-secondary {
@@ -539,7 +581,31 @@
 }
 .new-work-order-suborders h3 { align-self: flex-start; }
 .new-work-order-suborders p { margin: 0 0 var(--spacing-4); color: var(--muted); font-size: var(--font-size-sm); }
-.new-work-order-inline-action { margin: var(--spacing-6) 0 var(--spacing-4); color: var(--blue); font-size: var(--font-size-sm); }
+.new-work-order-inline-action {
+  margin: 4px 0 0 4px;
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: var(--font-normal);
+  line-height: 1.2;
+}
+.new-work-order-procedure { text-align: center; }
+.new-work-order-procedure h3 { text-align: left; }
+.new-work-order-procedure-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  margin-bottom: 16px;
+  color: var(--blue);
+}
+.new-work-order-procedure-inner > svg {
+  display: block;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--blue);
+}
+.new-work-order-procedure .new-work-order-inline-action { text-align: left; }
 .new-work-order-date {
   display: flex;
   align-items: center;
@@ -563,6 +629,15 @@
 .new-work-order-fieldset legend { padding: 0; }
 .new-work-order-two-column { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-3); }
 .new-work-order-two-column .new-work-order-field { margin-bottom: 0; }
+.new-work-order-recurrence-fields {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+}
+.new-work-order-recurrence-fields > .new-work-order-field {
+  min-width: 0;
+  flex: 1 1 0;
+}
 .new-work-order-recurrence .select-menu { max-height: none; }
 .new-work-order-priority { display: inline-flex; max-width: 100%; }
 .new-work-order-priority button {
