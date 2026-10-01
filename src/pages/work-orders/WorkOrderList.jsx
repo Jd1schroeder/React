@@ -167,6 +167,8 @@ export function WorkOrderList({
   canChangeStatusForOrder,
   onReadAll,
   isReadAllSaving = false,
+  sortId,
+  onSortChange,
   unreadFirst,
   onUnreadFirstChange,
 }) {
@@ -177,7 +179,6 @@ export function WorkOrderList({
   const queryGeneration = useRef(0);
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [expandedSortGroup, setExpandedSortGroup] = useState("priority");
-  const [sortId, setSortId] = useState("priority-highest");
   const sortMenuRef = useRef(null);
   const readAllButtonRef = useRef(null);
   const [isReadAllTooltipVisible, setIsReadAllTooltipVisible] = useState(false);
@@ -328,7 +329,7 @@ export function WorkOrderList({
             <div className="work-order-sort-menu" role="menu" aria-label="Sort Work Orders">
               <div className="sort-unread-row">
                 <span>Unread first</span>
-                <button type="button" className="sort-unread-toggle" role="switch" aria-checked={unreadFirst} aria-label="Unread first" onClick={() => onUnreadFirstChange((value) => !value)} />
+                <button type="button" className="sort-unread-toggle" role="switch" aria-checked={unreadFirst} aria-label="Unread first" onClick={() => onUnreadFirstChange(!unreadFirst)} />
               </div>
               {sortGroups.map((group) => (
                 <section className="sort-menu-group" key={group.id}>
@@ -338,7 +339,7 @@ export function WorkOrderList({
                   </button>
                   {expandedSortGroup === group.id && <div className="sort-menu-options">
                     {group.options.map((option) => (
-                      <button type="button" role="menuitemradio" aria-checked={sortId === option.id} className={`sort-menu-option ${sortId === option.id ? "selected" : ""}`} key={option.id} onClick={() => { setSortId(option.id); setExpandedSortGroup(group.id); }}>
+                      <button type="button" role="menuitemradio" aria-checked={sortId === option.id} className={`sort-menu-option ${sortId === option.id ? "selected" : ""}`} key={option.id} onClick={() => { onSortChange(option.id); setExpandedSortGroup(group.id); }}>
                         {option.label}
                       </button>
                     ))}
