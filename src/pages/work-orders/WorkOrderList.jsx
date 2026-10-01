@@ -24,6 +24,23 @@ const statusOptions = [
   { value: "Completed", label: "Done", icon: Check, tone: "completed" },
 ];
 
+function preloadWorkOrderThumbnails(orders) {
+  if (typeof Image === "undefined") return Promise.resolve();
+  const thumbnailUrls = orders.map((order) => {
+    const thumbnail = order.work_order_attachments?.find((attachment) => attachment.kind === "image" && attachment.is_thumbnail)
+      ?? order.work_order_attachments?.find((attachment) => attachment.kind === "image");
+    return thumbnail?.signed_url;
+  }).filter(Boolean);
+  return Promise.all(thumbnailUrls.map((url) => new Promise((resolve) => {
+    const image = new Image();
+    const finish = () => resolve();
+    image.onload = finish;
+    image.onerror = finish;
+    image.src = url;
+    if (image.complete) finish();
+  })));
+}
+
 function WorkOrderStatusMenu({ order, onStatusChange, canChangeStatus }) {
   const [isOpen, setIsOpen] = useState(false);
   const [openUp, setOpenUp] = useState(false);
@@ -113,7 +130,11 @@ function WorkOrderListItem({ order, selected, isRead, onSelect, onStatusChange, 
   return (
     <article className={`work-order-item ${selected ? "selected" : ""}`} onClick={() => onSelect(order)}>
       <button type="button" className="work-order-item-thumbnail" aria-label={`Open ${order.title}`} onClick={(event) => { event.stopPropagation(); onSelect(order); }}>
-        {thumbnail?.signed_url ? <img src={thumbnail.signed_url} alt="" loading="lazy" /> : <ImageIcon size={20} strokeWidth={1.7} />}
+        {thumbnail?.signed_url
+          ? <img src={thumbnail.signed_url} alt="" loading="lazy" />
+          : thumbnail
+            ? <span className="work-order-thumbnail-skeleton" aria-hidden="true" />
+            : <ImageIcon size={20} strokeWidth={1.7} />}
       </button>
       <button type="button" className="work-order-item-main" aria-current={selected ? "true" : undefined} onClick={(event) => { event.stopPropagation(); onSelect(order); }}>
         <span className="order-item-top">
@@ -140,6 +161,7 @@ export function WorkOrderList({
   onSelect,
   onOrdersLoaded,
   onLoadGroupPage,
+  onHydrateAttachments,
   refreshVersion,
   onStatusChange,
   canChangeStatusForOrder,
@@ -206,6 +228,28 @@ export function WorkOrderList({
       if (generation !== queryGeneration.current) return;
       setGroupPages((current) => ({ ...current, [group]: { orders: reset ? orders : [...(current[group]?.orders ?? []), ...orders] } }));
       onOrdersLoaded(orders);
+      if (onHydrateAttachments) {
+        void onHydrateAttachments(orders).then(async (hydratedOrders) => {
+          if (generation !== queryGeneration.current) return;
+          await preloadWorkOrderThumbnails(hydratedOrders);
+          if (generation !== queryGeneration.current) return;
+          const hydratedById = new Map(hydratedOrders.map((order) => [order.id, order.work_order_attachments]));
+          setGroupPages((current) => {
+            const page = current[group];
+            if (!page) return current;
+            return {
+              ...current,
+              [group]: {
+                ...page,
+                orders: page.orders.map((order) => hydratedById.has(order.id)
+                  ? { ...order, work_order_attachments: hydratedById.get(order.id) }
+                  : order),
+              },
+            };
+          });
+          onOrdersLoaded(hydratedOrders);
+        }).catch(() => {});
+      }
     } catch (error) {
       if (generation === queryGeneration.current) setGroupErrors((current) => ({ ...current, [group]: error.message || "Unable to load Work Orders." }));
     } finally {

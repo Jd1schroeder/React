@@ -11,7 +11,7 @@ function notifyUnreadWorkOrderCountInvalidated() {
   }
 }
 
-async function loadWorkOrderRelations(orders) {
+async function loadWorkOrderRelations(orders, { signAttachmentUrls = true } = {}) {
   if (!orders.length) return orders
   const workOrderIds = orders.map((order) => order.id)
   const { data: sessionData } = await supabase.auth.getSession()
@@ -44,16 +44,20 @@ async function loadWorkOrderRelations(orders) {
     ...order,
     is_read: readWorkOrderIds.has(order.id),
     work_order_assignments: assignmentsByWorkOrder.get(order.id) ?? [],
-    work_order_attachments: attachmentsByWorkOrder.get(order.id) ?? [],
+    work_order_attachments: (attachmentsByWorkOrder.get(order.id) ?? []).map((attachment) => ({ ...attachment, signed_url: null })),
   }))
-  const storagePaths = ordersWithRelations.flatMap((order) => order.work_order_attachments.map((attachment) => attachment.storage_path))
-  if (!storagePaths.length) return ordersWithRelations
+  return signAttachmentUrls ? signWorkOrderAttachmentUrls(ordersWithRelations) : ordersWithRelations
+}
+
+export async function signWorkOrderAttachmentUrls(orders) {
+  const storagePaths = orders.flatMap((order) => (order.work_order_attachments ?? []).map((attachment) => attachment.storage_path))
+  if (!storagePaths.length) return orders
   const { data: signedFiles, error: signedError } = await supabase.storage.from(attachmentBucket).createSignedUrls(storagePaths, 60 * 60)
   if (signedError) throw signedError
   const signedByPath = new Map((signedFiles ?? []).map((file) => [file.path, file.signedUrl]))
-  return ordersWithRelations.map((order) => ({
+  return orders.map((order) => ({
     ...order,
-    work_order_attachments: order.work_order_attachments.map((attachment) => ({ ...attachment, signed_url: signedByPath.get(attachment.storage_path) ?? null })),
+    work_order_attachments: (order.work_order_attachments ?? []).map((attachment) => ({ ...attachment, signed_url: signedByPath.get(attachment.storage_path) ?? null })),
   }))
 }
 
@@ -116,7 +120,7 @@ export async function listWorkOrderInboxPage({ organizationId, tab, group, searc
     target_page_size: 50,
   })
   if (error) throw error
-  return loadWorkOrderRelations(data ?? [])
+  return loadWorkOrderRelations(data ?? [], { signAttachmentUrls: false })
 }
 
 export async function getWorkOrderById({ organizationId, workOrderId, grants }) {
