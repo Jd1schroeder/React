@@ -30,6 +30,7 @@ Use Workbench primitives and conventions first. Extend shared components when th
 - Use `PanelLayout` for the shared pane hierarchy.
 - Keep the hierarchy explicit: `Navigation → Alert → SubNavigation → MainPanel → ContentSection`.
 - Use Workbench tokens, Lucide icons, existing buttons, inputs, selects, avatars, and panel components instead of reproducing reference markup literally.
+- When approximating a reference icon, retain the Workbench Lucide icon and tune its scoped CSS (such as dimensions, stroke, spacing, or transform) to match; replace the icon artwork only when the user explicitly asks for that.
 - Represent unfinished reference controls with explicit opt-in props or feature boundaries. Do not render placeholder actions on every page just because they appear in the reference.
 - For reference detail pages, preserve the meaningful two-column summary/actions and activity/permissions regions, but render unavailable data as explicit empty states or disabled controls until Workbench services exist. Do not copy reference records into the scaffold.
 - Preserve the existing shell’s scroll ownership. Do not add nested page scrolling or fixed offsets merely to match a screenshot.
