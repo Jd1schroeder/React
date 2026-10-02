@@ -19,6 +19,7 @@ import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { PanelRecordNotFound } from "../../components/layout/PanelView";
 import { canAccessRecord } from "../../services/authorizationService";
+import "./WorkOrderDetail.css";
 
 const statusTone = {
   Open: "blue",

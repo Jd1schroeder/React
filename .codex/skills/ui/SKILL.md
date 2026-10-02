@@ -14,7 +14,7 @@ Use the existing layout primitives before creating page-specific alternatives.
 - `PanelLayout` owns the page header, search, primary action, and subnavigation.
 - `PanelLayout` follows the reusable pane nesting `Navigation → Alert → SubNavigation → MainPanel → ContentSection`; page-specific list/detail content belongs inside `ContentSection`.
 - `PanelView` owns the reusable split list/detail panel.
-- `src/pages/WorkOrders.css` contains Work Orders-only pane/detail styling.
+- `src/pages/WorkOrders.css` owns the shared Work Orders split-pane shell and responsive pane geometry. `src/pages/work-orders/WorkOrderList.css` owns Inbox/list/filter styling, and `WorkOrderDetail.css` owns detail-pane content styling. New-work-order form styling remains in `WorkOrders.css` until split independently.
 - Work Orders page orchestration belongs in `WorkOrders.jsx`; list/filter controls and detail content belong in `src/pages/work-orders/WorkOrderList.jsx` and `WorkOrderDetail.jsx`.
 - Work Order creation belongs in `src/pages/work-orders/NewWorkOrderForm.jsx` as the detail-pane state; keep its header and footer fixed within the pane and let only the form body scroll. Reuse the shared `Select`, `Button`, and Workbench tokens for field controls.
 - For numeric fields that need preset suggestions while allowing arbitrary typed values, use the reusable `src/components/ui/PresetNumberInput.jsx` rather than native `<datalist>`, whose browser-controlled popup cannot match the application menu styling. Its menu uses a custom draggable scrollbar thumb because native Chromium scrollbars may retain arrow buttons despite `::-webkit-scrollbar-button` rules.
