@@ -212,7 +212,7 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
     return orders.map((order) => normalizeWorkOrder(order, workspace.preferences))
   }
   const hydrateGroupAttachments = (orders) => signWorkOrderAttachmentUrls(orders)
-  const storeOrders = (orders) => {
+  const storeOrders = (orders, { selectFirst = false } = {}) => {
     setWorkOrdersById((current) => ({
       ...current,
       ...Object.fromEntries(orders.map((order) => {
@@ -225,7 +225,7 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
         return [order.id, { ...order, is_read: existingOrder?.is_read ?? order.is_read, work_order_attachments: attachments }]
       })),
     }))
-    if (!recordId && !localSelectedId && orders[0]) {
+    if (selectFirst && !recordId && !localSelectedId && orders[0]) {
       setLocalSelectedId(orders[0].id)
       void markViewed(orders[0])
     }

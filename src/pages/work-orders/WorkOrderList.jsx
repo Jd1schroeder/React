@@ -173,10 +173,12 @@ export function WorkOrderList({
   onUnreadFirstChange,
 }) {
   const [expandedGroups, setExpandedGroups] = useState({});
+  const [showEmptyCategories, setShowEmptyCategories] = useState(false);
   const [groupPages, setGroupPages] = useState({});
   const [groupLoading, setGroupLoading] = useState({});
   const [groupErrors, setGroupErrors] = useState({});
   const queryGeneration = useRef(0);
+  const pendingGroupLoads = useRef(new Map());
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [expandedSortGroup, setExpandedSortGroup] = useState("priority");
   const sortMenuRef = useRef(null);
@@ -217,45 +219,65 @@ export function WorkOrderList({
         { id: "created-by-me", label: "Created by Me" },
         { id: "all-open", label: "All Open Work Orders" },
       ];
+  const visibleGroups = showEmptyCategories
+    ? groups
+    : groups.filter((group) => (groupCounts[group.id] ?? 0) > 0);
+  const hasHiddenEmptyCategories = groups.some((group) => (groupCounts[group.id] ?? 0) === 0);
+  const allVisibleGroupsCollapsed = visibleGroups.every((group) => !expandedGroups[group.id]);
 
-  const loadGroup = async (group, reset = false) => {
-    if (groupLoading[group] && !reset) return;
+  const loadGroup = (group, reset = false) => {
     const generation = queryGeneration.current;
     const offset = reset ? 0 : (groupPages[group]?.orders.length ?? 0);
-    setGroupLoading((current) => ({ ...current, [group]: true }));
-    setGroupErrors((current) => ({ ...current, [group]: "" }));
-    try {
-      const orders = await onLoadGroupPage({ tab: activeTab, group, sort: sortId, unreadFirst, offset });
-      if (generation !== queryGeneration.current) return;
-      setGroupPages((current) => ({ ...current, [group]: { orders: reset ? orders : [...(current[group]?.orders ?? []), ...orders] } }));
-      onOrdersLoaded(orders);
-      if (onHydrateAttachments) {
-        void onHydrateAttachments(orders).then(async (hydratedOrders) => {
-          if (generation !== queryGeneration.current) return;
-          await preloadWorkOrderThumbnails(hydratedOrders);
-          if (generation !== queryGeneration.current) return;
-          const hydratedById = new Map(hydratedOrders.map((order) => [order.id, order.work_order_attachments]));
-          setGroupPages((current) => {
-            const page = current[group];
-            if (!page) return current;
-            return {
-              ...current,
-              [group]: {
-                ...page,
-                orders: page.orders.map((order) => hydratedById.has(order.id)
-                  ? { ...order, work_order_attachments: hydratedById.get(order.id) }
-                  : order),
-              },
-            };
-          });
-          onOrdersLoaded(hydratedOrders);
-        }).catch(() => {});
+    const requestKey = `${generation}:${group}:${offset}`;
+    const pendingRequest = pendingGroupLoads.current.get(requestKey);
+    if (pendingRequest) return pendingRequest;
+    if (groupLoading[group] && !reset) return Promise.resolve();
+
+    const request = (async () => {
+      setGroupLoading((current) => ({ ...current, [group]: true }));
+      setGroupErrors((current) => ({ ...current, [group]: "" }));
+      try {
+        const orders = await onLoadGroupPage({ tab: activeTab, group, sort: sortId, unreadFirst, offset });
+        if (generation !== queryGeneration.current) return;
+        setGroupPages((current) => ({ ...current, [group]: { orders: reset ? orders : [...(current[group]?.orders ?? []), ...orders] } }));
+        onOrdersLoaded(orders);
+        if (onHydrateAttachments) {
+          void onHydrateAttachments(orders).then(async (hydratedOrders) => {
+            if (generation !== queryGeneration.current) return;
+            await preloadWorkOrderThumbnails(hydratedOrders);
+            if (generation !== queryGeneration.current) return;
+            const hydratedById = new Map(hydratedOrders.map((order) => [order.id, order.work_order_attachments]));
+            setGroupPages((current) => {
+              const page = current[group];
+              if (!page) return current;
+              return {
+                ...current,
+                [group]: {
+                  ...page,
+                  orders: page.orders.map((order) => hydratedById.has(order.id)
+                    ? { ...order, work_order_attachments: hydratedById.get(order.id) }
+                    : order),
+                },
+              };
+            });
+            onOrdersLoaded(hydratedOrders);
+          }).catch(() => {});
+        }
+        return orders;
+      } catch (error) {
+        if (generation === queryGeneration.current) setGroupErrors((current) => ({ ...current, [group]: error.message || "Unable to load Work Orders." }));
+      } finally {
+        pendingGroupLoads.current.delete(requestKey);
+        if (generation === queryGeneration.current) setGroupLoading((current) => ({ ...current, [group]: false }));
       }
-    } catch (error) {
-      if (generation === queryGeneration.current) setGroupErrors((current) => ({ ...current, [group]: error.message || "Unable to load Work Orders." }));
-    } finally {
-      if (generation === queryGeneration.current) setGroupLoading((current) => ({ ...current, [group]: false }));
-    }
+    })();
+    pendingGroupLoads.current.set(requestKey, request);
+    return request;
+  };
+
+  const prefetchGroup = (group) => {
+    if ((groupCounts[group] ?? 0) === 0 || groupPages[group] != null || groupLoading[group] || groupErrors[group]) return;
+    void loadGroup(group, true);
   };
 
   useEffect(() => {
@@ -356,16 +378,27 @@ export function WorkOrderList({
         </div>
       </div>
       <div className="work-order-list">
-        {groups.map((group) => {
+        {visibleGroups.map((group) => {
           const expanded = expandedGroups[group.id] ?? false;
           return (
             <section className="work-order-group" key={group.id}>
           <button
             className={`work-order-assignment-heading ${expanded ? "expanded" : ""}`}
             aria-expanded={expanded}
+            onMouseEnter={() => prefetchGroup(group.id)}
+            onFocus={() => prefetchGroup(group.id)}
             onClick={() => {
               setExpandedGroups((current) => ({ ...current, [group.id]: !expanded }));
-              if (!expanded && groupPages[group.id] == null) loadGroup(group.id, true);
+              if (!expanded) {
+                const loadedOrders = groupPages[group.id]?.orders;
+                if (loadedOrders) {
+                  onOrdersLoaded(loadedOrders, { selectFirst: true });
+                } else {
+                  void loadGroup(group.id, true).then((orders) => {
+                    if (orders?.length) onOrdersLoaded(orders, { selectFirst: true });
+                  });
+                }
+              }
             }}
           >
                 <span>{group.label} ({groupCounts[group.id] ?? 0})</span>
@@ -376,11 +409,19 @@ export function WorkOrderList({
                 {groupLoading[group.id] && <div className="list-empty">Loading Work Orders...</div>}
                 {groupErrors[group.id] && <div className="list-empty" role="alert">{groupErrors[group.id]}</div>}
                 {!groupLoading[group.id] && !groupErrors[group.id] && (groupPages[group.id]?.orders.length ?? 0) === 0 && <div className="list-empty">No work orders in this group.</div>}
-                {!groupLoading[group.id] && (groupPages[group.id]?.orders.length ?? 0) < (groupCounts[group.id] ?? 0) && <button type="button" className="work-order-show-more" onClick={() => loadGroup(group.id)}>Show more</button>}
+                {!groupLoading[group.id] && (groupPages[group.id]?.orders.length ?? 0) < (groupCounts[group.id] ?? 0) && <button type="button" className="work-order-show-more" onClick={() => loadGroup(group.id)}>Show more work orders</button>}
               </>}
             </section>
           );
         })}
+        {hasHiddenEmptyCategories && allVisibleGroupsCollapsed && <button
+          type="button"
+          className="work-order-empty-categories-toggle"
+          aria-expanded={showEmptyCategories}
+          onClick={() => setShowEmptyCategories((visible) => !visible)}
+        >
+          {showEmptyCategories ? "Hide empty categories" : "Show empty categories"}
+        </button>}
       </div>
       {isReadAllTooltipVisible && readAllTooltipPosition && createPortal(
         <div className="work-order-read-tooltip" role="tooltip" style={{ left: readAllTooltipPosition.left, top: readAllTooltipPosition.top }}>Mark all as read</div>,

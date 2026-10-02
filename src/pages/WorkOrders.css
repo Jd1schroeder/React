@@ -306,6 +306,22 @@
 .work-order-show-more:focus-visible {
   background: var(--surface-hover);
 }
+.work-order-empty-categories-toggle {
+  display: block;
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-5);
+  border: 0;
+  color: var(--blue);
+  background: var(--surface);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  text-align: center;
+  cursor: pointer;
+}
+.work-order-empty-categories-toggle:hover,
+.work-order-empty-categories-toggle:focus-visible {
+  background: var(--surface-hover);
+}
 .work-order-actions {
   display: flex;
   align-items: center;
