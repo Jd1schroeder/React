@@ -167,29 +167,21 @@
   font-weight: var(--font-semibold);
 }
 .work-order-sort-chevron {
-  display: block;
+  display: flex;
   flex: none;
-  width: 8px;
-  min-height: 0;
-  margin: 0 0 4px 4px;
-  line-height: 1.2;
-  text-align: center;
+  align-items: center;
+  width: 15px;
+  height: 15px;
+  margin-left: 4px;
 }
 .work-order-sort-chevron svg {
-  display: inline;
-  width: 8px;
-  height: 5px;
-  overflow: hidden;
+  flex: 0 0 auto;
+  color: var(--blue);
   stroke: var(--blue);
-  stroke-width: 4.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transform: scaleX(1.75);
-  transform-origin: center;
-  transition: transform 200ms ease;
+  transition: transform 160ms ease;
 }
 .work-order-sort-chevron svg.expanded {
-  transform: rotate(180deg) scaleX(1.75);
+  transform: rotate(180deg);
 }
 .work-order-sort-row .work-order-mark-as-read {
   appearance: button;

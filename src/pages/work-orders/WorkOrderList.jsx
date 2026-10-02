@@ -352,7 +352,7 @@ export function WorkOrderList({
                     setSortMenuOpen((open) => !open);
                   }}>
                     <span className="work-order-sort-selected-label"><span className="work-order-sort-selected-emphasis">{selectedSortGroup?.label ?? "Priority"}</span>: {selectedSort?.label ?? "Highest First"}</span>
-                    <div className="work-order-sort-chevron"><ChevronDown size={8} className={sortMenuOpen ? "expanded" : ""} /></div>
+                    <div className="work-order-sort-chevron"><ChevronDown size={15} className={sortMenuOpen ? "expanded" : ""} /></div>
                   </button>
                 </div>
                 {sortMenuOpen && (
