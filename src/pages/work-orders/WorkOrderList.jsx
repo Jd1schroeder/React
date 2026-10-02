@@ -129,26 +129,52 @@ function WorkOrderListItem({ order, selected, isRead, onSelect, onStatusChange, 
   const thumbnail = order.work_order_attachments?.find((attachment) => attachment.kind === "image" && attachment.is_thumbnail)
     ?? order.work_order_attachments?.find((attachment) => attachment.kind === "image");
   return (
-    <article className={`work-order-item ${selected ? "selected" : ""}`} onClick={() => onSelect(order)}>
-      <button type="button" className="work-order-item-thumbnail" aria-label={`Open ${order.title}`} onClick={(event) => { event.stopPropagation(); onSelect(order); }}>
-        {thumbnail?.signed_url
-          ? <img src={thumbnail.signed_url} alt="" loading="lazy" />
-          : thumbnail
-            ? <span className="work-order-thumbnail-skeleton" aria-hidden="true" />
-            : <ImageIcon size={20} strokeWidth={1.7} />}
-      </button>
-      <button type="button" className="work-order-item-main" aria-current={selected ? "true" : undefined} onClick={(event) => { event.stopPropagation(); onSelect(order); }}>
-        <span className="order-item-top">
-          <span className={`order-title ${isRead ? "reviewed" : "unreviewed"}`}>{order.title}</span>
-          <span className={`priority priority-${(order.priority ?? "none").toLowerCase()}`} aria-label={`${order.priority ?? "None"} priority`}><i /></span>
-        </span>
-        <span className="order-item-meta"><span>Requested by {order.requester}</span><span>#{order.work_order_number}</span></span>
-      </button>
-      <div className="order-item-bottom">
-        <WorkOrderStatusMenu order={order} onStatusChange={onStatusChange} canChangeStatus={canChangeStatus} />
-        <span>{order.due}</span>
+    <div
+      className={`work-order-item ${selected ? "selected" : ""}`}
+      aria-selected={selected}
+      onClick={() => onSelect(order)}
+    >
+      <a
+        className="work-order-item-link"
+        href={`/workorders/${order.id}`}
+        aria-label={`Open ${order.title}`}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onSelect(order);
+        }}
+      />
+      <div className="work-order-item-thumbnail-wrapper">
+        <div className="work-order-item-thumbnail" aria-hidden="true">
+          {thumbnail?.signed_url
+            ? <img src={thumbnail.signed_url} alt="" loading="lazy" />
+            : thumbnail
+              ? <span className="work-order-thumbnail-skeleton" />
+              : <ImageIcon size={20} strokeWidth={1.7} />}
+        </div>
       </div>
-    </article>
+      <div className="work-order-item-content">
+        <div className="work-order-item-title-row">
+          <div className="work-order-item-title-wrapper">
+            <div className={`work-order-item-title ${isRead ? "reviewed" : "unreviewed"}`} title={order.title}>
+              {order.title}
+            </div>
+          </div>
+          <div className="work-order-item-assignees" aria-label="Assignees" />
+        </div>
+        <div className="work-order-item-sub-row work-order-item-requester-row">
+          <div className="work-order-item-secondary work-order-item-requester">Requested by {order.requester}</div>
+          <div className="work-order-item-secondary">#{order.work_order_number}</div>
+        </div>
+        <div className="work-order-item-sub-row work-order-item-status-row">
+          <WorkOrderStatusMenu order={order} onStatusChange={onStatusChange} canChangeStatus={canChangeStatus} />
+          <div className="work-order-item-tags">
+            <span className={`priority priority-${(order.priority ?? "none").toLowerCase()}`} aria-label={`${order.priority ?? "None"} priority`}><i /></span>
+            <span className="work-order-item-due">{order.due}</span>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
