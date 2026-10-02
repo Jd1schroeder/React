@@ -62,40 +62,155 @@
 }
 .work-order-sort-row {
   position: relative;
-  z-index: 5;
+  z-index: 1;
+  display: block;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 40px;
+  min-height: 0;
+  color: var(--ink);
+  font-size: var(--font-size-root);
+  font-weight: var(--font-normal);
+  line-height: 1.2;
+}
+.work-order-review-menu {
+  position: relative;
+}
+.work-order-sort-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 100%;
+  height: 40px;
+  min-height: 0;
+  border-bottom: var(--border-width-normal) solid var(--line);
+  color: var(--ink);
+  font-size: var(--font-size-root);
+  font-weight: var(--font-normal);
+  line-height: 1.2;
+}
+.work-order-sort-root {
   display: flex;
   align-items: center;
   gap: 6px;
-  min-height: 40px;
-  padding: 0 var(--spacing-4);
-  border-bottom: var(--border-width-normal) solid var(--line);
-  color: var(--text-muted);
-  font-size: var(--font-size-sm-compact);
+  flex: 1 1 0%;
+  min-width: 0;
+  padding: 12px;
 }
-.work-order-sort-row button:not(.icon-button):not(.sort-unread-toggle) {
-  display: inline-flex;
+.work-order-sort-label {
+  display: block;
+  flex: 0 0 auto;
+  min-height: 0;
+  color: var(--text-navigation);
+  font-size: var(--font-size-root);
+  font-weight: var(--font-normal);
+  line-height: 1.2;
+}
+.work-order-sort-popover {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+.work-order-sort-popover > div:first-child {
+  display: block;
+  flex: 0 0 auto;
+  min-height: 0;
+}
+.work-order-sort-trigger {
+  appearance: button;
+  display: flex;
   align-items: center;
-  gap: var(--spacing-2);
-  padding: 0;
+  flex: 0 0 auto;
+  max-width: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 1px 6px;
   border: 0;
   color: var(--blue);
   background: transparent;
-  font-size: var(--font-size-sm-compact);
+  font: inherit;
+  font-size: var(--font-size-root);
+  font-weight: var(--font-normal);
+  line-height: 1.2;
+  letter-spacing: normal;
+  text-align: center;
+  cursor: pointer;
 }
-.work-order-sort-row .icon-button {
-  width: 26px;
-  height: 26px;
-  margin-left: 0;
+.work-order-sort-selected-label {
+  display: block;
+  flex: 1 1 0%;
+  min-height: 0;
+  min-width: 0;
+  margin-left: 4px;
+  color: var(--blue);
+  stroke: var(--blue);
+  font-size: var(--font-size-root);
+  font-weight: var(--font-normal);
+  line-height: 1.2;
+  letter-spacing: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
 }
-.work-order-sort-control {
-  position: relative;
+.work-order-sort-trigger:hover .work-order-sort-selected-label {
+  color: var(--icon-hover);
+  stroke: var(--work-order-sort-label-hover-stroke);
 }
-.work-order-list-options {
-  margin-left: auto;
+.work-order-sort-selected-emphasis {
+  display: inline;
+  font-weight: var(--font-semibold);
 }
-.work-order-list-options,
-.work-order-review-menu {
-  position: relative;
+.work-order-sort-chevron {
+  display: block;
+  flex: none;
+  width: 8px;
+  min-height: 0;
+  margin: 0 0 4px 4px;
+  line-height: 1.2;
+  text-align: center;
+}
+.work-order-sort-chevron svg {
+  display: inline;
+  width: 8px;
+  height: 5px;
+  overflow: hidden;
+  stroke: var(--blue);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform: scaleX(1.75);
+  transform-origin: center;
+  transition: transform 200ms ease;
+}
+.work-order-sort-chevron svg.expanded {
+  transform: rotate(180deg) scaleX(1.75);
+}
+.work-order-sort-row .work-order-mark-as-read {
+  appearance: button;
+  display: block;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 22px;
+  min-height: 0;
+  margin: 0 12px 0 0;
+  padding: 1px 0;
+  color: var(--muted);
+}
+.work-order-sort-row .work-order-mark-as-read:hover {
+  color: var(--blue);
+}
+.work-order-sort-row .work-order-mark-as-read:disabled {
+  cursor: wait;
+}
+.work-order-sort-row .work-order-mark-as-read svg {
+  width: 20px;
+  height: 20px;
 }
 .work-order-detail-menu {
   position: absolute;
@@ -155,15 +270,6 @@
   border-bottom-color: var(--tooltip-surface);
   content: "";
   transform: translateX(-50%);
-}
-.work-order-list-options button:disabled {
-  cursor: wait;
-}
-.work-order-sort-row .work-order-sort-trigger {
-  gap: var(--spacing-2);
-  font: inherit;
-  font-size: var(--font-size-sm-compact);
-  cursor: pointer;
 }
 .work-order-sort-menu {
   position: absolute;
@@ -327,6 +433,8 @@
   gap: var(--spacing-3);
 }
 .work-order-list {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: auto;
 }
 .work-order-item {

@@ -5,7 +5,6 @@ import {
   CalendarDays,
   Check,
   ChevronDown,
-  ChevronUp,
   Circle,
   CircleCheck,
   CirclePause,
@@ -225,6 +224,8 @@ export function WorkOrderList({
     : groups.filter((group) => (groupCounts[group.id] ?? 0) > 0);
   const hasHiddenEmptyCategories = groups.some((group) => (groupCounts[group.id] ?? 0) === 0);
   const allVisibleGroupsCollapsed = visibleGroups.every((group) => !expandedGroups[group.id]);
+  const selectedSortGroup = sortGroups.find((group) => group.options.some((option) => option.id === sortId));
+  const selectedSort = selectedSortGroup?.options.find((option) => option.id === sortId);
 
   const loadGroup = (group, reset = false) => {
     const generation = queryGeneration.current;
@@ -337,48 +338,53 @@ export function WorkOrderList({
           Done
         </button>
       </div>
-      <div className="work-order-sort-row">
-        <span>Sort By:</span>
-        <div className="work-order-sort-control" ref={sortMenuRef}>
-          <button className="work-order-sort-trigger" aria-expanded={sortMenuOpen} aria-haspopup="menu" onClick={() => {
-            if (!sortMenuOpen) {
-              setExpandedSortGroup(sortGroups.find((group) => group.options.some((option) => option.id === sortId))?.id ?? "priority");
-            }
-            setSortMenuOpen((open) => !open);
-          }}>
-            {sortLabels[sortId]} {sortMenuOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-          </button>
-          {sortMenuOpen && (
-            <div className="work-order-sort-menu" role="menu" aria-label="Sort Work Orders">
-              <div className="sort-unread-row">
-                <span>Unread first</span>
-                <button type="button" className="sort-unread-toggle" role="switch" aria-checked={unreadFirst} aria-label="Unread first" onClick={() => onUnreadFirstChange(!unreadFirst)} />
-              </div>
-              {sortGroups.map((group) => (
-                <section className="sort-menu-group" key={group.id}>
-                  <button type="button" className="sort-menu-group-heading" aria-expanded={expandedSortGroup === group.id} onClick={() => setExpandedSortGroup((current) => current === group.id ? null : group.id)}>
-                    <ChevronDown size={13} className={expandedSortGroup === group.id ? "expanded" : ""} />
-                    {group.label}
-                  </button>
-                  {expandedSortGroup === group.id && <div className="sort-menu-options">
-                    {group.options.map((option) => (
-                      <button type="button" role="menuitemradio" aria-checked={sortId === option.id} className={`sort-menu-option ${sortId === option.id ? "selected" : ""}`} key={option.id} onClick={() => { onSortChange(option.id); setExpandedSortGroup(group.id); }}>
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>}
-                </section>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="work-order-list-options">
-          <button ref={readAllButtonRef} type="button" className="icon-button" aria-label="Mark all as read" disabled={isReadAllSaving || (groupCounts[activeTab === "Done" ? "completed" : "all-open"] ?? 0) === 0} onMouseEnter={showReadAllTooltip} onMouseLeave={hideReadAllTooltip} onFocus={showReadAllTooltip} onBlur={hideReadAllTooltip} onClick={() => { void onReadAll(); }}>
-            <MailCheck size={17} />
-          </button>
-        </div>
-      </div>
       <div className="work-order-list">
+        <div className="work-order-sort-row">
+          <div className="work-order-sort-selector">
+            <div className="work-order-sort-root" ref={sortMenuRef}>
+              <span className="work-order-sort-label">Sort By:</span>
+              <div className="work-order-sort-popover">
+                <div>
+                  <button type="button" className="work-order-sort-trigger" aria-expanded={sortMenuOpen} aria-haspopup="menu" onClick={() => {
+                    if (!sortMenuOpen) {
+                      setExpandedSortGroup(selectedSortGroup?.id ?? "priority");
+                    }
+                    setSortMenuOpen((open) => !open);
+                  }}>
+                    <span className="work-order-sort-selected-label"><span className="work-order-sort-selected-emphasis">{selectedSortGroup?.label ?? "Priority"}</span>: {selectedSort?.label ?? "Highest First"}</span>
+                    <div className="work-order-sort-chevron"><ChevronDown size={8} className={sortMenuOpen ? "expanded" : ""} /></div>
+                  </button>
+                </div>
+                {sortMenuOpen && (
+                  <div className="work-order-sort-menu" role="menu" aria-label="Sort Work Orders">
+                    <div className="sort-unread-row">
+                      <span>Unread first</span>
+                      <button type="button" className="sort-unread-toggle" role="switch" aria-checked={unreadFirst} aria-label="Unread first" onClick={() => onUnreadFirstChange(!unreadFirst)} />
+                    </div>
+                    {sortGroups.map((group) => (
+                      <section className="sort-menu-group" key={group.id}>
+                        <button type="button" className="sort-menu-group-heading" aria-expanded={expandedSortGroup === group.id} onClick={() => setExpandedSortGroup((current) => current === group.id ? null : group.id)}>
+                          <ChevronDown size={13} className={expandedSortGroup === group.id ? "expanded" : ""} />
+                          {group.label}
+                        </button>
+                        {expandedSortGroup === group.id && <div className="sort-menu-options">
+                          {group.options.map((option) => (
+                            <button type="button" role="menuitemradio" aria-checked={sortId === option.id} className={`sort-menu-option ${sortId === option.id ? "selected" : ""}`} key={option.id} onClick={() => { onSortChange(option.id); setExpandedSortGroup(group.id); }}>
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>}
+                      </section>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <button ref={readAllButtonRef} type="button" className="icon-button work-order-mark-as-read" aria-label="Mark all as read" disabled={isReadAllSaving || (groupCounts[activeTab === "Done" ? "completed" : "all-open"] ?? 0) === 0} onMouseEnter={showReadAllTooltip} onMouseLeave={hideReadAllTooltip} onFocus={showReadAllTooltip} onBlur={hideReadAllTooltip} onClick={() => { void onReadAll(); }}>
+              <MailCheck size={20} />
+            </button>
+          </div>
+        </div>
         {visibleGroups.map((group) => {
           const expanded = expandedGroups[group.id] ?? false;
           return (
@@ -439,8 +445,6 @@ const sortGroups = [
   { id: "updated", label: "Last Updated", options: [{ id: "updated-oldest", label: "Least Recent First" }, { id: "updated-newest", label: "Most Recent First" }] },
   { id: "priority", label: "Priority", options: [{ id: "priority-highest", label: "Highest First" }, { id: "priority-lowest", label: "Lowest First" }] },
 ];
-
-const sortLabels = Object.fromEntries(sortGroups.flatMap((group) => group.options.map((option) => [option.id, `${group.label}: ${option.label}`])));
 
 export function WorkOrderFilters() {
   return (
