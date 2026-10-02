@@ -211,6 +211,13 @@
 .button-primary:hover {
   background: var(--action-blue-hover);
 }
+.button-ghost {
+  color: var(--blue);
+  background: transparent;
+}
+.button-ghost:hover {
+  background: var(--surface-hover);
+}
 .button-ripple {
   position: relative;
   overflow: hidden;

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Button } from "../../components/ui/Button";
 import {
   CalendarDays,
   Check,
@@ -409,19 +410,20 @@ export function WorkOrderList({
                 {groupLoading[group.id] && <div className="list-empty">Loading Work Orders...</div>}
                 {groupErrors[group.id] && <div className="list-empty" role="alert">{groupErrors[group.id]}</div>}
                 {!groupLoading[group.id] && !groupErrors[group.id] && (groupPages[group.id]?.orders.length ?? 0) === 0 && <div className="list-empty">No work orders in this group.</div>}
-                {!groupLoading[group.id] && (groupPages[group.id]?.orders.length ?? 0) < (groupCounts[group.id] ?? 0) && <button type="button" className="work-order-show-more" onClick={() => loadGroup(group.id)}>Show more work orders</button>}
+                {!groupLoading[group.id] && (groupPages[group.id]?.orders.length ?? 0) < (groupCounts[group.id] ?? 0) && <Button type="button" variant="ghost" className="work-order-show-more" onClick={() => loadGroup(group.id)}><span className="work-order-show-more-content"><p className="work-order-show-more-label">Show more</p></span></Button>}
               </>}
             </section>
           );
         })}
-        {hasHiddenEmptyCategories && allVisibleGroupsCollapsed && <button
+        {hasHiddenEmptyCategories && allVisibleGroupsCollapsed && <Button
           type="button"
+          variant="ghost"
           className="work-order-empty-categories-toggle"
           aria-expanded={showEmptyCategories}
           onClick={() => setShowEmptyCategories((visible) => !visible)}
         >
-          {showEmptyCategories ? "Hide empty categories" : "Show empty categories"}
-        </button>}
+          <span className="work-order-show-more-content"><p className="work-order-show-more-label">{showEmptyCategories ? "Show less" : "Show more"}</p></span>
+        </Button>}
       </div>
       {isReadAllTooltipVisible && readAllTooltipPosition && createPortal(
         <div className="work-order-read-tooltip" role="tooltip" style={{ left: readAllTooltipPosition.left, top: readAllTooltipPosition.top }}>Mark all as read</div>,

@@ -11,6 +11,7 @@ Use this skill when the user provides MaintainX HTML, DOM output, computed CSS, 
 
 Copy the reference’s meaningful format:
 
+- When HTML is provided, preserve its element-by-element hierarchy and element types (for example, `button > span > p`), including wrapper elements. Replace reference-specific class names with Workbench-owned classes, but do not flatten or change the structure unless the user explicitly asks or an accessibility requirement requires it.
 - DOM nesting and the relationship between navigation, alerts, subnavigation, main panels, content sections, lists, and details
 - layout behavior, spacing relationships, sizing, alignment, scroll ownership, responsive behavior, and visible states
 - semantic roles and interaction boundaries when they clarify the intended UI
