@@ -326,18 +326,25 @@ export function WorkOrderList({
   return (
     <section className="inbox-pane">
       <div className="work-order-tabs">
-        <button
-          className={activeTab === "To Do" ? "selected" : ""}
-          onClick={() => setActiveTab("To Do")}
-        >
-          To Do
-        </button>
-        <button
-          className={activeTab === "Done" ? "selected" : ""}
-          onClick={() => setActiveTab("Done")}
-        >
-          Done
-        </button>
+        {["To Do", "Done"].map((tab) => {
+          const isSelected = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              className={`work-order-tab${isSelected ? " selected" : ""}`}
+              disabled={isSelected}
+              onClick={() => setActiveTab(tab)}
+              type="button"
+            >
+              <div className="work-order-tab-content">
+                <div className="work-order-tab-badge-spacer">
+                </div>
+                <span className="work-order-tab-title" title={tab}>{tab}</span>
+                <div className="work-order-tab-badge-spacer" />
+              </div>
+            </button>
+          );
+        })}
       </div>
       <div className="work-order-list">
         <div className="work-order-sort-row">
