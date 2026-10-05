@@ -21,9 +21,33 @@ const selected = {
   description: 'Replace the filter.',
 }
 
-afterEach(cleanup)
+let clipboardDescriptor
+afterEach(() => {
+  cleanup()
+  if (clipboardDescriptor) Object.defineProperty(navigator, 'clipboard', clipboardDescriptor)
+  else delete navigator.clipboard
+  clipboardDescriptor = undefined
+})
 
 describe('WorkOrderDetail authorization', () => {
+  it('copies the current Work Order URL using the Link icon', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    })
+    const { container } = render(<WorkOrderDetail selected={selected} grants={{}} />)
+    const copyButton = screen.getByRole('button', { name: 'Copy Work Order link' })
+
+    expect(copyButton.querySelector('svg.lucide-link')).toBeInTheDocument()
+    fireEvent.click(copyButton)
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Work Order link copied.')
+    expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/workorders/wo-1`)
+    expect(container.querySelector('svg.lucide-link-2')).not.toBeInTheDocument()
+  })
+
   it('shows a loading state instead of a not-found illustration while lookup is pending', () => {
     render(<WorkOrderDetail selected={null} isLoadingRecord missingRecord={false} grants={{}} />)
 

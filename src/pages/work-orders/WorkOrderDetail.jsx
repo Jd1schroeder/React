@@ -6,7 +6,7 @@ import {
   Check,
   CircleDot,
   EllipsisVertical,
-  Link2,
+  Link,
   LockKeyhole,
   LockKeyholeOpen,
   MapPin,
@@ -21,6 +21,7 @@ import { Avatar } from "../../components/ui/Avatar";
 import { PanelRecordNotFound } from "../../components/layout/PanelView";
 import { canAccessRecord, hasPermission } from "../../services/authorizationService";
 import { formatDateForUser } from "../../utils/dateFormatting";
+import { getRecordPath } from "../../routes.js";
 import "./WorkOrderDetail.css";
 
 const statusOptions = [
@@ -153,6 +154,7 @@ export function WorkOrderDetail({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isChangingStatus, setIsChangingStatus] = useState(false);
   const [isDetailScrolled, setIsDetailScrolled] = useState(false);
+  const [linkCopyStatus, setLinkCopyStatus] = useState("");
   const menuRef = useRef(null);
   const commentsRef = useRef(null);
   useEffect(() => {
@@ -233,6 +235,15 @@ export function WorkOrderDetail({
     }
   };
   const showMarkDoneAction = isDetailScrolled && canChangeStatus && selected.status !== "Completed";
+  const copyWorkOrderLink = async () => {
+    const workOrderUrl = new URL(getRecordPath("workorders", selected.id), window.location.origin).href;
+    try {
+      await navigator.clipboard.writeText(workOrderUrl);
+      setLinkCopyStatus("copied");
+    } catch {
+      setLinkCopyStatus("error");
+    }
+  };
   const headerAction = showMarkDoneAction ? (
     <button
       className="detail-header-action detail-header-action-primary"
@@ -273,9 +284,16 @@ export function WorkOrderDetail({
         <div className="detail-heading">
           <div className="detail-title-row">
             <h2>{selected.title}</h2>
-            <button className="icon-button" aria-label="Copy work order link" type="button">
-              <Link2 size={17} />
+            <button
+              className="icon-button"
+              aria-label={linkCopyStatus === "copied" ? "Work Order link copied" : "Copy Work Order link"}
+              title={linkCopyStatus === "copied" ? "Link copied" : "Copy Work Order link"}
+              type="button"
+              onClick={() => { void copyWorkOrderLink(); }}
+            >
+              <Link size={17} aria-hidden="true" />
             </button>
+            {linkCopyStatus && <span className="detail-link-copy-feedback" role="status">{linkCopyStatus === "copied" ? "Work Order link copied." : "Unable to copy Work Order link."}</span>}
           </div>
           <div className="detail-meta">
             <CalendarDays size={14} /> Due by {selected.due} <span>·</span>{" "}
