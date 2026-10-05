@@ -28,16 +28,6 @@ export async function getCurrentWorkspace(organizationId = window.localStorage.g
   const preferences = preferencesResult.status === 'fulfilled' && !preferencesResult.value.error
     ? preferencesResult.value.data
     : null
-  let profileWithAvatar = profile
-  if (profile) {
-    let signedAvatarUrl = ""
-    try {
-      signedAvatarUrl = await getAvatarSignedUrl(profile.avatar_url)
-    } catch {
-      // Keep the profile data usable and let the avatar component render initials.
-    }
-    profileWithAvatar = { ...profile, avatar_path: profile.avatar_url, avatar_url: signedAvatarUrl }
-  }
   const organizations = (memberships ?? []).map(({ organizations: organization, organization_roles: roleDefinition, ...membership }) => ({
     ...organization,
     role: membership.role,
@@ -55,6 +45,12 @@ export async function getCurrentWorkspace(organizationId = window.localStorage.g
   const hasActiveOrganization = activeOrganizations.length > 0
   const hasSuspendedOrganization = organizations.some((item) => item.membershipStatus === 'suspended' || item.organizationStatus === 'suspended')
   const accessStatus = hasActiveOrganization ? 'active' : hasSuspendedOrganization ? 'suspended' : 'none'
+  const signedAvatarUrlPromise = profile
+    ? getAvatarSignedUrl(profile.avatar_url).catch(() => {
+      // Keep the profile data usable and let the avatar component render initials.
+      return ""
+    })
+    : Promise.resolve("")
 
   let authorization = { status: 'error', roleId: organization?.roleId ?? null, grants: {} }
   let teamIds = []
@@ -75,6 +71,11 @@ export async function getCurrentWorkspace(organizationId = window.localStorage.g
     teamIds = (teamMembershipRows ?? []).map((row) => row.team_id)
     authorization = { status: 'ready', roleId: organization.roleId, grants: permissionMap(permissionRows ?? []) }
   }
+
+  const signedAvatarUrl = await signedAvatarUrlPromise
+  const profileWithAvatar = profile
+    ? { ...profile, avatar_path: profile.avatar_url, avatar_url: signedAvatarUrl }
+    : null
 
   return { user, profile: profileWithAvatar, preferences, organizations, organization, accessStatus, authorization, teamIds }
 }

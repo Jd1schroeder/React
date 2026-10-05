@@ -12,15 +12,13 @@ export function WorkspaceProvider({ children, onNavigate }) {
   const loadWorkspace = useCallback(async () => {
     setState((current) => ({ ...current, status: "loading", error: null }));
     try {
-      const workspace = await getCurrentWorkspace();
+      const [workspace] = await Promise.all([
+        getCurrentWorkspace(),
+        registerCurrentSession().catch(() => null),
+      ]);
       if (!workspace.user) {
         setState({ status: "unauthenticated", workspace: null, error: null });
         return;
-      }
-      try {
-        await registerCurrentSession();
-      } catch {
-        // Session registry availability must not block workspace access.
       }
       const status = workspace.authorization?.status === "error"
         ? "error"

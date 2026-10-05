@@ -26,23 +26,6 @@ const statusOptions = [
   { value: "Completed", label: "Done", icon: Check, tone: "completed" },
 ];
 
-function preloadWorkOrderThumbnails(orders) {
-  if (typeof Image === "undefined") return Promise.resolve();
-  const thumbnailUrls = orders.map((order) => {
-    const thumbnail = order.work_order_attachments?.find((attachment) => attachment.kind === "image" && attachment.is_thumbnail)
-      ?? order.work_order_attachments?.find((attachment) => attachment.kind === "image");
-    return thumbnail?.signed_url;
-  }).filter(Boolean);
-  return Promise.all(thumbnailUrls.map((url) => new Promise((resolve) => {
-    const image = new Image();
-    const finish = () => resolve();
-    image.onload = finish;
-    image.onerror = finish;
-    image.src = url;
-    if (image.complete) finish();
-  })));
-}
-
 function WorkOrderStatusMenu({ order, onStatusChange, canChangeStatus }) {
   const [isOpen, setIsOpen] = useState(false);
   const [openUp, setOpenUp] = useState(false);
@@ -181,11 +164,18 @@ function WorkOrderListItem({ order, selected, isRead, onSelect, onStatusChange, 
       />
       <div className="work-order-item-thumbnail-wrapper">
         <div className="work-order-item-thumbnail" aria-hidden="true">
-          {thumbnail?.signed_url
-            ? <img src={thumbnail.signed_url} alt="" loading="lazy" />
-            : thumbnail
-              ? <span className="work-order-thumbnail-skeleton" />
-              : <ImageIcon size={20} strokeWidth={1.7} />}
+          {thumbnail?.signed_url ? (
+            <img
+              src={thumbnail.signed_url}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+          ) : thumbnail ? (
+            <span className="work-order-thumbnail-skeleton" />
+          ) : (
+            <ImageIcon size={20} strokeWidth={1.7} />
+          )}
         </div>
       </div>
       <div className="work-order-item-content">
@@ -306,26 +296,36 @@ export function WorkOrderList({
         setGroupPages((current) => ({ ...current, [group]: { orders: reset ? orders : [...(current[group]?.orders ?? []), ...orders] } }));
         onOrdersLoaded(orders);
         if (onHydrateAttachments) {
-          void onHydrateAttachments(orders).then(async (hydratedOrders) => {
-            if (generation !== queryGeneration.current) return;
-            await preloadWorkOrderThumbnails(hydratedOrders);
-            if (generation !== queryGeneration.current) return;
-            const hydratedById = new Map(hydratedOrders.map((order) => [order.id, order.work_order_attachments]));
-            setGroupPages((current) => {
-              const page = current[group];
-              if (!page) return current;
-              return {
-                ...current,
-                [group]: {
-                  ...page,
-                  orders: page.orders.map((order) => hydratedById.has(order.id)
-                    ? { ...order, work_order_attachments: hydratedById.get(order.id) }
-                    : order),
-                },
-              };
-            });
-            onOrdersLoaded(hydratedOrders);
-          }).catch(() => {});
+          void onHydrateAttachments(orders)
+            .then((hydratedOrders) => {
+              if (generation !== queryGeneration.current) return;
+              const hydratedById = new Map(
+                hydratedOrders.map((order) => [
+                  order.id,
+                  order.work_order_attachments,
+                ]),
+              );
+              setGroupPages((current) => {
+                const page = current[group];
+                if (!page) return current;
+                return {
+                  ...current,
+                  [group]: {
+                    ...page,
+                    orders: page.orders.map((order) =>
+                      hydratedById.has(order.id)
+                        ? {
+                            ...order,
+                            work_order_attachments: hydratedById.get(order.id),
+                          }
+                        : order,
+                    ),
+                  },
+                };
+              });
+              onOrdersLoaded(hydratedOrders);
+            })
+            .catch(() => {});
         }
         return orders;
       } catch (error) {

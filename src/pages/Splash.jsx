@@ -1,6 +1,6 @@
 import { ArrowRight, CheckCircle2, ClipboardCheck, ShieldCheck, UsersRound } from 'lucide-react'
 import { Button } from '../components/ui/Button'
-import workbenchIcon from '../assets/workbench-icon.png'
+import workbenchIcon from '../assets/workbench-icon-2x.png'
 import workbenchLogo from '../assets/workbench-logo.png'
 import './Splash.css'
 

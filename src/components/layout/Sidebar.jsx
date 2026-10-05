@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import "./Sidebar.css";
 import { settingsNavigation, settingsPageByLabel, sidebarGroups } from "./sidebarConfig";
-import workbenchIcon from "../../assets/workbench-icon.png";
+import workbenchIcon from "../../assets/workbench-icon-2x.png";
 import { supabase } from "../../lib/supabase";
 import { setActiveOrganization } from "../../services/workspaceService";
 import { getUnreadWorkOrderCount } from "../../services/workOrderService";
