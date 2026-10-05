@@ -115,6 +115,8 @@ describe('WorkOrderDetail authorization', () => {
     expect(screen.getByRole('heading', { name: 'Due Date' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Priority' })).toBeInTheDocument()
     expect(screen.getByText('#41')).toBeInTheDocument()
+    const assetAttribute = screen.getByRole('heading', { name: 'Asset' }).closest('.detail-attribute')
+    expect(assetAttribute.querySelector('svg.lucide-boxes')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Assigned To' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Description' })).toBeInTheDocument()
 

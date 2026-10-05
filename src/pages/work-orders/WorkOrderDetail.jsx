@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
+  Boxes,
   CirclePause,
   CalendarDays,
   Check,
-  CircleDot,
   EllipsisVertical,
   FileDown,
   Link,
@@ -454,7 +454,7 @@ export function WorkOrderDetail({
             <div className="detail-attributes-grid">
               <div className="detail-attribute">
                 <div className="detail-section-header"><h2>Asset</h2></div>
-                <DetailMetadata icon={CircleDot}>{selected.asset && selected.asset !== "Not available" ? selected.asset : "Not available"}</DetailMetadata>
+                <DetailMetadata icon={Boxes}>{selected.asset && selected.asset !== "Not available" ? selected.asset : "Not available"}</DetailMetadata>
               </div>
               <div className="detail-attribute">
                 <div className="detail-section-header"><h2>Location</h2></div>
