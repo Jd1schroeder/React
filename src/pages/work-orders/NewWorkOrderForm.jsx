@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CirclePlus,
   List,
@@ -68,6 +68,7 @@ export function NewWorkOrderForm({
   onCancel,
   onCreate,
   onUpdate,
+  onDirtyChange,
   isSaving = false,
   error = "",
   assigneeOptions = [],
@@ -77,6 +78,13 @@ export function NewWorkOrderForm({
   initialWorkOrder = null,
 }) {
   const existingAssignments = initialWorkOrder?.work_order_assignments ?? [];
+  const existingAttachments = initialWorkOrder?.work_order_attachments ?? [];
+  const existingImages = mode === "edit"
+    ? existingAttachments.filter((attachment) => attachment.kind === "image" || attachment.content_type?.startsWith("image/"))
+    : [];
+  const existingFiles = mode === "edit"
+    ? existingAttachments.filter((attachment) => !existingImages.includes(attachment))
+    : [];
   const currentAssignmentValues = existingAssignments.length
     ? existingAssignments.map((assignment) => assignment.user_id ? `user:${assignment.user_id}` : `team:${assignment.team_id}`)
     : [
@@ -115,8 +123,37 @@ export function NewWorkOrderForm({
   }));
   const [pictures, setPictures] = useState([]);
   const [thumbnail, setThumbnail] = useState(null);
+  const [retainedImageIds, setRetainedImageIds] = useState(() => existingImages.map((attachment) => attachment.id));
+  const [existingThumbnailAttachmentId, setExistingThumbnailAttachmentId] = useState(() =>
+    existingImages.find((attachment) => attachment.is_thumbnail)?.id ?? existingImages[0]?.id ?? null,
+  );
   const [files, setFiles] = useState([]);
   const [fileError, setFileError] = useState("");
+  const getFileKey = (file) => `${file.name}-${file.size}-${file.lastModified}`;
+  const [initialSnapshot] = useState(() => JSON.stringify({
+      form,
+      pictures: [],
+      thumbnail: null,
+      retainedImageIds,
+      existingThumbnailAttachmentId,
+      files: [],
+  }));
+  const currentSnapshot = JSON.stringify({
+    form,
+    pictures: pictures.map(getFileKey),
+    thumbnail: thumbnail ? getFileKey(thumbnail) : null,
+    retainedImageIds,
+    existingThumbnailAttachmentId,
+    files: files.map(getFileKey),
+  });
+  const isDirty = mode === "edit" && currentSnapshot !== initialSnapshot;
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
+
   const update = (field, value) =>
     setForm((current) => ({ ...current, [field]: value }));
   const handleFilesSelected = (event) => {
@@ -154,6 +191,10 @@ export function NewWorkOrderForm({
       workType: form.workType,
       pictures,
       thumbnail,
+      retainedAttachmentIds: mode === "edit"
+        ? [...existingFiles.map((attachment) => attachment.id), ...retainedImageIds]
+        : [],
+      thumbnailAttachmentId: thumbnail ? null : existingThumbnailAttachmentId,
       files,
     };
     if (mode === "edit") onUpdate?.(values);
@@ -180,27 +221,29 @@ export function NewWorkOrderForm({
               <LockKeyhole size={15} aria-hidden="true" /> Use a Template
             </button>
           </FormRow>
-          {mode === "edit" && initialWorkOrder?.work_order_attachments?.length > 0 && (
+          {existingFiles.length > 0 && (
             <FormRow>
               <section className="new-work-order-current-attachments" aria-label="Current attachments">
-                <h3>Current attachments</h3>
+                <h3>Current files</h3>
                 <ul>
-                  {initialWorkOrder.work_order_attachments.map((attachment) => (
+                  {existingFiles.map((attachment) => (
                     <li key={attachment.id}>
-                      {attachment.kind === "image" || attachment.content_type?.startsWith("image/")
-                        ? attachment.signed_url
-                          ? <img src={attachment.signed_url} alt={attachment.file_name} loading="lazy" />
-                          : <span className="new-work-order-current-attachment-unavailable">Image preview unavailable</span>
-                        : <Paperclip size={16} aria-hidden="true" />}
+                      <Paperclip size={16} aria-hidden="true" />
                       <span>{attachment.file_name}</span>
                     </li>
                   ))}
                 </ul>
-                <p>Existing attachments are kept when you save.</p>
+                <p>Current files are kept when you save.</p>
               </section>
             </FormRow>
           )}
-          <FormRow><ImageDropzone onChange={setPictures} onThumbnailChange={setThumbnail} allowThumbnailSelection={mode !== "edit"} /></FormRow>
+          <FormRow><ImageDropzone
+            initialAttachments={existingImages}
+            onChange={setPictures}
+            onThumbnailChange={setThumbnail}
+            onExistingAttachmentsChange={setRetainedImageIds}
+            onExistingThumbnailChange={setExistingThumbnailAttachmentId}
+          /></FormRow>
           <FormRow>
             <FormField label="Description">
               <textarea value={form.description} onChange={(event) => update("description", event.target.value)} placeholder="Add a description" rows="4" />

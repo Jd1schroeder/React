@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { Avatar } from "../../components/ui/Avatar";
 import { PanelRecordNotFound } from "../../components/layout/PanelView";
-import { canAccessRecord } from "../../services/authorizationService";
+import { canAccessRecord, hasPermission } from "../../services/authorizationService";
 import { formatDateForUser } from "../../utils/dateFormatting";
 import "./WorkOrderDetail.css";
 
@@ -137,6 +137,7 @@ export function WorkOrderDetail({
   selected,
   missingRecord,
   onEdit,
+  onCopy,
   onStatusChange,
   onToggleRead,
   isSavingReadState = false,
@@ -185,6 +186,7 @@ export function WorkOrderDetail({
     teamIds,
   };
   const canEditDetails = canAccessRecord(grants, "work_orders.edit", record);
+  const canCreateWorkOrder = hasPermission(grants, "work_orders.create");
   const canChangeStatus = canAccessRecord(
     grants,
     "work_orders.change_status",
@@ -195,7 +197,7 @@ export function WorkOrderDetail({
     "work_orders.view_comments",
     record,
   );
-  const canUseMoreActions = canEditDetails || canChangeStatus || canViewComments || onToggleRead;
+  const canUseMoreActions = canEditDetails || canChangeStatus || canViewComments || onToggleRead || canCreateWorkOrder;
   const assigneeOptionsByValue = new Map(assigneeOptions.map((option) => [option.value, option]));
   const identitiesById = new Map(memberDirectory.map((member) => [member.id, member]));
   const assignmentTargets = (selected.work_order_assignments ?? [])
@@ -296,8 +298,10 @@ export function WorkOrderDetail({
                 <button type="button" role="menuitem" disabled={isSavingReadState || !onToggleRead} onClick={async () => { await onToggleRead(selected); setIsMenuOpen(false); }}>
                   <span>Mark as {selected.is_read ? "unread" : "read"}</span>
                 </button>
+                <button className={!canCreateWorkOrder || !onCopy ? "is-unavailable" : ""} type="button" role="menuitem" disabled={!canCreateWorkOrder || !onCopy} onClick={() => { onCopy?.(); setIsMenuOpen(false); }}>
+                  <span>Copy to New Work Order</span>{(!canCreateWorkOrder || !onCopy) && <LockKeyhole size={14} aria-hidden="true" />}
+                </button>
                 {[
-                  ["Copy to New Work Order", "Copying Work Orders is not available yet."],
                   ["Save as Work Order Template", "Work Order templates are not available yet."],
                   ["Export to PDF", "PDF export is not available yet."],
                   ["Email to Vendors", "Emailing vendors is not available yet."],

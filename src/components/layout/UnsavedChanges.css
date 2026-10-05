@@ -1,0 +1,100 @@
+.unsaved-changes-backdrop {
+  position: fixed;
+  z-index: 1400;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--spacing-5);
+  background: var(--overlay-modal);
+  animation: unsaved-changes-backdrop-enter 160ms ease-out both;
+}
+
+.unsaved-changes-dialog {
+  width: min(100%, 464px);
+  overflow: hidden;
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--elevation-5);
+  animation: unsaved-changes-dialog-enter 220ms ease-out both;
+}
+
+.unsaved-changes-dialog h2 {
+  margin: 0;
+  padding: var(--spacing-4) var(--spacing-4) var(--spacing-2);
+  color: var(--ink);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  line-height: var(--line-height-copy);
+}
+
+.unsaved-changes-dialog > p {
+  margin: 0;
+  padding: 0 var(--spacing-4) var(--spacing-4);
+  color: var(--ink);
+  line-height: var(--line-height-copy);
+}
+
+.unsaved-changes-actions {
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-top: var(--border-width-normal) solid var(--line);
+}
+
+.unsaved-changes-cancel,
+.unsaved-changes-discard {
+  min-height: 40px;
+  padding: 0 var(--spacing-4);
+  border: 0;
+  border-radius: var(--radius-button);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.unsaved-changes-cancel {
+  color: var(--blue);
+  background: transparent;
+}
+
+.unsaved-changes-cancel:hover,
+.unsaved-changes-cancel:focus-visible {
+  background: var(--surface-control-hover);
+}
+
+.unsaved-changes-discard {
+  color: var(--white);
+  background: var(--blue);
+}
+
+.unsaved-changes-discard:hover,
+.unsaved-changes-discard:focus-visible {
+  background: var(--blue-hover);
+}
+
+.unsaved-changes-cancel:focus-visible,
+.unsaved-changes-discard:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+@keyframes unsaved-changes-backdrop-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes unsaved-changes-dialog-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .unsaved-changes-backdrop,
+  .unsaved-changes-dialog {
+    animation: none;
+  }
+}

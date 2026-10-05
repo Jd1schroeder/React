@@ -15,10 +15,11 @@ A create operation writes both database records and private Storage objects, esp
 - If the database operation fails, best-effort remove only the objects uploaded by this request, then propagate the original failure.
 - Keep RLS restrictive; any `SECURITY DEFINER` RPC must explicitly validate caller identity, permission, organization ownership, assignment targets, and object paths/existence.
 - Create short-lived signed URLs for display after persistence. Never store blob URLs or signed URLs in database rows.
+- During Work Order edits, pass retained attachment IDs and the chosen thumbnail together with new uploads to `update_work_order_with_attachment_state`. Reconcile metadata in the database transaction under an explicit `work_orders.edit` check; after commit, best-effort delete only Storage paths whose metadata was removed.
 
 ## Canonical implementation
 
-`src/services/workOrderService.js:createWorkOrder`, `work_order_attachments`, and `create_work_order_with_assignments` in `supabase/migrations/20261001140000_harden_work_order_creation_rpc.sql`.
+`src/services/workOrderService.js:createWorkOrder` / `updateWorkOrderDetails`, `work_order_attachments`, `create_work_order_with_assignments` in `supabase/migrations/20261001140000_harden_work_order_creation_rpc.sql`, and edit attachment reconciliation in `supabase/migrations/20261005130000_reconcile_work_order_attachments_on_edit.sql`.
 
 ## Related knowledge
 

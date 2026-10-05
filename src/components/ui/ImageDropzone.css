@@ -94,6 +94,11 @@
   height: 100%;
   object-fit: cover;
 }
+.image-dropzone-preview-unavailable {
+  width: 100%;
+  height: 100%;
+  background: var(--surface-subtle);
+}
 .image-dropzone-preview button {
   position: absolute;
   top: var(--spacing-2);

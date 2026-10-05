@@ -22,10 +22,11 @@ Create database records in one RPC transaction after uploading private objects. 
 - Authorization resolves assignment junctions and current team membership in database policies/functions.
 - Persist paths, not blob previews or signed URLs; sign only for display.
 - Validate new child fields/write paths inside the elevated RPC before expanding it.
+- For edits, keep attachment reconciliation in the same database transaction as the parent Work Order update. The dedicated helper checks `work_orders.edit`, changes thumbnail state or metadata for only that Work Order, and returns removed object paths; Storage deletion follows the commit and is best-effort. Do not broaden direct attachment table update/delete policies to implement the image editor.
 
 ## Canonical implementation
 
-`src/services/workOrderService.js:createWorkOrder`, `supabase/migrations/20261001120000_expand_work_order_creation.sql`, and `20261001140000_harden_work_order_creation_rpc.sql`.
+`src/services/workOrderService.js:createWorkOrder` / `updateWorkOrderDetails`, `supabase/migrations/20261001120000_expand_work_order_creation.sql`, `20261001140000_harden_work_order_creation_rpc.sql`, and `20261005130000_reconcile_work_order_attachments_on_edit.sql`.
 
 ## Related knowledge
 

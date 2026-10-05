@@ -8,6 +8,8 @@ Workbench is a browser-based React application with shared layouts, authenticate
 
 Use React with Vite and Lucide React. Use `react-router-dom` for route matching, navigation, redirects, parameters, and unknown routes. Keep page-name/path generation in `src/routes.js`, the lazy page registry and route declarations in `src/routes/routeConfig.jsx`, and route composition in `src/App.jsx`.
 
+Use React Router's data router (`createBrowserRouter` / `RouterProvider`) so route transitions can be blocked while an edit is dirty. Keep the shared unsaved-change prompt above routed pages; page controls can defer local navigation through that same guard.
+
 ## Alternatives considered
 
 - Keep custom History API routing: rejected because routing, redirects, record parameters, and browser history were becoming duplicated manual behavior.
@@ -18,6 +20,7 @@ Use React with Vite and Lucide React. Use `react-router-dom` for route matching,
 
 - Route-level modules are lazy-loaded and rendered through the shared loading fallback.
 - Existing public, authenticated, settings, record, and legacy redirect behavior must remain stable when adding routes.
+- Unsaved Work Order edits block app navigation and browser-history transitions until canceled or explicitly discarded; browser refresh/close uses the browser-native warning.
 - Register destinations in both the canonical path map and route registry; reuse one lazy wrapper for aliases to a module.
 
 ## Canonical implementation

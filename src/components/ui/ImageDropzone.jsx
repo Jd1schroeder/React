@@ -25,27 +25,43 @@ export function ImageDropzone({
   multiple = true,
   onChange,
   onThumbnailChange,
+  initialAttachments = [],
+  onExistingAttachmentsChange,
+  onExistingThumbnailChange,
   allowThumbnailSelection = true,
 }) {
   const inputRef = useRef(null);
-  const itemsRef = useRef([]);
-  const [items, setItems] = useState([]);
-  const [thumbnailKey, setThumbnailKey] = useState("");
+  const [items, setItems] = useState(() => initialAttachments.map((attachment) => ({
+    id: attachment.id,
+    name: attachment.file_name,
+    url: attachment.signed_url,
+    isExisting: true,
+  })));
+  const itemsRef = useRef(items);
+  const [thumbnailKey, setThumbnailKey] = useState(() => {
+    const selectedAttachment = initialAttachments.find((attachment) => attachment.is_thumbnail) ?? initialAttachments[0];
+    return selectedAttachment ? `attachment:${selectedAttachment.id}` : "";
+  });
   const [isDragging, setIsDragging] = useState(false);
 
-  const getItemKey = (item) => `${item.file.name}-${item.file.size}-${item.file.lastModified}`;
+  const getItemKey = (item) => item.isExisting
+    ? `attachment:${item.id}`
+    : `file:${item.file.name}-${item.file.size}-${item.file.lastModified}`;
   const notifyThumbnail = (next, preferredKey = thumbnailKey) => {
+    onExistingAttachmentsChange?.(next.filter((item) => item.isExisting).map((item) => item.id));
     if (!allowThumbnailSelection) {
       onThumbnailChange?.(null);
+      onExistingThumbnailChange?.(null);
       return;
     }
     const thumbnail = next.find((item) => getItemKey(item) === preferredKey) ?? next[0];
     setThumbnailKey(thumbnail ? getItemKey(thumbnail) : "");
-    onThumbnailChange?.(thumbnail?.file ?? null);
+    onThumbnailChange?.(thumbnail && !thumbnail.isExisting ? thumbnail.file : null);
+    onExistingThumbnailChange?.(thumbnail?.isExisting ? thumbnail.id : null);
   };
 
   useEffect(
-    () => () => itemsRef.current.forEach(({ url }) => URL.revokeObjectURL(url)),
+    () => () => itemsRef.current.filter((item) => !item.isExisting).forEach(({ url }) => URL.revokeObjectURL(url)),
     [],
   );
 
@@ -57,20 +73,22 @@ export function ImageDropzone({
         (file) =>
           !currentItems.some(
             (item) =>
+              !item.isExisting &&
               item.file.name === file.name &&
               item.file.size === file.size &&
               item.file.lastModified === file.lastModified,
           ),
       )
-      .map((file) => ({ file, url: URL.createObjectURL(file) }));
+      .map((file) => ({ file, name: file.name, url: URL.createObjectURL(file), isExisting: false }));
     const next = multiple ? [...currentItems, ...newItems] : newItems.slice(0, 1);
-    if (!multiple)
+    if (!multiple) {
       itemsRef.current
-        .filter((item) => !next.includes(item))
+        .filter((item) => !item.isExisting && !next.includes(item))
         .forEach(({ url }) => URL.revokeObjectURL(url));
+    }
     itemsRef.current = next;
     setItems(next);
-    onChange?.(next.map(({ file }) => file));
+    onChange?.(next.filter((item) => !item.isExisting).map(({ file }) => file));
     notifyThumbnail(next);
   };
 
@@ -86,11 +104,11 @@ export function ImageDropzone({
   };
 
   const removeFile = (itemToRemove) => {
-    URL.revokeObjectURL(itemToRemove.url);
+    if (!itemToRemove.isExisting) URL.revokeObjectURL(itemToRemove.url);
     const next = itemsRef.current.filter((item) => item !== itemToRemove);
     itemsRef.current = next;
     setItems(next);
-    onChange?.(next.map(({ file }) => file));
+    onChange?.(next.filter((item) => !item.isExisting).map(({ file }) => file));
     notifyThumbnail(next);
   };
 
@@ -98,7 +116,8 @@ export function ImageDropzone({
     if (!allowThumbnailSelection) return;
     const nextKey = getItemKey(item);
     setThumbnailKey(nextKey);
-    onThumbnailChange?.(item.file);
+    onThumbnailChange?.(item.isExisting ? null : item.file);
+    onExistingThumbnailChange?.(item.isExisting ? item.id : null);
   };
 
   return (
@@ -120,20 +139,21 @@ export function ImageDropzone({
         {items.length > 0 && (
           <div className="image-dropzone-previews">
             {items.map((item) => {
-              const { file, url } = item;
+              const { name, url } = item;
+              const isSelectedThumbnail = getItemKey(item) === thumbnailKey;
               return (
               <div
-                className={`image-dropzone-preview${allowThumbnailSelection && getItemKey(item) === thumbnailKey ? " is-thumbnail" : ""}`}
-                key={`${file.name}-${file.lastModified}`}
+                className={`image-dropzone-preview${allowThumbnailSelection && isSelectedThumbnail ? " is-thumbnail" : ""}`}
+                key={getItemKey(item)}
                 role={allowThumbnailSelection ? "button" : undefined}
                 tabIndex={allowThumbnailSelection ? "0" : undefined}
-                aria-pressed={allowThumbnailSelection ? getItemKey(item) === thumbnailKey : undefined}
-                aria-label={allowThumbnailSelection ? `${file.name}${getItemKey(item) === thumbnailKey ? ", work order thumbnail" : ", select as work order thumbnail"}` : undefined}
+                aria-pressed={allowThumbnailSelection ? isSelectedThumbnail : undefined}
+                aria-label={allowThumbnailSelection ? `${name}${isSelectedThumbnail ? ", work order thumbnail" : ", select as work order thumbnail"}` : undefined}
                 onClick={allowThumbnailSelection ? () => selectThumbnail(item) : undefined}
                 onKeyDown={allowThumbnailSelection ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectThumbnail(item); } } : undefined}
               >
-                <img src={url} alt={file.name} />
-                {allowThumbnailSelection && getItemKey(item) !== thumbnailKey && (
+                {url ? <img src={url} alt={name} /> : <div className="image-dropzone-preview-unavailable" role="img" aria-label={`${name} preview unavailable`} />}
+                {allowThumbnailSelection && !isSelectedThumbnail && (
                   <span className="image-dropzone-thumbnail-action">
                     Set as Thumbnail
                   </span>
@@ -141,7 +161,7 @@ export function ImageDropzone({
                 <button
                   type="button"
                   onClick={(event) => { event.stopPropagation(); removeFile(item); }}
-                  aria-label={`Remove ${file.name}`}
+                  aria-label={`Remove ${name}`}
                 >
                   <X size={14} />
                 </button>

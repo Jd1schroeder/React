@@ -607,19 +607,6 @@
   color: var(--text-secondary);
   font-size: var(--font-size-xs);
 }
-.new-work-order-current-attachments img,
-.new-work-order-current-attachment-unavailable {
-  display: grid;
-  width: 112px;
-  height: 84px;
-  place-items: center;
-  overflow: hidden;
-  border-radius: var(--radius-control);
-  color: var(--text-tertiary);
-  background: var(--surface-subtle);
-  object-fit: cover;
-  text-align: center;
-}
 .new-work-order-current-attachments li > span:last-child {
   overflow: hidden;
   text-overflow: ellipsis;

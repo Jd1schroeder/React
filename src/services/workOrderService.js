@@ -221,7 +221,7 @@ export async function createWorkOrder({ organizationId, title, description, prio
   return createdWorkOrder
 }
 
-export async function updateWorkOrderDetails({ organizationId, workOrderId, title, description, priority, dueDate, dueTime, startDate, estimatedDurationMinutes, workType = 'reactive', assignments = null, pictures = [], files = [], grants, record }) {
+export async function updateWorkOrderDetails({ organizationId, workOrderId, title, description, priority, dueDate, dueTime, startDate, estimatedDurationMinutes, workType = 'reactive', assignments = null, pictures = [], files = [], retainedAttachmentIds = [], thumbnailAttachmentId = null, thumbnail = null, grants, record }) {
   assertPermission(grants, 'work_orders.edit', record)
   if (assignments !== null) assertPermission(grants, 'work_orders.assign')
   if (!title?.trim()) throw new Error('A Work Order title is required.')
@@ -230,7 +230,7 @@ export async function updateWorkOrderDetails({ organizationId, workOrderId, titl
   if (estimatedDurationMinutes != null && (!Number.isInteger(estimatedDurationMinutes) || estimatedDurationMinutes <= 0)) throw new Error('Estimated time must be greater than zero minutes.')
 
   const filesToUpload = [
-    ...pictures.map((file) => ({ file, kind: 'image' })),
+    ...pictures.map((file) => ({ file, kind: 'image', isThumbnail: file === thumbnail })),
     ...files.map((file) => ({ file, kind: 'file' })),
   ]
   for (const { file } of filesToUpload) {
@@ -246,7 +246,7 @@ export async function updateWorkOrderDetails({ organizationId, workOrderId, titl
   const attachmentRecords = []
   let updatedWorkOrder
   try {
-    for (const { file, kind } of filesToUpload) {
+    for (const { file, kind, isThumbnail = false } of filesToUpload) {
       const attachmentId = crypto.randomUUID()
       const storagePath = `${organizationId}/${authData.user.id}/${workOrderId}/${attachmentId}${getSafeAttachmentExtension(file.name)}`
       const { error: uploadError } = await supabase.storage.from(attachmentBucket).upload(storagePath, file, {
@@ -263,11 +263,19 @@ export async function updateWorkOrderDetails({ organizationId, workOrderId, titl
         file_name: file.name,
         content_type: file.type || 'application/octet-stream',
         byte_size: file.size,
-        is_thumbnail: false,
+        is_thumbnail: isThumbnail,
       })
     }
 
-    const { data, error } = await supabase.rpc('update_work_order_with_assignments', {
+    const targetAttachmentState = [
+      ...retainedAttachmentIds.map((id) => ({
+        id,
+        existing: true,
+        is_thumbnail: id === thumbnailAttachmentId,
+      })),
+      ...attachmentRecords.map((attachment) => ({ ...attachment, existing: false })),
+    ]
+    const { data, error } = await supabase.rpc('update_work_order_with_attachment_state', {
       target_work_order_id: workOrderId,
       target_organization_id: organizationId,
       target_title: title.trim(),
@@ -279,13 +287,21 @@ export async function updateWorkOrderDetails({ organizationId, workOrderId, titl
       target_estimated_duration_minutes: estimatedDurationMinutes ?? null,
       target_work_type: workType,
       target_assignments: assignments === null ? null : assignments.map(({ userId, teamId }) => ({ user_id: userId ?? null, team_id: teamId ?? null })),
-      target_attachments: attachmentRecords,
+      target_attachments: [],
+      target_attachment_state: targetAttachmentState,
     })
     if (error) throw error
     updatedWorkOrder = data
   } catch (error) {
     if (uploadedObjects.length) await supabase.storage.from(attachmentBucket).remove(uploadedObjects).catch(() => {})
     throw error
+  }
+
+  const removedAttachmentPaths = updatedWorkOrder.removed_attachment_paths ?? []
+  delete updatedWorkOrder.removed_attachment_paths
+  if (removedAttachmentPaths.length) {
+    const { error: cleanupError } = await supabase.storage.from(attachmentBucket).remove(removedAttachmentPaths)
+    if (cleanupError) console.warn('Work Order attachment objects could not all be removed.', cleanupError)
   }
 
   const [hydratedWorkOrder] = await loadWorkOrderRelations([updatedWorkOrder])

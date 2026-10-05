@@ -103,6 +103,17 @@ describe('WorkOrderDetail authorization', () => {
     expect(onEdit).toHaveBeenCalledTimes(2)
   })
 
+  it('enables Copy to New Work Order only for users with create permission', () => {
+    const onCopy = vi.fn()
+    render(<WorkOrderDetail selected={selected} userId="user-a" grants={{
+      'work_orders.create': 'own',
+    }} onCopy={onCopy} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'More work order actions' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Copy to New Work Order' }))
+    expect(onCopy).toHaveBeenCalledTimes(1)
+  })
+
   it('includes the remaining reference sections without claiming unsupported features', () => {
     render(<WorkOrderDetail selected={{ ...selected, estimated_duration_minutes: 60 }} userId="user-a" grants={{
       'work_orders.view_comments': 'own',
