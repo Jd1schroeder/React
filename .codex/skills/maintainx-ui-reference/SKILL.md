@@ -5,6 +5,10 @@ description: Translate pasted MaintainX markup, computed styles, or screenshots 
 
 # MaintainX UI Reference
 
+Related Patterns: [panel page and route](../../patterns/frontend/panel-page-and-route.md), [categorized remote inbox](../../patterns/frontend/categorized-remote-inbox.md), [organization administration pages](../../patterns/frontend/organization-administration.md), [shared UI controls](../../patterns/frontend/shared-ui-controls.md).
+
+Related Decisions: [001](../../decisions/001-frontend-platform-and-routing.md), [005](../../decisions/005-organization-roles-and-permissions.md), [008](../../decisions/008-work-order-creation-and-persistence.md).
+
 Use this skill when the user provides MaintainX HTML, DOM output, computed CSS, screenshots, or a MaintainX interaction as a reference for Workbench.
 
 ## Translation rule

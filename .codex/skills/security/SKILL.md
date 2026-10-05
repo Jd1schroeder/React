@@ -5,6 +5,10 @@ description: Maintain Workbench authentication, authorization, storage, headers,
 
 # Workbench Security
 
+Related Patterns: [permissioned feature boundary](../../patterns/security/permissioned-feature-boundary.md), [secure attachment workflow](../../patterns/data-access/secure-attachment-workflow.md), [Supabase service boundary](../../patterns/data-access/supabase-service-boundary.md).
+
+Related Decisions: [004](../../decisions/004-signup-organization-provisioning.md), [005](../../decisions/005-organization-roles-and-permissions.md), [006](../../decisions/006-authorization-and-forward-only-security.md), [007](../../decisions/007-passkey-authentication.md), [008](../../decisions/008-work-order-creation-and-persistence.md), [009](../../decisions/009-work-order-inbox-query-and-review-state.md).
+
 Supabase RLS and database functions are the security boundary. Client route gates, hidden buttons, role labels, and `WorkspaceProvider` states are UX controls only and must never be the only authorization check.
 
 The shared client evaluator lives in `src/services/authorizationService.js`. It supports `own`, `assigned`, `team`, and `any` record scopes and must fail closed for missing or invalid grants. Use it to hide unauthorized actions while keeping database RLS authoritative.

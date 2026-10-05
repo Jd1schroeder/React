@@ -1,15 +1,19 @@
 ---
 name: database
-description: Guide persistence changes for Workbench when a backend database is introduced.
+description: Guide Workbench's Supabase schema, migrations, RPCs, indexes, and persisted data behavior.
 ---
 
 # Database Skill
+
+Related Patterns: [Supabase service boundary](../../patterns/data-access/supabase-service-boundary.md), [secure attachment workflow](../../patterns/data-access/secure-attachment-workflow.md), [categorized remote inbox](../../patterns/frontend/categorized-remote-inbox.md), [permissioned feature boundary](../../patterns/security/permissioned-feature-boundary.md).
+
+Related Decisions: [003](../../decisions/003-supabase-service-data-access.md), [004](../../decisions/004-signup-organization-provisioning.md), [005](../../decisions/005-organization-roles-and-permissions.md), [006](../../decisions/006-authorization-and-forward-only-security.md), [008](../../decisions/008-work-order-creation-and-persistence.md), [009](../../decisions/009-work-order-inbox-query-and-review-state.md).
 
 The Supabase schema is defined in timestamped migrations. `20260917000000_create_organizations.sql` creates `organizations` and `organization_members`; `20260918000000_create_user_profiles_and_preferences.sql` adds `profiles` and `user_preferences`, enables RLS, and provisions those records from new-user metadata. The legacy `organization_members.role` field remains the compatibility source for `owner`, `admin`, and `member` while the roles foundation is introduced. `20260923130000_create_organization_roles.sql` adds organization-scoped custom role records and nullable `organization_members.role_id`; do not treat application-level Superadmin as an organization membership role. Operations pages must show empty states until their corresponding Supabase tables and services are implemented; do not reintroduce hardcoded record fixtures.
 
 When persistence is introduced, document entities and ownership first. Keep database access behind a service or API boundary; frontend components should consume typed domain data rather than issue database queries. Never place a Supabase service-role key in the browser or in `VITE_` variables.
 
-Personal identity and preferences belong to `profiles` and `user_preferences`, keyed by `auth.users.id`. Organization membership belongs to `organization_members`; organization role definitions belong to `organization_roles`, and future permission assignments must use a normalized role-permission boundary rather than embedding permission names in frontend code. A user may have different membership roles in different organizations. Keep database access behind a service or API boundary, such as `src/services/workspaceService.js`, rather than issuing Supabase queries directly from page components.
+Personal identity and preferences belong to `profiles` and `user_preferences`, keyed by `auth.users.id`. Organization membership belongs to `organization_members`; organization role definitions belong to `organization_roles`, and permission assignments use the normalized `organization_role_permissions` boundary rather than embedding permission names in frontend code. A user may have different membership roles in different organizations. Keep database access behind a service or API boundary, such as `src/services/workspaceService.js`, rather than issuing Supabase queries directly from page components.
 
 Organization-specific Work Order Inbox display preferences belong in `work_order_inbox_preferences`, keyed by `(user_id, organization_id)`, rather than the globally scoped `user_preferences` row. Keep sort IDs constrained to supported server sort options, protect reads/writes with RLS requiring both `user_id = auth.uid()` and active organization membership, and include `updated_by` when attaching the shared timestamp trigger because that trigger records the authenticated actor.
 
@@ -22,8 +26,6 @@ System roles and their initial grants are seeded by `20260923150000_seed_system_
 New organizations must also receive system roles at signup. The forward-only provisioning repair `20260928130000_provision_system_roles_for_new_organizations.sql` seeds the four built-in roles and grants before inserting the owner membership, preventing role-validation failures and avoiding a fail-closed workspace with no assigned `role_id`.
 
 Work Order authorization is defined by `20260923190000_create_work_orders_authorization.sql`. The `work_orders_enforce_permissions` trigger permits Technician core edits only for records they created, while status and procedure-progress changes use assigned-record grants. Keep this distinction in database mutations, not only in UI button visibility.
-
-Work Order authorization must distinguish core record editing from execution updates. Technician grants may allow status and procedure-progress changes on assigned work orders while restricting core edits to work orders created by that technician.
 
 Work Order creation persistence is introduced by `20261001120000_expand_work_order_creation.sql`. Keep direct-user and team assignments in `work_order_assignments` rather than a team-ID array on profiles; one work order may have several assignment targets, and team membership is independently normalized in `organization_team_members`. Legacy `assigned_to` and `team_id` remain compatibility projections during migration. Store the selected work-order thumbnail as attachment metadata (`is_thumbnail`) alongside the other image/file records, with durable Storage paths rather than URLs. `estimated_duration_minutes` is nullable and positive when present; zero means no estimate. `due_date` and optional `due_time` are local organization values, while the compatibility `due_at` is synchronized using the organization timezone. Recurrence is intentionally not persisted until its scheduling contract is implemented.
 

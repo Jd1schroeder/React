@@ -5,6 +5,10 @@ description: Extend the Workbench frontend architecture while preserving shared 
 
 # Architecture Skill
 
+Related Patterns: [panel page and route](../../patterns/frontend/panel-page-and-route.md), [categorized remote inbox](../../patterns/frontend/categorized-remote-inbox.md), [Supabase service boundary](../../patterns/data-access/supabase-service-boundary.md).
+
+Related Decisions: [001](../../decisions/001-frontend-platform-and-routing.md), [002](../../decisions/002-client-state-and-navigation.md), [003](../../decisions/003-supabase-service-data-access.md).
+
 Keep the application organized around these boundaries:
 
 - `src/components/layout` contains application-wide layout and panel primitives.
@@ -29,4 +33,4 @@ The current backend-backed workspace identity is loaded through `src/services/wo
 
 Authenticated routes are coordinated by `src/components/layout/WorkspaceContext.jsx` and `WorkspaceProvider` in `AppLayout`. The provider waits for the Supabase session and workspace data before rendering the shell, refreshes on organization/profile/auth changes, exposes the ready workspace through `useWorkspace`, and blocks shell rendering when no active organization membership exists by showing a centralized no-organization or suspended-access state. Do not have individual layout or page components independently gate the authenticated shell or render anonymous-looking defaults while workspace hydration is pending.
 
-The current app uses React state plus browser History API navigation in `src/routes.js`. Record pages use clean parent-child paths such as `/workorders/WO-1048`, `/assets/AST-1001`, and `/parts/PART-2001`; the same pattern applies to other registered sidebar destinations. Unknown child records preserve the parent page shell and use the shared panel-level not-found state. Do not introduce a state-management library without a documented architectural decision.
+The app uses React Router for navigation and record parameters, local React state for page interactions, and React Context for authenticated workspace state. `src/routes.js` remains the canonical page-name/path map; `src/routes/routeConfig.jsx` owns the lazy page registry and route declarations. Preserve clean parent-child record paths and the shared detail-pane not-found state. Do not reintroduce manual History API routing or add a global state library without a documented architectural decision.

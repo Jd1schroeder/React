@@ -5,6 +5,10 @@ description: Validate Workbench UI and architecture changes using the repository
 
 # Testing Skill
 
+Related Patterns: use the Pattern Index to load the validation-relevant implementation recipe for the feature under test, especially [permissioned feature boundary](../../patterns/security/permissioned-feature-boundary.md).
+
+Related Decisions: validate the relevant current architecture through [the Decision Index](../../decisions/INDEX.md); security tests also relate to [006](../../decisions/006-authorization-and-forward-only-security.md).
+
 The project uses Vitest for unit and UI behavior tests. The required baseline validation is:
 
 ```text

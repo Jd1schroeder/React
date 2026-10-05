@@ -1,136 +1,38 @@
 ---
 name: ui
-description: Build and refactor Workbench UI pages, navigation, panel layouts, responsive styling, and reusable visual components.
+description: Build Workbench pages and interactions using shared layout primitives, reusable controls, accessibility requirements, and design tokens.
 ---
 
 # UI Skill
 
-Use the existing layout primitives before creating page-specific alternatives.
+Load the matching implementation Pattern for detailed page recipes instead of treating this Skill as a feature-by-feature catalog.
 
-## Established structure
+Related Patterns: [panel page and route](../../patterns/frontend/panel-page-and-route.md), [application shell and settings](../../patterns/frontend/application-shell-and-settings.md), [categorized remote inbox](../../patterns/frontend/categorized-remote-inbox.md), [organization administration](../../patterns/frontend/organization-administration.md), [shared UI controls](../../patterns/frontend/shared-ui-controls.md).
 
-- `src/components/layout/Sidebar.jsx` and `Sidebar.css` own navigation and sidebar styling.
-- Static sidebar groups and settings menu labels belong in `src/components/layout/sidebarConfig.js`; keep Supabase actions, open/close state, and rendering in `Sidebar.jsx`.
-- `PanelLayout` owns the page header, search, primary action, and subnavigation.
-- `PanelLayout` follows the reusable pane nesting `Navigation → Alert → SubNavigation → MainPanel → ContentSection`; page-specific list/detail content belongs inside `ContentSection`.
-- `PanelView` owns the reusable split list/detail panel.
-- `src/pages/WorkOrders.css` owns the shared Work Orders split-pane shell and responsive pane geometry. `src/pages/work-orders/WorkOrderList.css` owns Inbox/list/filter styling, and `WorkOrderDetail.css` owns detail-pane content styling. New-work-order form styling remains in `WorkOrders.css` until split independently.
-- Work Orders page orchestration belongs in `WorkOrders.jsx`; list/filter controls and detail content belong in `src/pages/work-orders/WorkOrderList.jsx` and `WorkOrderDetail.jsx`.
-- Work Order creation belongs in `src/pages/work-orders/NewWorkOrderForm.jsx` as the detail-pane state; keep its header and footer fixed within the pane and let only the form body scroll. Reuse the shared `Select`, `Button`, and Workbench tokens for field controls.
-- For numeric fields that need preset suggestions while allowing arbitrary typed values, use the reusable `src/components/ui/PresetNumberInput.jsx` rather than native `<datalist>`, whose browser-controlled popup cannot match the application menu styling. Its menu uses a custom draggable scrollbar thumb because native Chromium scrollbars may retain arrow buttons despite `::-webkit-scrollbar-button` rules.
-- Work Order priority segments use fixed per-option widths so switching selected font weight cannot resize or shift the group. Keep border widths constant across states; when an interior segment is selected, transfer the shared divider to its status-colored left border (remove the preceding segment's right border) instead of overlaying a pseudo-element inside the button. Non-selected hover changes only the border color, selected None/Low/Medium have reference-matched hover colors, and selected None/Low/Medium/High use their blue/positive/warning/danger styling respectively.
-- Work Order form content follows the reference row hierarchy: each standalone field/action row is a `.new-work-order-row` containing `.new-work-order-row-content`; paired controls live inside that content block. Keep the dedicated Sub-Work Orders card as its own section.
-- When implementing Work Order form settings, let organization admins configure which inputs are enabled and which enabled inputs are required; keep the form driven by that organization configuration rather than hardcoding field requirements.
-- Work Orders read and execution mutations use `src/services/workOrderService.js`; keep the page free of mock records. Database authorization controls core edits separately from assigned execution updates.
-- Work Order list rows use a 48×48 rounded-square image preview sourced from the selected `is_thumbnail` attachment, falling back to the first image attachment; rows without images show a neutral image placeholder. Render only short-lived signed URLs returned by `workOrderService`.
-- Preserve the Work Order list-row hierarchy: root item → link and thumbnail wrapper as siblings → content wrapper containing a title row, requester/number subrow, and status/tags subrow. The link covers the reference-sized primary area, while the root handles clicks in remaining row padding so the whole row selects; keep status controls operable and do not flatten row content into root-level siblings.
-- When matching user-provided computed CSS for Work Order row elements, do not invent spacing. Override shared row gaps with zero wherever the supplied element has no gap, and take margins/padding only from that element’s supplied values.
-- Work Order Inbox rows keep the same 98px flex geometry, thumbnail/content alignment, and reserved 4px left-border space in both selected and unselected states; selection changes the border color and surface, not the list layout. The selected row uses 8px vertical and 16px right padding with `--surface-work-order-selected`; do not imitate the left border with an inset shadow.
-- Do not block the first Work Order list render while Storage signs attachment URLs; render metadata first, then preload each page's selected thumbnails before revealing them so the images appear together instead of trickling in.
-- Use a thumbnail skeleton only when image metadata exists and its signed URL is still loading; keep the neutral image icon for Work Orders with no image. Respect reduced-motion preferences for any skeleton animation.
-- Display the organization-scoped `work_order_number` (prefixed with `#`) in user-facing Work Order list and detail metadata; keep UUIDs for internal lookup and routing.
-- Work Order inbox statuses are permission-aware menu buttons, not badges. Persist changes through `updateWorkOrderExecution` with the record-level status grant; keep the row selection action separate from the status button to avoid nested interactive elements.
-- When Work Orders are opened without a record ID in the URL, use the local selected ID for the detail pane after any part of a list row is clicked; otherwise the pane remains stuck on the first visible record.
-- Work Order status menus render in a document-level portal so list-row stacking contexts cannot paint sibling text over them. Position the menu against the trigger and visible list viewport, flip above when needed, and update its position during list scrolling and window resizing.
-- The Work Orders list sort menu orders the current filtered view by creation date, due date, last update, or priority; its Unread first switch is an independent ordering option that must be applied in the server query before pagination. When opening the sort menu, expand only the category containing the current sort; keep the remaining categories collapsed. Unreviewed titles are semibold and become regular weight after that user opens the Work Order details; the per-user read state is persisted rather than inferred from list rendering. The detail overflow menu can toggle the selected Work Order read/unread. The Inbox MailCheck icon opens a confirmation dialog before marking the current tab/search results read; after success, show a dismissible success toast. Keep its hover/focus tooltip centered on the icon and outside the clipped Inbox pane. Workbench does not yet have a general toast provider; prefer a small shared app-level toast API over adding a dependency or duplicating page-specific toast implementations as more toast use cases are introduced.
-- The Inbox sort trigger chevron uses the same 15px Lucide `ChevronDown` and expanded rotation as the expandable Work Order category headings.
-- Persist the selected Work Order Inbox sort and Unread first setting per user and organization via `work_order_inbox_preferences`; keep group expansion, active tab, and search transient unless separately requested. Load these preferences before enabling Inbox interaction so initial server pages use the saved ordering.
-- The Work Orders Inbox `.work-order-list` is the scroll container for its options row and expandable groups. Preserve this exact options-row nesting: list → options row → selector container → (sort root, mark-as-read button); the sort root contains the label and popover, whose button wrapper contains the trigger. The list groups into Assigned to Me, Assigned to My Teams, Created by Me, and All Open Work Orders; Done has a Completed group. Counts are exact; hide zero-count groups by default and let users reveal them with a separate full-width ghost “Show more” Button (switching to “Show less” while revealed) when visible groups are collapsed. Each expanded group fetches up to 50 server-filtered/server-sorted rows at a time; use the same shared Button for page continuation. Keep group membership and pagination in the Inbox RPCs rather than deriving it from only the currently loaded browser rows.
-- Preserve the Inbox tab button hierarchy: button → tab-content div → leading empty badge-spacer div → title span → trailing empty badge-spacer div. Keep both spacers empty so the title stays centered without a tab dot. The active tab button is disabled. Tabs share equal flex sizing; inactive tabs use normal-weight muted text and a neutral bottom border, while the active tab uses semibold blue text and a blue bottom border.
-- Prefetch only the first page of a non-empty Work Order Inbox group when its heading is hovered or keyboard-focused. Share/deduplicate that in-flight request with expansion so click reuses the prefetch, and discard stale results after tab, search, sort, or unread-order changes.
-- The Work Orders sidebar badge is the authenticated user's unread count across all Work Order statuses in the selected organization, limited by the user's Work Order visibility. Do not use a hard-coded badge or scope it to the current Inbox tab/search.
-- `src/styles/tokens.css` contains shared design tokens; prefer tokens over new hardcoded values.
-- The document root uses `--font-size-root` at 14px, so `1rem` equals 14px throughout the Workbench UI. Keep the root scale explicit rather than relying on the browser default.
-- Use the standard Workbench type, line-height, spacing, border, radius, transition, elevation, and color tokens in `src/styles/tokens.css`. UI styles outside the token file must not contain raw color literals; use an existing semantic token or add a centralized palette/semantic token first. Migrate repeated values to tokens before introducing new literals. Keep unique brand artwork values centralized in the token file rather than scattering them through component CSS. Native `@media` breakpoints may remain literal because CSS custom properties are not reliably supported in media queries.
-- Name color tokens by UI role (`--surface-*`, `--text-*`, `--border-*`, `--status-*`, `--auth-*`, or feature-specific names such as `--tooltip-surface`), not by encoded hex/RGB values. Keep feature artwork values centralized and explicitly scoped when they cannot be given a shared semantic role.
-- `src/styles/globals.css` contains reset and document-level styles.
-- Login and signup use the shared `AuthPage` implementation in `src/pages/AuthPage.jsx`; keep authentication modes as configuration rather than duplicating the full auth layout.
-- The public splash page is the `/` entry route. Branding on unauthenticated pages may return to `Splash`, while the logged-in sidebar brand is static and must not navigate out of the application shell.
-- Keep the left visual column of the splash and signup layouts aligned through the shared `--auth-visual-column` token in `src/styles/tokens.css`.
-- Use the shared `--focus-border-width` and `--focus-border-color` tokens for focused form controls; the standard focused border is 2px blue without an added focus shadow.
-- Use `--warning-soft` for pale warning surfaces; the current warning surface is `#FEF9EC`.
+Related Decisions: [001 — Frontend platform and routing](../../decisions/001-frontend-platform-and-routing.md), [002 — Client state and navigation](../../decisions/002-client-state-and-navigation.md), [005 — Organization roles and permissions](../../decisions/005-organization-roles-and-permissions.md), [009 — Work Order Inbox paging and review state](../../decisions/009-work-order-inbox-query-and-review-state.md).
 
-Every new sidebar destination should use the shared panel shell unless its interaction model genuinely differs. Keep page-specific differences in the page stylesheet, not in `App.css`.
+## Core rules
 
-People management uses dedicated `/users` and `/teams` pages with a shared Users/Teams tab switcher; the sidebar label remains “Teams / Users” but lands on `/users`.
+- Extend existing components under `src/components/layout` and `src/components/ui` before creating parallel primitives. Compose route-level pages under `src/pages` and keep feature-specific styles with the feature.
+- Use `PanelLayout` for the shared page header/search/action/subnavigation shell and `PanelView` for the established list/detail page. Consult the [panel page and route Pattern](../../patterns/frontend/panel-page-and-route.md) for routing and not-found behavior.
+- Use shared UI controls and tokens from `src/styles/tokens.css`. Prefer semantic tokens; do not scatter raw colors or copy component behavior into pages. The document root is intentionally 14px.
+- Preserve semantic, keyboard-operable controls and visible focus states. Respect `prefers-reduced-motion` for nonessential animation; keep loading states layout-stable.
+- Use the saved workspace locale/timezone via `src/utils/dateFormatting.js`, not browser-locale formatting.
+- Use Lucide icons already installed and size them in the component that owns the shared UI.
+- When the user supplies reference markup, computed CSS, or a screenshot, load the [MaintainX UI reference Skill](../maintainx-ui-reference/SKILL.md); preserve literal element hierarchy when HTML is provided and distinguish external reference observations from established Workbench rules.
+- Keep page behavior aligned with current source and relevant domain/API/security Skills. UI visibility is not authorization; follow the [permissioned feature boundary Pattern](../../patterns/security/permissioned-feature-boundary.md) for protected actions.
 
-Teammate administration uses `/settings/teammates/users`, `/settings/teammates/teams`, and `/settings/teammates/roles` as subpages within the Manage Teammates settings area. Show the built-in organization roles Requester, Technician, Supervisor, and Organization Admin separately from persisted custom roles; do not present application-level Superadmin as an organization role. Custom roles use the real granular permission catalog and must not render fabricated permission toggles.
+## Routing
 
-Manage Teammates subpages use a consistent header action pattern: place the standard tokenized search field with a clear `X` beside the primary action, filter loaded records when a data model exists, and preserve the search affordance on scaffolded pages until persistence is connected.
+Load the [panel page and route Pattern](../../patterns/frontend/panel-page-and-route.md) when adding pages or record routes. Route paths are built in `src/routes.js`; lazy route registration is in `src/routes/routeConfig.jsx`.
 
-User role assignment uses persisted `organization_members.role_id` values and the organization role list; do not use the legacy text role as the selector value. Custom-role deletion must require a replacement role in a reassignment modal.
+## Feature patterns
 
-Every module or feature must own a permission catalog before its authorization UI is built. A user has one effective organization role. Custom roles use a "Create from" baseline and copy its permissions at creation time. Deleting a role with assigned users must use a reassignment modal and must not complete until every affected user has a replacement role. Superadmin is platform-only and must never appear in organization-facing UI.
+- Categorized remote records: [categorized remote inbox](../../patterns/frontend/categorized-remote-inbox.md).
+- Organization, member, role, and invitation screens: [organization administration](../../patterns/frontend/organization-administration.md).
+- Sidebar, authenticated shell, and settings pages: [application shell and settings](../../patterns/frontend/application-shell-and-settings.md).
+- Forms, selectors, tables, and images: [shared UI controls](../../patterns/frontend/shared-ui-controls.md).
 
-The current cross-module catalog and built-in-role baselines live in `src/services/permissionCatalog.js`; extend that catalog when adding a feature instead of inventing permission keys inside a page component. Use granular action keys, including nested feature actions, and render organization-wide actions as allow/deny rather than a misleading record scope.
+## Validation
 
-For Work Orders, Technician permissions distinguish core editing from execution: technicians may change execution state on work orders assigned to them, including status and procedure progress, but may not edit core details on work orders they did not create.
-
-User rows navigate to `/users/profile/:userId`, whose detail scaffold uses real organization-member/profile data for identity fields. Keep activity, work-order history, permissions, teams, and unavailable account actions as explicit empty or disabled states until their data models and services exist; never fill the profile scaffold with mock records.
-
-People-table names, last-visit cells, and row action menus are shared through `src/components/people/UserTableCells.jsx` and `src/components/people/UserRowActions.jsx`; keep row behavior out of dense page-level column definitions.
-
-The user profile permission panel renders the complete MaintainX-style catalog grouped by module, using enabled and disabled status icons; do not render only the permissions currently granted because the panel is an audit view.
-
-Use the React Router route boundaries in `src/App.jsx` and the route registry in `src/routes/routeConfig.jsx` for navigation. Keep page modules lazy-loaded and render them through the shared loading fallback; do not reintroduce direct `history.pushState` navigation or eager-import every route page.
-
-Date and time values must use the saved `workspace.preferences.date_format`, `workspace.preferences.timezone`, and related localization preferences. Use `src/utils/dateFormatting.js` rather than browser-locale defaults or page-specific date formatters so every module renders dates consistently.
-
-Last Visit-style values use `formatLastVisitForUser`: show `Today` and `Yesterday`, use the weekday for earlier dates in the current configured week, and use the selected date format for older dates.
-
-The authenticated shell is gated by `WorkspaceProvider`. During session/workspace hydration, show the shared neutral loading surface and spinner; render the sidebar and page together only after authoritative workspace data is ready. Workspace failures must show the shared retry state instead of placeholder identity or organization values. Authenticated users without an active organization membership must receive a centralized no-access or suspended-access state before the shell renders; do not duplicate this gate in individual pages.
-
-Unknown record IDs under a valid section route must preserve the parent `PanelView` and render the shared `PanelRecordNotFound` state in its detail pane. Unknown authenticated top-level routes must preserve `AppLayout` and render only the artwork in the main content area. Public splash and authentication routes remain outside the application shell.
-
-Use Lucide icons already installed in the project. Keep icon sizing controlled by the component that owns the shared UI so changes propagate consistently.
-Use the Lucide `LoaderCircle` with a scoped rotation animation for page-level loading states; keep the loading container’s layout and spacing stable while data is fetched.
-
-Store production browser and PWA branding assets in `public/`, including the favicon, Apple touch icon, and 192px/512px install icons referenced by `manifest.webmanifest`. Keep icon-set reference sheets outside `public/` so they are not shipped as application assets.
-
-Use `src/components/ui/Avatar.jsx` for every user avatar. Render the uploaded image when available; otherwise derive initials from first and last names, or only the first name when no last name exists, with `A` as the neutral fallback. Do not create page-specific avatar fallback logic.
-
-Use `src/components/ui/ImageDropzone.jsx` for reusable image selection and drag/drop areas. It owns accepted-image filtering, drag-over state, local previews, removal, and the hidden file input; feature pages provide the `onChange` boundary.
-
-Use `src/components/ui/Select.jsx` for standard dropdowns. It provides the shared styled trigger, rotating Lucide chevron, focus tokens, outside-click dismissal, keyboard navigation, and listbox semantics. Options may provide `disabled: true` and a Lucide `icon` for unavailable choices or explanatory affordances; disabled options remain muted and non-interactive. Keep specialized selectors, such as phone-country selection, separate only when they need custom option content.
-
-`Select` also supports reusable multi-select values and option avatars through the `multiple` and `avatar` option props. Use this for assignment controls that need user avatars/initials; do not build page-specific multi-select menus.
-
-Use `src/components/ui/DatePicker.jsx` for date fields that need the shared `react-calendar` experience. Its calendar opens only from the calendar icon; the adjacent date text remains manually editable and emits ISO date values. Keep calendar container, navigation, weekday, and tile styling in `DatePicker.css` so reference computed CSS remains reusable.
-
-Use `src/components/ui/DataTable.jsx` for reusable sortable tables. Supply column definitions and row renderers rather than copying table markup; the component owns sort state, sortable header icons, responsive overflow, and the empty state.
-
-`PanelViewSelector` owns the reusable panel/table view menu. Its default options are Panel View and a muted, locked Table View until table rendering exists; modules may pass additional view options without copying the selector interaction or menu markup.
-The panel view selector uses only a pointer cursor on hover and has no trigger hover or focus visual state; do not add color, background, border, or outline changes for those states. Its label uses primary ink while the view icon and chevron use secondary gray.
-
-## Sidebar reference tokens
-
-- Group headings use `0.8571rem` font size and `1.2857rem` line-height.
-- Navigation items use 32px height, 8px padding, and an 8px radius.
-- `.page-content` owns scrolling and uses `scrollbar-gutter: stable` so pages do not shift when a scrollbar appears; `.page-content-inner` owns the standard 16px shell inset. Full-bleed `PanelView` pages may offset that inset with matching `-16px` margins, but their visible content must remain one 16px inset from the shell edge.
-- Page headers must remain visible while the page scrolls: use the shared sticky treatment for `.page-heading`, `.panel-view-header`, and `.settings-page-header`, with an opaque surface background and stacking order below the sidebar menus.
-- The settings page uses a viewport-based two-row layout: the header occupies the first row, the navigation and details share the second-row top edge, and only the details column scrolls. Do not align these areas with fixed pixel offsets.
-- The authenticated shell owns page scrolling through `.main-shell` and `.page-content`; settings pages must fill that shell rather than allowing the document body to scroll the entire settings layout. Keep overflow containment scoped to the authenticated shell so public splash and authentication pages retain normal document scrolling on mobile.
-- The authenticated shell checks the build-generated `/version.json` and shows a refresh notice only when a newer deployment is detected; keep this update prompt non-blocking and separate from ordinary data refreshes.
-- `/settings/general` displays the human-readable build label from `/version.json` at the bottom of its settings card.
-- The sidebar account popover and settings navigation share the same section headings, divider, item spacing, radius, and hover treatment; keep their navigation groupings synchronized.
-- Notification Settings uses grouped cards with a shared event matrix: event labels in the main column and Email/In-App toggle columns, implemented with the reusable notification row/toggle pattern in `src/pages/SettingsPage.jsx`.
-- The reusable `PanelView` list header is opt-in through `showListHeader`; keep it hidden on scaffolded pages until their list actions are implemented.
-- Icon-only edit controls use color-only hover feedback with `var(--icon-hover)` (`rgb(97 174 255)`); do not add a hover background behind the icon.
-- Account sign-out and destructive removal actions use `var(--signout)` (`rgb(236 65 70)`) and `var(--signout-hover)` (`rgb(236 65 70 / 75%)`) with no hover background. The MaintainX-style linked-device modal keeps its reversible per-device `Sign out` action as a blue primary button.
-- Active items use `#E7F3FE` as the background, normal 400 weight, and `#1E2429` for the root text color; active icon and label treatments may apply the accent blue separately.
-- When matching reference designs, compare computed styles and rendered fonts in addition to screenshots.
-- When the user provides computed CSS values from a reference UI, reproduce those values exactly in the corresponding Workbench-owned styles unless they conflict with an explicit Workbench token or accessibility requirement; do not substitute approximate spacing or dimensions.
-- The collapsed sidebar root uses `padding: 0`; section spacing belongs to `.sidebar-header` and `.sidebar-nav`, while `.sidebar-bottom` remains `padding: 0`.
-- The collapsed sidebar width is `50px`, exposed as `--sidebar-collapsed-width`; preserve the legacy `--sidebarCollapsedWidth` alias when changing sidebar geometry.
-- The expanded sidebar width is `246px`, exposed as `--sidebar-expanded-width` and the alias `--sidebarWidth`.
-- Sidebar item icons are assigned through the `icon` property in the `groups` configuration in `src/components/layout/Sidebar.jsx`; use installed Lucide icons rather than duplicating navigation markup.
-- Nested sidebar destinations must automatically open their parent group when the nested route is active, so deep-linked pages remain visible and selected in navigation.
-- Sidebar expand/collapse uses a short 160ms width transition; preserve this when changing collapsed-state geometry.
-- Scrollbars use the shared global rules in `src/styles/globals.css`: thin Firefox scrollbars and custom WebKit track/thumb styling with arrow buttons hidden. Do not add one-off scrollbar styling to page/component CSS unless a control intentionally hides or replaces its scrollbar (such as the custom preset-number menu). Sidebar navigation scrolling is owned by `.sidebar-nav`; keep `.sidebar-bottom` outside the scroll region.
-- The account area in `.settings-menu-root` owns the account popover and Supabase sign-out action; close it on outside pointer interaction and keep account identity sourced from `workspaceService.js`.
-- Organization and personal settings use the shared route-backed `src/pages/SettingsPage.jsx`; Manage Teammates and Invite Users use the organization and invitation services for membership administration and generated invite links. Keep Invite Users form-only; invitation history and revocation belong in the user-management views.
-- Profile Preferences uses workspace identity from `src/services/workspaceService.js`; profile, phone, avatar, and localization controls persist through `src/services/profileService.js`.
-- Profile Preferences renders MaintainX-style linked devices from `src/services/sessionService.js`: device rows open a modal with device name/type, browser, operating system, last connection, optional IP address, current-device state, and a per-device logout action; keep loading, empty, and error states explicit. The modal action uses an inline-flex `LogOut` icon and label, while Cancel gets blue hover/focus border feedback without changing its neutral default appearance.
-- Tork destinations (`Chat`, `Routines`, and `History`) intentionally render only the Workbench 404 artwork inside the authenticated app shell until their UI is designed.
-
-Validate visual refactors with `npm.cmd run lint` and `npm.cmd run build`.
+Run `npm.cmd run verify` for UI changes. For meaningful layout or interaction changes, also inspect the rendered state at the affected viewport and test keyboard/reduced-motion behavior where applicable.

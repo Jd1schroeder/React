@@ -1,11 +1,15 @@
 ---
 name: api
-description: Add API-backed behavior to Workbench when backend contracts become available.
+description: Maintain Workbench's Supabase services, Edge Function integrations, and browser/backend contracts.
 ---
 
 # API Skill
 
-Supabase is configured through `src/lib/supabase.js` using `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. Authentication calls belong in `src/services/authService.js`; do not place Supabase calls directly into presentational components. Signup metadata is consumed by the organization-provisioning trigger in the latest profile/provisioning migration (`supabase/migrations/20260918080000_add_profile_phone.sql`).
+Related Patterns: [Supabase service boundary](../../patterns/data-access/supabase-service-boundary.md), [secure attachment workflow](../../patterns/data-access/secure-attachment-workflow.md), [categorized remote inbox](../../patterns/frontend/categorized-remote-inbox.md), [permissioned feature boundary](../../patterns/security/permissioned-feature-boundary.md).
+
+Related Decisions: [003](../../decisions/003-supabase-service-data-access.md), [004](../../decisions/004-signup-organization-provisioning.md), [006](../../decisions/006-authorization-and-forward-only-security.md), [008](../../decisions/008-work-order-creation-and-persistence.md), [009](../../decisions/009-work-order-inbox-query-and-review-state.md).
+
+Supabase is configured through `src/lib/supabase.js` using `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. Authentication calls belong in `src/services/authService.js`; do not place Supabase calls directly into presentational components. Signup metadata is consumed by the Auth organization-provisioning trigger (`supabase/migrations/20260917000000_create_organizations.sql`), with built-in role seeding maintained by forward migration `20260928130000_provision_system_roles_for_new_organizations.sql`.
 
 For Vercel deployments, configure both `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` as public Config variables for every required environment, then create a fresh deployment because Vite injects `VITE_*` values at build time. Do not store these browser-exposed values as immutable Secrets if the deployment workflow needs to update them. Never expose a Supabase service-role key in a `VITE_*` variable or in the browser.
 
@@ -31,7 +35,7 @@ Work Order reviewed state is per user. `loadWorkOrderRelations` decorates fetche
 
 The sidebar Work Orders badge loads through `getUnreadWorkOrderCount` and the `get_unread_work_order_count` RPC. It covers all statuses in the selected organization, while RLS limits the aggregate to Work Orders the current user can view; mutations and Work Order creation invalidate the in-app badge count.
 
-The creation RPC is `SECURITY DEFINER` only as a narrow workaround for an authenticated INSERT RLS failure; it must validate the caller's create permission, each assignment target, and each uploaded attachment's organization/uploader/Work Order path and object existence before writing. Keep direct table RLS restrictive.
+The Work Order create RPC is a narrow `SECURITY DEFINER` boundary. Preserve its independent caller, assignment, organization/path, and object validation; see the [secure attachment workflow Pattern](../../patterns/data-access/secure-attachment-workflow.md) and [Decision 008](../../decisions/008-work-order-creation-and-persistence.md) for the full contract.
 
 The workspace service also loads the current user's team IDs for the selected organization. Pass team context to Work Order UI authorization only as a rendering aid; the Work Order service and RLS remain authoritative.
 
@@ -45,9 +49,7 @@ When an invite recipient is signed out, preserve the raw invitation token only i
 
 Explicit audit writes use the `record_audit_event` database function, which derives the actor from `auth.uid()` and checks organization-admin authorization. Organization, membership, and invitation mutation triggers record their own audit events atomically; client mutation services must not add duplicate audit calls. Do not insert arbitrary audit rows directly from browser code.
 
-Avatar files must be uploaded through the `upload-avatar` Supabase Edge Function, which authenticates the caller, checks the file's detected content type and size, and writes to the private `avatars` Storage bucket using a user-scoped path. The bucket configuration and Storage RLS provide a second server-side enforcement layer. Organization-owned files should use a separate private bucket with organization-scoped paths and membership-backed Storage RLS. Use buckets for access or lifecycle boundaries rather than creating one bucket per organization. Persist storage paths in profiles or domain rows and generate short-lived signed URLs only when data is loaded for display; never store temporary browser blob URLs or expiring signed URLs.
-
-The avatar upload function requires the deployment environment variable `WORKBENCH_ALLOWED_ORIGINS` to contain the exact Workbench origins that may call it. It must not use a service-role key in browser code; the function forwards the caller's access token so Storage RLS remains effective.
+Avatar uploads use `supabase/functions/upload-avatar/index.ts`; bucket and CORS security requirements are canonical in the Security Skill. The browser calls the function through its feature service and stores only the durable avatar path.
 
 When API work begins:
 
@@ -64,6 +66,6 @@ The invitation contract should resolve the allowed membership role for the curre
 - Use `sessionStorage` only for short-lived flow state. The current approved key is `workbench.pendingInviteToken`, which may bridge login or email verification and must be removed after invitation acceptance or cancellation.
 - Never store access tokens, refresh tokens, passwords, authorization decisions, profile records, organization records, or signed URLs in application-managed browser storage. Supabase Auth owns its session persistence.
 - Persist profile, preference, membership, invitation, and audit data in Supabase and reload it through services. Namespace any future browser keys under `workbench.` and document their owner, sensitivity, lifetime, and cleanup behavior before adding them.
-Organization member account edits use the authenticated `manage-user-account` Edge Function. The function checks `organization.edit_user_accounts` through the caller JWT, validates organization membership, and performs Auth email changes with the service-role key only inside the function; browser code must use `src/services/userAccountService.js` and must never call the Auth admin API directly.
+Organization member account edits use `src/services/userAccountService.js` and the authenticated `manage-user-account` Edge Function; authorization and secret-handling requirements are canonical in the Security Skill.
 
 Passkey authentication uses the experimental Supabase Auth WebAuthn API through `src/services/authService.js`. The browser client must opt in with `auth.experimental.passkey`; registration belongs in authenticated Profile Preferences and sign-in belongs on the public login page. Passkeys require a stable configured WebAuthn relying-party ID and exact allowed origins in the Supabase project. Treat browser cancellation/timeouts as a neutral user notice rather than a registration failure.
