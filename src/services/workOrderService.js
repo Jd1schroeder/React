@@ -221,6 +221,78 @@ export async function createWorkOrder({ organizationId, title, description, prio
   return createdWorkOrder
 }
 
+export async function updateWorkOrderDetails({ organizationId, workOrderId, title, description, priority, dueDate, dueTime, startDate, estimatedDurationMinutes, workType = 'reactive', assignments = null, pictures = [], files = [], grants, record }) {
+  assertPermission(grants, 'work_orders.edit', record)
+  if (assignments !== null) assertPermission(grants, 'work_orders.assign')
+  if (!title?.trim()) throw new Error('A Work Order title is required.')
+  if (!['Low', 'Medium', 'High', 'Urgent'].includes(priority) && priority !== null) throw new Error('Choose a valid Work Order priority.')
+  if (!['reactive', 'preventive'].includes(workType)) throw new Error('Choose a valid Work Type.')
+  if (estimatedDurationMinutes != null && (!Number.isInteger(estimatedDurationMinutes) || estimatedDurationMinutes <= 0)) throw new Error('Estimated time must be greater than zero minutes.')
+
+  const filesToUpload = [
+    ...pictures.map((file) => ({ file, kind: 'image' })),
+    ...files.map((file) => ({ file, kind: 'file' })),
+  ]
+  for (const { file } of filesToUpload) {
+    if (!file.size || file.size > WORK_ORDER_ATTACHMENT_MAX_BYTES) throw new Error(`${file.name} must be between 1 byte and 10 MB.`)
+    if (file.name.length > 255) throw new Error(`${file.name} has a filename longer than 255 characters.`)
+  }
+
+  const { data: authData, error: authError } = await supabase.auth.getUser()
+  if (authError) throw authError
+  if (!authData.user) throw new Error('You must be signed in to edit a Work Order.')
+
+  const uploadedObjects = []
+  const attachmentRecords = []
+  let updatedWorkOrder
+  try {
+    for (const { file, kind } of filesToUpload) {
+      const attachmentId = crypto.randomUUID()
+      const storagePath = `${organizationId}/${authData.user.id}/${workOrderId}/${attachmentId}${getSafeAttachmentExtension(file.name)}`
+      const { error: uploadError } = await supabase.storage.from(attachmentBucket).upload(storagePath, file, {
+        cacheControl: '3600',
+        contentType: file.type || 'application/octet-stream',
+        upsert: false,
+      })
+      if (uploadError) throw uploadError
+      uploadedObjects.push(storagePath)
+      attachmentRecords.push({
+        id: attachmentId,
+        kind,
+        storage_path: storagePath,
+        file_name: file.name,
+        content_type: file.type || 'application/octet-stream',
+        byte_size: file.size,
+        is_thumbnail: false,
+      })
+    }
+
+    const { data, error } = await supabase.rpc('update_work_order_with_assignments', {
+      target_work_order_id: workOrderId,
+      target_organization_id: organizationId,
+      target_title: title.trim(),
+      target_description: description?.trim() || null,
+      target_priority: priority ?? null,
+      target_due_date: dueDate ?? null,
+      target_due_time: dueTime ?? null,
+      target_start_date: startDate ?? null,
+      target_estimated_duration_minutes: estimatedDurationMinutes ?? null,
+      target_work_type: workType,
+      target_assignments: assignments === null ? null : assignments.map(({ userId, teamId }) => ({ user_id: userId ?? null, team_id: teamId ?? null })),
+      target_attachments: attachmentRecords,
+    })
+    if (error) throw error
+    updatedWorkOrder = data
+  } catch (error) {
+    if (uploadedObjects.length) await supabase.storage.from(attachmentBucket).remove(uploadedObjects).catch(() => {})
+    throw error
+  }
+
+  const [hydratedWorkOrder] = await loadWorkOrderRelations([updatedWorkOrder])
+  notifyUnreadWorkOrderCountInvalidated()
+  return hydratedWorkOrder
+}
+
 export async function updateWorkOrder({ organizationId, workOrderId, updates, grants, permissionKey = 'work_orders.edit', record }) {
   assertPermission(grants, permissionKey, record)
   const { data, error } = await supabase

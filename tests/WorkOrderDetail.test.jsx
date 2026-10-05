@@ -89,6 +89,20 @@ describe('WorkOrderDetail authorization', () => {
     expect(onStatusChange).toHaveBeenCalledWith(selected, 'Completed')
   })
 
+  it('routes the header and ellipsis Edit actions to the edit flow', () => {
+    const onEdit = vi.fn()
+    render(<WorkOrderDetail selected={selected} userId="user-a" grants={{
+      'work_orders.edit': 'own',
+    }} onEdit={onEdit} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    expect(onEdit).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getByRole('button', { name: 'More work order actions' }))
+    fireEvent.click(within(screen.getByRole('menu', { name: 'Work Order actions' })).getByRole('menuitem', { name: 'Edit' }))
+    expect(onEdit).toHaveBeenCalledTimes(2)
+  })
+
   it('includes the remaining reference sections without claiming unsupported features', () => {
     render(<WorkOrderDetail selected={{ ...selected, estimated_duration_minutes: 60 }} userId="user-a" grants={{
       'work_orders.view_comments': 'own',
@@ -115,7 +129,7 @@ describe('WorkOrderDetail authorization', () => {
     expect(within(menu).getByRole('menuitem', { name: 'Mark as unread' })).toBeEnabled()
     expect(within(menu).getByRole('menuitem', { name: 'Edit' })).toBeDisabled()
     expect(within(menu).getByRole('menuitem', { name: 'Delete' })).toBeDisabled()
-    expect(menu.querySelectorAll('button.is-unavailable svg')).toHaveLength(7)
+    expect(menu.querySelectorAll('button.is-unavailable svg')).toHaveLength(6)
 
     fireEvent.click(within(menu).getByRole('menuitem', { name: 'Mark as unread' }))
     expect(onToggleRead).toHaveBeenCalledWith(selected)

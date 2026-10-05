@@ -136,6 +136,7 @@ function DetailMetadata({ icon: Icon, children }) {
 export function WorkOrderDetail({
   selected,
   missingRecord,
+  onEdit,
   onStatusChange,
   onToggleRead,
   isSavingReadState = false,
@@ -230,7 +231,7 @@ export function WorkOrderDetail({
       <Check size={15} aria-hidden="true" /> Mark as Done
     </button>
   ) : canEditDetails ? (
-    <button className="detail-header-action" type="button" disabled title="Work Order editing is not available yet.">
+    <button className="detail-header-action" type="button" onClick={onEdit} disabled={!onEdit}>
       <Pencil size={15} aria-hidden="true" /> Edit
     </button>
   ) : canChangeStatus && selected.status !== "Completed" ? (
@@ -289,8 +290,8 @@ export function WorkOrderDetail({
                 <EllipsisVertical size={17} />
               </button>
               {isMenuOpen && <div className="work-order-detail-menu" role="menu" aria-label="Work Order actions">
-                <button className="is-unavailable" type="button" role="menuitem" disabled title="Editing is not available yet.">
-                  <span>Edit</span><LockKeyhole size={14} aria-hidden="true" />
+                <button type="button" role="menuitem" disabled={!canEditDetails || !onEdit} onClick={() => { onEdit?.(); setIsMenuOpen(false); }}>
+                  <span>Edit</span>
                 </button>
                 <button type="button" role="menuitem" disabled={isSavingReadState || !onToggleRead} onClick={async () => { await onToggleRead(selected); setIsMenuOpen(false); }}>
                   <span>Mark as {selected.is_read ? "unread" : "read"}</span>

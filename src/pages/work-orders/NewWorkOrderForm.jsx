@@ -67,30 +67,52 @@ function DateField({ label, value, onChange, dateFormat, timeValue = "", onTimeC
 export function NewWorkOrderForm({
   onCancel,
   onCreate,
+  onUpdate,
   isSaving = false,
   error = "",
   assigneeOptions = [],
   canAssign = true,
   dateFormat,
+  mode = "create",
+  initialWorkOrder = null,
 }) {
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
+  const existingAssignments = initialWorkOrder?.work_order_assignments ?? [];
+  const currentAssignmentValues = existingAssignments.length
+    ? existingAssignments.map((assignment) => assignment.user_id ? `user:${assignment.user_id}` : `team:${assignment.team_id}`)
+    : [
+      ...(initialWorkOrder?.assigned_to ? [`user:${initialWorkOrder.assigned_to}`] : []),
+      ...(initialWorkOrder?.team_id ? [`team:${initialWorkOrder.team_id}`] : []),
+    ];
+  const formAssigneeOptions = [...assigneeOptions];
+  for (const value of currentAssignmentValues) {
+    if (!formAssigneeOptions.some((option) => option.value === value)) {
+      formAssigneeOptions.push({ value, label: value.startsWith('user:') ? 'Assigned user' : 'Assigned team' });
+    }
+  }
+  const durationMinutes = initialWorkOrder?.estimated_duration_minutes ?? 0;
+  const [form, setForm] = useState(() => ({
+    title: initialWorkOrder?.title ?? "",
+    description: initialWorkOrder?.description ?? "",
     location: "",
     asset: "",
-    assignee: [],
-    dueDate: "",
-    dueTime: "",
-    startDate: "",
+    assignee: existingAssignments.length
+      ? existingAssignments.map((assignment) => assignment.user_id ? `user:${assignment.user_id}` : `team:${assignment.team_id}`)
+      : [
+        ...(initialWorkOrder?.assigned_to ? [`user:${initialWorkOrder.assigned_to}`] : []),
+        ...(initialWorkOrder?.team_id ? [`team:${initialWorkOrder.team_id}`] : []),
+      ],
+    dueDate: initialWorkOrder?.due_date ?? "",
+    dueTime: initialWorkOrder?.due_time?.slice(0, 5) ?? "",
+    startDate: initialWorkOrder?.start_date ?? "",
     recurrence: "none",
-    workType: "reactive",
-    priority: "None",
+    workType: initialWorkOrder?.work_type ?? "reactive",
+    priority: initialWorkOrder?.priority ?? "None",
     parts: "",
     categories: "",
     vendors: "",
-    hours: "0",
-    minutes: "0",
-  });
+    hours: String(Math.floor(durationMinutes / 60)),
+    minutes: String(durationMinutes % 60),
+  }));
   const [pictures, setPictures] = useState([]);
   const [thumbnail, setThumbnail] = useState(null);
   const [files, setFiles] = useState([]);
@@ -117,7 +139,7 @@ export function NewWorkOrderForm({
     event.preventDefault();
     if (fileError) return;
     const durationMinutes = (Number(form.hours) || 0) * 60 + (Number(form.minutes) || 0);
-    onCreate({
+    const values = {
       title: form.title,
       description: form.description,
       priority: form.priority === "None" ? null : form.priority,
@@ -133,7 +155,9 @@ export function NewWorkOrderForm({
       pictures,
       thumbnail,
       files,
-    });
+    };
+    if (mode === "edit") onUpdate?.(values);
+    else onCreate?.(values);
   };
 
   return (
@@ -143,7 +167,7 @@ export function NewWorkOrderForm({
     >
       <header className="new-work-order-header">
         <div className="new-work-order-header-content">
-          <h2 id="new-work-order-title">New Work Order</h2>
+          <h2 id="new-work-order-title">{mode === "edit" ? "Edit Work Order" : "New Work Order"}</h2>
         </div>
       </header>
       <form className="new-work-order-form" onSubmit={submit}>
@@ -156,7 +180,27 @@ export function NewWorkOrderForm({
               <LockKeyhole size={15} aria-hidden="true" /> Use a Template
             </button>
           </FormRow>
-          <FormRow><ImageDropzone onChange={setPictures} onThumbnailChange={setThumbnail} /></FormRow>
+          {mode === "edit" && initialWorkOrder?.work_order_attachments?.length > 0 && (
+            <FormRow>
+              <section className="new-work-order-current-attachments" aria-label="Current attachments">
+                <h3>Current attachments</h3>
+                <ul>
+                  {initialWorkOrder.work_order_attachments.map((attachment) => (
+                    <li key={attachment.id}>
+                      {attachment.kind === "image" || attachment.content_type?.startsWith("image/")
+                        ? attachment.signed_url
+                          ? <img src={attachment.signed_url} alt={attachment.file_name} loading="lazy" />
+                          : <span className="new-work-order-current-attachment-unavailable">Image preview unavailable</span>
+                        : <Paperclip size={16} aria-hidden="true" />}
+                      <span>{attachment.file_name}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p>Existing attachments are kept when you save.</p>
+              </section>
+            </FormRow>
+          )}
+          <FormRow><ImageDropzone onChange={setPictures} onThumbnailChange={setThumbnail} allowThumbnailSelection={mode !== "edit"} /></FormRow>
           <FormRow>
             <FormField label="Description">
               <textarea value={form.description} onChange={(event) => update("description", event.target.value)} placeholder="Add a description" rows="4" />
@@ -183,7 +227,7 @@ export function NewWorkOrderForm({
               <button type="button" className="new-work-order-secondary" disabled><LockKeyhole size={15} aria-hidden="true" /> Add Procedure</button>
             </section>
           </FormRow>
-          <FormRow><SearchSelect label="Assign to" placeholder={canAssign ? "Type name" : "Assignment unavailable"} value={form.assignee} onChange={(value) => update("assignee", value)} options={assigneeOptions} multiple disabled={!canAssign} /></FormRow>
+          <FormRow><SearchSelect label="Assign to" placeholder={canAssign ? "Type name" : "Assignment unavailable"} value={form.assignee} onChange={(value) => update("assignee", value)} options={formAssigneeOptions} multiple disabled={!canAssign} /></FormRow>
           <FormRow>
             <fieldset className="new-work-order-fieldset">
               <legend>Estimated Time</legend>
@@ -248,7 +292,7 @@ export function NewWorkOrderForm({
         <footer className="new-work-order-footer">
           <button type="button" className="new-work-order-cancel" onClick={onCancel}>Cancel</button>
           <Button type="submit" className="new-work-order-create" disabled={isSaving || !form.title.trim()}>
-            {isSaving ? "Creating..." : "Create"}
+            {isSaving ? (mode === "edit" ? "Saving..." : "Creating...") : (mode === "edit" ? "Save changes" : "Create")}
           </Button>
         </footer>
       </form>

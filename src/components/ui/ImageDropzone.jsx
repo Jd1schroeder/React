@@ -25,6 +25,7 @@ export function ImageDropzone({
   multiple = true,
   onChange,
   onThumbnailChange,
+  allowThumbnailSelection = true,
 }) {
   const inputRef = useRef(null);
   const itemsRef = useRef([]);
@@ -34,6 +35,10 @@ export function ImageDropzone({
 
   const getItemKey = (item) => `${item.file.name}-${item.file.size}-${item.file.lastModified}`;
   const notifyThumbnail = (next, preferredKey = thumbnailKey) => {
+    if (!allowThumbnailSelection) {
+      onThumbnailChange?.(null);
+      return;
+    }
     const thumbnail = next.find((item) => getItemKey(item) === preferredKey) ?? next[0];
     setThumbnailKey(thumbnail ? getItemKey(thumbnail) : "");
     onThumbnailChange?.(thumbnail?.file ?? null);
@@ -90,6 +95,7 @@ export function ImageDropzone({
   };
 
   const selectThumbnail = (item) => {
+    if (!allowThumbnailSelection) return;
     const nextKey = getItemKey(item);
     setThumbnailKey(nextKey);
     onThumbnailChange?.(item.file);
@@ -117,17 +123,17 @@ export function ImageDropzone({
               const { file, url } = item;
               return (
               <div
-                className={`image-dropzone-preview${getItemKey(item) === thumbnailKey ? " is-thumbnail" : ""}`}
+                className={`image-dropzone-preview${allowThumbnailSelection && getItemKey(item) === thumbnailKey ? " is-thumbnail" : ""}`}
                 key={`${file.name}-${file.lastModified}`}
-                role="button"
-                tabIndex="0"
-                aria-pressed={getItemKey(item) === thumbnailKey}
-                aria-label={`${file.name}${getItemKey(item) === thumbnailKey ? ", work order thumbnail" : ", select as work order thumbnail"}`}
-                onClick={() => selectThumbnail(item)}
-                onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectThumbnail(item); } }}
+                role={allowThumbnailSelection ? "button" : undefined}
+                tabIndex={allowThumbnailSelection ? "0" : undefined}
+                aria-pressed={allowThumbnailSelection ? getItemKey(item) === thumbnailKey : undefined}
+                aria-label={allowThumbnailSelection ? `${file.name}${getItemKey(item) === thumbnailKey ? ", work order thumbnail" : ", select as work order thumbnail"}` : undefined}
+                onClick={allowThumbnailSelection ? () => selectThumbnail(item) : undefined}
+                onKeyDown={allowThumbnailSelection ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectThumbnail(item); } } : undefined}
               >
                 <img src={url} alt={file.name} />
-                {getItemKey(item) !== thumbnailKey && (
+                {allowThumbnailSelection && getItemKey(item) !== thumbnailKey && (
                   <span className="image-dropzone-thumbnail-action">
                     Set as Thumbnail
                   </span>

@@ -581,6 +581,55 @@
   color: var(--icon-secondary);
   background: transparent;
 }
+.new-work-order-current-attachments {
+  width: 100%;
+}
+.new-work-order-current-attachments h3 {
+  margin: 0 0 var(--spacing-3);
+  color: var(--ink);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-semibold);
+}
+.new-work-order-current-attachments ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.new-work-order-current-attachments li {
+  display: flex;
+  width: 112px;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+}
+.new-work-order-current-attachments img,
+.new-work-order-current-attachment-unavailable {
+  display: grid;
+  width: 112px;
+  height: 84px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--radius-control);
+  color: var(--text-tertiary);
+  background: var(--surface-subtle);
+  object-fit: cover;
+  text-align: center;
+}
+.new-work-order-current-attachments li > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.new-work-order-current-attachments p {
+  margin: var(--spacing-2) 0 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-xs);
+}
 .new-work-order-field .date-picker-trigger input,
 .new-work-order-field .date-picker-trigger input:focus {
   width: auto;

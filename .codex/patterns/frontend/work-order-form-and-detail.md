@@ -11,6 +11,9 @@ Changing Work Order creation fields, form layout, attachment inputs, or the sele
 ## Pattern
 
 - `NewWorkOrderForm` owns editable form state and emits a domain payload through `onCreate`; `WorkOrders.jsx` coordinates services and the panel layout. Do not add persistence calls to the form component.
+- Reuse `NewWorkOrderForm` for edits with `mode="edit"` and `initialWorkOrder`; prefill only fields supported by persistence and send changes through `onUpdate`. Keep the page as the mutation coordinator and route header/menu Edit actions through record-scoped `work_orders.edit` authorization.
+- For updates, send `assignments: null` when assignment targets are unchanged or the actor cannot assign. When targets change, authorize with `work_orders.assign` and replace assignment rows transactionally alongside legacy assignment projections.
+- Keep existing private attachments intact during an edit. Preview them as existing attachments, append new uploads without changing the existing thumbnail, and roll back newly uploaded storage objects if the transactional metadata update fails. Storage upload permission for edits must be scoped to the exact organization and Work Order and still require `work_orders.edit`.
 - Keep the form header and footer fixed within the pane and put long-form fields in `.new-work-order-scroll`; preserve the existing responsive row/layout CSS in `src/pages/WorkOrders.css`.
 - Use shared `DatePicker`, `Select`, `PresetNumberInput`, `ImageDropzone`, `Button`, and `Avatar` components where their contracts fit. Keep unavailable fields explicitly disabled rather than implying they persist.
 - Attachments pass `File` objects and selected pictures to the service boundary. Preserve the configured per-file size validation and let the service own private upload, metadata, rollback, and atomic create behavior; see the secure attachment Pattern and Decision 008.
