@@ -272,7 +272,6 @@ function WorkOrderListItem({
           />
           <div className="work-order-item-tags">
             <PriorityBadge priority={order.priority} />
-            <span className="work-order-item-due">{order.due}</span>
           </div>
         </div>
       </div>

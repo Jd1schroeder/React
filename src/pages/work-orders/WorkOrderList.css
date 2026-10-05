@@ -111,7 +111,7 @@
 }
 .work-order-sort-row {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: block;
   flex: 0 0 auto;
   width: 100%;
@@ -627,9 +627,17 @@
   pointer-events: none;
 }
 .work-order-item-secondary {
+  box-sizing: border-box;
+  display: block;
+  flex: 0 0 auto;
   min-width: 0;
-  color: var(--text-disabled-muted);
-  font-size: var(--font-size-xs);
+  min-height: 0;
+  color: var(--text-navigation);
+  font-family: var(--font-family);
+  font-size: 0.9rem;
+  font-style: normal;
+  font-weight: var(--font-normal);
+  line-height: normal;
   white-space: nowrap;
 }
 .work-order-item-requester {
@@ -653,11 +661,6 @@
   flex: 0 0 auto;
   align-items: center;
   gap: var(--spacing-3);
-}
-.work-order-item-due {
-  color: var(--text-muted-light);
-  font-size: var(--font-size-xs);
-  white-space: nowrap;
 }
 .work-order-item-status-row > .work-order-status-control {
   pointer-events: auto;
