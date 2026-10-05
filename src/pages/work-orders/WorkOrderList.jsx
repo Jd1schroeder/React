@@ -45,6 +45,7 @@ function preloadWorkOrderThumbnails(orders) {
 function WorkOrderStatusMenu({ order, onStatusChange, canChangeStatus }) {
   const [isOpen, setIsOpen] = useState(false);
   const [openUp, setOpenUp] = useState(false);
+  const [menuPosition, setMenuPosition] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const rootRef = useRef(null);
   const menuRef = useRef(null);
@@ -52,20 +53,41 @@ function WorkOrderStatusMenu({ order, onStatusChange, canChangeStatus }) {
 
   useLayoutEffect(() => {
     if (!isOpen || !rootRef.current || !menuRef.current) return;
-    const scrollport = rootRef.current.closest(".work-order-list");
-    if (!scrollport) return;
-    const controlRect = rootRef.current.getBoundingClientRect();
-    const scrollportRect = scrollport.getBoundingClientRect();
-    const menuHeight = menuRef.current.getBoundingClientRect().height;
-    const roomBelow = scrollportRect.bottom - controlRect.bottom;
-    const roomAbove = controlRect.top - scrollportRect.top;
-    setOpenUp(roomBelow < menuHeight && roomAbove > roomBelow);
+    const updatePosition = () => {
+      if (!rootRef.current || !menuRef.current) return;
+      const scrollport = rootRef.current.closest(".work-order-list");
+      const controlRect = rootRef.current.getBoundingClientRect();
+      const menuRect = menuRef.current.getBoundingClientRect();
+      const scrollportRect = scrollport?.getBoundingClientRect();
+      const style = getComputedStyle(rootRef.current);
+      const gap = Number.parseFloat(style.getPropertyValue("--spacing-2")) || 0;
+      const topBoundary = Math.max(0, scrollportRect?.top ?? 0);
+      const bottomBoundary = Math.min(window.innerHeight, scrollportRect?.bottom ?? window.innerHeight);
+      const roomBelow = Math.max(0, bottomBoundary - controlRect.bottom - gap);
+      const roomAbove = Math.max(0, controlRect.top - topBoundary - gap);
+      const shouldOpenUp = roomBelow < menuRect.height && roomAbove > roomBelow;
+      const availableHeight = Math.max(80, shouldOpenUp ? roomAbove : roomBelow);
+      const height = Math.min(menuRef.current.scrollHeight, availableHeight);
+      const left = Math.max(0, Math.min(controlRect.left, window.innerWidth - menuRect.width));
+      const top = shouldOpenUp
+        ? Math.max(topBoundary, controlRect.top - gap - height)
+        : Math.min(controlRect.bottom + gap, bottomBoundary - height);
+      setOpenUp(shouldOpenUp);
+      setMenuPosition({ top, left, maxHeight: availableHeight });
+    };
+    updatePosition();
+    document.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      document.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+    };
   }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
     const dismiss = (event) => {
-      if (!rootRef.current?.contains(event.target)) setIsOpen(false);
+      if (!rootRef.current?.contains(event.target) && !menuRef.current?.contains(event.target)) setIsOpen(false);
     };
     const handleKeyDown = (event) => {
       if (event.key === "Escape") setIsOpen(false);
@@ -106,8 +128,19 @@ function WorkOrderStatusMenu({ order, onStatusChange, canChangeStatus }) {
         {currentStatus?.label ?? order.status}
         <ChevronDown size={12} className={isOpen ? "rotated" : ""} />
       </button>
-      {isOpen && (
-        <div ref={menuRef} className={`work-order-status-menu ${openUp ? "open-up" : ""}`} role="menu" aria-label="Work Order status">
+      {isOpen && createPortal(
+        <div
+          ref={menuRef}
+          className={`work-order-status-menu ${openUp ? "open-up" : ""}`}
+          role="menu"
+          aria-label="Work Order status"
+          style={{
+            top: menuPosition?.top ?? 0,
+            left: menuPosition?.left ?? 0,
+            maxHeight: menuPosition?.maxHeight,
+            visibility: menuPosition ? "visible" : "hidden",
+          }}
+        >
           {statusOptions.map((status) => {
             const StatusIcon = status.icon;
             const selected = status.value === order.status;
@@ -119,7 +152,8 @@ function WorkOrderStatusMenu({ order, onStatusChange, canChangeStatus }) {
               </button>
             );
           })}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
