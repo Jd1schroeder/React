@@ -24,6 +24,19 @@ const selected = {
 afterEach(cleanup)
 
 describe('WorkOrderDetail authorization', () => {
+  it('shows a loading state instead of a not-found illustration while lookup is pending', () => {
+    render(<WorkOrderDetail selected={null} isLoadingRecord missingRecord={false} grants={{}} />)
+
+    expect(screen.getByRole('status')).toHaveTextContent('Loading Work Order...')
+    expect(screen.queryByAltText('Workbench 404 illustration')).not.toBeInTheDocument()
+  })
+
+  it('shows the not-found illustration only after lookup confirms the record is missing', () => {
+    render(<WorkOrderDetail selected={null} missingRecord grants={{}} />)
+
+    expect(screen.getByAltText('Workbench 404 illustration')).toBeInTheDocument()
+  })
+
   it('hides unauthorized work-order actions', () => {
     render(<WorkOrderDetail selected={selected} grants={{}} userId="user-a" />)
 

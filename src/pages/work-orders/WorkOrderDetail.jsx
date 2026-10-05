@@ -135,6 +135,7 @@ function DetailMetadata({ icon: Icon, children }) {
 
 export function WorkOrderDetail({
   selected,
+  isLoadingRecord = false,
   missingRecord,
   onEdit,
   onCopy,
@@ -169,6 +170,15 @@ export function WorkOrderDetail({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isMenuOpen]);
+  if (isLoadingRecord)
+    return (
+      <section className="detail-pane" aria-busy="true">
+        <div className="detail-record-loading" role="status">
+          <span className="detail-record-loading-spinner" aria-hidden="true" />
+          <span>Loading Work Order...</span>
+        </div>
+      </section>
+    );
   if (missingRecord)
     return (
       <section className="detail-pane">
