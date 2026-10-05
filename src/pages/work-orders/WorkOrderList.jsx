@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "../../components/ui/Button";
+import { PriorityBadge } from "../../components/ui/PriorityBadge";
 import "./WorkOrderList.css";
 import {
   CalendarDays,
@@ -203,7 +204,7 @@ function WorkOrderListItem({ order, selected, isRead, onSelect, onStatusChange, 
         <div className="work-order-item-sub-row work-order-item-status-row">
           <WorkOrderStatusMenu order={order} onStatusChange={onStatusChange} canChangeStatus={canChangeStatus} />
           <div className="work-order-item-tags">
-            <span className={`priority priority-${(order.priority ?? "none").toLowerCase()}`} aria-label={`${order.priority ?? "None"} priority`}><i /></span>
+            <PriorityBadge priority={order.priority} />
             <span className="work-order-item-due">{order.due}</span>
           </div>
         </div>

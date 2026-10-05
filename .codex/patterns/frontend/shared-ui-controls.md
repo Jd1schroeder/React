@@ -11,6 +11,7 @@ Building a form, table, selection control, image input, avatar, or reusable menu
 ## Pattern
 
 - Use `Button`, `Select`, `DatePicker`, `DataTable`, `Avatar`, and `ImageDropzone` from `src/components/ui/` where their interaction fits; extend the shared component before creating a parallel control.
+- Use the shared `PriorityBadge` to display Work Order priorities consistently in list and detail views; keep the visible priority label, Lucide indicator, and token-based tone together instead of recreating page-specific badges.
 - `Avatar` owns image/initial fallback behavior. `ImageDropzone` owns image filtering, drag state, previews/removal, and its hidden input. `DataTable` owns sorting, responsive overflow, and empty presentation.
 - `Select` owns outside-click dismissal, keyboard navigation, listbox semantics, and its rotating chevron. Use its multiple/avatar options for assignment controls; keep specialized option renderers separate only when their content truly differs.
 - `DatePicker` opens from its calendar icon while adjacent date text remains editable and emits ISO dates. Keep its calendar-specific styles in `DatePicker.css`.
@@ -23,7 +24,7 @@ Building a form, table, selection control, image input, avatar, or reusable menu
 
 ## Canonical implementations
 
-`src/components/ui/Select.jsx`, `DatePicker.jsx`, `DataTable.jsx`, `Avatar.jsx`, `ImageDropzone.jsx`, `PresetNumberInput.jsx`, and `src/styles/tokens.css`.
+`src/components/ui/Select.jsx`, `DatePicker.jsx`, `DataTable.jsx`, `Avatar.jsx`, `ImageDropzone.jsx`, `PresetNumberInput.jsx`, `PriorityBadge.jsx`, `PriorityBadge.css`, and `src/styles/tokens.css`.
 
 ## Related knowledge
 

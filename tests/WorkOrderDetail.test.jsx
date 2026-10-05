@@ -109,6 +109,30 @@ describe('WorkOrderDetail authorization', () => {
     expect(onStatusChange).toHaveBeenCalledWith(selected, 'Completed')
   })
 
+  it.each([null, 'None'])('hides the Priority fact when priority is %s', (priority) => {
+    const { container } = render(<WorkOrderDetail selected={{ ...selected, priority }} grants={{}} />)
+
+    expect(screen.queryByRole('heading', { name: 'Priority' })).not.toBeInTheDocument()
+    expect(container.querySelector('.priority-badge')).not.toBeInTheDocument()
+    expect(container.querySelector('.detail-facts-grid')).toHaveClass('detail-facts-grid--without-priority')
+  })
+
+  it('uses the warning tone for the active On Hold status button', () => {
+    render(<WorkOrderDetail selected={{ ...selected, status: 'On Hold' }} userId="user-a" grants={{
+      'work_orders.change_status': 'own',
+    }} onStatusChange={vi.fn()} />)
+
+    expect(screen.getByRole('button', { name: 'On Hold' })).toHaveClass('on-hold', 'is-active')
+  })
+
+  it('uses the completed tone for the active Done status button', () => {
+    render(<WorkOrderDetail selected={{ ...selected, status: 'Completed' }} userId="user-a" grants={{
+      'work_orders.change_status': 'own',
+    }} onStatusChange={vi.fn()} />)
+
+    expect(screen.getByRole('button', { name: 'Done' })).toHaveClass('completed', 'is-active')
+  })
+
   it('replaces Edit with Mark as Done after scrolling the detail pane', () => {
     const onStatusChange = vi.fn()
     const { container } = render(<WorkOrderDetail selected={selected} userId="user-a" grants={{

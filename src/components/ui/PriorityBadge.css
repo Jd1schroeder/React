@@ -1,0 +1,59 @@
+.priority-badge {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  column-gap: 4px;
+  row-gap: 4px;
+  min-height: 0;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: var(--font-family);
+  white-space: nowrap;
+}
+
+.priority-badge-regular {
+  height: 24px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: var(--font-semibold);
+  letter-spacing: -0.2px;
+  line-height: 18px;
+}
+
+.priority-badge-icon {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: 0 0 16px;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+.priority-badge-icon svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.priority-badge-low .priority-badge-icon {
+  color: var(--priority-low);
+}
+
+.priority-badge-medium .priority-badge-icon {
+  color: var(--warning);
+}
+
+.priority-badge-high .priority-badge-icon {
+  color: var(--priority-high-icon);
+}
+
+.priority-badge-urgent .priority-badge-icon {
+  color: var(--status-danger-muted);
+}
+
+.priority-badge-none .priority-badge-icon {
+  color: var(--status-neutral);
+}

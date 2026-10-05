@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  CircleArrowUp,
   CirclePause,
   CalendarDays,
   Check,
@@ -18,6 +17,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Avatar } from "../../components/ui/Avatar";
+import { PriorityBadge } from "../../components/ui/PriorityBadge";
 import { PanelRecordNotFound } from "../../components/layout/PanelView";
 import { canAccessRecord, hasPermission } from "../../services/authorizationService";
 import { formatDateForUser } from "../../utils/dateFormatting";
@@ -26,9 +26,9 @@ import "./WorkOrderDetail.css";
 
 const statusOptions = [
   { value: "Open", label: "Open", icon: LockKeyholeOpen },
-  { value: "On Hold", label: "On Hold", icon: CirclePause },
+  { value: "On Hold", label: "On Hold", className: "on-hold", icon: CirclePause },
   { value: "In Progress", label: "In Progress", icon: RefreshCw },
-  { value: "Completed", label: "Done", icon: Check },
+  { value: "Completed", label: "Done", className: "completed", icon: Check },
 ];
 
 function WorkOrderDescription({ order }) {
@@ -278,6 +278,7 @@ export function WorkOrderDetail({
   const updaterName = selected.updated_by
     ? identitiesById.get(selected.updated_by)?.name ?? "User details unavailable"
     : "Not available";
+  const hasPriority = Boolean(selected.priority && String(selected.priority).trim().toLowerCase() !== "none");
   return (
     <section className="detail-pane">
       <header className="detail-header">
@@ -352,9 +353,9 @@ export function WorkOrderDetail({
             <div className="detail-status-row">
               <div>
                 <div className="detail-status-buttons" role="group" aria-label="Work Order status">
-                  {statusOptions.map(({ value, label, icon: Icon }) => (
-                    <button
-                      className={`detail-status-button${selected.status === value ? " is-active" : ""}`}
+                {statusOptions.map(({ value, label, className, icon: Icon }) => (
+                  <button
+                      className={`detail-status-button${className ? ` ${className}` : ""}${selected.status === value ? " is-active" : ""}`}
                       type="button"
                       key={value}
                       aria-pressed={selected.status === value}
@@ -371,22 +372,19 @@ export function WorkOrderDetail({
           </div>
         </div>
         <div className="detail-work-order-facts">
-          <div className="detail-facts-grid">
+          <div className={`detail-facts-grid${hasPriority ? "" : " detail-facts-grid--without-priority"}`}>
             <div className="detail-fact">
               <div className="detail-section-header"><h2>Due Date</h2></div>
               <div className="detail-fact-value">{selected.due || "No due date"}</div>
             </div>
-            <div className="detail-fact">
-              <div className="detail-section-header"><h2>Priority</h2></div>
-              <div className="detail-fact-value">
-                {selected.priority ? (
-                  <span className={`detail-priority-pill detail-priority-${selected.priority.toLowerCase()}`}>
-                    {selected.priority === "High" || selected.priority === "Urgent" ? <CircleArrowUp size={14} aria-hidden="true" /> : <CircleDot size={14} aria-hidden="true" />}
-                    {selected.priority}
-                  </span>
-                ) : "None"}
+            {hasPriority && (
+              <div className="detail-fact">
+                <div className="detail-section-header"><h2>Priority</h2></div>
+                <div className="detail-fact-value">
+                  <PriorityBadge priority={selected.priority} />
+                </div>
               </div>
-            </div>
+            )}
             <div className="detail-fact">
               <div className="detail-section-header"><h2>Work Order ID</h2></div>
               <div className="detail-fact-value">{selected.work_order_number ? `#${selected.work_order_number}` : "Not available"}</div>

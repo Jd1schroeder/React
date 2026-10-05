@@ -277,26 +277,6 @@
   color: var(--text-tertiary);
   background: var(--border-light);
 }
-.priority {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.priority i {
-  width: 6px;
-  height: 6px;
-  border-radius: var(--radius-circle);
-  background: var(--status-neutral);
-}
-.priority-high i {
-  background: var(--status-danger-muted);
-}
-.priority-medium i {
-  background: var(--status-warning-muted);
-}
-.priority-low i {
-  background: var(--status-success-soft);
-}
 .activity {
   display: flex;
   gap: 10px;
