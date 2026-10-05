@@ -67,6 +67,7 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
   const [isSaving, setIsSaving] = useState(false)
   const [createError, setCreateError] = useState('')
   const [assigneeOptions, setAssigneeOptions] = useState([])
+  const [memberDirectory, setMemberDirectory] = useState([])
   const pendingReadIds = useRef(new Set())
   const inboxPreferencesReady = Boolean(organizationId && preferencesLoadedForOrganization === organizationId)
   const isLoading = canViewWorkOrders && (loadState === 'loading' || !inboxPreferencesReady)
@@ -246,6 +247,15 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
     ])
       .then(([members, teams, teamMemberships]) => {
         if (!active) return
+        setMemberDirectory(members
+          .filter((member) => member.user_id)
+          .map((member) => ({
+            id: member.user_id,
+            name: memberName(member),
+            avatarUrl: member.profile?.avatar_url?.startsWith('http') ? member.profile.avatar_url : '',
+            firstName: member.profile?.first_name,
+            lastName: member.profile?.last_name,
+          })))
         const assignableTeamIds = assignScope === 'team' ? new Set(teamIds) : null
         const usersOnAssignableTeams = new Set(teamMemberships
           .filter((membership) => !assignableTeamIds || assignableTeamIds.has(membership.team_id))
@@ -270,7 +280,10 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
         )
       })
       .catch(() => {
-        if (active) setAssigneeOptions([])
+        if (active) {
+          setAssigneeOptions([])
+          setMemberDirectory([])
+        }
       })
     return () => { active = false }
   }, [assignScope, canAssignWorkOrders, organizationId, teamIds])
@@ -286,7 +299,6 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
       throw updateError
     }
   }
-  const markDone = async () => { if (selected) await changeStatus(selected, 'Completed') }
   const canChangeStatusForOrder = (order) => canAccessRecord(grants, 'work_orders.change_status', {
     userId,
     ownerId: order.created_by,
@@ -319,7 +331,7 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
     {isLoading && <div className="work-orders-loading">Loading Work Orders...</div>}
     {!isLoading && error && <div className="work-orders-loading" role="alert">{error}</div>}
     {!isLoading && !error && !canViewWorkOrders && <div className="work-orders-loading" role="status">You do not have permission to view Work Orders.</div>}
-    {!isLoading && !error && canViewWorkOrders && <>{readError && <div className="work-orders-loading" role="alert">{readError}</div>}{inboxPreferenceError && <div className="work-orders-loading" role="alert">{inboxPreferenceError}</div>}<WorkOrderList activeTab={activeTab} setActiveTab={setActiveTab} search={debouncedSearch} groupCounts={groupCounts} readStatusById={workOrdersById} selected={selected} onOrdersLoaded={storeOrders} onLoadGroupPage={loadGroupPage} onHydrateAttachments={hydrateGroupAttachments} refreshVersion={refreshVersion} onSelect={selectOrder} onStatusChange={changeStatus} onReadAll={() => { setReadError(''); setIsReadAllConfirmOpen(true) }} isReadAllSaving={isSavingReadState || search !== debouncedSearch} canChangeStatusForOrder={canChangeStatusForOrder} sortId={sortId} onSortChange={changeInboxSort} unreadFirst={unreadFirst} onUnreadFirstChange={changeUnreadFirst} />{isCreating ? <NewWorkOrderForm onCancel={() => setIsCreating(false)} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : <WorkOrderDetail selected={selected} missingRecord={missingRecord} onMarkDone={markDone} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} />}</>}
+    {!isLoading && !error && canViewWorkOrders && <>{readError && <div className="work-orders-loading" role="alert">{readError}</div>}{inboxPreferenceError && <div className="work-orders-loading" role="alert">{inboxPreferenceError}</div>}<WorkOrderList activeTab={activeTab} setActiveTab={setActiveTab} search={debouncedSearch} groupCounts={groupCounts} readStatusById={workOrdersById} selected={selected} onOrdersLoaded={storeOrders} onLoadGroupPage={loadGroupPage} onHydrateAttachments={hydrateGroupAttachments} refreshVersion={refreshVersion} onSelect={selectOrder} onStatusChange={changeStatus} onReadAll={() => { setReadError(''); setIsReadAllConfirmOpen(true) }} isReadAllSaving={isSavingReadState || search !== debouncedSearch} canChangeStatusForOrder={canChangeStatusForOrder} sortId={sortId} onSortChange={changeInboxSort} unreadFirst={unreadFirst} onUnreadFirstChange={changeUnreadFirst} />{isCreating ? <NewWorkOrderForm onCancel={() => setIsCreating(false)} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : <WorkOrderDetail selected={selected} missingRecord={missingRecord} onStatusChange={changeStatus} assigneeOptions={assigneeOptions} memberDirectory={memberDirectory} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} dateFormat={workspace.preferences?.date_format} timezone={workspace.preferences?.timezone} />}</>}
   </PanelLayout>
   {isReadAllConfirmOpen && createPortal(<div className="work-order-read-confirm-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !isSavingReadState) setIsReadAllConfirmOpen(false) }}>
     <section className="work-order-read-confirm" role="dialog" aria-modal="true" aria-labelledby="work-order-read-confirm-title">
