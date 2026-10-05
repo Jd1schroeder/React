@@ -48,6 +48,17 @@ describe('WorkOrderDetail authorization', () => {
     expect(container.querySelector('svg.lucide-link-2')).not.toBeInTheDocument()
   })
 
+  it('opens the PDF export dialog from the detail actions menu', () => {
+    render(<WorkOrderDetail selected={selected} grants={{}} onToggleRead={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'More work order actions' }))
+    const exportAction = screen.getByRole('menuitem', { name: 'Export to PDF' })
+    expect(exportAction).toBeEnabled()
+    fireEvent.click(exportAction)
+
+    expect(screen.getByRole('dialog', { name: 'Export Work Order as PDF' })).toBeInTheDocument()
+  })
+
   it('shows a loading state instead of a not-found illustration while lookup is pending', () => {
     render(<WorkOrderDetail selected={null} isLoadingRecord missingRecord={false} grants={{}} />)
 
@@ -203,7 +214,7 @@ describe('WorkOrderDetail authorization', () => {
     expect(within(menu).getByRole('menuitem', { name: 'Mark as unread' })).toBeEnabled()
     expect(within(menu).getByRole('menuitem', { name: 'Edit' })).toBeDisabled()
     expect(within(menu).getByRole('menuitem', { name: 'Delete' })).toBeDisabled()
-    expect(menu.querySelectorAll('button.is-unavailable svg')).toHaveLength(6)
+    expect(menu.querySelectorAll('button.is-unavailable svg')).toHaveLength(5)
 
     fireEvent.click(within(menu).getByRole('menuitem', { name: 'Mark as unread' }))
     expect(onToggleRead).toHaveBeenCalledWith(selected)

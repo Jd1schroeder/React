@@ -24,13 +24,14 @@ Changing Work Order creation fields, form layout, attachment inputs, or the sele
 - Order the detail overview as a status-button row, four-field facts row (due date, priority, Work Order ID, Request ID), Assigned To list, then Description and its picture gallery. Route status clicks through the page's `onStatusChange` callback so the existing service permission checks and database authorization remain in force; show unavailable fields as “Not available” rather than inventing values.
 - Keep description and pictures in separate sibling rows: description row → content block → heading wrapper/`h2` and description wrapper/`span`; picture row → gallery wrapper → `ul`/`li` thumbnails, followed by a “See all” control when more than three images exist. Keep non-image attachments outside the image list.
 - Keep the detail header visible while `.detail-scroll` owns body scrolling. When a record can change status, the header’s Edit action transitions to “Mark as Done” after the content scrolls; route it through the same status callback and hide it for completed records. Header Comments should scroll to the comments region, respecting reduced-motion preferences.
-- Keep the detail ellipsis menu’s Mark as read/unread action functional. Show future actions in the reference order, but keep unsupported actions disabled, muted, and marked with a lock icon until their feature boundary is implemented; disabled menu actions must not look interactive.
+- Keep the detail ellipsis menu's Mark as read/unread action functional. Show future actions in the reference order, but keep unsupported actions disabled, muted, and marked with a lock icon until their feature boundary is implemented; disabled menu actions must not look interactive.
+- Keep the detail menu's PDF export client-side and record-scoped. Offer options only for data Workbench can export; keep unsupported sections disabled and locked rather than generating empty or invented content. Load the PDF generator on demand, use the selected record's signed attachment URLs for image pages, and apply the saved workspace date format/timezone to export metadata.
 - Follow the overview with the available asset/location/estimated-time/work-type/category area, Time & Cost Tracking rows, and requester/creator/update metadata. Work Order records currently persist estimated duration, work type, requester/creator IDs, and update timestamps, but do not expose asset/location/category relations or comments/time-cost services in this detail query; render honest empty states and keep unsupported Add actions disabled instead of fabricating records or behavior.
 - Keep creation/form field availability aligned with organization Work Order settings when that configuration exists; do not invent persisted behavior for scaffolded controls.
 
 ## Canonical implementation
 
-`src/pages/work-orders/NewWorkOrderForm.jsx`, `src/pages/work-orders/WorkOrderDetail.jsx`, `src/pages/WorkOrders.jsx`, `src/pages/WorkOrders.css`, and `src/services/workOrderService.js`.
+`src/pages/work-orders/NewWorkOrderForm.jsx`, `src/pages/work-orders/WorkOrderDetail.jsx`, `src/pages/work-orders/WorkOrderPdfExportDialog.jsx`, `src/pages/WorkOrders.jsx`, `src/pages/WorkOrders.css`, `src/services/workOrderService.js`, and `src/services/workOrderPdfService.js`.
 
 ## Related knowledge
 

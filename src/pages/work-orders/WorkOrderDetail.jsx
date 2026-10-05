@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   CirclePause,
   CalendarDays,
   Check,
   CircleDot,
   EllipsisVertical,
+  FileDown,
   Link,
   LockKeyhole,
   LockKeyholeOpen,
@@ -15,6 +17,7 @@ import {
   RefreshCw,
   ChevronDown,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { Avatar } from "../../components/ui/Avatar";
 import { PriorityBadge } from "../../components/ui/PriorityBadge";
@@ -22,6 +25,7 @@ import { PanelRecordNotFound } from "../../components/layout/PanelView";
 import { canAccessRecord, hasPermission } from "../../services/authorizationService";
 import { formatDateForUser } from "../../utils/dateFormatting";
 import { getRecordPath } from "../../routes.js";
+import { WorkOrderPdfExportDialog } from "./WorkOrderPdfExportDialog";
 import "./WorkOrderDetail.css";
 
 const statusOptions = [
@@ -140,6 +144,7 @@ export function WorkOrderDetail({
   missingRecord,
   onEdit,
   onCopy,
+  onPreparePdfExport,
   onStatusChange,
   onToggleRead,
   isSavingReadState = false,
@@ -155,8 +160,12 @@ export function WorkOrderDetail({
   const [isChangingStatus, setIsChangingStatus] = useState(false);
   const [isDetailScrolled, setIsDetailScrolled] = useState(false);
   const [linkCopyStatus, setLinkCopyStatus] = useState("");
+  const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
+  const [pdfExportNotice, setPdfExportNotice] = useState("");
   const menuRef = useRef(null);
+  const moreActionsButtonRef = useRef(null);
   const commentsRef = useRef(null);
+  const pdfExportTimerRef = useRef(null);
   useEffect(() => {
     if (!isMenuOpen) return undefined;
     const dismiss = (event) => {
@@ -172,6 +181,13 @@ export function WorkOrderDetail({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isMenuOpen]);
+  const closePdfExportDialog = useCallback(() => setIsPdfExportOpen(false), []);
+  const handlePdfExportComplete = useCallback((filename) => {
+    setPdfExportNotice(`PDF download started: ${filename}`);
+    window.clearTimeout(pdfExportTimerRef.current);
+    pdfExportTimerRef.current = window.setTimeout(() => setPdfExportNotice(""), 7000);
+  }, []);
+  useEffect(() => () => window.clearTimeout(pdfExportTimerRef.current), []);
   if (isLoadingRecord)
     return (
       <section className="detail-pane" aria-busy="true">
@@ -223,6 +239,11 @@ export function WorkOrderDetail({
   if (!assignmentTargets.length && selected.team_id) {
     assignmentTargets.push({ type: "team", id: selected.team_id });
   }
+  const assignedNames = assignmentTargets.map((target) => {
+    const identity = target.type === "user" ? identitiesById.get(target.id) : null;
+    const option = assigneeOptionsByValue.get(`${target.type}:${target.id}`);
+    return identity?.name ?? option?.label ?? (target.type === "user" ? "Assigned user" : "Assigned team");
+  });
   const handleStatusChange = async (status) => {
     if (!canChangeStatus || isChangingStatus || status === selected.status || !onStatusChange) return;
     setIsChangingStatus(true);
@@ -316,7 +337,7 @@ export function WorkOrderDetail({
           {headerAction}
           {canUseMoreActions && (
             <div className="work-order-review-menu" ref={menuRef}>
-              <button type="button" className="icon-button" aria-label="More work order actions" aria-haspopup="menu" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen((open) => !open)}>
+              <button ref={moreActionsButtonRef} type="button" className="icon-button" aria-label="More work order actions" aria-haspopup="menu" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen((open) => !open)}>
                 <EllipsisVertical size={17} />
               </button>
               {isMenuOpen && <div className="work-order-detail-menu" role="menu" aria-label="Work Order actions">
@@ -329,9 +350,11 @@ export function WorkOrderDetail({
                 <button className={!canCreateWorkOrder || !onCopy ? "is-unavailable" : ""} type="button" role="menuitem" disabled={!canCreateWorkOrder || !onCopy} onClick={() => { onCopy?.(); setIsMenuOpen(false); }}>
                   <span>Copy to New Work Order</span>{(!canCreateWorkOrder || !onCopy) && <LockKeyhole size={14} aria-hidden="true" />}
                 </button>
+                <button type="button" role="menuitem" onClick={() => { setIsPdfExportOpen(true); setIsMenuOpen(false); }}>
+                  <span>Export to PDF</span>
+                </button>
                 {[
                   ["Save as Work Order Template", "Work Order templates are not available yet."],
-                  ["Export to PDF", "PDF export is not available yet."],
                   ["Email to Vendors", "Emailing vendors is not available yet."],
                   ["Cancel Work Order", "Cancelling Work Orders is not available yet."],
                   ["Delete", "Deleting Work Orders is not available yet."],
@@ -483,6 +506,31 @@ export function WorkOrderDetail({
           )}
         </div>
       </div>
+      {isPdfExportOpen && (
+        <WorkOrderPdfExportDialog
+          isOpen={isPdfExportOpen}
+          onClose={closePdfExportDialog}
+          onExportComplete={handlePdfExportComplete}
+          returnFocusRef={moreActionsButtonRef}
+          workOrder={selected}
+          onPrepareWorkOrder={onPreparePdfExport}
+          assignedTo={assignedNames}
+          requesterName={requesterName}
+          createdByName={creatorName}
+          updatedByName={updaterName}
+          exportedByName={identitiesById.get(userId)?.name ?? "Workbench user"}
+          dateFormat={dateFormat}
+          timezone={timezone}
+        />
+      )}
+      {pdfExportNotice && createPortal(
+        <div className="work-order-pdf-export-toast" role="status" aria-live="polite">
+          <FileDown size={18} aria-hidden="true" />
+          <span>{pdfExportNotice}</span>
+          <button type="button" onClick={() => setPdfExportNotice("")} aria-label="Dismiss PDF notification"><X size={17} aria-hidden="true" /></button>
+        </div>,
+        document.body,
+      )}
     </section>
   );
 }

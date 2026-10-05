@@ -46,6 +46,48 @@
   flex: none;
   color: var(--text-disabled-muted);
 }
+.work-order-pdf-export-toast {
+  position: fixed;
+  z-index: 1201;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  max-width: min(440px, calc(100vw - 32px));
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: var(--elevation-3);
+  font-size: var(--font-size-body-sm);
+}
+.work-order-pdf-export-toast > svg {
+  flex: none;
+  color: var(--blue);
+}
+.work-order-pdf-export-toast > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.work-order-pdf-export-toast button {
+  display: grid;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  margin-left: auto;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+.work-order-pdf-export-toast button:hover {
+  color: var(--ink);
+  background: var(--surface-control-hover);
+}
 .detail-pane {
   min-width: 0;
   display: flex;

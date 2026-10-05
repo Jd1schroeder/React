@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",
+    "jspdf": "^4.2.1",
     "libphonenumber-js": "^1.13.13",
     "lucide-react": "^1.46.0",
     "react": "^19.2.8",

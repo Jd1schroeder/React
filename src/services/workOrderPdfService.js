@@ -1,0 +1,328 @@
+import { formatDateForUser } from '../utils/dateFormatting'
+
+const pageMargin = 42
+const headerHeight = 58
+const footerHeight = 38
+const contentTop = 82
+const ink = [30, 36, 41]
+const muted = [77, 90, 102]
+const blue = [24, 135, 252]
+const line = [218, 223, 227]
+
+const imagePresets = {
+  small: { columns: 3, maxHeight: 88, quality: 0.5 },
+  regular: { columns: 3, maxHeight: 132, quality: 0.72 },
+  large: { columns: 2, maxHeight: 210, quality: 0.86 },
+  original: { columns: 1, maxHeight: 390, quality: 0.95 },
+  file: { columns: 1, maxHeight: 460, quality: 1 },
+}
+
+function safePdfText(value) {
+  return String(value ?? '')
+    .replace(/\r\n?/g, '\n')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\u2010-\u2015\u2212]/g, '-')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"')
+    .replace(/[^\x20-\x7e\xa0-\xff\n]/g, ' ')
+}
+
+function cleanFileName(value) {
+  return Array.from(safePdfText(value))
+    .filter((character) => character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127)
+    .map((character) => '<>:"/\\|?*'.includes(character) ? '-' : character)
+    .join('')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 150) || 'Work Order'
+}
+
+function createLayout(doc) {
+  const width = doc.internal.pageSize.getWidth()
+  const height = doc.internal.pageSize.getHeight()
+  const contentWidth = width - pageMargin * 2
+  return {
+    width,
+    height,
+    contentWidth,
+    y: contentTop,
+    addPage() {
+      doc.addPage()
+      this.y = contentTop
+    },
+    ensureSpace(requiredHeight) {
+      if (this.y + requiredHeight > height - footerHeight) this.addPage()
+    },
+  }
+}
+
+function addSection(doc, layout, title) {
+  layout.ensureSpace(34)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(10)
+  doc.setTextColor(...muted)
+  doc.text(safePdfText(title).toUpperCase(), pageMargin, layout.y)
+  layout.y += 8
+  doc.setDrawColor(...line)
+  doc.setLineWidth(0.7)
+  doc.line(pageMargin, layout.y + 4, layout.width - pageMargin, layout.y + 4)
+  layout.y += 18
+}
+
+function addParagraph(doc, layout, value, { bold = false, fontSize = 10, color = ink, gapAfter = 6 } = {}) {
+  const text = safePdfText(value).trim()
+  if (!text) return
+  doc.setFont('helvetica', bold ? 'bold' : 'normal')
+  doc.setFontSize(fontSize)
+  doc.setTextColor(...color)
+  const lines = doc.splitTextToSize(text, layout.contentWidth)
+  const lineHeight = fontSize * 1.38
+  for (const lineText of lines) {
+    layout.ensureSpace(lineHeight)
+    doc.text(lineText, pageMargin, layout.y)
+    layout.y += lineHeight
+  }
+  layout.y += gapAfter
+}
+
+function addFacts(doc, layout, facts) {
+  const visibleFacts = facts.filter(([, value]) => value != null && String(value).trim())
+  if (!visibleFacts.length) return
+  const columnGap = 24
+  const columnWidth = (layout.contentWidth - columnGap) / 2
+  for (let index = 0; index < visibleFacts.length; index += 2) {
+    const rowFacts = visibleFacts.slice(index, index + 2).map(([label, value]) => {
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      return { label, value: safePdfText(value), valueLines: doc.splitTextToSize(safePdfText(value), columnWidth) }
+    })
+    const rowHeight = Math.max(...rowFacts.map((fact) => 31 + fact.valueLines.length * 12))
+    layout.ensureSpace(rowHeight)
+    rowFacts.forEach((fact, column) => {
+      const x = pageMargin + column * (columnWidth + columnGap)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8)
+      doc.setTextColor(...muted)
+      doc.text(safePdfText(fact.label).toUpperCase(), x, layout.y)
+      doc.setFontSize(10)
+      doc.setTextColor(...ink)
+      doc.text(fact.valueLines, x, layout.y + 14)
+    })
+    layout.y += rowHeight
+  }
+  layout.y += 2
+}
+
+function addHeaderAndFooters(doc, layout, order, exportInfo) {
+  const pageCount = doc.internal.getNumberOfPages()
+  const workOrderNumber = order.work_order_number ? `#${order.work_order_number}` : ''
+  const titleWidth = layout.contentWidth - (workOrderNumber ? 94 : 0)
+  for (let page = 1; page <= pageCount; page += 1) {
+    doc.setPage(page)
+    doc.setFillColor(...blue)
+    doc.rect(0, 0, layout.width, headerHeight, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(14)
+    doc.setTextColor(255, 255, 255)
+    const titleLines = doc.splitTextToSize(safePdfText(order.title || 'Work Order'), titleWidth).slice(0, 2)
+    doc.text(titleLines, pageMargin, titleLines.length > 1 ? 23 : 34)
+    if (workOrderNumber) {
+      doc.setFontSize(10)
+      doc.text(workOrderNumber, layout.width - pageMargin, 34, { align: 'right' })
+    }
+    doc.setDrawColor(...line)
+    doc.setLineWidth(0.7)
+    doc.line(pageMargin, layout.height - footerHeight, layout.width - pageMargin, layout.height - footerHeight)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(7.5)
+    doc.setTextColor(...muted)
+    doc.text(`Generated by Workbench${exportInfo ? ` on ${safePdfText(exportInfo)}` : ''}`, pageMargin, layout.height - 20)
+    doc.text(`Page ${page} of ${pageCount}`, layout.width - pageMargin, layout.height - 20, { align: 'right' })
+  }
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(new Error('Unable to read image attachment.'))
+    reader.readAsDataURL(blob)
+  })
+}
+
+async function loadImage(doc, attachment, quality) {
+  if (!attachment.signed_url) throw new Error('Image preview is unavailable.')
+  const url = new URL(attachment.signed_url)
+  if (!['https:', 'http:'].includes(url.protocol)) throw new Error('Image URL is invalid.')
+  const response = await fetch(url.href, { credentials: 'omit' })
+  if (!response.ok) throw new Error('Unable to download image attachment.')
+  const blob = await response.blob()
+  if (!blob.type.startsWith('image/')) throw new Error('Attachment is not an image.')
+  let dataUrl = await blobToDataUrl(blob)
+  let format = dataUrl.startsWith('data:image/png') ? 'PNG' : dataUrl.startsWith('data:image/webp') ? 'WEBP' : 'JPEG'
+  if (typeof createImageBitmap === 'function') {
+    const bitmap = await createImageBitmap(blob)
+    const canvas = document.createElement('canvas')
+    canvas.width = bitmap.width
+    canvas.height = bitmap.height
+    const context = canvas.getContext('2d')
+    context.fillStyle = '#fff'
+    context.fillRect(0, 0, canvas.width, canvas.height)
+    context.drawImage(bitmap, 0, 0)
+    bitmap.close?.()
+    dataUrl = canvas.toDataURL('image/jpeg', quality)
+    format = 'JPEG'
+  }
+  const properties = doc.getImageProperties(dataUrl)
+  return { dataUrl, format, width: properties.width, height: properties.height, name: attachment.file_name || 'Work Order picture' }
+}
+
+async function addAttachments(doc, layout, order, imageSize) {
+  const attachments = order.work_order_attachments ?? []
+  const images = attachments.filter((attachment) => attachment.kind === 'image' || attachment.content_type?.startsWith('image/'))
+  const files = attachments.filter((attachment) => !images.includes(attachment))
+  const preset = imagePresets[imageSize] ?? imagePresets.regular
+  const loadedImages = await Promise.all(images.map(async (attachment) => {
+    try {
+      return await loadImage(doc, attachment, preset.quality)
+    } catch {
+      return { name: attachment.file_name || 'Work Order picture', unavailable: true }
+    }
+  }))
+
+  addSection(doc, layout, 'Attachments')
+  const availableImages = loadedImages.filter((image) => !image.unavailable)
+  const unavailableImages = loadedImages.filter((image) => image.unavailable)
+  const columnCount = preset.columns
+  const gap = 10
+  const columnWidth = (layout.contentWidth - gap * (columnCount - 1)) / columnCount
+  for (let index = 0; index < availableImages.length; index += columnCount) {
+    const row = availableImages.slice(index, index + columnCount).map((image) => {
+      const scale = Math.min(columnWidth / image.width, preset.maxHeight / image.height)
+      return { ...image, displayWidth: image.width * scale, displayHeight: image.height * scale }
+    })
+    const rowHeight = Math.max(...row.map((image) => image.displayHeight + 14))
+    layout.ensureSpace(rowHeight + 4)
+    row.forEach((image, column) => {
+      const x = pageMargin + column * (columnWidth + gap)
+      doc.addImage(image.dataUrl, image.format, x, layout.y, image.displayWidth, image.displayHeight, undefined, 'MEDIUM')
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(7.5)
+      doc.setTextColor(...muted)
+      doc.text(doc.splitTextToSize(safePdfText(image.name), columnWidth).slice(0, 1), x, layout.y + image.displayHeight + 10)
+    })
+    layout.y += rowHeight + 8
+  }
+  for (const image of unavailableImages) addParagraph(doc, layout, `${image.name} - preview unavailable`, { fontSize: 9, color: muted })
+  if (files.length) {
+    addParagraph(doc, layout, `Files: ${files.map((file) => file.file_name || 'Attached file').join(', ')}`, { fontSize: 9 })
+  }
+  if (!attachments.length) addParagraph(doc, layout, 'No attachments.', { fontSize: 9, color: muted })
+}
+
+function exportDateTime(dateFormat, timezone, now = new Date()) {
+  const date = formatDateForUser(now, dateFormat, timezone)
+  const time = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: timezone || undefined }).format(now)
+  return `${date} ${time}`
+}
+
+export async function createWorkOrderPdf({
+  workOrder,
+  assignedTo = [],
+  requesterName = '',
+  createdByName = '',
+  updatedByName = '',
+  exportedByName = '',
+  included = {},
+  imageSize = 'regular',
+  procedureFormat = 'detailed',
+  dateFormat,
+  timezone,
+  now = new Date(),
+}) {
+  const { jsPDF } = await import('jspdf')
+  const pdf = new jsPDF({ unit: 'pt', format: 'a4' })
+  const layout = createLayout(pdf)
+  const exportedAt = exportDateTime(dateFormat, timezone, now)
+  const settings = { ...included }
+  pdf.setProperties({
+    title: `Work Order ${workOrder.work_order_number ?? ''} ${workOrder.title ?? ''}`.trim(),
+    subject: 'Workbench Work Order export',
+    creator: 'Workbench',
+  })
+
+  if (settings.basicInformation) {
+    addSection(pdf, layout, 'Basic Information')
+    addFacts(pdf, layout, [
+      ['Status', workOrder.status === 'Completed' ? 'Done' : workOrder.status],
+      ['Due Date', workOrder.due || 'No due date'],
+      ['Work Type', workOrder.workType || workOrder.work_type],
+      ['Asset', workOrder.asset && workOrder.asset !== 'Not available' ? workOrder.asset : null],
+      ['Location', workOrder.location && workOrder.location !== 'Not available' ? workOrder.location : null],
+      ['Categories', Array.isArray(workOrder.categories) ? workOrder.categories.map((category) => category.name ?? category).join(', ') : null],
+    ])
+    addParagraph(pdf, layout, workOrder.description || 'No description available.')
+  }
+
+  if (settings.priority && workOrder.priority && String(workOrder.priority).toLowerCase() !== 'none') {
+    addSection(pdf, layout, 'Priority')
+    addParagraph(pdf, layout, workOrder.priority, { bold: true })
+  }
+
+  if (settings.estimatedTime && Number.isFinite(workOrder.estimated_duration_minutes) && workOrder.estimated_duration_minutes > 0) {
+    addSection(pdf, layout, 'Estimated Time')
+    const minutes = workOrder.estimated_duration_minutes
+    const value = [Math.floor(minutes / 60) ? `${Math.floor(minutes / 60)}h` : '', minutes % 60 ? `${minutes % 60}m` : ''].filter(Boolean).join(' ')
+    addParagraph(pdf, layout, value)
+  }
+
+  if (workOrder.work_type === 'preventive' && procedureFormat !== 'none' && Number.isFinite(workOrder.procedure_progress)) {
+    addSection(pdf, layout, procedureFormat === 'summary' ? 'Procedure Summary' : 'Procedure Progress')
+    addParagraph(pdf, layout, `${workOrder.procedure_progress}% complete`)
+  }
+
+  if (settings.workOrderInformation) {
+    addSection(pdf, layout, 'Work Order Information')
+    addFacts(pdf, layout, [
+      ['Work Order ID', workOrder.work_order_number ? `#${workOrder.work_order_number}` : workOrder.id],
+      ['Request ID', workOrder.request_id ? `#${workOrder.request_id}` : null],
+      ['Assigned To', assignedTo.join(', ') || 'Unassigned'],
+      ['Requested By', requesterName || null],
+      ['Created By', createdByName || null],
+      ['Created On', workOrder.created_at ? formatDateForUser(workOrder.created_at, dateFormat, timezone) : null],
+      ['Last Updated', workOrder.updated_at ? formatDateForUser(workOrder.updated_at, dateFormat, timezone) : null],
+      ['Updated By', updatedByName || null],
+    ])
+  }
+
+  if (settings.attachments) await addAttachments(pdf, layout, workOrder, imageSize)
+
+  if (settings.exportInformation) {
+    addSection(pdf, layout, 'Export Information')
+    addFacts(pdf, layout, [['Exported By', exportedByName || 'Workbench user'], ['Exported On', exportedAt]])
+  }
+
+  if (settings.signatureLine) {
+    layout.ensureSpace(88)
+    addSection(pdf, layout, 'Signature')
+    const signatureWidth = Math.min(190, layout.contentWidth * 0.45)
+    const signatureX = layout.width - pageMargin - signatureWidth
+    pdf.setDrawColor(...ink)
+    pdf.setLineWidth(0.8)
+    pdf.line(signatureX, layout.y + 14, signatureX + signatureWidth, layout.y + 14)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(8)
+    pdf.setTextColor(...ink)
+    pdf.text('Signed off by', signatureX + signatureWidth, layout.y + 28, { align: 'right' })
+    layout.y += 45
+    pdf.line(signatureX, layout.y + 6, signatureX + signatureWidth * 0.56, layout.y + 6)
+    pdf.text('Date', signatureX + signatureWidth * 0.56, layout.y + 20, { align: 'right' })
+    layout.y += 28
+  }
+
+  addHeaderAndFooters(pdf, layout, workOrder, exportedAt)
+  const orderNumber = workOrder.work_order_number ? `#${workOrder.work_order_number}` : ''
+  const filename = `${cleanFileName(`Work Order ${orderNumber} - ${workOrder.title || workOrder.id}`).slice(0, 145)}.pdf`
+  return { pdf, filename }
+}
