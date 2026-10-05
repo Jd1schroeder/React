@@ -297,8 +297,7 @@ export function WorkOrderDetail({
             {linkCopyStatus && <span className="detail-link-copy-feedback" role="status">{linkCopyStatus === "copied" ? "Work Order link copied." : "Unable to copy Work Order link."}</span>}
           </div>
           <div className="detail-meta">
-            <CalendarDays size={14} /> Due by {selected.due} <span>·</span>{" "}
-            #{selected.work_order_number}
+            <CalendarDays size={14} /> Due by {selected.due}
           </div>
         </div>
         <div className="detail-actions">

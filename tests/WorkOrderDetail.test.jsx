@@ -93,10 +93,12 @@ describe('WorkOrderDetail authorization', () => {
 
   it('shows the detail overview in reference order and routes status changes', () => {
     const onStatusChange = vi.fn()
-    render(<WorkOrderDetail selected={selected} userId="user-a" grants={{
+    const { container } = render(<WorkOrderDetail selected={selected} userId="user-a" grants={{
       'work_orders.change_status': 'own',
     }} onStatusChange={onStatusChange} />)
 
+    expect(container.querySelector('.detail-meta')).toHaveTextContent(`Due by ${selected.due}`)
+    expect(container.querySelector('.detail-meta')).not.toHaveTextContent(`#${selected.work_order_number}`)
     expect(screen.getByRole('group', { name: 'Work Order status' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Open' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('heading', { name: 'Due Date' })).toBeInTheDocument()
