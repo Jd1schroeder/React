@@ -221,6 +221,32 @@ describe('WorkOrderDetail authorization', () => {
     expect(screen.getAllByRole('button', { name: /Add/ }).every((button) => button.disabled)).toBe(true)
   })
 
+  it('scrolls to comments inside the detail pane without scrolling the outer page', () => {
+    const { container } = render(<div className="page-content"><WorkOrderDetail selected={selected} userId="user-a" grants={{
+      'work_orders.view_comments': 'own',
+    }} /></div>)
+    const detailScroll = container.querySelector('.detail-scroll')
+    const commentsSection = container.querySelector('.detail-comments-section')
+    const pageContent = container.querySelector('.page-content')
+    const detailScrollTo = vi.fn()
+    const pageScrollTo = vi.fn()
+    const commentsScrollIntoView = vi.fn()
+
+    detailScroll.scrollTop = 40
+    commentsSection.style.scrollMarginTop = '16px'
+    vi.spyOn(detailScroll, 'getBoundingClientRect').mockReturnValue({ top: 100 })
+    vi.spyOn(commentsSection, 'getBoundingClientRect').mockReturnValue({ top: 340 })
+    Object.defineProperty(detailScroll, 'scrollTo', { configurable: true, value: detailScrollTo })
+    Object.defineProperty(pageContent, 'scrollTo', { configurable: true, value: pageScrollTo })
+    Object.defineProperty(commentsSection, 'scrollIntoView', { configurable: true, value: commentsScrollIntoView })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Comments' }))
+
+    expect(detailScrollTo).toHaveBeenCalledWith({ top: 264, behavior: 'smooth' })
+    expect(pageScrollTo).not.toHaveBeenCalled()
+    expect(commentsScrollIntoView).not.toHaveBeenCalled()
+  })
+
   it('shows the work-order menu options and locks actions that are not implemented', () => {
     const onToggleRead = vi.fn()
     render(<WorkOrderDetail selected={selected} userId="user-a" grants={{}}

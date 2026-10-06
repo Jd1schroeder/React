@@ -162,8 +162,25 @@ export function WorkOrderDetail({
   const [pdfExportNotice, setPdfExportNotice] = useState("");
   const menuRef = useRef(null);
   const moreActionsButtonRef = useRef(null);
+  const detailScrollRef = useRef(null);
   const commentsRef = useRef(null);
   const pdfExportTimerRef = useRef(null);
+  const scrollToComments = () => {
+    const scroller = detailScrollRef.current;
+    const commentsSection = commentsRef.current;
+    if (!scroller || !commentsSection) return;
+
+    const scrollerRect = scroller.getBoundingClientRect();
+    const commentsRect = commentsSection.getBoundingClientRect();
+    const scrollMarginTop = Number.parseFloat(window.getComputedStyle(commentsSection).scrollMarginTop) || 0;
+    const top = scroller.scrollTop + commentsRect.top - scrollerRect.top - scroller.clientTop - scrollMarginTop;
+    const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+
+    scroller.scrollTo({
+      top: Math.max(0, top),
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    });
+  };
   useEffect(() => {
     if (!isMenuOpen) return undefined;
     const dismiss = (event) => {
@@ -333,10 +350,7 @@ export function WorkOrderDetail({
             <button
               className="detail-header-action"
               type="button"
-              onClick={() => commentsRef.current?.scrollIntoView({
-                behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-                block: "start",
-              })}
+              onClick={scrollToComments}
             >
               <MessageCircle size={15} /> Comments
             </button>
@@ -375,7 +389,7 @@ export function WorkOrderDetail({
           )}
         </div>
       </header>
-      <div className="detail-scroll" onScroll={(event) => setIsDetailScrolled(event.currentTarget.scrollTop > 120)}>
+      <div ref={detailScrollRef} className="detail-scroll" onScroll={(event) => setIsDetailScrolled(event.currentTarget.scrollTop > 120)}>
         <div className="detail-summary-row">
           <div className="detail-content-block">
             <div className="detail-status-title"><strong>Status</strong></div>
