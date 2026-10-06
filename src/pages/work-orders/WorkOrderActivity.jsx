@@ -268,6 +268,7 @@ function ActivityItem({
   const actorId = item.kind === 'comment' ? item.author_id : item.actor_id
   const actor = identitiesById.get(actorId)
   const actorName = actor?.name || (actorId ? 'Former member' : 'System')
+  const actorProfilePath = actorId ? getRecordPath('users/profile', actorId) : null
   const deletedBy = identitiesById.get(item.deleted_by)
   const isLiveComment = item.kind === 'comment' && !item.deleted_at
   const isOwnComment = Boolean(currentUserId && item.author_id === currentUserId)
@@ -308,61 +309,97 @@ function ActivityItem({
     }
   }
 
+  const avatar = (
+    <div className="work-order-activity-user-image">
+      {actorProfilePath
+        ? <RouterLink
+            className="work-order-activity-avatar-link"
+            to={actorProfilePath}
+            aria-label={`View ${actorName}'s profile`}
+            title={`View ${actorName}'s profile`}
+          >
+            <Avatar
+              className="work-order-activity-avatar"
+              src={actor?.avatarUrl}
+              firstName={actor?.firstName}
+              lastName={actor?.lastName}
+              name={actorName}
+              alt=""
+            />
+          </RouterLink>
+        : <Avatar
+            className="work-order-activity-avatar"
+            src={actor?.avatarUrl}
+            firstName={actor?.firstName}
+            lastName={actor?.lastName}
+            name={actorName}
+            alt=""
+          />}
+    </div>
+  )
+  const commentActions = (canEditComment || canDeleteComment) && !isEditing && (
+    <span className="work-order-comment-actions">
+      {canEditComment && <button type="button" onClick={() => { setActionError(''); setDraft(item.body ?? ''); setIsEditing(true); setIsConfirmingDelete(false) }} aria-label="Edit comment" title="Edit comment"><Pencil size={14} aria-hidden="true" />Edit</button>}
+      {canDeleteComment && <button type="button" className="is-danger" onClick={() => { setActionError(''); setIsConfirmingDelete(true) }} aria-label="Delete comment" title="Delete comment"><Trash2 size={14} aria-hidden="true" />Delete</button>}
+    </span>
+  )
+  const authorTimeRow = (
+    <div className="work-order-activity-meta">
+      {actorProfilePath
+        ? <RouterLink className="work-order-activity-author is-link" to={actorProfilePath}>{actorName}</RouterLink>
+        : <strong className="work-order-activity-author">{actorName}</strong>}
+      <div className="work-order-activity-time">{activityTimestamp(item.created_at, dateFormat, timezone)}</div>
+      {isLiveComment && item.edited_at && <span className="work-order-comment-edited" title={`Edited ${editedAt}`}>Edited</span>}
+      {commentActions}
+    </div>
+  )
+
   return (
-    <article className={`work-order-activity-item${item.kind === 'comment' ? ' is-comment' : ' is-system'}`}>
-      <Avatar
-        className="work-order-activity-avatar"
-        src={actor?.avatarUrl}
-        firstName={actor?.firstName}
-        lastName={actor?.lastName}
-        name={actorName}
-        alt=""
-      />
-      <div className="work-order-activity-content">
-        <div className="work-order-activity-meta">
-          <strong>{actorName}</strong>
-          <time dateTime={item.created_at}>{activityTimestamp(item.created_at, dateFormat, timezone)}</time>
-          {isLiveComment && item.edited_at && <span className="work-order-comment-edited" title={`Edited ${editedAt}`}>Edited</span>}
-          {(canEditComment || canDeleteComment) && !isEditing && (
-            <span className="work-order-comment-actions">
-              {canEditComment && <button type="button" onClick={() => { setActionError(''); setDraft(item.body ?? ''); setIsEditing(true); setIsConfirmingDelete(false) }} aria-label="Edit comment" title="Edit comment"><Pencil size={14} aria-hidden="true" />Edit</button>}
-              {canDeleteComment && <button type="button" className="is-danger" onClick={() => { setActionError(''); setIsConfirmingDelete(true) }} aria-label="Delete comment" title="Delete comment"><Trash2 size={14} aria-hidden="true" />Delete</button>}
-            </span>
-          )}
-        </div>
-        {item.kind === 'comment'
-          ? <>
-              {item.deleted_at
-                ? <div className="work-order-comment-tombstone">
-                    <p className="work-order-comment-deleted">This comment was deleted.</p>
-                    <p className="work-order-comment-delete-meta">Deleted {activityTimestamp(item.deleted_at, dateFormat, timezone)}{item.deleted_by ? ` by ${deletedBy?.name ?? 'a former member'}` : ''}.</p>
+    <li className="work-order-activity-list-item">
+      <div className={`work-order-activity-item${item.kind === 'comment' ? ' is-comment' : ' is-system'}`}>
+        <div className="work-order-activity-row">
+          {avatar}
+          <div className="work-order-activity-content">
+            {authorTimeRow}
+            {item.kind === 'comment' ? (
+              <>
+                {item.deleted_at
+                  ? <div className="work-order-comment-tombstone">
+                      <p className="work-order-comment-deleted">This comment was deleted.</p>
+                      <p className="work-order-comment-delete-meta">Deleted {activityTimestamp(item.deleted_at, dateFormat, timezone)}{item.deleted_by ? ` by ${deletedBy?.name ?? 'a former member'}` : ''}.</p>
+                    </div>
+                  : isEditing
+                    ? <form className="work-order-comment-editor" onSubmit={saveComment}>
+                        <label className="work-order-comment-sr-only" htmlFor={`edit-comment-${item.id}`}>Edit comment</label>
+                        <textarea id={`edit-comment-${item.id}`} value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={10000} rows={3} disabled={isSavingComment} />
+                        <div className="work-order-comment-editor-actions">
+                          <button type="button" onClick={() => { setDraft(item.body ?? ''); setIsEditing(false); setActionError('') }} disabled={isSavingComment}>Cancel</button>
+                          <button type="submit" disabled={isSavingComment || draft.trim() === (item.body ?? '')}><Check size={14} aria-hidden="true" />{isSavingComment ? 'Saving...' : 'Save'}</button>
+                        </div>
+                      </form>
+                    : <>
+                        {item.body && <CommentBody body={item.body} linkPreviews={linkPreviews} />}
+                        <CommentAttachments attachments={item.attachments} />
+                      </>}
+                {isConfirmingDelete && !item.deleted_at && (
+                  <div className="work-order-comment-delete-confirm" role="group" aria-label="Confirm comment deletion">
+                    <span>Delete this comment?</span>
+                    <button type="button" onClick={() => setIsConfirmingDelete(false)} disabled={isDeletingComment}>Cancel</button>
+                    <button type="button" className="is-danger" onClick={() => void deleteComment()} disabled={isDeletingComment}><Trash2 size={14} aria-hidden="true" />{isDeletingComment ? 'Deleting...' : 'Delete'}</button>
                   </div>
-                : isEditing
-                  ? <form className="work-order-comment-editor" onSubmit={saveComment}>
-                      <label className="work-order-comment-sr-only" htmlFor={`edit-comment-${item.id}`}>Edit comment</label>
-                      <textarea id={`edit-comment-${item.id}`} value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={10000} rows={3} disabled={isSavingComment} />
-                      <div className="work-order-comment-editor-actions">
-                        <button type="button" onClick={() => { setDraft(item.body ?? ''); setIsEditing(false); setActionError('') }} disabled={isSavingComment}>Cancel</button>
-                        <button type="submit" disabled={isSavingComment || draft.trim() === (item.body ?? '')}><Check size={14} aria-hidden="true" />{isSavingComment ? 'Saving...' : 'Save'}</button>
-                      </div>
-                    </form>
-                  : <>
-                      {item.body && <CommentBody body={item.body} linkPreviews={linkPreviews} />}
-                      <CommentAttachments attachments={item.attachments} />
-                    </>}
-              {isConfirmingDelete && !item.deleted_at && (
-                <div className="work-order-comment-delete-confirm" role="group" aria-label="Confirm comment deletion">
-                  <span>Delete this comment?</span>
-                  <button type="button" onClick={() => setIsConfirmingDelete(false)} disabled={isDeletingComment}>Cancel</button>
-                  <button type="button" className="is-danger" onClick={() => void deleteComment()} disabled={isDeletingComment}><Trash2 size={14} aria-hidden="true" />{isDeletingComment ? 'Deleting...' : 'Delete'}</button>
-                </div>
-              )}
-              {actionNotice && <p className="work-order-comment-notice" role="status">{actionNotice}</p>}
-              {actionError && <p className="work-order-comment-error" role="alert">{actionError}</p>}
-            </>
-          : <ActivityDescription item={item} dateFormat={dateFormat} identitiesById={identitiesById} assigneeOptionsByValue={assigneeOptionsByValue} />}
+                )}
+                {actionNotice && <p className="work-order-comment-notice" role="status">{actionNotice}</p>}
+                {actionError && <p className="work-order-comment-error" role="alert">{actionError}</p>}
+              </>
+            ) : (
+              <div className="work-order-activity-content-inner">
+                <ActivityDescription item={item} dateFormat={dateFormat} identitiesById={identitiesById} assigneeOptionsByValue={assigneeOptionsByValue} />
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-    </article>
+    </li>
   )
 }
 
@@ -573,7 +610,6 @@ export function WorkOrderActivity({
               ))}
             </ul>
           )}
-          <p className="work-order-comment-help">Images and files up to 10 MB each. Up to 20 files per comment.</p>
           {commentError && <p className="work-order-comment-error" role="alert">{commentError}</p>}
         </form>
       )}
@@ -581,7 +617,7 @@ export function WorkOrderActivity({
       {isLoading && <p className="work-order-activity-loading" role="status">Loading comments and activity…</p>}
       {!isLoading && canViewComments && items.length === 0 && !loadError && <p className="work-order-activity-empty">No comments or activity yet.</p>}
       {canViewComments && items.length > 0 && (
-        <div className="work-order-activity-list" aria-label="Work Order comments and activity">
+        <ul className="work-order-activity-list" aria-label="Work Order comments and activity">
           {items.map((item) => (
             <ActivityItem
               key={`${item.kind}:${item.id}`}
@@ -600,11 +636,13 @@ export function WorkOrderActivity({
             />
           ))}
           {hasMore && (
-            <button type="button" className="work-order-activity-load-more" disabled={isLoadingOlder} onClick={() => void loadActivity({ before: nextCursor })}>
-              {isLoadingOlder ? 'Loading…' : 'Load older activity'}
-            </button>
+            <li className="work-order-activity-load-more-item">
+              <button type="button" className="work-order-activity-load-more" disabled={isLoadingOlder} onClick={() => void loadActivity({ before: nextCursor })}>
+                {isLoadingOlder ? 'Loading…' : 'Load older activity'}
+              </button>
+            </li>
           )}
-        </div>
+        </ul>
       )}
     </section>
   )

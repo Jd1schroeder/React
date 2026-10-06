@@ -108,6 +108,13 @@ describe('WorkOrderActivity', () => {
     expect(screen.getByText('Changed status from Open to In Progress.')).toBeInTheDocument()
     expect(screen.getByText('Changed the description from “Before the repair” to “After the repair”.')).toBeInTheDocument()
     expect(screen.getAllByText('Jordan Lee')).toHaveLength(3)
+    const activityList = screen.getByRole('list', { name: 'Work Order comments and activity' })
+    expect(within(activityList).getAllByRole('listitem')).toHaveLength(3)
+    expect(within(activityList).getAllByRole('link', { name: 'Jordan Lee' })).toHaveLength(3)
+    expect(within(activityList).getAllByRole('link', { name: "View Jordan Lee's profile" })).toHaveLength(3)
+    for (const profileLink of within(activityList).getAllByRole('link', { name: 'Jordan Lee' })) {
+      expect(profileLink).toHaveAttribute('href', '/users/profile/member-1')
+    }
     const linkedOrder = await screen.findByRole('link', { name: /Fire Extinguisher Inspection/ })
     expect(linkedOrder).toHaveAttribute('href', `/workorders/${workOrderId}`)
     expect(linkedOrder).toHaveTextContent('#17150')
@@ -255,10 +262,10 @@ describe('WorkOrderActivity', () => {
     const onUpdateComment = vi.fn().mockResolvedValue({ ...olderComment, body: 'Edited older note', edited_at: '2026-10-05T11:15:00.000Z' })
     renderActivity({ currentUserId: 'member-1', onLoadActivity, onUpdateComment })
 
-    const olderArticle = (await screen.findByText('Older note')).closest('article')
-    fireEvent.click(within(olderArticle).getByRole('button', { name: 'Edit comment' }))
-    fireEvent.change(within(olderArticle).getByRole('textbox', { name: 'Edit comment' }), { target: { value: 'Edited older note' } })
-    fireEvent.click(within(olderArticle).getByRole('button', { name: 'Save' }))
+    const olderListItem = (await screen.findByText('Older note')).closest('li')
+    fireEvent.click(within(olderListItem).getByRole('button', { name: 'Edit comment' }))
+    fireEvent.change(within(olderListItem).getByRole('textbox', { name: 'Edit comment' }), { target: { value: 'Edited older note' } })
+    fireEvent.click(within(olderListItem).getByRole('button', { name: 'Save' }))
 
     await waitFor(() => expect(onUpdateComment).toHaveBeenCalledWith(order, olderComment, 'Edited older note'))
     expect(await screen.findByText('Edited older note')).toBeInTheDocument()
@@ -319,9 +326,9 @@ describe('WorkOrderActivity', () => {
     const onDeleteComment = vi.fn().mockResolvedValue({ deletedAt, cleanupPending: false })
     renderActivity({ currentUserId: 'member-1', onLoadActivity, onDeleteComment })
 
-    const olderArticle = (await screen.findByText('Older note to remove')).closest('article')
-    fireEvent.click(within(olderArticle).getByRole('button', { name: 'Delete comment' }))
-    fireEvent.click(within(olderArticle).getByRole('button', { name: 'Delete', exact: true }))
+    const olderListItem = (await screen.findByText('Older note to remove')).closest('li')
+    fireEvent.click(within(olderListItem).getByRole('button', { name: 'Delete comment' }))
+    fireEvent.click(within(olderListItem).getByRole('button', { name: 'Delete', exact: true }))
 
     await waitFor(() => expect(onDeleteComment).toHaveBeenCalledWith(order, olderComment))
     expect(await screen.findByText('This comment was deleted.')).toBeInTheDocument()
