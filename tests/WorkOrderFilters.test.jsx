@@ -20,6 +20,8 @@ describe('WorkOrderFilters', () => {
 
     const assignedToButton = screen.getByRole('button', { name: 'Assigned To filter' })
     const addFilterButton = screen.getByRole('button', { name: /Add filter/ })
+    expect(assignedToButton.parentElement).toHaveClass('work-order-filter-button-wrap')
+    expect(addFilterButton.parentElement).toHaveClass('work-order-filter-button-wrap')
     expect(assignedToButton.querySelector('.work-order-filter-icon')).not.toBeNull()
     expect(addFilterButton.querySelector('.work-order-filter-icon')).not.toBeNull()
     expect(assignedToButton.querySelector('.lucide-chevron-down')).toBeNull()
@@ -33,15 +35,43 @@ describe('WorkOrderFilters', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Status filter' }))
     const dialog = screen.getByRole('dialog', { name: 'Status filter' })
     expect(within(dialog).getByLabelText('On Hold').closest('label').querySelector('.work-order-filter-option-label')).not.toBeNull()
+    const expectedStatusIcons = [
+      ['Open', 'lucide-lock-keyhole', 'open'],
+      ['On Hold', 'lucide-circle-pause', 'on-hold'],
+      ['In Progress', 'lucide-rotate-cw', 'in-progress'],
+      ['Done', 'lucide-check', 'completed'],
+    ]
+    expectedStatusIcons.forEach(([label, iconClass, tone]) => {
+      const option = within(dialog).getByLabelText(label).closest('label')
+      expect(option.querySelector('.work-order-filter-status-icon')).toHaveClass(tone)
+      expect(option.querySelector('.work-order-filter-status-icon svg')).toHaveClass(iconClass)
+    })
     fireEvent.click(within(dialog).getByLabelText('On Hold'))
     expect(onFiltersChange).toHaveBeenLastCalledWith([
       { field: 'status', operator: 'one_of', values: ['On Hold'] },
     ])
 
-    fireEvent.change(within(dialog).getByLabelText('Status operator'), { target: { value: 'none_of' } })
+    expect(within(dialog).getByText('Status', { selector: '.work-order-filter-popover-title' })).toBeInTheDocument()
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Status operator: One of' }))
+    const operatorMenu = within(dialog).getByRole('group', { name: 'Status operators' })
+    fireEvent.click(within(operatorMenu).getByRole('button', { name: 'None of' }))
     expect(onFiltersChange).toHaveBeenLastCalledWith([
       { field: 'status', operator: 'none_of', values: ['On Hold'] },
     ])
+  })
+
+  it('renders the selected-value count in the nested filter badge', () => {
+    render(<ControlledFilters />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Status filter' }))
+    const dialog = screen.getByRole('dialog', { name: 'Status filter' })
+    fireEvent.click(within(dialog).getByLabelText('Open'))
+    fireEvent.click(within(dialog).getByLabelText('On Hold'))
+
+    const statusFilter = screen.getByRole('button', { name: 'Status filter, One of, 2 selected' })
+    const badge = statusFilter.querySelector('.work-order-filter-count')
+    expect(badge).toHaveTextContent('2')
+    expect(badge.querySelector('.work-order-filter-count-badge')).toHaveTextContent('2')
   })
 
   it('shows the Work Order priorities in the filter', () => {
@@ -51,12 +81,12 @@ describe('WorkOrderFilters', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Priority' }))
 
     const dialog = screen.getByRole('dialog', { name: 'Priority filter' })
-    const priorities = within(dialog).getAllByRole('checkbox').map((checkbox) => checkbox.parentElement.textContent.trim())
+    const priorities = within(dialog).getAllByRole('menuitem').map((item) => item.textContent.trim())
     expect(priorities).toEqual(['None', 'Low', 'Medium', 'High'])
-    expect(within(dialog).getByLabelText('None').closest('label').querySelector('.work-order-filter-option-icon svg')).toBeNull()
-    expect(within(dialog).getByLabelText('Low').closest('label').querySelector('.lucide-circle-arrow-down')).not.toBeNull()
-    expect(within(dialog).getByLabelText('Medium').closest('label').querySelector('.lucide-circle-minus')).not.toBeNull()
-    expect(within(dialog).getByLabelText('High').closest('label').querySelector('.lucide-circle-arrow-up')).not.toBeNull()
+    expect(within(dialog).getByRole('menuitem', { name: 'None' }).closest('.work-order-filter-option-row').querySelector('.work-order-filter-option-icon svg')).toBeNull()
+    expect(within(dialog).getByRole('menuitem', { name: 'Low' }).closest('.work-order-filter-option-row').querySelector('.lucide-circle-arrow-down')).not.toBeNull()
+    expect(within(dialog).getByRole('menuitem', { name: 'Medium' }).closest('.work-order-filter-option-row').querySelector('.lucide-circle-minus')).not.toBeNull()
+    expect(within(dialog).getByRole('menuitem', { name: 'High' }).closest('.work-order-filter-option-row').querySelector('.lucide-circle-arrow-up')).not.toBeNull()
 
     fireEvent.click(within(dialog).getByLabelText('None'))
     expect(onFiltersChange).toHaveBeenLastCalledWith([
@@ -71,7 +101,8 @@ describe('WorkOrderFilters', () => {
     fireEvent.click(screen.getByRole('button', { name: /Add filter/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Due date' }))
     const dialog = screen.getByRole('dialog', { name: 'Due date filter' })
-    fireEvent.change(within(dialog).getByLabelText('Due date operator'), { target: { value: 'between' } })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Due date operator: On' }))
+    fireEvent.click(within(within(dialog).getByRole('group', { name: 'Due date operators' })).getByRole('button', { name: 'Between' }))
     fireEvent.change(within(dialog).getByLabelText('Start date'), { target: { value: '2026-10-08' } })
     expect(onFiltersChange).not.toHaveBeenCalled()
     fireEvent.change(within(dialog).getByLabelText('End date'), { target: { value: '2026-10-10' } })

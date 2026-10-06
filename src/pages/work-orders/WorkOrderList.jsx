@@ -15,30 +15,15 @@ import {
 } from "./workOrderInboxExpandedGroups";
 import "./WorkOrderList.css";
 import {
-  Check,
   ChevronDown,
   Circle,
   CircleCheck,
-  CirclePause,
-  LockKeyhole,
   Image as ImageIcon,
   MailCheck,
-  RotateCw,
 } from "lucide-react";
+import { workOrderStatusOptions as statusOptions } from "./workOrderStatusOptions";
 
 const EMPTY_FILTERS = [];
-
-const statusOptions = [
-  { value: "Open", label: "Open", icon: LockKeyhole, tone: "open" },
-  { value: "On Hold", label: "On Hold", icon: CirclePause, tone: "on-hold" },
-  {
-    value: "In Progress",
-    label: "In Progress",
-    icon: RotateCw,
-    tone: "in-progress",
-  },
-  { value: "Completed", label: "Done", icon: Check, tone: "completed" },
-];
 
 function WorkOrderStatusMenu({ order, onStatusChange, canChangeStatus }) {
   const [isOpen, setIsOpen] = useState(false);

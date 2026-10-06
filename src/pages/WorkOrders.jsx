@@ -11,6 +11,7 @@ import { matchesWorkOrderFilters, normalizeWorkOrderFilters } from '../utils/wor
 import { canAccessRecord, hasPermission } from '../services/authorizationService'
 import { listOrganizationMembers, listOrganizationTeamMemberships, listOrganizationTeams } from '../services/organizationService'
 import { useWorkspace } from '../components/layout/useWorkspace'
+import { usePersistedFilterSelection } from '../hooks/usePersistedFilterSelection'
 import { createWorkOrder, getWorkOrderById, listWorkOrderInboxCounts, listWorkOrderInboxPage, markWorkOrderInboxRead, markWorkOrderRead, markWorkOrderUnread, signWorkOrderAttachmentUrls, updateWorkOrderDetails, updateWorkOrderExecution } from '../services/workOrderService'
 import { NewWorkOrderForm } from './work-orders/NewWorkOrderForm'
 import { formatCalendarDateForUser, formatDateForUser } from '../utils/dateFormatting'
@@ -79,7 +80,12 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
   const [activeTab, setActiveTab] = useState('To Do')
   const [sortId, setSortId] = useState('priority-highest')
   const [unreadFirst, setUnreadFirst] = useState(false)
-  const [inboxFilters, setInboxFilters] = useState([])
+  const { filters: inboxFilters, setFilters: setInboxFilters } = usePersistedFilterSelection({
+    moduleKey: 'work-orders',
+    userId,
+    organizationId,
+    normalizeFilters: normalizeWorkOrderFilters,
+  })
   const [savedWorkOrderFilters, setSavedWorkOrderFilters] = useState([])
   const [savedFiltersLoadedForOrganization, setSavedFiltersLoadedForOrganization] = useState('')
   const [savedFiltersLoadingForOrganization, setSavedFiltersLoadingForOrganization] = useState('')
@@ -155,7 +161,7 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
     void saveInboxPreferences(sortId, nextUnreadFirst)
   }
   const changeInboxFilters = (nextFilters) => {
-    setInboxFilters(normalizeWorkOrderFilters(nextFilters))
+    setInboxFilters(nextFilters)
     setActiveSavedFilterId(null)
   }
   const loadSavedWorkOrderFilters = useCallback(async () => {
@@ -217,9 +223,9 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
     setActiveSavedFilterId((current) => current === savedFilterId ? null : current)
   }, [canManageOrganizationWorkOrderFilters, grants, organizationId])
   const applySavedWorkOrderFilter = useCallback((savedFilter) => {
-    setInboxFilters(normalizeWorkOrderFilters(savedFilter.filters))
+    setInboxFilters(savedFilter.filters)
     setActiveSavedFilterId(savedFilter.id)
-  }, [])
+  }, [setInboxFilters])
   useEffect(() => {
     const timeout = window.setTimeout(() => setDebouncedSearch(search), 250)
     return () => window.clearTimeout(timeout)

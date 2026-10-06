@@ -49,6 +49,21 @@ Separate observations into three layers before editing:
 
 Prefer computed styles and the reference DOM over visual guesses when they conflict. Use the reference to establish relationships, then verify the Workbench result with the project’s own DOM and styles.
 
+## Conformance workflow
+
+Complete this comparison before changing reference-driven UI:
+
+- Read the complete supplied HTML, computed CSS, and screenshots. Do not style from a cropped screenshot or isolated property list while ignoring the supplied DOM.
+- Map the relevant reference elements and parent/child/sibling relationships to the Workbench JSX. Note which element owns each supplied layout property and which visible control it positions.
+- Distinguish measured computed dimensions from intended layout constraints. Do not turn a measured width into a fixed CSS width unless the reference or responsive behavior supports that choice.
+- Inspect the current Workbench DOM and scoped CSS, identify the exact layout owner causing the mismatch, and make the smallest change at that owner. Avoid compensating overrides on descendants or unrelated controls.
+
+After changing the UI:
+
+- Compare the rendered Workbench result with the reference at the same viewport, checking the actual alignment, spacing, sizing, and visible states. Passing tests or a production build does not establish visual conformance.
+- If a browser or rendered capture is unavailable, state that visual conformance remains unverified; do not claim the UI matches or that the issue is fixed.
+- If the user reports that the result is still wrong, stop making incremental CSS guesses. Re-read the supplied reference and inspect the current Workbench markup/styles, explain the specific mismatch, then adjust the responsible layout owner and verify again.
+
 ## Validation
 
 After a structural or visual change, run `npm.cmd run verify` and inspect the rendered layout at the reference viewport. Confirm that:
