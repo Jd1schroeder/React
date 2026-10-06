@@ -8,6 +8,11 @@ import {
 import { createPortal } from "react-dom";
 import { Button } from "../../components/ui/Button";
 import { PriorityBadge } from "../../components/ui/PriorityBadge";
+import {
+  getWorkOrderInboxExpandedGroupsKey,
+  readWorkOrderInboxExpandedGroups,
+  writeWorkOrderInboxExpandedGroups,
+} from "./workOrderInboxExpandedGroups";
 import "./WorkOrderList.css";
 import {
   CalendarDays,
@@ -284,6 +289,8 @@ function WorkOrderListItem({
 }
 
 export function WorkOrderList({
+  userId,
+  organizationId,
   activeTab,
   setActiveTab,
   search,
@@ -304,7 +311,20 @@ export function WorkOrderList({
   unreadFirst,
   onUnreadFirstChange,
 }) {
-  const [expandedGroups, setExpandedGroups] = useState({});
+  const expandedGroupsStorageKey = getWorkOrderInboxExpandedGroupsKey({
+    userId,
+    organizationId,
+    activeTab,
+  });
+  const expandedGroupsScopeKey = expandedGroupsStorageKey ?? "";
+  const [expandedGroupsByScope, setExpandedGroupsByScope] = useState(() => ({
+    [expandedGroupsScopeKey]: readWorkOrderInboxExpandedGroups(
+      expandedGroupsStorageKey,
+      activeTab,
+    ),
+  }));
+  const expandedGroups = expandedGroupsByScope[expandedGroupsScopeKey] ??
+    readWorkOrderInboxExpandedGroups(expandedGroupsStorageKey, activeTab);
   const [showEmptyCategories, setShowEmptyCategories] = useState(false);
   const [groupPages, setGroupPages] = useState({});
   const [groupLoading, setGroupLoading] = useState({});
@@ -317,6 +337,16 @@ export function WorkOrderList({
   const readAllButtonRef = useRef(null);
   const [isReadAllTooltipVisible, setIsReadAllTooltipVisible] = useState(false);
   const [readAllTooltipPosition, setReadAllTooltipPosition] = useState(null);
+  useEffect(() => {
+    if (Object.prototype.hasOwnProperty.call(expandedGroupsByScope, expandedGroupsScopeKey)) return;
+    setExpandedGroupsByScope((current) => ({
+      ...current,
+      [expandedGroupsScopeKey]: readWorkOrderInboxExpandedGroups(
+        expandedGroupsStorageKey,
+        activeTab,
+      ),
+    }));
+  }, [activeTab, expandedGroupsByScope, expandedGroupsScopeKey, expandedGroupsStorageKey]);
   const measureReadAllTooltip = useCallback(() => {
     const rect = readAllButtonRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -653,10 +683,18 @@ export function WorkOrderList({
                 onMouseEnter={() => prefetchGroup(group.id)}
                 onFocus={() => prefetchGroup(group.id)}
                 onClick={() => {
-                  setExpandedGroups((current) => ({
+                  const nextExpandedGroups = { ...expandedGroups };
+                  if (expanded) delete nextExpandedGroups[group.id];
+                  else nextExpandedGroups[group.id] = true;
+                  setExpandedGroupsByScope((current) => ({
                     ...current,
-                    [group.id]: !expanded,
+                    [expandedGroupsScopeKey]: nextExpandedGroups,
                   }));
+                  writeWorkOrderInboxExpandedGroups(
+                    expandedGroupsStorageKey,
+                    activeTab,
+                    nextExpandedGroups,
+                  );
                   if (!expanded) {
                     const loadedOrders = groupPages[group.id]?.orders;
                     if (loadedOrders) {

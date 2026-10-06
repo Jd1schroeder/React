@@ -64,7 +64,7 @@ The invitation contract should resolve the allowed membership role for the curre
 
 ## Browser storage standard
 
-- Use `localStorage` only for non-sensitive, durable UI context. The current approved key is `workbench.activeOrganizationId`; always revalidate it against the authenticated user's active memberships before using it.
+- Use `localStorage` only for non-sensitive, durable UI context. Approved keys include `workbench.activeOrganizationId` (revalidate against the authenticated user's active memberships) and `workbench.workOrderInbox.expandedGroups.v1:{userId}:{organizationId}:{todo|done}`. The latter is owned by the signed-in user, stores only valid expanded-group IDs for this browser and scope, does not sync across devices, and persists until all groups in that scope are collapsed or site data is cleared.
 - Use `sessionStorage` only for short-lived flow state. The current approved key is `workbench.pendingInviteToken`, which may bridge login or email verification and must be removed after invitation acceptance or cancellation.
 - Never store access tokens, refresh tokens, passwords, authorization decisions, profile records, organization records, or signed URLs in application-managed browser storage. Supabase Auth owns its session persistence.
 - Persist profile, preference, membership, invitation, and audit data in Supabase and reload it through services. Namespace any future browser keys under `workbench.` and document their owner, sensitivity, lifetime, and cleanup behavior before adding them.
