@@ -131,7 +131,9 @@ function WorkOrderStatusMenu({ order, onStatusChange, canChangeStatus }) {
     return (
       <span className={`work-order-status-static ${currentStatus?.tone ?? ""}`}>
         <CurrentIcon size={12} />
-        {currentStatus?.label ?? order.status}
+        <span className="work-order-status-label">
+          {currentStatus?.label ?? order.status}
+        </span>
       </span>
     );
   }
@@ -147,7 +149,9 @@ function WorkOrderStatusMenu({ order, onStatusChange, canChangeStatus }) {
         onClick={() => setIsOpen((open) => !open)}
       >
         <CurrentIcon size={12} />
-        {currentStatus?.label ?? order.status}
+        <span className="work-order-status-label">
+          {currentStatus?.label ?? order.status}
+        </span>
         <ChevronDown size={12} className={isOpen ? "rotated" : ""} />
       </button>
       {isOpen &&

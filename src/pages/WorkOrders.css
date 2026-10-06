@@ -1,10 +1,12 @@
 .work-orders-layout {
-  grid-template-columns: 516px minmax(0, 1fr);
-  gap: 0;
   overflow: visible;
   border: 0;
   border-radius: var(--radius-none);
   background: transparent;
+}
+.panel-view-body.work-orders-layout {
+  grid-template-columns: minmax(316px, min(516px, 40%)) minmax(0, 1fr);
+  gap: 0;
 }
 .inbox-pane,
 .detail-pane {
@@ -17,7 +19,7 @@
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
-  width: 500px;
+  width: calc(100% - 16px);
   min-width: 300px;
   max-width: 500px;
   min-height: 0;
@@ -202,11 +204,15 @@
 .work-order-read-toast button:hover {
   background: var(--surface-toast-action-hover);
 }
-@media (max-width: 700px) {
+@media (max-width: 1200px) {
+  .panel-view-body.work-orders-layout {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
   .inbox-pane {
-    width: 100%;
+    width: min(100%, 500px);
     min-width: 0;
-    max-width: none;
+    max-width: 500px;
     max-height: 390px;
     margin-right: 0;
     border-right: 0;

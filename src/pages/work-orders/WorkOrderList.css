@@ -667,7 +667,17 @@
 }
 .work-order-status-control {
   position: relative;
+  display: block;
   flex: 0 0 auto;
+  min-height: 0;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: 0.9rem;
+  font-style: normal;
+  font-weight: var(--font-normal);
+  line-height: 1.2;
+  user-select: none;
 }
 .work-order-status-trigger,
 .work-order-status-static {
@@ -684,6 +694,14 @@
   font-size: var(--font-size-xs);
   line-height: 1;
   white-space: nowrap;
+}
+.work-order-status-label {
+  color: var(--ink);
+  font-family: var(--font-family);
+  font-size: 0.9rem;
+  font-style: normal;
+  font-weight: var(--font-normal);
+  line-height: 1.2;
 }
 .work-order-status-trigger {
   cursor: pointer;
