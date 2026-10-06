@@ -60,7 +60,7 @@ function WorkOrderDescription({ order }) {
         {pictures.length > 0 && (
           <div className="detail-attachment-gallery">
             <ul className="detail-attachment-list" aria-label="Work Order pictures">
-              {visiblePictures.map((picture) => (
+              {visiblePictures.map((picture, index) => (
                 <li className="detail-attachment-item" key={picture.id}>
                   <div className="detail-attachment-image-link">
                     <div className="detail-attachment-ratio">
@@ -70,7 +70,8 @@ function WorkOrderDescription({ order }) {
                           src={picture.signed_url}
                           alt={picture.file_name || "Work Order picture"}
                           title={picture.file_name || "Work Order picture"}
-                          loading="lazy"
+                          loading={index === 0 ? "eager" : "lazy"}
+                          fetchPriority={index === 0 ? "high" : undefined}
                         />
                       ) : (
                         <div className="detail-attachment-unavailable" role="img" aria-label={`${picture.file_name || "Work Order picture"} preview unavailable`} />

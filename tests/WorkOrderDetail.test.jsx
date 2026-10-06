@@ -124,6 +124,22 @@ describe('WorkOrderDetail authorization', () => {
     expect(onStatusChange).toHaveBeenCalledWith(selected, 'Completed')
   })
 
+  it('prioritizes only the first detail picture', () => {
+    const { container } = render(<WorkOrderDetail selected={{
+      ...selected,
+      work_order_attachments: [
+        { id: 'image-1', kind: 'image', signed_url: '/first.jpg', file_name: 'First image' },
+        { id: 'image-2', kind: 'image', signed_url: '/second.jpg', file_name: 'Second image' },
+      ],
+    }} grants={{}} />)
+    const images = container.querySelectorAll('.detail-attachment-image')
+
+    expect(images[0]).toHaveAttribute('loading', 'eager')
+    expect(images[0]).toHaveAttribute('fetchpriority', 'high')
+    expect(images[1]).toHaveAttribute('loading', 'lazy')
+    expect(images[1]).not.toHaveAttribute('fetchpriority')
+  })
+
   it.each([null, 'None'])('hides the Priority fact when priority is %s', (priority) => {
     const { container } = render(<WorkOrderDetail selected={{ ...selected, priority }} grants={{}} />)
 
