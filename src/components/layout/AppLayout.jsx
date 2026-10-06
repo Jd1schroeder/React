@@ -1,6 +1,7 @@
 import { Sidebar } from "./Sidebar";
 import { WorkspaceProvider } from "./WorkspaceContext";
 import { UpdateNotice } from "./UpdateNotice";
+import { MobileNavigation } from "./MobileNavigation";
 export function AppLayout({ activePage, onNavigate, children }) {
   return (
     <WorkspaceProvider onNavigate={onNavigate}>
@@ -11,6 +12,7 @@ export function AppLayout({ activePage, onNavigate, children }) {
             <div className="page-content-inner">{children}</div>
           </main>
         </div>
+        <MobileNavigation activePage={activePage} onNavigate={onNavigate} />
         <UpdateNotice />
       </div>
     </WorkspaceProvider>

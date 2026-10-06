@@ -5,6 +5,7 @@ import {
   CirclePause,
   CalendarDays,
   Check,
+  ChevronLeft,
   EllipsisVertical,
   FileDown,
   Link,
@@ -132,6 +133,7 @@ export function WorkOrderDetail({
   selected,
   isLoadingRecord = false,
   missingRecord,
+  onBack,
   onEdit,
   onCopy,
   onPreparePdfExport,
@@ -187,6 +189,7 @@ export function WorkOrderDetail({
   if (isLoadingRecord)
     return (
       <section className="detail-pane" aria-busy="true">
+        <button className="mobile-detail-back" type="button" onClick={onBack}><ChevronLeft size={19} aria-hidden="true" /><span>Work Orders</span></button>
         <div className="detail-record-loading" role="status">
           <span className="detail-record-loading-spinner" aria-hidden="true" />
           <span>Loading Work Order...</span>
@@ -196,6 +199,7 @@ export function WorkOrderDetail({
   if (missingRecord)
     return (
       <section className="detail-pane">
+        <button className="mobile-detail-back" type="button" onClick={onBack}><ChevronLeft size={19} aria-hidden="true" /><span>Work Orders</span></button>
         <PanelRecordNotFound />
       </section>
     );
@@ -305,6 +309,7 @@ export function WorkOrderDetail({
   return (
     <section className="detail-pane">
       <header className="detail-header">
+        <button className="mobile-detail-back" type="button" onClick={onBack}><ChevronLeft size={19} aria-hidden="true" /><span>Work Orders</span></button>
         <div className="detail-heading">
           <div className="detail-title-row">
             <h2>{selected.title}</h2>

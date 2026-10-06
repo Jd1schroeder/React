@@ -295,9 +295,79 @@
   margin-left: auto;
   flex: none;
 }
+.mobile-record-back {
+  display: none;
+}
 @media (max-width: 900px) {
   .panel-detail-meta {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 840px) {
+  .panel-record-page .panel-view-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-record-page .panel-list {
+    min-height: 0;
+    flex: 1 1 auto;
+    max-height: none;
+    border-radius: var(--radius-card);
+  }
+
+  .panel-record-page.has-record-route .panel-list {
+    display: none;
+  }
+
+  .panel-record-page:not(.has-record-route) .panel-detail {
+    display: none;
+  }
+
+  .panel-record-page.has-record-route .panel-detail {
+    min-height: 0;
+    flex: 1 1 auto;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .panel-record-page .mobile-record-back {
+    display: inline-flex;
+    min-height: 48px;
+    flex: none;
+    align-items: center;
+    align-self: flex-start;
+    gap: var(--spacing-1);
+    padding: 0 var(--spacing-2);
+    border: 0;
+    border-radius: var(--radius-control);
+    color: var(--blue);
+    background: transparent;
+    font: inherit;
+    font-weight: var(--font-semibold);
+  }
+
+  .panel-record-page .panel-detail-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+
+  .panel-record-page .panel-detail-header h2 {
+    font-size: var(--font-size-xl-compact);
+    overflow-wrap: anywhere;
+  }
+
+  .panel-record-page .panel-detail-content {
+    min-height: 0;
+    flex: 1 1 auto;
+    padding: var(--spacing-4);
+  }
+
+  .panel-record-page .panel-detail-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (max-width: 700px) {
@@ -312,5 +382,17 @@
   .panel-detail-content,
   .panel-detail-header {
     padding: var(--spacing-3);
+  }
+}
+
+@media (max-width: 840px) {
+  .panel-record-page .panel-list {
+    max-height: none;
+    border-right: var(--border-width-normal) solid var(--line);
+    border-bottom: var(--border-width-normal) solid var(--line);
+  }
+
+  .panel-record-page.has-record-route .panel-detail {
+    min-height: 0;
   }
 }

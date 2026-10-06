@@ -204,19 +204,17 @@
 .work-order-read-toast button:hover {
   background: var(--surface-toast-action-hover);
 }
-@media (max-width: 1200px) {
+@media (max-width: 840px) {
   .panel-view-body.work-orders-layout {
     grid-template-columns: 1fr;
-    overflow: auto;
+    overflow: hidden;
   }
   .inbox-pane {
-    width: min(100%, 500px);
+    width: 100%;
     min-width: 0;
-    max-width: 500px;
-    max-height: 390px;
+    max-width: none;
+    max-height: none;
     margin-right: 0;
-    border-right: 0;
-    border-bottom: var(--border-width-normal) solid var(--line);
   }
 }
 .work-orders-loading {
@@ -832,5 +830,156 @@
   .new-work-order-title-row {
     grid-template-columns: 1fr;
     gap: var(--spacing-3);
+  }
+}
+
+@media (max-width: 840px) {
+  .work-orders-page.is-mobile-record-view .panel-navigation,
+  .work-orders-page.is-mobile-record-view .panel-subnavigation {
+    display: none;
+  }
+
+  .work-orders-page .panel-main-panel {
+    min-height: 0;
+    padding: 0;
+  }
+
+  .work-orders-page .panel-content-section {
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  .work-orders-page .panel-view-body.work-orders-layout {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .work-orders-page .inbox-pane {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    min-height: 0;
+    max-height: none;
+    flex: 1 1 auto;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .work-orders-page .panel-subnavigation {
+    flex: 0 0 48px;
+    padding: 0 var(--spacing-3);
+  }
+
+  .work-orders-page .panel-subnavigation .panel-filter-row {
+    width: 100%;
+    padding: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .work-orders-page .panel-subnavigation .panel-filter-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .work-orders-page .work-order-filter-button-wrap {
+    height: 44px;
+  }
+
+  .work-orders-page .work-order-actions {
+    width: max-content;
+    min-width: max-content;
+    flex-wrap: nowrap;
+  }
+
+  .work-orders-page .work-order-filter-chip,
+  .work-orders-page .work-order-filter-add,
+  .work-orders-page .work-order-filter-clear,
+  .work-orders-page .work-order-saved-filters-trigger {
+    min-height: 44px;
+  }
+
+  .work-orders-page .work-order-tab {
+    min-height: 48px;
+  }
+
+  .work-orders-page:not(.is-mobile-record-view) .detail-pane,
+  .work-orders-page.is-mobile-record-view .inbox-pane {
+    display: none;
+  }
+
+  .work-orders-page.is-mobile-record-view .detail-pane,
+  .work-orders-page.is-mobile-record-view .new-work-order-pane {
+    min-height: 0;
+    height: 100%;
+    flex: 1 1 auto;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .work-orders-page.is-mobile-record-view .new-work-order-header {
+    min-height: 58px;
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+
+  .work-orders-page .new-work-order-scroll {
+    padding: var(--spacing-4) var(--spacing-4) var(--spacing-7);
+  }
+
+  .work-orders-page .new-work-order-row {
+    margin: var(--spacing-3) 0 0;
+  }
+
+  .work-orders-page .new-work-order-row-content {
+    margin: var(--spacing-2) 0;
+  }
+
+  .work-orders-page .new-work-order-two-column,
+  .work-orders-page .new-work-order-recurrence-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .work-orders-page .new-work-order-recurrence-fields {
+    display: grid;
+    width: 100%;
+  }
+
+  .work-orders-page .new-work-order-field input,
+  .work-orders-page .new-work-order-date,
+  .work-orders-page .new-work-order-time-control,
+  .work-orders-page .new-work-order-priority button,
+  .work-orders-page .new-work-order-cancel,
+  .work-orders-page .new-work-order-create {
+    min-height: 48px;
+  }
+
+  .work-orders-page .new-work-order-field input,
+  .work-orders-page .new-work-order-field textarea {
+    font-size: var(--font-size-md);
+  }
+
+  .work-orders-page .new-work-order-footer {
+    gap: var(--spacing-2);
+    padding: var(--spacing-3) var(--spacing-4) calc(var(--spacing-3) + env(safe-area-inset-bottom));
+  }
+
+  .work-orders-page .new-work-order-cancel {
+    flex: 0 0 auto;
+  }
+
+  .work-orders-page .new-work-order-create {
+    flex: 1 1 auto;
+  }
+
+  .work-orders-page .work-orders-loading {
+    min-height: 0;
+    padding: var(--spacing-4);
   }
 }

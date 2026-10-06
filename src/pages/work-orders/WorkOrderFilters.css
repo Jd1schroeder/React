@@ -181,6 +181,12 @@
   outline: var(--focus-border-width) solid var(--focus-border-color);
   outline-offset: 1px;
 }
+.work-order-filter-portal {
+  position: fixed;
+  z-index: 1599;
+  inset: 0;
+  pointer-events: none;
+}
 .work-order-filter-popover {
   position: fixed;
   z-index: 1600;
@@ -194,6 +200,7 @@
   color: var(--ink);
   background: var(--surface);
   box-shadow: var(--shadow-popover, 0 8px 24px rgb(16 24 40 / 16%));
+  pointer-events: auto;
 }
 .work-order-filter-popover.is-add-menu {
   overflow: auto;
@@ -639,5 +646,54 @@
   }
   .work-order-filter-clear {
     margin-left: 0;
+  }
+}
+
+@media (max-width: 840px) {
+  .work-order-filter-portal {
+    z-index: 1599;
+    pointer-events: auto;
+    background: rgb(18 28 38 / 38%);
+  }
+
+  .work-order-filter-popover {
+    position: absolute;
+    top: auto !important;
+    right: 8px;
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    left: 8px !important;
+    width: auto;
+    max-height: min(72dvh, calc(100% - 88px - env(safe-area-inset-bottom))) !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: 0 -8px 28px rgb(16 24 40 / 18%);
+  }
+
+  .work-order-filter-popover-header {
+    min-height: 48px;
+    height: 48px;
+  }
+
+  .work-order-filter-header-start {
+    height: 48px;
+  }
+
+  .work-order-filter-operator-trigger,
+  .work-order-filter-clear-button {
+    min-height: 44px;
+  }
+
+  .work-order-filter-options.is-assignees {
+    max-height: none;
+  }
+
+  .work-order-filter-option {
+    min-height: 48px;
+    font-size: var(--font-size-md);
+  }
+
+  .work-order-filter-search input,
+  .work-order-filter-date-inputs input {
+    min-height: 48px;
+    font-size: var(--font-size-md);
   }
 }

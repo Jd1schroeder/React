@@ -1,4 +1,5 @@
 import { PanelView } from '../components/layout/PanelView'
+import { getPagePath } from '../routes.js'
 
 const pageActions = {
   Requests: 'Create request',
@@ -15,6 +16,6 @@ const pageActions = {
   Vendors: 'Add vendor',
 }
 
-export function ScaffoldPage({ pageName, recordId }) {
-  return <PanelView title={pageName} actionLabel={pageActions[pageName] ?? 'Create item'} items={[]} filters={['Status', 'Owner']} kind="record" recordId={recordId} />
+export function ScaffoldPage({ pageName, recordId, onNavigate }) {
+  return <PanelView title={pageName} actionLabel={pageActions[pageName] ?? 'Create item'} items={[]} filters={['Status', 'Owner']} kind="record" recordId={recordId} listPath={getPagePath(pageName)} onNavigate={onNavigate} />
 }

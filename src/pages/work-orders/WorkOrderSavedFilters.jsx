@@ -167,13 +167,14 @@ export function WorkOrderSavedFilters({
     >
       <WandSparkles size={14} aria-hidden="true" /> My Filters
     </button>
-    {isOpen && createPortal(<section
-      ref={panelRef}
-      className="work-order-saved-filters-panel"
-      role="dialog"
-      aria-label="My saved Work Order filters"
-      style={{ top: position?.top ?? 0, left: position?.left ?? 0, maxHeight: position?.maxHeight ?? 'calc(100vh - 16px)', visibility: position ? 'visible' : 'hidden' }}
-    >
+    {isOpen && createPortal(<div className="work-order-saved-filters-portal" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsOpen(false) }}>
+      <section
+        ref={panelRef}
+        className="work-order-saved-filters-panel"
+        role="dialog"
+        aria-label="My saved Work Order filters"
+        style={{ top: position?.top ?? 0, left: position?.left ?? 0, maxHeight: position?.maxHeight ?? 'calc(100vh - 16px)', visibility: position ? 'visible' : 'hidden' }}
+      >
       <label className="work-order-saved-filters-search">
         <Search size={16} aria-hidden="true" />
         <span className="work-order-saved-filters-sr-only">Search saved filters</span>
@@ -225,6 +226,7 @@ export function WorkOrderSavedFilters({
           <footer><button type="button" onClick={() => setEditor(null)} disabled={saving}>Cancel</button><button type="submit" disabled={saving || !nameDraft.trim()}>{saving ? 'Saving…' : editor.mode === 'edit' ? 'Save name' : 'Save filter'}</button></footer>
         </form>
       </div>, document.body)}
-    </section>, document.body)}
+      </section>
+    </div>, document.body)}
   </div>
 }

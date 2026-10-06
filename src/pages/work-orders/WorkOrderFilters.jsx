@@ -355,18 +355,19 @@ export function WorkOrderFilters({
         onDelete={onDeleteSavedFilter}
       />
       {activeField && createPortal(
-        <div
-          ref={menuRef}
-          className={`work-order-filter-popover${activeField === 'add' ? ' is-add-menu' : ''}`}
-          role="dialog"
-          aria-label={activeField === 'add' ? 'Add Work Order filter' : `${activeDefinition.label} filter`}
-          style={{
-            top: menuPosition?.top ?? 0,
-            left: menuPosition?.left ?? 0,
-            maxHeight: menuPosition?.maxHeight ?? 'calc(100vh - 16px)',
-            visibility: menuPosition ? 'visible' : 'hidden',
-          }}
-        >
+        <div className="work-order-filter-portal" onMouseDown={(event) => { if (event.target === event.currentTarget) setActiveField(null) }}>
+          <div
+            ref={menuRef}
+            className={`work-order-filter-popover${activeField === 'add' ? ' is-add-menu' : ''}`}
+            role="dialog"
+            aria-label={activeField === 'add' ? 'Add Work Order filter' : `${activeDefinition.label} filter`}
+            style={{
+              top: menuPosition?.top ?? 0,
+              left: menuPosition?.left ?? 0,
+              maxHeight: menuPosition?.maxHeight ?? 'calc(100vh - 16px)',
+              visibility: menuPosition ? 'visible' : 'hidden',
+            }}
+          >
           {activeField === 'add'
             ? <div className="work-order-filter-add-options">
                 {selectableFields.filter((field) => !filterByField.has(field)).map((field) => {
@@ -486,6 +487,7 @@ export function WorkOrderFilters({
                 {activeField === 'priority' && hasEmptyOperator && <p className="work-order-filter-hint">This filter matches Work Orders {operatorDraft === 'is_empty' ? 'without a priority' : 'with a priority'}.</p>}
                 </div>
               </>}
+          </div>
         </div>,
         document.body,
       )}

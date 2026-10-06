@@ -13,6 +13,12 @@
   border-color: var(--blue);
   background: var(--surface-control-hover);
 }
+.work-order-saved-filters-portal {
+  position: fixed;
+  z-index: 1599;
+  inset: 0;
+  pointer-events: none;
+}
 .work-order-saved-filters-panel {
   position: fixed;
   z-index: 1600;
@@ -26,6 +32,7 @@
   color: var(--ink);
   background: var(--surface);
   box-shadow: var(--shadow-popover, 0 8px 24px rgb(16 24 40 / 16%));
+  pointer-events: auto;
 }
 .work-order-saved-filters-trigger:focus-visible,
 .work-order-saved-filters-panel button:focus-visible,
@@ -338,4 +345,37 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   clip-path: inset(50%);
+}
+
+@media (max-width: 840px) {
+  .work-order-saved-filters-portal {
+    pointer-events: auto;
+    background: rgb(18 28 38 / 38%);
+  }
+
+  .work-order-saved-filters-panel {
+    position: absolute;
+    top: auto !important;
+    right: 8px;
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    left: 8px !important;
+    width: auto;
+    max-height: min(72dvh, calc(100% - 88px - env(safe-area-inset-bottom))) !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: 0 -8px 28px rgb(16 24 40 / 18%);
+  }
+
+  .work-order-saved-filters-trigger {
+    min-height: 44px;
+  }
+
+  .work-order-saved-filters-tabs button,
+  .work-order-saved-filters-footer button {
+    min-height: 48px;
+  }
+
+  .work-order-saved-filter-actions button {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }

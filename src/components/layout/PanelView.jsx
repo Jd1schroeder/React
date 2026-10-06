@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   BarChart3,
   CalendarDays,
+  ChevronLeft,
   ChevronDown,
   EllipsisVertical,
   Gauge,
@@ -38,6 +39,8 @@ export function PanelView({
   recordId,
   recordType,
   onNavigateRecord,
+  onNavigate,
+  listPath,
   showListHeader = false,
 }) {
   const [localSelectedId, setLocalSelectedId] = useState(items[0]?.id);
@@ -59,6 +62,7 @@ export function PanelView({
   return (
     <PanelLayout
       title={title}
+      className={`panel-record-page${recordId ? " has-record-route" : ""}`}
       modeIcon={PanelLeft}
       searchValue={filter}
       onSearch={setFilter}
@@ -108,6 +112,7 @@ export function PanelView({
           </div>
         </aside>
         <section className="panel-detail">
+          {recordId && onNavigate && (listPath || recordType) && <button className="mobile-record-back" type="button" onClick={() => onNavigate(listPath ?? `/${recordType}`)}><ChevronLeft size={19} aria-hidden="true" /><span>Back to {title}</span></button>}
           {missingRecord ? (
             <PanelRecordNotFound />
           ) : selected && (

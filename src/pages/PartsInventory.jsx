@@ -1,6 +1,6 @@
 import { PanelView } from '../components/layout/PanelView'
 
-export function PartsInventory({ recordId, onNavigateRecord }) {
+export function PartsInventory({ recordId, onNavigateRecord, onNavigate }) {
   const parts = []
   const items = parts.map((part) => ({
     id: part.id,
@@ -25,6 +25,7 @@ export function PartsInventory({ recordId, onNavigateRecord }) {
       recordId={recordId}
       recordType="parts"
       onNavigateRecord={onNavigateRecord}
+      onNavigate={onNavigate}
     />
   )
 }

@@ -207,4 +207,8 @@
   .settings-content {
     padding: var(--spacing-7);
   }
+
+  .settings-nav-item {
+    min-height: 48px;
+  }
 }

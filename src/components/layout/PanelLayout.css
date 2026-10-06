@@ -208,3 +208,101 @@
 @media (max-width: 600px) {
   .header-search { flex: 1; width: auto; min-width: 0; max-width: none; }
 }
+
+@media (max-width: 840px) {
+  .panel-view-page {
+    min-height: 0;
+    height: 100%;
+  }
+
+  .panel-navigation {
+    padding: var(--spacing-3) var(--spacing-4) 0;
+  }
+
+  .panel-view-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+    gap: var(--spacing-3);
+  }
+
+  .panel-view-title,
+  .panel-title-line {
+    min-width: 0;
+  }
+
+  .panel-title-line {
+    flex-wrap: wrap;
+    gap: var(--spacing-1) var(--spacing-2);
+  }
+
+  .panel-view-title h1 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: var(--font-size-2xl-compact);
+    line-height: var(--line-height-3xl);
+    white-space: normal;
+  }
+
+  .panel-view-mode-selector {
+    padding-top: 0;
+  }
+
+  .panel-view-header-actions {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: stretch;
+    gap: var(--spacing-2);
+  }
+
+  .panel-view-header-actions .header-search {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    min-height: 48px;
+    flex: initial;
+    padding: 0 var(--spacing-3);
+  }
+
+  .panel-view-header-actions > .button {
+    min-height: 48px;
+    gap: var(--spacing-2);
+    padding: 0 var(--spacing-3);
+    white-space: nowrap;
+  }
+
+  .panel-subnavigation {
+    min-height: 48px;
+    margin: 0;
+    padding: 0 var(--spacing-3);
+    overflow: hidden;
+  }
+
+  .panel-subnavigation .panel-filter-row {
+    display: flex;
+    min-width: 0;
+    flex-wrap: nowrap;
+    gap: var(--spacing-2);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .panel-subnavigation .panel-filter-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .panel-main-panel {
+    min-height: 0;
+    padding: 0 var(--spacing-3) var(--spacing-3);
+  }
+
+  .panel-view-body {
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    overflow: hidden;
+  }
+}
