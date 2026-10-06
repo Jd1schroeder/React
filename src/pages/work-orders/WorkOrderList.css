@@ -412,11 +412,6 @@
   line-height: var(--line-height-md);
   letter-spacing: inherit;
 }
-.work-order-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-}
 .work-order-list {
   flex: 1 1 auto;
   min-height: 0;
@@ -783,9 +778,4 @@
 .work-order-status-option:disabled {
   opacity: 0.6;
   cursor: wait;
-}
-@media (max-width: 700px) {
-  .work-order-actions {
-    width: 100%;
-  }
 }

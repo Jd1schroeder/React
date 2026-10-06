@@ -21,6 +21,7 @@ function permission(module, key, label, description, scopes = recordScopes, opti
 
 export const permissionCatalog = [
   permission('Work Orders', 'work_orders.view', 'View work orders', 'See work orders and their details.', ['assigned', 'team', 'any']),
+  permission('Work Orders', 'work_orders.manage_saved_filters', 'Save personal Work Order filters', 'Create, edit, and delete personal saved filters. Organization-wide filters are managed by organization administrators.', actionOnly, { actionOnly: true }),
   permission('Work Orders', 'work_orders.create', 'Create work orders', 'Create new work orders.', ['own', 'any']),
   permission('Work Orders', 'work_orders.edit', 'Edit work orders', 'Edit core work-order details.', ['own', 'team', 'any']),
   permission('Work Orders', 'work_orders.delete', 'Delete work orders', 'Delete work orders.', ['own', 'any']),
@@ -122,7 +123,7 @@ export function getBaselinePermissions(roleKey) {
   }
   if (roleKey === 'technician') return {
     ...baselineForKeys([
-    'work_orders.view', 'work_orders.create', 'work_orders.edit', 'work_orders.delete', 'work_orders.cancel_skip', 'work_orders.fill_procedure', 'work_orders.change_status', 'work_orders.view_comments', 'work_orders.post_comments', 'work_orders.view_parts', 'work_orders.change_part_status', 'work_orders.part_status_assigned', 'work_orders.part_status_reserved', 'work_orders.part_status_issued',
+    'work_orders.view', 'work_orders.manage_saved_filters', 'work_orders.create', 'work_orders.edit', 'work_orders.delete', 'work_orders.cancel_skip', 'work_orders.fill_procedure', 'work_orders.change_status', 'work_orders.view_comments', 'work_orders.post_comments', 'work_orders.view_parts', 'work_orders.change_part_status', 'work_orders.part_status_assigned', 'work_orders.part_status_reserved', 'work_orders.part_status_issued',
     'requests.view', 'requests.create', 'requests.edit', 'assets.view', 'parts.create', 'parts.edit', 'parts.view_costs', 'locations.view', 'meters.view', 'procedures.view', 'maintenance_plans.view', 'messaging.direct', 'messaging.comments',
     ], 'assigned'),
     'work_orders.create': 'own', 'work_orders.edit': 'own', 'work_orders.delete': 'own', 'requests.create': 'own', 'requests.edit': 'own', 'messaging.comments': 'assigned',

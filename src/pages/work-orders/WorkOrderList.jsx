@@ -15,20 +15,18 @@ import {
 } from "./workOrderInboxExpandedGroups";
 import "./WorkOrderList.css";
 import {
-  CalendarDays,
   Check,
   ChevronDown,
   Circle,
   CircleCheck,
   CirclePause,
   LockKeyhole,
-  Filter,
   Image as ImageIcon,
   MailCheck,
-  Plus,
   RotateCw,
-  Users,
 } from "lucide-react";
+
+const EMPTY_FILTERS = [];
 
 const statusOptions = [
   { value: "Open", label: "Open", icon: LockKeyhole, tone: "open" },
@@ -294,6 +292,7 @@ export function WorkOrderList({
   activeTab,
   setActiveTab,
   search,
+  filters = EMPTY_FILTERS,
   groupCounts,
   readStatusById,
   selected,
@@ -419,6 +418,7 @@ export function WorkOrderList({
           sort: sortId,
           unreadFirst,
           offset,
+          filters,
         });
         if (generation !== queryGeneration.current) return;
         setGroupPages((current) => ({
@@ -500,7 +500,7 @@ export function WorkOrderList({
     }
     // Changing filters/sort/records invalidates the page cursor and reloads open groups.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, search, sortId, unreadFirst, refreshVersion]);
+  }, [activeTab, filters, search, sortId, unreadFirst, refreshVersion]);
 
   useEffect(() => {
     if (!sortMenuOpen) return undefined;
@@ -821,22 +821,3 @@ const sortGroups = [
     ],
   },
 ];
-
-export function WorkOrderFilters() {
-  return (
-    <div className="work-order-actions">
-      <button className="filter-button">
-        <Users size={14} /> Assigned to
-      </button>
-      <button className="filter-button">
-        <CalendarDays size={14} /> Due date
-      </button>
-      <button className="filter-button">
-        <Plus size={14} /> Add filter
-      </button>
-      <button className="filter-button">
-        <Filter size={14} /> My filters
-      </button>
-    </div>
-  );
-}
