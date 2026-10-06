@@ -435,19 +435,6 @@ a.detail-assignee-link:hover {
   color: var(--text-disabled-muted);
   cursor: not-allowed;
 }
-.detail-record-metadata {
-  display: grid;
-  gap: var(--spacing-5);
-  padding: var(--spacing-7) 0;
-  border-bottom: var(--border-width-normal) solid var(--line);
-}
-.detail-audit-avatar {
-  display: inline-flex;
-  width: 18px;
-  height: 18px;
-  vertical-align: middle;
-  font-size: var(--font-size-3xs);
-}
 .detail-comments-section {
   padding: var(--spacing-7) 0;
   scroll-margin-top: var(--spacing-4);

@@ -1,0 +1,459 @@
+.work-order-comment-composer {
+  display: grid;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-6);
+}
+.work-order-comment-composer textarea,
+.work-order-comment-editor textarea {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 78px;
+  padding: 11px var(--spacing-3);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+  line-height: 1.5;
+  outline: 0;
+  resize: vertical;
+}
+.work-order-comment-composer textarea::placeholder,
+.work-order-comment-editor textarea::placeholder {
+  color: var(--text-input-placeholder);
+}
+.work-order-comment-composer textarea:focus,
+.work-order-comment-editor textarea:focus {
+  border-width: var(--border-width-normal);
+  border-color: var(--focus-border-color);
+  outline: var(--border-width-normal) solid var(--focus-border-color);
+  outline-offset: -2px;
+}
+.work-order-comment-composer-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+.work-order-comment-attach {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-button);
+  color: var(--blue);
+  cursor: pointer;
+}
+.work-order-comment-attach:hover {
+  background: var(--surface-subtle);
+}
+.work-order-comment-attach:focus-within {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.work-order-comment-attach input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+.work-order-comment-send {
+  min-height: 34px;
+  padding: 0 var(--spacing-3);
+  gap: var(--spacing-1);
+}
+.work-order-comment-send:disabled {
+  cursor: not-allowed;
+}
+.work-order-comment-pending-files,
+.work-order-comment-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.work-order-comment-pending-files li {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  gap: var(--spacing-1);
+  padding: 3px var(--spacing-2);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary-muted);
+  font-size: var(--font-size-sm-compact);
+}
+.work-order-comment-pending-files li > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.work-order-comment-pending-files button {
+  display: grid;
+  place-items: center;
+  padding: 2px;
+  border: 0;
+  color: var(--text-secondary-muted);
+  background: transparent;
+  cursor: pointer;
+}
+.work-order-comment-pending-files button:hover {
+  color: var(--ink);
+}
+.work-order-comment-help,
+.work-order-activity-loading,
+.work-order-activity-empty,
+.work-order-activity-error,
+.work-order-comment-error {
+  margin: 0;
+  color: var(--text-secondary-muted);
+  font-size: var(--font-size-sm-compact);
+}
+.work-order-comment-error,
+.work-order-activity-error {
+  color: var(--danger, #dc2626);
+}
+.work-order-activity-list {
+  display: grid;
+  gap: var(--spacing-4);
+}
+.work-order-activity-item {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--spacing-3);
+  min-width: 0;
+}
+.work-order-activity-avatar {
+  width: 36px;
+  height: 36px;
+  font-size: var(--font-size-xs);
+}
+.work-order-activity-content {
+  display: grid;
+  min-width: 0;
+  gap: var(--spacing-1);
+}
+.work-order-activity-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--spacing-2);
+  min-height: 20px;
+  color: var(--ink);
+  font-size: var(--font-size-sm-compact);
+}
+.work-order-activity-meta strong {
+  font-weight: var(--font-semibold, 600);
+}
+.work-order-activity-meta time {
+  color: var(--text-secondary-muted);
+}
+.work-order-comment-edited {
+  color: var(--text-secondary-muted);
+  font-size: var(--font-size-xs);
+  font-style: italic;
+}
+.work-order-comment-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-left: auto;
+  transition: opacity 120ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .work-order-comment-actions {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .work-order-activity-item.is-comment:hover .work-order-comment-actions,
+  .work-order-activity-item.is-comment:focus-within .work-order-comment-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .work-order-comment-actions {
+    transition: none;
+  }
+}
+.work-order-comment-actions button,
+.work-order-comment-editor-actions button,
+.work-order-comment-delete-confirm button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-1);
+  min-height: 28px;
+  padding: 0 var(--spacing-2);
+  border: var(--border-width-normal) solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--blue);
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-sm-compact);
+  cursor: pointer;
+}
+.work-order-comment-actions button:hover,
+.work-order-comment-editor-actions button:hover:not(:disabled),
+.work-order-comment-delete-confirm button:hover:not(:disabled) {
+  background: var(--surface-subtle);
+}
+.work-order-comment-actions button.is-danger,
+.work-order-comment-delete-confirm button.is-danger {
+  color: var(--danger, #dc2626);
+}
+.work-order-comment-actions button:focus-visible,
+.work-order-comment-editor-actions button:focus-visible,
+.work-order-comment-delete-confirm button:focus-visible {
+  outline: var(--focus-border-width) solid var(--focus-border-color);
+  outline-offset: 1px;
+}
+.work-order-comment-editor {
+  display: grid;
+  gap: var(--spacing-2);
+}
+.work-order-comment-editor-actions,
+.work-order-comment-delete-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-2);
+}
+.work-order-comment-delete-confirm {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  padding: var(--spacing-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-subtle);
+}
+.work-order-comment-delete-confirm > span {
+  margin-right: auto;
+  color: var(--ink);
+  font-size: var(--font-size-sm-compact);
+}
+.work-order-comment-actions button:disabled,
+.work-order-comment-editor-actions button:disabled,
+.work-order-comment-delete-confirm button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+.work-order-comment-tombstone {
+  display: grid;
+  gap: var(--spacing-1);
+}
+.work-order-comment-deleted,
+.work-order-comment-delete-meta,
+.work-order-comment-notice {
+  margin: 0;
+  color: var(--text-secondary-muted);
+  font-size: var(--font-size-md);
+  font-style: italic;
+}
+.work-order-comment-delete-meta {
+  font-size: var(--font-size-sm-compact);
+}
+.work-order-comment-notice {
+  font-size: var(--font-size-sm-compact);
+}
+.work-order-activity-description {
+  margin: 0;
+  color: var(--text-secondary-muted);
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+}
+.work-order-activity-changes {
+  display: grid;
+  gap: var(--spacing-1);
+}
+.work-order-activity-description-change summary {
+  cursor: pointer;
+}
+.work-order-activity-description-values {
+  display: grid;
+  gap: var(--spacing-1);
+  padding: var(--spacing-2) 0 0 var(--spacing-3);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.work-order-activity-description-values p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+.work-order-comment-body {
+  min-width: 0;
+  color: var(--ink);
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.work-order-comment-link-row {
+  display: flex;
+  align-items: center;
+  width: min(600px, 100%);
+  min-height: 72px;
+  box-sizing: border-box;
+  gap: var(--spacing-3);
+  margin: var(--spacing-2) 0;
+  padding: var(--spacing-2) var(--spacing-3);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-button);
+  color: var(--ink);
+  background: var(--surface);
+  text-decoration: none;
+}
+.work-order-comment-link-row:hover {
+  border-color: var(--blue);
+  background: var(--surface-subtle);
+}
+.work-order-comment-link-row:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.work-order-comment-link-thumbnail {
+  display: grid;
+  flex: 0 0 48px;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  color: var(--blue);
+  background: var(--surface-subtle);
+}
+.work-order-comment-link-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.work-order-comment-link-main {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 3px;
+}
+.work-order-comment-link-main > strong,
+.work-order-comment-link-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.work-order-comment-link-main > strong {
+  font-weight: var(--font-medium, 500);
+}
+.work-order-comment-link-meta {
+  color: var(--text-secondary-muted);
+  font-size: var(--font-size-sm-compact);
+}
+.work-order-comment-link-row .priority-badge {
+  flex: 0 0 auto;
+}
+.work-order-comment-attachments {
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-2);
+}
+.work-order-comment-attachment-link {
+  display: inline-flex;
+  align-items: center;
+  max-width: 280px;
+  min-height: 38px;
+  gap: var(--spacing-2);
+  padding: 3px var(--spacing-2);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--blue);
+  font-size: var(--font-size-sm-compact);
+  text-decoration: none;
+}
+.work-order-comment-attachment-link:hover {
+  background: var(--surface-subtle);
+}
+.work-order-comment-attachment-link[aria-disabled="true"] {
+  color: var(--text-secondary-muted);
+  pointer-events: none;
+}
+.work-order-comment-image-link {
+  display: block;
+  width: min(300px, 100%);
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--surface-subtle);
+}
+.work-order-comment-image-link img {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+}
+.work-order-comment-image-name {
+  display: block;
+  max-width: min(300px, 100%);
+  margin-top: var(--spacing-1);
+  color: var(--text-secondary-muted);
+  font-size: var(--font-size-sm-compact);
+}
+.work-order-comment-attachment-link > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.work-order-activity-load-more {
+  justify-self: center;
+  padding: var(--spacing-2) var(--spacing-3);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-button);
+  color: var(--blue);
+  background: var(--surface);
+  font: inherit;
+  cursor: pointer;
+}
+.work-order-activity-load-more:hover:not(:disabled) {
+  background: var(--surface-subtle);
+}
+.work-order-activity-load-more:disabled {
+  cursor: wait;
+}
+.work-order-comment-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+@media (max-width: 520px) {
+  .work-order-comment-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .work-order-activity-item {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: var(--spacing-2);
+  }
+  .work-order-activity-avatar {
+    width: 30px;
+    height: 30px;
+  }
+  .work-order-comment-link-row {
+    gap: var(--spacing-2);
+    padding: var(--spacing-2);
+  }
+  .work-order-comment-link-thumbnail {
+    flex-basis: 40px;
+    width: 40px;
+    height: 40px;
+  }
+  .work-order-comment-link-row .priority-badge {
+    font-size: 10px;
+  }
+}

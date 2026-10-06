@@ -13,6 +13,7 @@ import { createWorkOrder, getWorkOrderById, listWorkOrderInboxCounts, listWorkOr
 import { NewWorkOrderForm } from './work-orders/NewWorkOrderForm'
 import { formatCalendarDateForUser, formatDateForUser } from '../utils/dateFormatting'
 import { getWorkOrderInboxPreferences, saveWorkOrderInboxPreferences } from '../services/workOrderInboxPreferenceService'
+import { createWorkOrderComment, deleteWorkOrderComment, getWorkOrderLinkPreviews, listWorkOrderActivity, updateWorkOrderComment } from '../services/workOrderCommentService'
 
 function normalizeWorkOrder(order, preferences = {}) {
   const assignments = order.work_order_assignments ?? []
@@ -44,6 +45,18 @@ function assignmentKeys(assignments = []) {
     .sort()
 }
 
+function workOrderAccessContext(order, userId, teamIds) {
+  return {
+    userId,
+    ownerId: order.created_by,
+    assigneeId: order.assigned_to,
+    assigneeIds: order.work_order_assignments?.map((assignment) => assignment.user_id).filter(Boolean),
+    teamId: order.team_id,
+    assignedTeamIds: order.work_order_assignments?.map((assignment) => assignment.team_id).filter(Boolean),
+    teamIds,
+  }
+}
+
 export function WorkOrders({ recordId, onNavigateRecord }) {
   const workspace = useWorkspace()
   const { guardNavigation, setHasUnsavedChanges } = useUnsavedChanges()
@@ -55,6 +68,8 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
   const canViewWorkOrders = workspace.authorization?.status === 'ready' && hasPermission(grants, 'work_orders.view')
   const canCreateWorkOrders = canViewWorkOrders && hasPermission(grants, 'work_orders.create')
   const userId = workspace.user?.id
+  const canDeleteAnyWorkOrderComment = workspace.organization?.roleDefinition?.system_key === 'organization_admin'
+    || workspace.user?.app_metadata?.platform_role === 'superadmin'
   const [activeTab, setActiveTab] = useState('To Do')
   const [sortId, setSortId] = useState('priority-highest')
   const [unreadFirst, setUnreadFirst] = useState(false)
@@ -235,6 +250,44 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
     const orders = await listWorkOrderInboxPage({ organizationId, tab, group, search: debouncedSearch, sort, unreadFirst, offset, grants })
     return orders.map((order) => normalizeWorkOrder(order, workspace.preferences))
   }
+  const loadWorkOrderActivity = useCallback((order, before) => listWorkOrderActivity({
+    organizationId,
+    workOrderId: order.id,
+    grants,
+    record: workOrderAccessContext(order, userId, teamIds),
+    before,
+  }), [grants, organizationId, teamIds, userId])
+  const postWorkOrderComment = useCallback((order, body, files) => createWorkOrderComment({
+    organizationId,
+    workOrderId: order.id,
+    body,
+    files,
+    grants,
+    record: workOrderAccessContext(order, userId, teamIds),
+  }), [grants, organizationId, teamIds, userId])
+  const editWorkOrderComment = useCallback((order, comment, body) => updateWorkOrderComment({
+    organizationId,
+    workOrderId: order.id,
+    commentId: comment.id,
+    authorId: comment.author_id,
+    body,
+    grants,
+    record: workOrderAccessContext(order, userId, teamIds),
+  }), [grants, organizationId, teamIds, userId])
+  const removeWorkOrderComment = useCallback((order, comment) => deleteWorkOrderComment({
+    organizationId,
+    workOrderId: order.id,
+    commentId: comment.id,
+    authorId: comment.author_id,
+    grants,
+    record: workOrderAccessContext(order, userId, teamIds),
+    canDeleteAny: canDeleteAnyWorkOrderComment,
+  }), [canDeleteAnyWorkOrderComment, grants, organizationId, teamIds, userId])
+  const resolveWorkOrderLinks = useCallback((workOrderIds) => getWorkOrderLinkPreviews({
+    organizationId,
+    workOrderIds,
+    grants,
+  }), [grants, organizationId])
   const hydrateGroupAttachments = (orders) => signWorkOrderAttachmentUrls(orders)
   const prepareWorkOrderForPdfExport = async (order) => {
     const [signedOrder] = await signWorkOrderAttachmentUrls([order])
@@ -436,7 +489,7 @@ export function WorkOrders({ recordId, onNavigateRecord }) {
     {isLoading && <div className="work-orders-loading">Loading Work Orders...</div>}
     {!isLoading && error && <div className="work-orders-loading" role="alert">{error}</div>}
     {!isLoading && !error && !canViewWorkOrders && <div className="work-orders-loading" role="status">You do not have permission to view Work Orders.</div>}
-    {!isLoading && !error && canViewWorkOrders && <>{readError && <div className="work-orders-loading" role="alert">{readError}</div>}{inboxPreferenceError && <div className="work-orders-loading" role="alert">{inboxPreferenceError}</div>}<WorkOrderList userId={userId} organizationId={organizationId} activeTab={activeTab} setActiveTab={setActiveTab} search={debouncedSearch} groupCounts={groupCounts} readStatusById={workOrdersById} selected={selected} onOrdersLoaded={storeOrders} onLoadGroupPage={loadGroupPage} onHydrateAttachments={hydrateGroupAttachments} refreshVersion={refreshVersion} onSelect={selectOrder} onStatusChange={changeStatus} onReadAll={() => { setReadError(''); setIsReadAllConfirmOpen(true) }} isReadAllSaving={isSavingReadState || search !== debouncedSearch} canChangeStatusForOrder={canChangeStatusForOrder} sortId={sortId} onSortChange={changeInboxSort} unreadFirst={unreadFirst} onUnreadFirstChange={changeUnreadFirst} />{isCreating ? <NewWorkOrderForm initialWorkOrder={copySource} onCancel={() => { setIsCreating(false); setCopySource(null) }} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : isEditingSelected ? <NewWorkOrderForm mode="edit" initialWorkOrder={selected} onCancel={() => guardNavigation(() => { setHasUnsavedChanges(false); setEditingWorkOrderId(null) })} onDirtyChange={setHasUnsavedChanges} onUpdate={handleUpdate} isSaving={isSavingEdit} error={editError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : <WorkOrderDetail selected={selected} isLoadingRecord={isLoadingSelectedRecord} missingRecord={missingRecord} onEdit={() => selected && handleEdit(selected)} onCopy={() => selected && handleCopy(selected)} onStatusChange={changeStatus} onPreparePdfExport={prepareWorkOrderForPdfExport} assigneeOptions={assigneeOptions} memberDirectory={memberDirectory} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} dateFormat={workspace.preferences?.date_format} timezone={workspace.preferences?.timezone} />}</>}
+    {!isLoading && !error && canViewWorkOrders && <>{readError && <div className="work-orders-loading" role="alert">{readError}</div>}{inboxPreferenceError && <div className="work-orders-loading" role="alert">{inboxPreferenceError}</div>}<WorkOrderList userId={userId} organizationId={organizationId} activeTab={activeTab} setActiveTab={setActiveTab} search={debouncedSearch} groupCounts={groupCounts} readStatusById={workOrdersById} selected={selected} onOrdersLoaded={storeOrders} onLoadGroupPage={loadGroupPage} onHydrateAttachments={hydrateGroupAttachments} refreshVersion={refreshVersion} onSelect={selectOrder} onStatusChange={changeStatus} onReadAll={() => { setReadError(''); setIsReadAllConfirmOpen(true) }} isReadAllSaving={isSavingReadState || search !== debouncedSearch} canChangeStatusForOrder={canChangeStatusForOrder} sortId={sortId} onSortChange={changeInboxSort} unreadFirst={unreadFirst} onUnreadFirstChange={changeUnreadFirst} />{isCreating ? <NewWorkOrderForm initialWorkOrder={copySource} onCancel={() => { setIsCreating(false); setCopySource(null) }} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : isEditingSelected ? <NewWorkOrderForm mode="edit" initialWorkOrder={selected} onCancel={() => guardNavigation(() => { setHasUnsavedChanges(false); setEditingWorkOrderId(null) })} onDirtyChange={setHasUnsavedChanges} onUpdate={handleUpdate} isSaving={isSavingEdit} error={editError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : <WorkOrderDetail selected={selected} isLoadingRecord={isLoadingSelectedRecord} missingRecord={missingRecord} onEdit={() => selected && handleEdit(selected)} onCopy={() => selected && handleCopy(selected)} onStatusChange={changeStatus} onPreparePdfExport={prepareWorkOrderForPdfExport} assigneeOptions={assigneeOptions} memberDirectory={memberDirectory} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} dateFormat={workspace.preferences?.date_format} timezone={workspace.preferences?.timezone} onLoadActivity={loadWorkOrderActivity} onPostComment={postWorkOrderComment} onUpdateComment={editWorkOrderComment} onDeleteComment={removeWorkOrderComment} canDeleteAnyComments={canDeleteAnyWorkOrderComment} onResolveWorkOrderLinks={resolveWorkOrderLinks} />}</>}
   </PanelLayout>
   {isReadAllConfirmOpen && createPortal(<div className="work-order-read-confirm-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !isSavingReadState) setIsReadAllConfirmOpen(false) }}>
     <section className="work-order-read-confirm" role="dialog" aria-modal="true" aria-labelledby="work-order-read-confirm-title">

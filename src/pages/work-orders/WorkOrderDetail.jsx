@@ -23,9 +23,9 @@ import { Avatar } from "../../components/ui/Avatar";
 import { PriorityBadge } from "../../components/ui/PriorityBadge";
 import { PanelRecordNotFound } from "../../components/layout/PanelView";
 import { canAccessRecord, hasPermission } from "../../services/authorizationService";
-import { formatDateForUser } from "../../utils/dateFormatting";
 import { getRecordPath } from "../../routes.js";
 import { WorkOrderPdfExportDialog } from "./WorkOrderPdfExportDialog";
+import { WorkOrderActivity } from "./WorkOrderActivity";
 import "./WorkOrderDetail.css";
 
 const statusOptions = [
@@ -124,17 +124,6 @@ function formatEstimatedTime(minutes) {
     .join(" ");
 }
 
-function formatTimestamp(value, dateFormat, timezone) {
-  if (!value) return "";
-  const date = formatDateForUser(value, dateFormat, timezone);
-  const time = new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: timezone,
-  }).format(new Date(value));
-  return `${date}, ${time}`;
-}
-
 function DetailMetadata({ icon: Icon, children }) {
   return <div className="detail-metadata-item">{Icon && <Icon size={16} aria-hidden="true" />}<span>{children}</span></div>;
 }
@@ -156,6 +145,12 @@ export function WorkOrderDetail({
   memberDirectory = [],
   dateFormat,
   timezone,
+  onLoadActivity,
+  onPostComment,
+  onUpdateComment,
+  onDeleteComment,
+  canDeleteAnyComments = false,
+  onResolveWorkOrderLinks,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isChangingStatus, setIsChangingStatus] = useState(false);
@@ -226,7 +221,13 @@ export function WorkOrderDetail({
     "work_orders.view_comments",
     record,
   );
-  const canUseMoreActions = canEditDetails || canChangeStatus || canViewComments || onToggleRead || canCreateWorkOrder;
+  const canPostComments = canAccessRecord(
+    grants,
+    "work_orders.post_comments",
+    record,
+  );
+  const canUseComments = canViewComments || canPostComments;
+  const canUseMoreActions = canEditDetails || canChangeStatus || canUseComments || onToggleRead || canCreateWorkOrder;
   const assigneeOptionsByValue = new Map(assigneeOptions.map((option) => [option.value, option]));
   const identitiesById = new Map(memberDirectory.map((member) => [member.id, member]));
   const assignmentTargets = (selected.work_order_assignments ?? [])
@@ -323,7 +324,7 @@ export function WorkOrderDetail({
           </div>
         </div>
         <div className="detail-actions">
-          {canViewComments && (
+          {canUseComments && (
             <button
               className="detail-header-action"
               type="button"
@@ -490,20 +491,25 @@ export function WorkOrderDetail({
               </div>
             ))}
           </section>
-          <section className="detail-record-metadata" aria-label="Work Order history">
-            <DetailMetadata>
-              Requested by {requesterIdentity && <Avatar className="detail-audit-avatar" src={requesterIdentity.avatarUrl} firstName={requesterIdentity.firstName} lastName={requesterIdentity.lastName} name={requesterName} alt="" />} {requesterName}
-            </DetailMetadata>
-            <DetailMetadata>
-              Created by {creatorIdentity && <Avatar className="detail-audit-avatar" src={creatorIdentity.avatarUrl} firstName={creatorIdentity.firstName} lastName={creatorIdentity.lastName} name={creatorName} alt="" />} {creatorName}{selected.created_at ? ` on ${formatTimestamp(selected.created_at, dateFormat, timezone)}` : ""}
-            </DetailMetadata>
-            <DetailMetadata>Last updated{selected.updated_at ? ` on ${formatTimestamp(selected.updated_at, dateFormat, timezone)}` : ""}{selected.updated_by ? ` by ${updaterName}` : ""}</DetailMetadata>
-          </section>
-          {canViewComments && (
-          <section className="detail-comments-section" aria-labelledby="detail-comments-title" ref={commentsRef}>
-              <h2 id="detail-comments-title">Comments</h2>
-              <p>Comments are not available yet.</p>
-            </section>
+          {canUseComments && (
+            <WorkOrderActivity
+              key={selected.id}
+              order={selected}
+              sectionRef={commentsRef}
+              memberDirectory={memberDirectory}
+              assigneeOptions={assigneeOptions}
+              currentUserId={userId}
+              canDeleteAnyComments={canDeleteAnyComments}
+              canViewComments={canViewComments}
+              canPostComments={canPostComments}
+              dateFormat={dateFormat}
+              timezone={timezone}
+              onLoadActivity={onLoadActivity}
+              onPostComment={onPostComment}
+              onUpdateComment={onUpdateComment}
+              onDeleteComment={onDeleteComment}
+              onResolveWorkOrderLinks={onResolveWorkOrderLinks}
+            />
           )}
         </div>
       </div>
