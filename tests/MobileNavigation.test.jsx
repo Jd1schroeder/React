@@ -1,6 +1,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MobileNavigation } from '../src/components/layout/MobileNavigation'
+
+const serviceMocks = vi.hoisted(() => ({ getUnreadWorkOrderCount: vi.fn() }))
 
 vi.mock('../src/components/layout/useWorkspace', () => ({
   useWorkspace: () => ({
@@ -8,6 +10,7 @@ vi.mock('../src/components/layout/useWorkspace', () => ({
     user: { email: 'morgan@example.com' },
     organization: { id: 'organization-a', name: 'Main shop' },
     organizations: [],
+    authorization: { grants: { 'work_orders.view': 'any' } },
   }),
 }))
 
@@ -15,7 +18,15 @@ vi.mock('../src/lib/supabase', () => ({
   supabase: { auth: { signOut: vi.fn() } },
 }))
 
+vi.mock('../src/services/workOrderService', () => ({
+  getUnreadWorkOrderCount: serviceMocks.getUnreadWorkOrderCount,
+}))
+
 afterEach(cleanup)
+beforeEach(() => {
+  vi.clearAllMocks()
+  serviceMocks.getUnreadWorkOrderCount.mockResolvedValue(89)
+})
 
 describe('mobile navigation', () => {
   it('routes from the primary navigation', () => {
@@ -25,6 +36,20 @@ describe('mobile navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Assets' }))
 
     expect(onNavigate).toHaveBeenCalledWith('Assets')
+  })
+
+  it('shows the mobile overview destinations and the live Work Order unread badge', async () => {
+    render(<MobileNavigation activePage="Dashboard" onNavigate={vi.fn()} />)
+
+    expect(screen.getByRole('button', { name: 'Overview' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('button', { name: 'Assets' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Messages' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'More modules and settings' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Work Orders, 89 unread' })).toBeInTheDocument()
+    expect(serviceMocks.getUnreadWorkOrderCount).toHaveBeenCalledWith({
+      organizationId: 'organization-a',
+      grants: { 'work_orders.view': 'any' },
+    })
   })
 
   it('searches all modules from the More sheet and closes after navigation', () => {

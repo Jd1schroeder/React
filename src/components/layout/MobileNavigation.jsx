@@ -4,6 +4,7 @@ import { useWorkspace } from './useWorkspace'
 import { settingsNavigation, settingsPageByLabel, sidebarGroups } from './sidebarConfig'
 import { setActiveOrganization } from '../../services/workspaceService'
 import { supabase } from '../../lib/supabase'
+import { getUnreadWorkOrderCount } from '../../services/workOrderService'
 import { Avatar } from '../ui/Avatar'
 import {
   Boxes,
@@ -11,23 +12,24 @@ import {
   ChevronDown,
   ClipboardCheck,
   Ellipsis,
+  Home,
   House,
   LogOut,
-  Package,
+  MessageCircle,
   Search,
   X,
 } from 'lucide-react'
 import './MobileNavigation.css'
 
 const primaryDestinations = [
+  { label: 'Overview', page: 'Dashboard', icon: Home },
   { label: 'Work Orders', page: 'Work Orders', icon: ClipboardCheck },
   { label: 'Assets', page: 'Assets', icon: Boxes },
-  { label: 'Parts', page: 'Parts Inventory', icon: Package },
+  { label: 'Messages', page: 'Messages', icon: MessageCircle },
 ]
 
 function isPrimaryPage(page, activePage) {
-  if (activePage === page) return true
-  return page === 'Work Orders' && activePage === 'Work Orders'
+  return activePage === page
 }
 
 export function MobileNavigation({ activePage, onNavigate }) {
@@ -37,6 +39,13 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const closeButtonRef = useRef(null)
   const moreButtonRef = useRef(null)
   const workspace = useWorkspace()
+  const [unreadWorkOrderBadge, setUnreadWorkOrderBadge] = useState(null)
+  const organizationId = workspace.organization?.id
+  const grants = workspace.authorization?.grants
+  const canViewWorkOrders = Boolean(grants?.['work_orders.view'])
+  const unreadWorkOrderCount = canViewWorkOrders && unreadWorkOrderBadge?.organizationId === organizationId
+    ? unreadWorkOrderBadge.count
+    : null
   const query = search.trim().toLocaleLowerCase()
   const visibleGroups = useMemo(() => sidebarGroups.map((group) => ({
     ...group,
@@ -47,6 +56,22 @@ export function MobileNavigation({ activePage, onNavigate }) {
     }),
   })).filter((group) => !query || group.items.length > 0), [query])
   const isMoreCurrent = !primaryDestinations.some((item) => isPrimaryPage(item.page, activePage))
+
+  useEffect(() => {
+    if (!organizationId || !canViewWorkOrders) {
+      return undefined
+    }
+    let active = true
+    const loadUnreadCount = () => getUnreadWorkOrderCount({ organizationId, grants })
+      .then((count) => { if (active) setUnreadWorkOrderBadge({ organizationId, count }) })
+      .catch(() => { if (active) setUnreadWorkOrderBadge({ organizationId, count: null }) })
+    void loadUnreadCount()
+    window.addEventListener('workbench:unread-work-order-count-invalidated', loadUnreadCount)
+    return () => {
+      active = false
+      window.removeEventListener('workbench:unread-work-order-count-invalidated', loadUnreadCount)
+    }
+  }, [canViewWorkOrders, grants, organizationId])
 
   useEffect(() => {
     if (!isMoreOpen) return undefined
@@ -103,12 +128,13 @@ export function MobileNavigation({ activePage, onNavigate }) {
           key={page}
           type="button"
           className={`mobile-primary-navigation-item${isPrimaryPage(page, activePage) ? ' is-active' : ''}`}
-          aria-label={page}
           aria-current={isPrimaryPage(page, activePage) ? 'page' : undefined}
+          aria-label={label === 'Work Orders' && unreadWorkOrderCount > 0 ? `Work Orders, ${unreadWorkOrderCount} unread` : label}
           onClick={() => navigateTo(page)}
         >
           <Icon size={21} strokeWidth={1.9} aria-hidden="true" />
           <span>{label}</span>
+          {label === 'Work Orders' && unreadWorkOrderCount > 0 && <span className="mobile-navigation-badge" aria-hidden="true">{unreadWorkOrderCount > 99 ? '99+' : unreadWorkOrderCount}</span>}
         </button>
       ))}
       <button

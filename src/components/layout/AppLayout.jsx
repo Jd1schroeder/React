@@ -2,11 +2,13 @@ import { Sidebar } from "./Sidebar";
 import { WorkspaceProvider } from "./WorkspaceContext";
 import { UpdateNotice } from "./UpdateNotice";
 import { MobileNavigation } from "./MobileNavigation";
+import { MobileAppHeader } from "./MobileAppHeader";
 export function AppLayout({ activePage, onNavigate, children }) {
   return (
     <WorkspaceProvider onNavigate={onNavigate}>
       <div className="app-shell">
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
+        <MobileAppHeader onNavigate={onNavigate} />
         <div className="main-shell">
           <main className="page-content page-content-full">
             <div className="page-content-inner">{children}</div>

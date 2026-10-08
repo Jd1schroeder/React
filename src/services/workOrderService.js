@@ -110,7 +110,7 @@ export async function markWorkOrderInboxRead({ organizationId, tab, search, filt
   return data ?? 0
 }
 
-export async function listWorkOrderInboxPage({ organizationId, tab, group, search, sort, unreadFirst = false, offset, filters = [], grants }) {
+export async function listWorkOrderInboxPage({ organizationId, tab, group, search, sort, unreadFirst = false, offset, pageSize = 50, filters = [], grants }) {
   assertPermission(grants, 'work_orders.view')
   const { data, error } = await supabase.rpc('get_work_order_inbox_page', {
     target_organization_id: organizationId,
@@ -120,7 +120,7 @@ export async function listWorkOrderInboxPage({ organizationId, tab, group, searc
     target_sort: sort,
     target_unread_first: unreadFirst,
     target_offset: offset,
-    target_page_size: 50,
+    target_page_size: pageSize,
     target_filters: normalizeWorkOrderFilters(filters),
   })
   if (error) throw error

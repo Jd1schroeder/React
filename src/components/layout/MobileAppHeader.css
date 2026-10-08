@@ -1,0 +1,59 @@
+.mobile-app-header {
+  display: none;
+}
+
+@media (max-width: 840px) {
+  .mobile-app-header {
+    position: relative;
+    z-index: 30;
+    box-sizing: border-box;
+    display: grid;
+    min-height: calc(68px + env(safe-area-inset-top));
+    flex: 0 0 auto;
+    place-items: center;
+    padding: calc(6px + env(safe-area-inset-top)) 76px 6px 16px;
+    color: var(--white);
+    background: var(--blue);
+    box-shadow: 0 2px 5px rgb(16 24 40 / 14%);
+  }
+
+  .mobile-app-header-title {
+    width: 100%;
+    overflow: hidden;
+    margin: 0;
+    color: inherit;
+    font-size: clamp(17px, 5vw, 22px);
+    font-weight: var(--font-bold);
+    line-height: 1.2;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-app-header-account {
+    position: absolute;
+    top: calc(3px + env(safe-area-inset-top));
+    right: 8px;
+    display: flex;
+    width: 62px;
+    min-height: 62px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 2px;
+    border: 0;
+    border-radius: var(--radius-control);
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    font-size: var(--font-size-xs);
+    line-height: 1.1;
+    touch-action: manipulation;
+  }
+
+  .mobile-app-header-account:focus-visible {
+    outline: 2px solid var(--white);
+    outline-offset: -2px;
+  }
+}

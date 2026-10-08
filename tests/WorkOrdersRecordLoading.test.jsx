@@ -1,5 +1,6 @@
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 
 const serviceMocks = vi.hoisted(() => ({
   getWorkOrderById: vi.fn(),
@@ -76,7 +77,7 @@ beforeEach(() => {
 });
 
 function renderDeepLinkedWorkOrder() {
-  return render(<WorkOrders recordId="wo-1" />);
+  return render(<MemoryRouter initialEntries={["/workorders/wo-1"]}><WorkOrders recordId="wo-1" /></MemoryRouter>);
 }
 
 describe("Work Orders deep-link refresh", () => {
