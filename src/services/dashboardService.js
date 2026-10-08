@@ -2,6 +2,8 @@ import { supabase } from '../lib/supabase'
 import { assertPermission, hasPermission } from './authorizationService'
 import { listWorkOrderInboxCounts, listWorkOrderInboxPage } from './workOrderService'
 
+const recentActivityPageSize = 8
+
 async function countWorkOrders(organizationId, configureQuery) {
   const query = supabase.from('work_orders')
     .select('id', { count: 'exact', head: true })
@@ -11,18 +13,24 @@ async function countWorkOrders(organizationId, configureQuery) {
   return Number(count ?? 0)
 }
 
-async function listRecentWorkOrderActivity(organizationId, userId, grants) {
+export async function getDashboardRecentActivityPage({ organizationId, userId, grants, before = null }) {
+  if (!organizationId) throw new Error('Choose a workspace to view recent activity.')
   assertPermission(grants, 'work_orders.view_comments')
-  const { data: events, error } = await supabase.from('work_order_activity')
+  let activityQuery = supabase.from('work_order_activity')
     .select('id, work_order_id, actor_id, event_type, details, created_at')
     .eq('organization_id', organizationId)
     .order('created_at', { ascending: false })
     .order('id', { ascending: false })
-    .limit(8)
+  if (before?.created_at && before?.id) {
+    activityQuery = activityQuery.or(`created_at.lt.${before.created_at},and(created_at.eq.${before.created_at},id.lt.${before.id})`)
+  }
+  const { data: fetchedEvents, error } = await activityQuery.limit(recentActivityPageSize + 1)
   if (error) throw error
-  if (!events?.length) return []
+  const events = fetchedEvents ?? []
+  const pageEvents = events.slice(0, recentActivityPageSize)
+  if (!pageEvents.length) return { items: [], hasMore: false, nextCursor: null }
 
-  const workOrderIds = [...new Set(events.map((event) => event.work_order_id))]
+  const workOrderIds = [...new Set(pageEvents.map((event) => event.work_order_id))]
   const { data: workOrders, error: workOrdersError } = await supabase.from('work_orders')
     .select('id, title, work_order_number')
     .eq('organization_id', organizationId)
@@ -30,7 +38,7 @@ async function listRecentWorkOrderActivity(organizationId, userId, grants) {
   if (workOrdersError) throw workOrdersError
   const workOrdersById = new Map((workOrders ?? []).map((workOrder) => [workOrder.id, workOrder]))
 
-  return events.flatMap((event) => {
+  const items = pageEvents.flatMap((event) => {
     const workOrder = workOrdersById.get(event.work_order_id)
     if (!workOrder) return []
     return [{
@@ -39,23 +47,31 @@ async function listRecentWorkOrderActivity(organizationId, userId, grants) {
       actorLabel: event.actor_id && event.actor_id === userId ? 'You' : 'A teammate',
     }]
   })
+  const lastEvent = pageEvents.at(-1)
+  return {
+    items,
+    hasMore: events.length > recentActivityPageSize,
+    nextCursor: lastEvent ? { created_at: lastEvent.created_at, id: lastEvent.id } : null,
+  }
 }
 
 export async function getDashboardOverview({ organizationId, userId, grants, today }) {
   if (!organizationId) throw new Error('Choose a workspace to view its overview.')
   if (!hasPermission(grants, 'work_orders.view')) {
-    return { canViewWorkOrders: false, groups: [], recentActivity: [], activityAvailable: false }
+    return { canViewWorkOrders: false, groups: [], recentActivity: [], recentActivityHasMore: false, recentActivityCursor: null, activityAvailable: false }
   }
   assertPermission(grants, 'work_orders.view')
 
   const activityAvailable = hasPermission(grants, 'work_orders.view_comments')
-  const [highPriorityCount, overdueCount, dueTodayCount, completedCount, groupCounts, recentActivity] = await Promise.all([
+  const [highPriorityCount, overdueCount, dueTodayCount, completedCount, groupCounts, recentActivityPage] = await Promise.all([
     countWorkOrders(organizationId, (query) => query.in('priority', ['Urgent', 'High']).neq('status', 'Completed')),
     countWorkOrders(organizationId, (query) => query.lt('due_date', today).neq('status', 'Completed')),
     countWorkOrders(organizationId, (query) => query.eq('due_date', today).neq('status', 'Completed')),
     countWorkOrders(organizationId, (query) => query.eq('status', 'Completed')),
     listWorkOrderInboxCounts({ organizationId, tab: 'To Do', search: '', grants }),
-    activityAvailable ? listRecentWorkOrderActivity(organizationId, userId, grants) : Promise.resolve([]),
+    activityAvailable
+      ? getDashboardRecentActivityPage({ organizationId, userId, grants })
+      : Promise.resolve({ items: [], hasMore: false, nextCursor: null }),
   ])
 
   const groupDefinitions = [
@@ -83,7 +99,9 @@ export async function getDashboardOverview({ organizationId, userId, grants, tod
     canViewWorkOrders: true,
     metrics: { highPriorityCount, overdueCount, dueTodayCount, completedCount },
     groups,
-    recentActivity,
+    recentActivity: recentActivityPage.items,
+    recentActivityHasMore: recentActivityPage.hasMore,
+    recentActivityCursor: recentActivityPage.nextCursor,
     activityAvailable,
   }
 }

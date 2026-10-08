@@ -8,6 +8,11 @@ import './Signup.css'
 import { Brand } from './auth/Brand'
 import { PhoneField, TeamSizeDropdown } from './auth/AuthControls'
 
+function getPostAuthenticationPage() {
+  if (window.sessionStorage.getItem('workbench.pendingInviteToken')) return 'Accept Invite'
+  return window.innerWidth <= 840 ? 'Dashboard' : 'Work Orders'
+}
+
 export function AuthPage({ mode = 'login', onNavigate }) {
   const isSignup = mode === 'signup'
   const [showPassword, setShowPassword] = useState(false)
@@ -15,13 +20,12 @@ export function AuthPage({ mode = 'login', onNavigate }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isPasskeySubmitting, setIsPasskeySubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
-  const hasPendingInvite = () => Boolean(window.sessionStorage.getItem('workbench.pendingInviteToken'))
   const handlePasskeySignIn = async () => {
     setSubmitError('')
     setIsPasskeySubmitting(true)
     try {
       await signInWithPasskey()
-      onNavigate?.(hasPendingInvite() ? 'Accept Invite' : 'Work Orders')
+      onNavigate?.(getPostAuthenticationPage())
     } catch (error) {
       setSubmitError(error.message || 'We could not sign you in with your passkey.')
     } finally {
@@ -35,7 +39,7 @@ export function AuthPage({ mode = 'login', onNavigate }) {
     if (!isSignup) {
       const values = Object.fromEntries(new FormData(event.currentTarget).entries())
       signInWithPassword({ email: values.email, password: values.password })
-        .then(() => onNavigate?.(hasPendingInvite() ? 'Accept Invite' : 'Work Orders'))
+        .then(() => onNavigate?.(getPostAuthenticationPage()))
         .catch((error) => setSubmitError(error.message || 'We could not sign you in. Please try again.'))
         .finally(() => setIsSubmitting(false))
       return
@@ -64,7 +68,7 @@ export function AuthPage({ mode = 'login', onNavigate }) {
         organizationName: values.organization,
         teamSize: values.teamSize,
       })
-      onNavigate?.(data.session ? (hasPendingInvite() ? 'Accept Invite' : 'Work Orders') : 'Verify Email')
+      onNavigate?.(data.session ? getPostAuthenticationPage() : 'Verify Email')
     } catch (error) {
       setSubmitError(error.message || 'We could not create your account. Please try again.')
     } finally {

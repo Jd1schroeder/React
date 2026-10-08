@@ -8,17 +8,25 @@ import {
   Check,
   ChevronRight,
   CircleHelp,
+  ClipboardList,
+  FileText,
   Clock3,
   Inbox,
+  List,
+  LockKeyhole,
+  MapPin,
+  Network,
   Plus,
   ScanQrCode,
+  Settings,
   ThumbsUp,
   UserPlus,
   X,
 } from 'lucide-react'
 import { useWorkspace } from '../components/layout/useWorkspace'
+import { Avatar } from '../components/ui/Avatar'
 import { hasPermission } from '../services/authorizationService'
-import { getDashboardMetricWorkOrders, getDashboardOverview } from '../services/dashboardService'
+import { getDashboardMetricWorkOrders, getDashboardOverview, getDashboardRecentActivityPage } from '../services/dashboardService'
 import { getRecordPath } from '../routes'
 import { PriorityBadge } from '../components/ui/PriorityBadge'
 import { workOrderStatusOptions } from './work-orders/workOrderStatusOptions'
@@ -84,6 +92,15 @@ const dashboardMetricDefinitions = {
     tone: 'green',
   },
 }
+
+const dashboardCreateOptions = [
+  { label: 'Work Order', icon: ClipboardList, available: true },
+  { label: 'Purchase Order', icon: FileText },
+  { label: 'Asset', icon: Network },
+  { label: 'Part', icon: Settings },
+  { label: 'Procedure', icon: List },
+  { label: 'Location', icon: MapPin },
+]
 
 function DashboardQuickAction({ icon: Icon, label, hint, disabled = false, disabledMessage = 'Coming soon', onClick, badge }) {
   return (
@@ -207,6 +224,74 @@ function DashboardMetricSheet({ metric, count, organizationId, grants, timeZone,
   )
 }
 
+function DashboardCreateSheet({ onClose, onNavigate, triggerRef }) {
+  const dialogRef = useRef(null)
+  const closeButtonRef = useRef(null)
+
+  useEffect(() => {
+    const triggerElement = triggerRef.current
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    closeButtonRef.current?.focus()
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onClose()
+        return
+      }
+      if (event.key !== 'Tab' || !dialogRef.current) return
+      const focusable = [...dialogRef.current.querySelectorAll('button:not(:disabled)')]
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable.at(-1)
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleKeyDown)
+      if (triggerElement?.isConnected) triggerElement.focus()
+    }
+  }, [onClose, triggerRef])
+
+  const handleSelect = (option) => {
+    if (!option.available) return
+    onClose()
+    onNavigate('/workorders?create=1')
+  }
+
+  return createPortal(
+    <div className="dashboard-create-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      <section ref={dialogRef} className="dashboard-create-sheet" role="dialog" aria-modal="true" aria-labelledby="dashboard-create-title">
+        <header className="dashboard-create-header">
+          <h2 id="dashboard-create-title">What would you like to Create?</h2>
+          <button ref={closeButtonRef} className="dashboard-metric-sheet-close" type="button" aria-label="Close" onClick={onClose}><X size={28} aria-hidden="true" /></button>
+        </header>
+        <ul className="dashboard-create-options">
+          {dashboardCreateOptions.map((option) => {
+            const Icon = option.icon
+            return <li key={option.label}>
+              <button className={`dashboard-create-option${option.available ? '' : ' is-unavailable'}`} type="button" disabled={!option.available} onClick={() => handleSelect(option)}>
+                <span className="dashboard-create-option-icon"><Icon size={27} strokeWidth={2.3} aria-hidden="true" /></span>
+                <span className="dashboard-create-option-label">{option.label}</span>
+                {option.available ? <ChevronRight className="dashboard-create-option-arrow" size={23} strokeWidth={2.5} aria-hidden="true" /> : <LockKeyhole className="dashboard-create-option-lock" size={19} aria-hidden="true" />}
+                {!option.available && <span className="dashboard-create-option-sr-only">Coming soon</span>}
+              </button>
+            </li>
+          })}
+        </ul>
+      </section>
+    </div>,
+    document.body,
+  )
+}
+
 function WorkOrderStatus({ status }) {
   const option = workOrderStatusOptions.find((item) => item.value === status)
   const Icon = option?.icon ?? Inbox
@@ -238,20 +323,88 @@ function WorkOrderGroupCard({ group }) {
   )
 }
 
-function ActivityRow({ event, timeZone }) {
+function ActivityRow({ event, timeZone, currentUserId, currentUserProfile, currentUserName, currentUserFirstName, currentUserLastName }) {
   const order = event.workOrder
+  const isCurrentUser = Boolean(currentUserId && event.actor_id === currentUserId)
+  const actorName = isCurrentUser ? currentUserName : event.actorLabel
   return (
     <li className="dashboard-activity-row">
-      <span className={`dashboard-activity-avatar${event.actorLabel === 'You' ? ' is-you' : ''}`} aria-hidden="true">
-        {event.actorLabel === 'You' ? 'You' : 'T'}
+      <span className={`dashboard-activity-avatar${isCurrentUser ? ' is-you' : ''}`} aria-hidden="true">
+        {isCurrentUser
+          ? <Avatar className="dashboard-activity-avatar-image" src={currentUserProfile?.avatar_url} firstName={currentUserProfile?.first_name || currentUserFirstName} lastName={currentUserProfile?.last_name || currentUserLastName} name={currentUserName} alt="" />
+          : 'T'}
       </span>
       <p>
-        <strong>{event.actorLabel}</strong> {getActivityPhrase(event)}{' '}
+        <strong>{actorName}</strong> {getActivityPhrase(event)}{' '}
         <Link to={getRecordPath('workorders', order.id)}>#{order.work_order_number} {order.title}</Link>.
         <time dateTime={event.created_at}>{formatActivityTime(event.created_at, timeZone)}</time>
       </p>
     </li>
   )
+}
+
+function RecentActivityFeed({ events: initialEvents, hasMore: initialHasMore, cursor: initialCursor, organizationId, userId, grants, timeZone, currentUserProfile, currentUserName, currentUserFirstName, currentUserLastName }) {
+  const [events, setEvents] = useState(initialEvents)
+  const [hasMore, setHasMore] = useState(initialHasMore)
+  const [cursor, setCursor] = useState(initialCursor)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const feedRef = useRef(null)
+  const sentinelRef = useRef(null)
+  const loadingRef = useRef(false)
+  const pauseAutomaticLoadingRef = useRef(false)
+
+  const loadNextPage = useCallback(async (manual = false) => {
+    if (manual) pauseAutomaticLoadingRef.current = false
+    if (loadingRef.current || !hasMore || !cursor || pauseAutomaticLoadingRef.current) return
+
+    loadingRef.current = true
+    setIsLoading(true)
+    setError('')
+    try {
+      const page = await getDashboardRecentActivityPage({ organizationId, userId, grants, before: cursor })
+      setEvents((currentEvents) => {
+        const existingIds = new Set(currentEvents.map((event) => event.id))
+        return [...currentEvents, ...page.items.filter((event) => !existingIds.has(event.id))]
+      })
+      setCursor(page.nextCursor)
+      setHasMore(page.hasMore)
+    } catch (loadError) {
+      pauseAutomaticLoadingRef.current = true
+      setError(loadError.message || 'Unable to load more activity.')
+    } finally {
+      loadingRef.current = false
+      setIsLoading(false)
+    }
+  }, [cursor, grants, hasMore, organizationId, userId])
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel || !hasMore || typeof IntersectionObserver === 'undefined') return undefined
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) void loadNextPage()
+    }, {
+      root: feedRef.current?.closest('.page-content') ?? null,
+      rootMargin: '0px 0px 320px 0px',
+    })
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMore, loadNextPage])
+
+  return <div className="dashboard-activity-feed" ref={feedRef}>
+    <ul className="dashboard-activity-list">
+      {events.map((event) => <ActivityRow event={event} timeZone={timeZone} currentUserId={userId} currentUserProfile={currentUserProfile} currentUserName={currentUserName} currentUserFirstName={currentUserFirstName} currentUserLastName={currentUserLastName} key={event.id} />)}
+    </ul>
+    <div className="dashboard-activity-feed-footer">
+      {isLoading && <p className="dashboard-activity-feed-status" role="status">Loading more activity…</p>}
+      {error && <p className="dashboard-activity-feed-error" role="alert">{error}</p>}
+      {hasMore
+        ? <button className="dashboard-activity-load-more" type="button" onClick={() => void loadNextPage(true)} disabled={isLoading}>{error ? 'Retry loading activity' : 'Load more activity'}</button>
+        : <p className="dashboard-activity-feed-status">You’re all caught up.</p>}
+      {hasMore && <div className="dashboard-activity-feed-sentinel" ref={sentinelRef} aria-hidden="true" />}
+    </div>
+  </div>
 }
 
 export function Dashboard({ onNavigate }) {
@@ -261,6 +414,12 @@ export function Dashboard({ onNavigate }) {
   const grants = useMemo(() => workspace.authorization?.grants ?? {}, [workspace.authorization?.grants])
   const timeZone = workspace.preferences?.timezone
   const firstName = workspace.profile?.first_name || workspace.user?.user_metadata?.first_name || ''
+  const lastName = workspace.profile?.last_name || workspace.user?.user_metadata?.last_name || ''
+  const currentUserName = [firstName, lastName].filter(Boolean).join(' ').trim()
+    || workspace.user?.user_metadata?.full_name
+    || workspace.user?.user_metadata?.name
+    || workspace.user?.email
+    || 'Current user'
   const displayGreeting = useMemo(() => getGreeting(timeZone), [timeZone])
   const [overview, setOverview] = useState(null)
   const [loadState, setLoadState] = useState('loading')
@@ -268,12 +427,19 @@ export function Dashboard({ onNavigate }) {
   const [refreshVersion, setRefreshVersion] = useState(0)
   const [isCreateButtonCollapsed, setIsCreateButtonCollapsed] = useState(false)
   const [activeMetricKey, setActiveMetricKey] = useState(null)
+  const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false)
   const dashboardRef = useRef(null)
   const metricTriggerRef = useRef(null)
+  const createTriggerRef = useRef(null)
   const canViewWorkOrders = hasPermission(grants, 'work_orders.view')
   const canCreateWorkOrders = canViewWorkOrders && hasPermission(grants, 'work_orders.create')
   const canInviteUsers = hasPermission(grants, 'organization.invite_users')
   const closeMetricSheet = useCallback(() => setActiveMetricKey(null), [])
+  const closeCreateSheet = useCallback(() => setIsCreateSheetOpen(false), [])
+  const openCreateSheet = useCallback((event) => {
+    createTriggerRef.current = event.currentTarget
+    setIsCreateSheetOpen(true)
+  }, [])
   const openMetricSheet = useCallback((metricKey, event) => {
     metricTriggerRef.current = event.currentTarget
     setActiveMetricKey(metricKey)
@@ -346,7 +512,7 @@ export function Dashboard({ onNavigate }) {
       <section className="dashboard-section dashboard-todo-section" aria-labelledby="dashboard-todo-title">
         <div className="dashboard-section-heading">
           <h2 id="dashboard-todo-title">To Do List</h2>
-          {canCreateWorkOrders && <button className={`dashboard-create-button${isCreateButtonCollapsed ? ' is-collapsed' : ''}`} type="button" aria-label="Create work order" onClick={() => onNavigate('/workorders?create=1')}><Plus size={24} aria-hidden="true" /><span>Create</span></button>}
+          {canCreateWorkOrders && <button className={`dashboard-create-button${isCreateButtonCollapsed ? ' is-collapsed' : ''}`} type="button" aria-label="Create" aria-haspopup="dialog" onClick={openCreateSheet}><Plus size={24} aria-hidden="true" /><span>Create</span></button>}
         </div>
         {loadState === 'loading' && <p className="dashboard-section-state" role="status">Loading your work...</p>}
         {loadState === 'ready' && overview?.canViewWorkOrders && <div className="dashboard-work-order-carousel">
@@ -359,10 +525,21 @@ export function Dashboard({ onNavigate }) {
         <h2 id="dashboard-activity-title">Recent Activity</h2>
         {loadState === 'loading' && <p className="dashboard-section-state" role="status">Loading recent activity...</p>}
         {loadState === 'ready' && !overview.activityAvailable && <p className="dashboard-section-state">Activity access is not included in your role.</p>}
-        {loadState === 'ready' && overview.activityAvailable && overview.recentActivity.length === 0 && <p className="dashboard-section-state">No recent Work Order activity.</p>}
-        {loadState === 'ready' && overview.activityAvailable && overview.recentActivity.length > 0 && <ul className="dashboard-activity-list">
-          {overview.recentActivity.map((event) => <ActivityRow event={event} timeZone={timeZone} key={event.id} />)}
-        </ul>}
+        {loadState === 'ready' && overview.activityAvailable && overview.recentActivity.length === 0 && !overview.recentActivityHasMore && <p className="dashboard-section-state">No recent Work Order activity.</p>}
+        {loadState === 'ready' && overview.activityAvailable && (overview.recentActivity.length > 0 || overview.recentActivityHasMore) && <RecentActivityFeed
+          key={`${organizationId}:${refreshVersion}`}
+          events={overview.recentActivity}
+          hasMore={overview.recentActivityHasMore}
+          cursor={overview.recentActivityCursor}
+          organizationId={organizationId}
+          userId={userId}
+          grants={grants}
+          timeZone={timeZone}
+          currentUserProfile={workspace.profile}
+          currentUserName={currentUserName}
+          currentUserFirstName={firstName}
+          currentUserLastName={lastName}
+        />}
       </section>
     </div>
     {activeMetricKey && <DashboardMetricSheet
@@ -377,5 +554,6 @@ export function Dashboard({ onNavigate }) {
       onNavigate={onNavigate}
       triggerRef={metricTriggerRef}
     />}
+    {isCreateSheetOpen && <DashboardCreateSheet onClose={closeCreateSheet} onNavigate={onNavigate} triggerRef={createTriggerRef} />}
   </>
 }

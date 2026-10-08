@@ -214,6 +214,18 @@ button.dashboard-metric-card:hover {
   animation: dashboard-metric-backdrop-enter 180ms ease-out both;
 }
 
+.dashboard-create-backdrop {
+  position: fixed;
+  z-index: 2100;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgb(18 28 38 / 48%);
+  animation: dashboard-metric-backdrop-enter 180ms ease-out both;
+}
+
 .dashboard-metric-sheet {
   box-sizing: border-box;
   display: flex;
@@ -228,6 +240,112 @@ button.dashboard-metric-card:hover {
   box-shadow: var(--elevation-6);
   animation: dashboard-metric-sheet-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+.dashboard-create-sheet {
+  box-sizing: border-box;
+  display: flex;
+  width: min(100%, 520px);
+  height: min(680px, calc(100dvh - 48px));
+  max-height: calc(100dvh - 32px);
+  flex-direction: column;
+  padding: 14px 20px 16px;
+  border-radius: var(--radius-xl);
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: var(--elevation-6);
+  animation: dashboard-metric-sheet-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dashboard-create-header {
+  position: relative;
+  display: flex;
+  min-height: 58px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0 44px;
+}
+
+.dashboard-create-header h2 {
+  margin: 0;
+  font-size: var(--font-size-xl-plus);
+  font-weight: var(--font-bold);
+  line-height: 1.25;
+  text-align: center;
+}
+
+.dashboard-create-header .dashboard-metric-sheet-close {
+  position: absolute;
+  top: 50%;
+  right: -8px;
+  transform: translateY(-50%);
+}
+
+.dashboard-create-options {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overscroll-behavior: contain;
+}
+
+.dashboard-create-options li + li { border-top: 1px solid var(--border-subtle); }
+
+.dashboard-create-option {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-height: 74px;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 8px;
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  touch-action: manipulation;
+}
+
+.dashboard-create-option:not(:disabled) { cursor: pointer; }
+.dashboard-create-option:not(:disabled):hover { background: var(--surface-muted); }
+.dashboard-create-option:focus-visible { outline: 3px solid var(--focus-border-color); outline-offset: -3px; }
+
+.dashboard-create-option-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.dashboard-create-option-label {
+  min-width: 0;
+  flex: 1;
+  font-size: var(--font-size-xl-plus);
+  font-weight: var(--font-bold);
+  line-height: 1.25;
+}
+
+.dashboard-create-option-arrow { flex: none; color: var(--blue); }
+
+.dashboard-create-option.is-unavailable {
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+.dashboard-create-option.is-unavailable .dashboard-create-option-icon {
+  color: var(--text-secondary);
+  background: var(--surface-muted);
+}
+
+.dashboard-create-option-lock { flex: none; color: var(--text-secondary); }
+.dashboard-create-option-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
 
 @keyframes dashboard-metric-backdrop-enter {
   from { background-color: rgb(18 28 38 / 0%); }
@@ -619,6 +737,42 @@ button.dashboard-metric-card:hover {
   list-style: none;
 }
 
+.dashboard-activity-feed-footer {
+  display: flex;
+  min-height: 52px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+}
+
+.dashboard-activity-load-more {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--blue);
+  background: transparent;
+  font: inherit;
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+}
+
+.dashboard-activity-load-more:hover:not(:disabled) { background: var(--blue-soft); }
+.dashboard-activity-load-more:disabled { color: var(--text-secondary); cursor: wait; }
+
+.dashboard-activity-feed-status,
+.dashboard-activity-feed-error {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.dashboard-activity-feed-error { color: var(--danger, #c62828); }
+.dashboard-activity-feed-sentinel { width: 100%; height: 1px; }
+
 .dashboard-activity-row {
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr);
@@ -642,6 +796,16 @@ button.dashboard-metric-card:hover {
 }
 
 .dashboard-activity-avatar.is-you { color: var(--blue); background: var(--blue-soft); font-size: var(--font-size-xs); }
+
+.dashboard-activity-avatar-image {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: inherit;
+  background: inherit;
+  font-size: var(--font-size-md);
+}
 
 .dashboard-activity-row p {
   min-width: 0;
@@ -684,6 +848,13 @@ button.dashboard-metric-card:hover {
   .dashboard-metric-sheet { width: min(100%, 640px); height: min(82dvh, 960px); max-height: calc(100dvh - env(safe-area-inset-top)); padding: 18px 24px calc(18px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; animation-name: dashboard-metric-sheet-slide-up; }
   .dashboard-metric-sheet.is-empty { height: min(52dvh, 680px); min-height: 400px; }
   .dashboard-metric-sheet.is-empty.is-compact { height: min(44dvh, 560px); min-height: 340px; }
+  .dashboard-create-backdrop { align-items: flex-end; padding: 0; }
+  .dashboard-create-sheet { width: min(100%, 640px); height: min(74dvh, 820px); max-height: calc(100dvh - env(safe-area-inset-top)); padding: 10px 16px calc(14px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; animation-name: dashboard-metric-sheet-slide-up; }
+  .dashboard-create-header { min-height: 64px; }
+  .dashboard-create-header h2 { font-size: var(--font-size-xl-plus); }
+  .dashboard-create-option { min-height: 76px; gap: 14px; padding: 12px 8px; }
+  .dashboard-create-option-icon { width: 44px; height: 44px; }
+  .dashboard-create-option-label { font-size: var(--font-size-xl-plus); }
   .dashboard-metric-sheet-header h2 { font-size: var(--font-size-xl-plus); }
   .dashboard-metric-empty-state h3 { margin-top: 22px; font-size: var(--font-size-xl-plus); }
   .dashboard-metric-empty-state p { font-size: var(--font-size-lg); }
@@ -709,5 +880,7 @@ button.dashboard-metric-card:hover {
 @media (prefers-reduced-motion: reduce) {
   button.dashboard-metric-card { transition: none; }
   .dashboard-metric-backdrop,
-  .dashboard-metric-sheet { animation: none; }
+  .dashboard-metric-sheet,
+  .dashboard-create-backdrop,
+  .dashboard-create-sheet { animation: none; }
 }
