@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import {
-  ArrowUpCircle,
+  ArrowUp,
   ArrowRight,
   CalendarDays,
   Check,
@@ -11,11 +12,13 @@ import {
   Inbox,
   Plus,
   ScanQrCode,
+  ThumbsUp,
   UserPlus,
+  X,
 } from 'lucide-react'
 import { useWorkspace } from '../components/layout/useWorkspace'
 import { hasPermission } from '../services/authorizationService'
-import { getDashboardOverview } from '../services/dashboardService'
+import { getDashboardMetricWorkOrders, getDashboardOverview } from '../services/dashboardService'
 import { getRecordPath } from '../routes'
 import { PriorityBadge } from '../components/ui/PriorityBadge'
 import { workOrderStatusOptions } from './work-orders/workOrderStatusOptions'
@@ -55,6 +58,33 @@ function getActivityPhrase(event) {
   return 'updated'
 }
 
+const dashboardMetricDefinitions = {
+  'high-priority': {
+    key: 'high-priority',
+    label: 'High Priority Work Orders',
+    icon: ArrowUp,
+    tone: 'red',
+  },
+  overdue: {
+    key: 'overdue',
+    label: 'Overdue Work Orders',
+    icon: Clock3,
+    tone: 'red',
+  },
+  requests: {
+    key: 'requests',
+    label: 'Requests Pending Approval',
+    icon: Inbox,
+    tone: 'amber',
+  },
+  completed: {
+    key: 'completed',
+    label: 'Completed Work Orders',
+    icon: Check,
+    tone: 'green',
+  },
+}
+
 function DashboardQuickAction({ icon: Icon, label, hint, disabled = false, disabledMessage = 'Coming soon', onClick, badge }) {
   return (
     <button className="dashboard-quick-action" type="button" disabled={disabled} onClick={onClick} title={hint}>
@@ -68,17 +98,113 @@ function DashboardQuickAction({ icon: Icon, label, hint, disabled = false, disab
   )
 }
 
-function MetricCard({ icon: Icon, value, label, tone, onClick, unavailable = false }) {
-  const content = <>
-    <span className={`dashboard-metric-icon is-${tone}`}><Icon size={26} strokeWidth={2.4} aria-hidden="true" /></span>
-    <strong className="dashboard-metric-value">{value}</strong>
-    {!unavailable && <ChevronRight className="dashboard-metric-chevron" size={23} aria-hidden="true" />}
-    <span className="dashboard-metric-label">{label}</span>
-  </>
+function MetricCard({ metric, value, onClick, unavailable = false }) {
+  const Icon = metric.icon
+  return (
+    <button type="button" className={`dashboard-metric-card${unavailable ? ' is-unavailable' : ''}`} aria-haspopup="dialog" onClick={onClick}>
+      <span className={`dashboard-metric-icon is-${metric.tone}`}><Icon size={26} strokeWidth={2.4} aria-hidden="true" /></span>
+      <strong className="dashboard-metric-value">{value}</strong>
+      <ChevronRight className="dashboard-metric-chevron" size={23} aria-hidden="true" />
+      <span className="dashboard-metric-label">{metric.label}{unavailable && ' (coming soon)'}</span>
+    </button>
+  )
+}
 
-  return onClick
-    ? <button type="button" className="dashboard-metric-card" onClick={onClick}>{content}</button>
-    : <div className={`dashboard-metric-card${unavailable ? ' is-unavailable' : ''}`}>{content}</div>
+function DashboardMetricSheet({ metric, count, organizationId, grants, timeZone, canCreateWorkOrders, onClose, onNavigate, triggerRef }) {
+  const [result, setResult] = useState({ status: metric.key === 'requests' ? 'unavailable' : count === 0 ? 'ready' : 'loading', workOrders: [], error: '' })
+  const [retryVersion, setRetryVersion] = useState(0)
+  const dialogRef = useRef(null)
+  const closeButtonRef = useRef(null)
+  const Icon = metric.icon
+
+  useEffect(() => {
+    if (metric.key === 'requests') return undefined
+    if (count === 0) return undefined
+    let active = true
+    getDashboardMetricWorkOrders({
+      organizationId,
+      metric: metric.key,
+      today: getCalendarDate(timeZone),
+      grants,
+    }).then((workOrders) => {
+      if (active) setResult({ status: 'ready', workOrders, error: '' })
+    }).catch((error) => {
+      if (active) setResult({ status: 'error', workOrders: [], error: error.message || 'Unable to load these Work Orders.' })
+    })
+    return () => { active = false }
+  }, [count, grants, metric.key, organizationId, retryVersion, timeZone])
+
+  useEffect(() => {
+    const triggerElement = triggerRef.current
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    closeButtonRef.current?.focus()
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onClose()
+        return
+      }
+      if (event.key !== 'Tab' || !dialogRef.current) return
+      const focusable = [...dialogRef.current.querySelectorAll('button:not(:disabled), a[href]')]
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable.at(-1)
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleKeyDown)
+      if (triggerElement?.isConnected) triggerElement.focus()
+    }
+  }, [onClose, triggerRef])
+
+  const isEmpty = (result.status === 'ready' && result.workOrders.length === 0) || (metric.key !== 'requests' && count === 0)
+  const isLoading = result.status === 'loading' && count > 0
+  const isRequestPlaceholder = result.status === 'unavailable'
+  const handleCreate = () => onNavigate('/workorders?create=1')
+  const handleViewAll = () => onNavigate(`/workorders?dashboardFilter=${metric.key}`)
+
+  return createPortal(
+    <div className="dashboard-metric-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      <section ref={dialogRef} className={`dashboard-metric-sheet${isEmpty || isRequestPlaceholder ? ' is-empty' : ' is-list'}${isRequestPlaceholder ? ' is-compact' : ''}`} role="dialog" aria-modal="true" aria-labelledby="dashboard-metric-sheet-title">
+        <header className="dashboard-metric-sheet-header">
+          <Icon className={`dashboard-metric-sheet-icon is-${metric.tone}`} size={36} strokeWidth={2.4} aria-hidden="true" />
+          <h2 id="dashboard-metric-sheet-title">{metric.label}</h2>
+          <button ref={closeButtonRef} className="dashboard-metric-sheet-close" type="button" aria-label="Close" onClick={onClose}><X size={28} aria-hidden="true" /></button>
+        </header>
+
+        <div className="dashboard-metric-sheet-content" aria-live="polite">
+          {isLoading && <p className="dashboard-metric-sheet-message" role="status">Loading Work Orders...</p>}
+          {result.status === 'error' && <div className="dashboard-metric-sheet-error" role="alert"><p>{result.error}</p><button type="button" onClick={() => setRetryVersion((version) => version + 1)}>Try again</button></div>}
+          {isRequestPlaceholder && <div className="dashboard-metric-empty-state is-coming-soon"><Inbox size={88} strokeWidth={1.8} aria-hidden="true" /><h3>Requests are coming soon</h3><p>Request approvals will appear here when the Requests module is available.</p></div>}
+          {isEmpty && <div className="dashboard-metric-empty-state"><ThumbsUp size={96} strokeWidth={1.8} aria-hidden="true" /><h3>All good here!</h3><p>There are no {metric.label}</p></div>}
+          {result.status === 'ready' && result.workOrders.length > 0 && <ul className="dashboard-metric-order-list">
+            {result.workOrders.map((order) => (
+              <li key={order.id}>
+                <Link className="dashboard-metric-order-row" to={getRecordPath('workorders', order.id)}>
+                  <span className="dashboard-metric-order-title">{order.title}</span>
+                  <span className="dashboard-metric-order-number">#{order.work_order_number}</span>
+                  <span className="dashboard-metric-order-meta"><WorkOrderStatus status={order.status} /><PriorityBadge priority={order.priority} /></span>
+                </Link>
+              </li>
+            ))}
+          </ul>}
+        </div>
+
+        {isEmpty && canCreateWorkOrders && <footer className="dashboard-metric-sheet-footer"><button className="dashboard-metric-create" type="button" onClick={handleCreate}><Plus size={28} aria-hidden="true" />Create Work Order</button></footer>}
+        {result.status === 'ready' && result.workOrders.length > 0 && count > result.workOrders.length && <footer className="dashboard-metric-sheet-footer"><button className="dashboard-metric-view-all" type="button" onClick={handleViewAll}>View all {count} Work Orders <ArrowRight size={20} aria-hidden="true" /></button></footer>}
+      </section>
+    </div>,
+    document.body,
+  )
 }
 
 function WorkOrderStatus({ status }) {
@@ -141,10 +267,17 @@ export function Dashboard({ onNavigate }) {
   const [error, setError] = useState('')
   const [refreshVersion, setRefreshVersion] = useState(0)
   const [isCreateButtonCollapsed, setIsCreateButtonCollapsed] = useState(false)
+  const [activeMetricKey, setActiveMetricKey] = useState(null)
   const dashboardRef = useRef(null)
+  const metricTriggerRef = useRef(null)
   const canViewWorkOrders = hasPermission(grants, 'work_orders.view')
   const canCreateWorkOrders = canViewWorkOrders && hasPermission(grants, 'work_orders.create')
   const canInviteUsers = hasPermission(grants, 'organization.invite_users')
+  const closeMetricSheet = useCallback(() => setActiveMetricKey(null), [])
+  const openMetricSheet = useCallback((metricKey, event) => {
+    metricTriggerRef.current = event.currentTarget
+    setActiveMetricKey(metricKey)
+  }, [])
 
   useEffect(() => {
     const scrollContainer = dashboardRef.current?.closest('.page-content')
@@ -183,7 +316,7 @@ export function Dashboard({ onNavigate }) {
   const metrics = overview?.metrics
   const organizationName = workspace.organization?.name || 'your workspace'
 
-  return (
+  return <>
     <div className="dashboard-page" ref={dashboardRef}>
       <section className="dashboard-welcome" aria-labelledby="dashboard-title">
         <p className="dashboard-greeting">{displayGreeting}{firstName ? `, ${firstName}` : ''}!</p>
@@ -202,10 +335,10 @@ export function Dashboard({ onNavigate }) {
         {loadState === 'loading' && <p className="dashboard-section-state" role="status">Loading work order totals...</p>}
         {loadState === 'error' && <div className="dashboard-section-state" role="alert"><span>{error}</span><button type="button" onClick={() => { setLoadState('loading'); setRefreshVersion((version) => version + 1) }}>Try again</button></div>}
         {loadState === 'ready' && overview?.canViewWorkOrders && <div className="dashboard-metrics-grid">
-          <MetricCard icon={ArrowUpCircle} value={metrics.highPriorityCount} label="High Priority Work Orders" tone="red" onClick={() => onNavigate('/workorders?dashboardFilter=high-priority')} />
-          <MetricCard icon={Clock3} value={metrics.overdueCount} label="Overdue Work Orders" tone="red" onClick={() => onNavigate('/workorders?dashboardFilter=overdue')} />
-          <MetricCard icon={Inbox} value="N/A" label="Requests Pending Approval (coming soon)" tone="amber" unavailable />
-          <MetricCard icon={Check} value={metrics.completedCount} label="Completed Work Orders" tone="green" />
+          <MetricCard metric={dashboardMetricDefinitions['high-priority']} value={metrics.highPriorityCount} onClick={(event) => openMetricSheet('high-priority', event)} />
+          <MetricCard metric={dashboardMetricDefinitions.overdue} value={metrics.overdueCount} onClick={(event) => openMetricSheet('overdue', event)} />
+          <MetricCard metric={dashboardMetricDefinitions.requests} value="N/A" unavailable onClick={(event) => openMetricSheet('requests', event)} />
+          <MetricCard metric={dashboardMetricDefinitions.completed} value={metrics.completedCount} onClick={(event) => openMetricSheet('completed', event)} />
         </div>}
         {loadState === 'ready' && !overview?.canViewWorkOrders && <p className="dashboard-section-state">Your role does not include Work Order access.</p>}
       </section>
@@ -232,5 +365,17 @@ export function Dashboard({ onNavigate }) {
         </ul>}
       </section>
     </div>
-  )
+    {activeMetricKey && <DashboardMetricSheet
+      key={activeMetricKey}
+      metric={dashboardMetricDefinitions[activeMetricKey]}
+      count={activeMetricKey === 'requests' ? 0 : metrics?.[`${activeMetricKey === 'high-priority' ? 'highPriority' : activeMetricKey}Count`] ?? 0}
+      organizationId={organizationId}
+      grants={grants}
+      timeZone={timeZone}
+      canCreateWorkOrders={canCreateWorkOrders}
+      onClose={closeMetricSheet}
+      onNavigate={onNavigate}
+      triggerRef={metricTriggerRef}
+    />}
+  </>
 }

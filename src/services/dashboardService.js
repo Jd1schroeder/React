@@ -87,3 +87,41 @@ export async function getDashboardOverview({ organizationId, userId, grants, tod
     activityAvailable,
   }
 }
+
+export async function getDashboardMetricWorkOrders({ organizationId, metric, today, grants }) {
+  const metricQueries = {
+    'high-priority': {
+      tab: 'To Do',
+      group: 'all-open',
+      sort: 'priority-highest',
+      filters: [{ field: 'priority', operator: 'one_of', values: ['Urgent', 'High'] }],
+    },
+    overdue: {
+      tab: 'To Do',
+      group: 'all-open',
+      sort: 'due-earliest',
+      filters: [{ field: 'due_date', operator: 'before', values: [today] }],
+    },
+    completed: {
+      tab: 'Done',
+      group: 'completed',
+      sort: 'updated-newest',
+      filters: [],
+    },
+  }
+  const query = metricQueries[metric]
+  if (!query) throw new Error('This Dashboard list is not available yet.')
+
+  return listWorkOrderInboxPage({
+    organizationId,
+    tab: query.tab,
+    group: query.group,
+    search: '',
+    sort: query.sort,
+    offset: 0,
+    pageSize: 50,
+    filters: query.filters,
+    includeRelations: false,
+    grants,
+  })
+}

@@ -36,7 +36,7 @@ vi.mock("../src/components/layout/useUnsavedChanges", () => ({
 
 vi.mock("../src/pages/work-orders/WorkOrderList", () => ({
   WorkOrderFilters: () => null,
-  WorkOrderList: () => <section aria-label="Work Order list" />,
+  WorkOrderList: ({ activeTab, filters }) => <section aria-label="Work Order list"><span data-testid="active-work-order-tab">{activeTab}</span><span data-testid="active-work-order-filters">{JSON.stringify(filters)}</span></section>,
 }));
 
 vi.mock("../src/services/workOrderService", () => ({
@@ -80,6 +80,10 @@ function renderDeepLinkedWorkOrder() {
   return render(<MemoryRouter initialEntries={["/workorders/wo-1"]}><WorkOrders recordId="wo-1" /></MemoryRouter>);
 }
 
+function renderCompletedDashboardFilter() {
+  return render(<MemoryRouter initialEntries={["/workorders?dashboardFilter=completed"]}><WorkOrders /></MemoryRouter>);
+}
+
 describe("Work Orders deep-link refresh", () => {
   it("keeps the detail pane loading until lookup confirms a missing record", async () => {
     let resolveLookup;
@@ -92,5 +96,13 @@ describe("Work Orders deep-link refresh", () => {
 
     await act(async () => resolveLookup(null));
     await waitFor(() => expect(screen.getByAltText("Workbench 404 illustration")).toBeInTheDocument());
+  });
+
+  it("opens the Done tab with completed Work Orders when launched from the Dashboard sheet", async () => {
+    renderCompletedDashboardFilter();
+
+    expect(await screen.findByTestId("active-work-order-tab")).toHaveTextContent("Done");
+    expect(screen.getByTestId("active-work-order-filters")).toHaveTextContent('"field":"status"');
+    expect(screen.getByTestId("active-work-order-filters")).toHaveTextContent('"values":["Completed"]');
   });
 });

@@ -80,7 +80,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   const userId = workspace.user?.id
   const canDeleteAnyWorkOrderComment = workspace.organization?.roleDefinition?.system_key === 'organization_admin'
     || workspace.user?.app_metadata?.platform_role === 'superadmin'
-  const [activeTab, setActiveTab] = useState('To Do')
+  const [activeTab, setActiveTab] = useState(() => new URLSearchParams(location.search).get('dashboardFilter') === 'completed' ? 'Done' : 'To Do')
   const dashboardFilter = new URLSearchParams(location.search).get('dashboardFilter')
   const dashboardFilters = useMemo(() => {
     if (!dashboardFilter) return []
@@ -95,6 +95,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     if (dashboardFilter === 'due-today') return normalizeWorkOrderFilters([{ field: 'due_date', operator: 'on', values: [today] }])
     if (dashboardFilter === 'overdue') return normalizeWorkOrderFilters([{ field: 'due_date', operator: 'before', values: [today] }])
     if (dashboardFilter === 'high-priority') return normalizeWorkOrderFilters([{ field: 'priority', operator: 'one_of', values: ['Urgent', 'High'] }])
+    if (dashboardFilter === 'completed') return normalizeWorkOrderFilters([{ field: 'status', operator: 'one_of', values: ['Completed'] }])
     return []
   }, [dashboardFilter, workspace.preferences?.timezone])
   const [sortId, setSortId] = useState('priority-highest')

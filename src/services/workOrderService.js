@@ -110,7 +110,7 @@ export async function markWorkOrderInboxRead({ organizationId, tab, search, filt
   return data ?? 0
 }
 
-export async function listWorkOrderInboxPage({ organizationId, tab, group, search, sort, unreadFirst = false, offset, pageSize = 50, filters = [], grants }) {
+export async function listWorkOrderInboxPage({ organizationId, tab, group, search, sort, unreadFirst = false, offset, pageSize = 50, filters = [], includeRelations = true, grants }) {
   assertPermission(grants, 'work_orders.view')
   const { data, error } = await supabase.rpc('get_work_order_inbox_page', {
     target_organization_id: organizationId,
@@ -124,7 +124,8 @@ export async function listWorkOrderInboxPage({ organizationId, tab, group, searc
     target_filters: normalizeWorkOrderFilters(filters),
   })
   if (error) throw error
-  return loadWorkOrderRelations(data ?? [], { signAttachmentUrls: false })
+  const workOrders = data ?? []
+  return includeRelations ? loadWorkOrderRelations(workOrders, { signAttachmentUrls: false }) : workOrders
 }
 
 export async function getWorkOrderById({ organizationId, workOrderId, grants }) {
