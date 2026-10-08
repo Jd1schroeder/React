@@ -840,9 +840,31 @@ button.dashboard-metric-card:hover {
   .dashboard-metric-card { min-height: 140px; grid-template-columns: 24px minmax(0, 1fr) 16px; column-gap: 6px; padding: 12px; }
   .dashboard-metric-label { font-size: var(--font-size-md); }
   .dashboard-section-heading { margin-bottom: 10px; }
-  .dashboard-create-button { position: fixed; z-index: 35; right: 18px; bottom: calc(82px + env(safe-area-inset-bottom)); min-width: 156px; height: 58px; padding: 0 18px; border-radius: 999px; box-shadow: var(--elevation-4); }
-  .dashboard-create-button.is-collapsed { width: 56px; min-width: 56px; height: 56px; padding: 0; border-radius: 50%; }
-  .dashboard-create-button.is-collapsed span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+  .dashboard-create-button {
+    position: fixed;
+    z-index: 35;
+    right: 18px;
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    width: 144px;
+    min-width: 144px;
+    height: 54px;
+    gap: 6px;
+    padding: 0 14px;
+    border-radius: 999px;
+    box-shadow: var(--elevation-4);
+    transition: width 260ms cubic-bezier(0.22, 1, 0.36, 1), min-width 260ms cubic-bezier(0.22, 1, 0.36, 1), height 220ms ease, gap 220ms ease, padding 220ms ease, border-radius 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms ease;
+  }
+  .dashboard-create-button > span {
+    max-width: 72px;
+    min-width: 0;
+    overflow: hidden;
+    opacity: 1;
+    transform: translateX(0);
+    white-space: nowrap;
+    transition: max-width 220ms ease, opacity 140ms ease, transform 220ms ease, visibility 0s;
+  }
+  .dashboard-create-button.is-collapsed { width: 52px; min-width: 52px; height: 52px; gap: 0; padding: 0; border-radius: 50%; }
+  .dashboard-create-button.is-collapsed > span { max-width: 0; opacity: 0; transform: translateX(6px); visibility: hidden; transition: max-width 220ms ease, opacity 120ms ease, transform 220ms ease, visibility 0s linear 140ms; }
   .dashboard-create-button svg { width: 24px; height: 24px; }
   .dashboard-metric-backdrop { align-items: flex-end; padding: 0; }
   .dashboard-metric-sheet { width: min(100%, 640px); height: min(82dvh, 960px); max-height: calc(100dvh - env(safe-area-inset-top)); padding: 18px 24px calc(18px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; animation-name: dashboard-metric-sheet-slide-up; }
@@ -879,6 +901,8 @@ button.dashboard-metric-card:hover {
 
 @media (prefers-reduced-motion: reduce) {
   button.dashboard-metric-card { transition: none; }
+  .dashboard-create-button,
+  .dashboard-create-button > span { transition: none; }
   .dashboard-metric-backdrop,
   .dashboard-metric-sheet,
   .dashboard-create-backdrop,
