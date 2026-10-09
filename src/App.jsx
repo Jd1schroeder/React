@@ -6,6 +6,7 @@ import { useUnsavedChanges } from './components/layout/useUnsavedChanges'
 import { getPagePath, getRecordPath, pagePaths } from './routes.js'
 import { authenticatedRoutes, pages, publicRoutes, recordPageNames, recordRoutes } from './routes/routeConfig.jsx'
 import './styles/tokens.css'
+import './styles/breakpoints.css'
 import './styles/globals.css'
 import './App.css'
 

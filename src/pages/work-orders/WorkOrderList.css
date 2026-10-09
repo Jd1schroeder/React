@@ -691,7 +691,7 @@
   white-space: nowrap;
 }
 
-@media (max-width: 840px) {
+@media (--wb-viewport-tablet-and-down) {
   .work-order-sort-selector {
     height: 48px;
   }

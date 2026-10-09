@@ -550,7 +550,7 @@
   clip-path: inset(50%);
 }
 
-@media (max-width: 520px) {
+@media (--wb-viewport-max-520) {
   .work-order-comment-actions {
     opacity: 1;
     pointer-events: auto;
@@ -582,7 +582,7 @@
   }
 }
 
-@media (max-width: 840px) {
+@media (--wb-viewport-tablet-and-down) {
   .work-order-comment-composer textarea,
   .work-order-comment-editor textarea {
     min-height: 96px;

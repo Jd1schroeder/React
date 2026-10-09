@@ -640,7 +640,7 @@
   clip-path: inset(50%);
 }
 
-@media (max-width: 520px) {
+@media (--wb-viewport-max-520) {
   .work-order-actions {
     align-items: flex-start;
   }
@@ -649,7 +649,7 @@
   }
 }
 
-@media (max-width: 840px) {
+@media (--wb-viewport-tablet-and-down) {
   .work-order-filter-portal {
     z-index: 1599;
     pointer-events: auto;

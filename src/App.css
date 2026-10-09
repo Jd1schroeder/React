@@ -312,13 +312,13 @@
   border: var(--border-width-normal) solid var(--line);
   background: var(--surface);
 }
-@media (max-width: 900px) {
+@media (--wb-viewport-max-900) {
   .page-content-inner {
     padding-left: var(--spacing-5);
     padding-right: var(--spacing-5);
   }
 }
-@media (max-width: 600px) {
+@media (--wb-viewport-max-600) {
   .page-heading {
     align-items: flex-start;
     flex-direction: column;
@@ -353,7 +353,7 @@
   gap: 7px;
 }
 
-@media (max-width: 840px) {
+@media (--wb-viewport-max-840) {
   .app-shell {
     height: 100vh;
     height: 100dvh;
@@ -396,7 +396,7 @@
   }
 }
 
-@media (min-width: 701px) and (max-width: 1199px) {
+@media (--wb-viewport-tablet) {
   .app-shell {
     height: 100vh;
     height: 100dvh;

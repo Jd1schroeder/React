@@ -185,13 +185,13 @@
 .panel-view-header-actions .button-secondary {
   display: none;
 }
-@media (max-width: 900px) {
+@media (--wb-viewport-max-900) {
   .panel-view-page {
     margin: 0;
     padding: 0;
   }
 }
-@media (max-width: 700px) {
+@media (--wb-viewport-max-700) {
   .panel-view-header {
     align-items: flex-start;
     flex-direction: column;
@@ -205,11 +205,11 @@
     overflow: auto;
   }
 }
-@media (max-width: 600px) {
+@media (--wb-viewport-max-600) {
   .header-search { flex: 1; width: auto; min-width: 0; max-width: none; }
 }
 
-@media (max-width: 840px) {
+@media (--wb-viewport-tablet-and-down) {
   .panel-view-page {
     min-height: 0;
     height: 100%;

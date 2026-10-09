@@ -2,7 +2,34 @@
   display: none;
 }
 
-@media (max-width: 840px) {
+.mobile-app-header-account {
+  position: absolute;
+  top: calc(3px + env(safe-area-inset-top));
+  right: 8px;
+  display: flex;
+  width: 62px;
+  min-height: 62px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 2px;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--text-secondary-strong);
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-xs);
+  line-height: 1.1;
+  touch-action: manipulation;
+}
+
+.mobile-app-header-account:focus-visible {
+  outline: 2px solid var(--focus-border-color);
+  outline-offset: -2px;
+}
+
+@media (--wb-viewport-max-840) {
   .mobile-app-header {
     position: relative;
     z-index: 30;
@@ -31,43 +58,24 @@
   }
 
   .mobile-app-header-account {
-    position: absolute;
-    top: calc(3px + env(safe-area-inset-top));
-    right: 8px;
-    display: flex;
-    width: 62px;
-    min-height: 62px;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    padding: 2px;
-    border: 0;
-    border-radius: var(--radius-control);
     color: inherit;
-    background: transparent;
-    font: inherit;
-    font-size: var(--font-size-xs);
-    line-height: 1.1;
-    touch-action: manipulation;
   }
 
   .mobile-app-header-account:focus-visible {
-    outline: 2px solid var(--white);
-    outline-offset: -2px;
+    outline-color: var(--white);
   }
 }
 
-@media (min-width: 701px) and (max-width: 1199px) {
+@media (--wb-viewport-tablet) {
   .mobile-app-header {
     position: relative;
     z-index: 30;
     box-sizing: border-box;
     display: grid;
-    min-height: 78px;
+    min-height: 64px;
     flex: 0 0 auto;
     place-items: center;
-    padding: 8px 92px;
+    padding: 4px 92px;
     border-bottom: 1px solid var(--line);
     color: var(--ink);
     background: var(--surface);
@@ -86,7 +94,7 @@
   }
 
   .mobile-app-header-account {
-    top: 7px;
+    top: 1px;
     right: 18px;
     color: var(--text-secondary-strong);
   }

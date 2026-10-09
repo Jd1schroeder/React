@@ -415,7 +415,7 @@
   font-size: inherit;
 }
 
-@media (max-width: 820px) {
+@media (--wb-viewport-max-820) {
   .login-page {
     display: block;
   }

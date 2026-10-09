@@ -163,7 +163,7 @@
 
 .invite-link-button { width: 100%; }
 
-@media (max-width: 760px) {
+@media (--wb-viewport-max-760) {
   .invite-card { padding: var(--spacing-7) var(--spacing-4); }
   .invite-table-header { display: none; }
   .invite-row { grid-template-columns: 1fr 28px; gap: 10px; }

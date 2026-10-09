@@ -1,5 +1,26 @@
 import react from '@vitejs/plugin-react'
+import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vite'
+
+function breakpointTokensPlugin() {
+  return {
+    postcssPlugin: 'workbench-breakpoint-tokens',
+    Once(root) {
+      const tokenSource = readFileSync(new URL('./src/styles/breakpoints.css', import.meta.url), 'utf8')
+      const tokens = new Map([...tokenSource.matchAll(/@custom-media\s+(--wb-[\w-]+)\s+([^;]+);/g)]
+        .map(([, name, query]) => [name, query.trim()]))
+
+      root.walkAtRules('media', (rule) => {
+        rule.params = rule.params.replace(/\((--wb-[\w-]+)\)/g, (token, name) => {
+          const query = tokens.get(name)
+          if (!query) throw rule.error(`Unknown Workbench breakpoint token: ${name}`)
+          return query
+        })
+      })
+      root.walkAtRules('custom-media', (rule) => rule.remove())
+    },
+  }
+}
 
 function deploymentVersionPlugin() {
   return {
@@ -28,4 +49,9 @@ function deploymentVersionPlugin() {
 
 export default defineConfig({
   plugins: [react(), deploymentVersionPlugin()],
+  css: {
+    postcss: {
+      plugins: [breakpointTokensPlugin()],
+    },
+  },
 })

@@ -1,0 +1,14 @@
+@custom-media --wb-viewport-max-480 (max-width: 480px);
+@custom-media --wb-viewport-max-520 (max-width: 520px);
+@custom-media --wb-viewport-max-600 (max-width: 600px);
+@custom-media --wb-viewport-max-640 (max-width: 640px);
+@custom-media --wb-viewport-max-700 (max-width: 700px);
+@custom-media --wb-viewport-max-760 (max-width: 760px);
+@custom-media --wb-viewport-max-800 (max-width: 800px);
+@custom-media --wb-viewport-max-820 (max-width: 820px);
+@custom-media --wb-viewport-max-840 (max-width: 840px);
+@custom-media --wb-viewport-max-900 (max-width: 900px);
+@custom-media --wb-viewport-tablet (min-width: 701px) and (max-width: 1199px);
+@custom-media --wb-viewport-tablet-compact (min-width: 701px) and (max-width: 1063px);
+@custom-media --wb-viewport-tablet-wide (min-width: 841px) and (max-width: 1199px);
+@custom-media --wb-viewport-tablet-and-down (max-width: 1199px);

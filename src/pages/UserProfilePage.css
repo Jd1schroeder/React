@@ -510,7 +510,7 @@
   background: var(--surface-disabled);
   cursor: not-allowed;
 }
-@media (max-width: 800px) {
+@media (--wb-viewport-max-800) {
   .user-profile-content-inner {
     /* padding: 0 var(--spacing-4) var(--spacing-4); */
     padding: 0px;

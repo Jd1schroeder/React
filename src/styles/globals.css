@@ -88,7 +88,7 @@ body,
   min-height: 100%;
 }
 
-@media (max-width: 840px) {
+@media (--wb-viewport-tablet-and-down) {
   .mobile-edge-to-edge-sheet[role='dialog'] {
     width: 100%;
     max-width: none;

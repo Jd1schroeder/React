@@ -165,7 +165,7 @@
   border: 0;
 }
 
-@media (max-width: 760px) {
+@media (--wb-viewport-max-760) {
   .settings-page {
     padding: var(--spacing-5);
   }

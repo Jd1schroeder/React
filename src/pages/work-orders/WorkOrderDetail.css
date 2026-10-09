@@ -595,7 +595,7 @@ a.detail-assignee-link:hover {
   color: var(--white);
   background: var(--blue);
 }
-@media (max-width: 900px) {
+@media (--wb-viewport-max-900) {
   .detail-header {
     flex-direction: column;
   }
@@ -603,7 +603,7 @@ a.detail-assignee-link:hover {
     width: 100%;
   }
 }
-@media (max-width: 700px) {
+@media (--wb-viewport-max-700) {
   .detail-pane {
     min-height: 620px;
   }
@@ -621,7 +621,7 @@ a.detail-assignee-link:hover {
   }
 }
 
-@media (max-width: 840px) {
+@media (--wb-viewport-tablet-and-down) {
   .detail-pane {
     min-height: 0;
     height: 100%;

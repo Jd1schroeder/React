@@ -196,7 +196,7 @@
   width: min(100%, 320px);
 }
 
-@media (max-width: 760px) {
+@media (--wb-viewport-max-760) {
   .notification-card {
     padding: var(--spacing-6);
   }

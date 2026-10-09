@@ -347,7 +347,7 @@
   clip-path: inset(50%);
 }
 
-@media (max-width: 840px) {
+@media (--wb-viewport-tablet-and-down) {
   .work-order-saved-filters-portal {
     pointer-events: auto;
     background: rgb(18 28 38 / 38%);

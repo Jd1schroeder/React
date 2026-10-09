@@ -204,7 +204,7 @@
 .work-order-read-toast button:hover {
   background: var(--surface-toast-action-hover);
 }
-@media (max-width: 840px) {
+@media (--wb-viewport-tablet-and-down) {
   .panel-view-body.work-orders-layout {
     grid-template-columns: 1fr;
     overflow: hidden;
@@ -820,7 +820,7 @@
   border-color: var(--blue);
   color: var(--blue);
 }
-@media (max-width: 700px) {
+@media (--wb-viewport-max-700) {
   .new-work-order-scroll {
     padding: var(--spacing-5) var(--spacing-4) var(--spacing-8);
   }
@@ -833,7 +833,7 @@
   }
 }
 
-@media (max-width: 840px) {
+@media (--wb-viewport-tablet-and-down) {
   .work-orders-page.is-mobile-record-view .panel-navigation,
   .work-orders-page.is-mobile-record-view .panel-subnavigation {
     display: none;

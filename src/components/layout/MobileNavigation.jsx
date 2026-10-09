@@ -11,9 +11,9 @@ import {
   Boxes,
   Check,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   ClipboardCheck,
-  Ellipsis,
   Home,
   House,
   LogOut,
@@ -30,18 +30,6 @@ const primaryDestinations = [
   { label: 'Messages', page: 'Messages', icon: MessageCircle },
 ]
 
-const primaryDestinationPages = new Set(primaryDestinations.map(({ page }) => page))
-const tabletDestinations = [
-  ...primaryDestinations.map(({ label, page }) => ({ label, page })),
-  ...sidebarGroups.flatMap(({ items }) => items.flatMap((item) => [
-    { label: item.label, page: item.page },
-    ...(item.children ?? []).map((child) => ({ label: `${item.label} · ${child.label}`, page: child.page })),
-  ])),
-].filter((destination, index, destinations) =>
-  !primaryDestinationPages.has(destination.page)
-    && destinations.findIndex((candidate) => candidate.page === destination.page) === index,
-)
-
 function isPrimaryPage(page, activePage) {
   return activePage === page
 }
@@ -55,7 +43,7 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const navigationTabsRef = useRef(null)
   const workspace = useWorkspace()
   const [unreadWorkOrderBadge, setUnreadWorkOrderBadge] = useState(null)
-  const [hasMoreNavigationTabs, setHasMoreNavigationTabs] = useState(false)
+  const [navigationOverflow, setNavigationOverflow] = useState({ previous: false, next: false })
   const organizationId = workspace.organization?.id
   const grants = workspace.authorization?.grants
   const canViewWorkOrders = Boolean(grants?.['work_orders.view'])
@@ -80,14 +68,18 @@ export function MobileNavigation({ activePage, onNavigate }) {
     if (!tabs) return undefined
     const updateOverflow = () => {
       const items = tabs.querySelectorAll('.mobile-primary-navigation-item')
+      const firstItem = items[0]
       const lastItem = items[items.length - 1]
-      if (!lastItem) {
-        setHasMoreNavigationTabs(false)
+      if (!firstItem || !lastItem) {
+        setNavigationOverflow({ previous: false, next: false })
         return
       }
       const tabsRect = tabs.getBoundingClientRect()
       const lastItemEnd = tabs.scrollLeft + lastItem.getBoundingClientRect().right - tabsRect.left
-      setHasMoreNavigationTabs(lastItemEnd > tabs.scrollLeft + tabs.clientWidth + 2)
+      setNavigationOverflow({
+        previous: tabs.scrollLeft > 2,
+        next: lastItemEnd > tabs.scrollLeft + tabs.clientWidth + 2,
+      })
     }
     updateOverflow()
     tabs.addEventListener('scroll', updateOverflow, { passive: true })
@@ -102,10 +94,10 @@ export function MobileNavigation({ activePage, onNavigate }) {
   }, [])
 
   useEffect(() => {
-    const isTablet = window.matchMedia?.('(min-width: 701px) and (max-width: 1199px)').matches
-    if (!isTablet) return
-    navigationTabsRef.current
-      ?.querySelector('.tablet-navigation-item[aria-current="page"], .mobile-primary-navigation-item[aria-current="page"]')
+    const tabs = navigationTabsRef.current
+    if (!tabs || window.getComputedStyle(tabs).overflowX !== 'auto') return
+    tabs
+      .querySelector('.tablet-navigation-item[aria-current="page"], .mobile-primary-navigation-item[aria-current="page"]')
       ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
   }, [activePage])
 
@@ -174,6 +166,17 @@ export function MobileNavigation({ activePage, onNavigate }) {
     const nextItemLeft = tabs.scrollLeft + nextItem.getBoundingClientRect().left - tabsRect.left - tabs.clientLeft - 4
     tabs.scrollTo({ left: nextItemLeft, behavior: 'smooth' })
   }
+  const scrollNavigationBackward = () => {
+    const tabs = navigationTabsRef.current
+    if (!tabs) return
+    const tabsRect = tabs.getBoundingClientRect()
+    const previousItem = [...tabs.querySelectorAll('.mobile-primary-navigation-item')]
+      .filter((item) => item.getBoundingClientRect().left - tabsRect.left < tabs.clientLeft + 8)
+      .at(-1)
+    if (!previousItem) return
+    const previousItemLeft = tabs.scrollLeft + previousItem.getBoundingClientRect().left - tabsRect.left - tabs.clientLeft - 4
+    tabs.scrollTo({ left: previousItemLeft, behavior: 'smooth' })
+  }
   const handleSignOut = async () => {
     setIsMoreOpen(false)
     await supabase.auth.signOut()
@@ -186,6 +189,9 @@ export function MobileNavigation({ activePage, onNavigate }) {
 
   return <>
     <nav className="mobile-primary-navigation" aria-label="Primary navigation">
+      <button className="mobile-navigation-scroll-back" type="button" aria-label="Show previous navigation options" onClick={scrollNavigationBackward} hidden={!navigationOverflow.previous}>
+        <ChevronLeft size={22} strokeWidth={2.4} />
+      </button>
       <div className="mobile-primary-navigation-tabs" ref={navigationTabsRef}>
         {primaryDestinations.map(({ label, page, icon: Icon }) => (
           <button
@@ -201,17 +207,6 @@ export function MobileNavigation({ activePage, onNavigate }) {
             {label === 'Work Orders' && unreadWorkOrderCount > 0 && <span className="mobile-navigation-badge" aria-hidden="true">{unreadWorkOrderCount > 99 ? '99+' : unreadWorkOrderCount}</span>}
           </button>
         ))}
-        {tabletDestinations.map(({ label, page }) => (
-          <button
-            key={page}
-            type="button"
-            className={`mobile-primary-navigation-item tablet-navigation-item${activePage === page ? ' is-active' : ''}`}
-            aria-current={activePage === page ? 'page' : undefined}
-            onClick={() => navigateTo(page)}
-          >
-            <span>{label}</span>
-          </button>
-        ))}
         <button
           ref={moreButtonRef}
           type="button"
@@ -220,12 +215,10 @@ export function MobileNavigation({ activePage, onNavigate }) {
           aria-expanded={isMoreOpen}
           onClick={() => setIsMoreOpen(true)}
         >
-          <Ellipsis size={21} strokeWidth={1.9} aria-hidden="true" />
-          <ChevronRight className="tablet-navigation-chevron" size={21} strokeWidth={2.3} aria-hidden="true" />
           <span>More</span>
         </button>
       </div>
-      <button className="mobile-navigation-scroll-forward" type="button" aria-label="Show more navigation options" onClick={scrollNavigationForward} hidden={!hasMoreNavigationTabs}>
+      <button className="mobile-navigation-scroll-forward" type="button" aria-label="Show more navigation options" onClick={scrollNavigationForward} hidden={!navigationOverflow.next}>
         <ChevronRight size={22} strokeWidth={2.4} aria-hidden="true" />
       </button>
     </nav>

@@ -584,7 +584,7 @@
 
 .profile-danger-button:disabled { cursor: not-allowed; opacity: 0.55; }
 
-@media (max-width: 760px) {
+@media (--wb-viewport-max-760) {
   .profile-preferences-content {
     grid-template-columns: 1fr;
     grid-template-areas:

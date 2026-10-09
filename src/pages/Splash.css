@@ -201,7 +201,7 @@
 .splash-checklist svg {
   color: var(--success);
 }
-@media (max-width: 820px) {
+@media (--wb-viewport-max-820) {
   .splash-page {
     display: block;
   }

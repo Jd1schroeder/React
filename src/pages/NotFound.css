@@ -76,7 +76,7 @@
   background: var(--not-found-accent-dark);
 }
 
-@media (max-width: 640px) {
+@media (--wb-viewport-max-640) {
   .not-found-brand {
     top: 20px;
     left: 20px;

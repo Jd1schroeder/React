@@ -14,4 +14,4 @@
 .teammate-empty-state h3 { margin: 0; color: var(--ink); font-size: var(--font-size-lg); }
 .teammate-empty-state p { max-width: 380px; margin: 0; }
 .teammate-secondary-action { border-color: var(--line); color: var(--ink); background: var(--surface-subtle); }
-@media (max-width: 800px) { .teammate-section-header { flex-direction: column; }.teammate-section-actions, .teammate-search { width: 100%; }.teammate-section-actions > button { width: 100%; } }
+@media (--wb-viewport-max-800) { .teammate-section-header { flex-direction: column; }.teammate-section-actions, .teammate-search { width: 100%; }.teammate-section-actions > button { width: 100%; } }

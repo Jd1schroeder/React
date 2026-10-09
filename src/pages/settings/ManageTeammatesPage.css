@@ -162,7 +162,7 @@
 
 .teammates-error { color: var(--danger); }
 
-@media (max-width: 800px) {
+@media (--wb-viewport-max-800) {
   .teammates-card-header {
     flex-direction: column;
   }
