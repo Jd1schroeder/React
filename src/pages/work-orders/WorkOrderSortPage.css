@@ -76,6 +76,23 @@
   padding: var(--spacing-5);
 }
 
+@media (--wb-viewport-max-700) {
+  .work-order-sort-page {
+    height: 100%;
+    min-height: 0;
+    animation: work-order-utility-page-slide-up 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .work-order-sort-page-content {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work-order-sort-page { animation: none; }
+}
+
 .work-order-sort-page-note {
   margin: 0;
   color: var(--text-secondary);

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronRight, CircleAlert, Clock3, List, MapPin, Plus, Search, SlidersHorizontal, Trash2, UserRound, WandSparkles, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CircleAlert, Clock3, List, MapPin, Plus, Search, SlidersHorizontal, Trash2, UserRound, WandSparkles, X } from 'lucide-react'
 import { normalizeWorkOrderFilters } from '../../utils/workOrderFilters'
 import { workOrderFilterDefinitions } from './workOrderFilterOptions'
 import './WorkOrderFilterPage.css'
@@ -41,6 +41,7 @@ export function WorkOrderFilterPage({
   onOpenSort,
   pageSize = 50,
   onPageSizeChange,
+  onBack,
   onApply,
 }) {
   const [screen, setScreen] = useState({ type: 'filters' })
@@ -102,6 +103,14 @@ export function WorkOrderFilterPage({
     }
     setScreen({ type: 'filters' })
   }
+  const renderTitlebar = (title, { onBack: handleBack = goBack, backLabel = 'Back to Add Filter', showBackText = true } = {}) => <header className="work-order-filter-page-titlebar has-back">
+    <button className="work-order-filter-page-back" type="button" aria-label={backLabel} onClick={handleBack}>
+      <ChevronLeft size={22} aria-hidden="true" />
+      {showBackText && <span>Back</span>}
+    </button>
+    <h1>{title}</h1>
+    <span />
+  </header>
   useEffect(() => {
     if (screen.type === 'filters') return undefined
     const returnToFilters = () => setScreen({ type: 'filters' })
@@ -173,16 +182,16 @@ export function WorkOrderFilterPage({
   }
 
   if (screen.type === 'field') {
-    return <div className="work-order-filter-page">
-      <header className="work-order-filter-page-titlebar"><span /><h1>{fieldLabel(screen.field)}</h1><span /></header>
+    return <div className="work-order-filter-page" key={screen.type}>
+      {renderTitlebar(fieldLabel(screen.field))}
       <main className="work-order-filter-page-detail">{renderFieldEditor(screen.field)}</main>
       <footer className="work-order-filter-page-footer"><button type="button" onClick={goBack}>Done</button></footer>
     </div>
   }
 
   if (screen.type === 'saved') {
-    return <div className="work-order-filter-page">
-      <header className="work-order-filter-page-titlebar"><span /><h1>My Filters</h1><span /></header>
+    return <div className="work-order-filter-page" key={screen.type}>
+      {renderTitlebar('My Filters')}
       <main className="work-order-filter-page-detail">
         <FilterSearchField value={fieldSearch} onChange={setFieldSearch} placeholder="Search saved filters" ariaLabel="Search saved filters" />
         <div className="work-order-filter-page-saved-tabs" role="tablist" aria-label="Saved filter scope">
@@ -197,8 +206,8 @@ export function WorkOrderFilterPage({
   }
 
   if (screen.type === 'page-size') {
-    return <div className="work-order-filter-page">
-      <header className="work-order-filter-page-titlebar"><span /><h1>Results per page</h1><span /></header>
+    return <div className="work-order-filter-page" key={screen.type}>
+      {renderTitlebar('Results per page')}
       <main className="work-order-filter-page-detail" role="radiogroup" aria-label="Results per page">
         {PAGE_SIZES.map((size) => <label className="work-order-filter-page-value" key={size}><span>{size}</span><input type="radio" name="work-order-page-size" checked={pageSize === size} onChange={() => onPageSizeChange(size)} /></label>)}
         <p className="work-order-filter-page-empty">The inbox supports up to 50 results per page.</p>
@@ -207,8 +216,8 @@ export function WorkOrderFilterPage({
     </div>
   }
 
-  return <div className="work-order-filter-page">
-    <header className="work-order-filter-page-titlebar"><span /><h1>Add Filter</h1><span /></header>
+  return <div className="work-order-filter-page" key={screen.type}>
+    {renderTitlebar('Add Filter', { onBack, backLabel: 'Back to Work Orders', showBackText: false })}
     <FilterSearchField value={search} onChange={setSearch} placeholder="Filter by..." ariaLabel="Filter by" className="work-order-filter-page-search-main" />
     <main className="work-order-filter-page-main">
       {showSort && <button className="work-order-filter-page-row work-order-filter-page-sort" type="button" onClick={onOpenSort}><List size={20} aria-hidden="true" /><span>Sort by</span><ChevronRight className="work-order-filter-page-chevron" size={20} aria-hidden="true" /></button>}

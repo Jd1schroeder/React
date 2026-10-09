@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { CheckCircle2, PanelLeft, UsersRound, X } from 'lucide-react'
+import { CalendarDays, CheckCircle2, Filter, PanelLeft, UsersRound, X } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import './WorkOrders.css'
 import { PanelLayout } from '../components/layout/PanelLayout'
@@ -700,8 +700,9 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     onOpenSort={openSortFromFilterPage}
     pageSize={draftPageSize}
     onPageSizeChange={setDraftPageSize}
+    onBack={() => window.dispatchEvent(new CustomEvent('workbench:work-orders-utility-page', { detail: { page: null } }))}
     onApply={applyFilterPage}
-  /> : utilityPage === 'sort' && canViewWorkOrders && !isMobileRecordView ? <WorkOrderSortPage sortId={sortId} onSortChange={changeInboxSort} unreadFirst={unreadFirst} onUnreadFirstChange={changeUnreadFirst} onBack={returnToFilterPage} onDone={applyFilterPage} /> : <PanelLayout title="Work orders" modeIcon={PanelLeft} searchValue={search} onSearch={setSearch} searchPlaceholder="Search Work Orders" actionLabel="New work order" onAction={startCreateWorkOrder} showHeaderSearch={canViewWorkOrders} showAction={canCreateWorkOrders} className={`work-orders-page${isMobileRecordView ? ' is-mobile-record-view' : ''}`} bodyClassName="work-orders-layout" subnavigation={canViewWorkOrders ? <WorkOrderFilters
+  /> : utilityPage === 'sort' && canViewWorkOrders && !isMobileRecordView ? <WorkOrderSortPage sortId={sortId} onSortChange={changeInboxSort} unreadFirst={unreadFirst} onUnreadFirstChange={changeUnreadFirst} onBack={returnToFilterPage} onDone={applyFilterPage} /> : <PanelLayout title="Work orders" modeIcon={PanelLeft} searchValue={search} onSearch={setSearch} searchPlaceholder="Search Work Orders" actionLabel="New work order" onAction={startCreateWorkOrder} showHeaderSearch={canViewWorkOrders} searchLeadingAction={<button className="work-orders-mobile-search-action" type="button" disabled aria-label="Calendar view coming soon" title="Calendar view coming soon"><CalendarDays size={23} aria-hidden="true" /></button>} searchTrailingAction={<button className={`work-orders-mobile-search-action is-filter${activeFilters.length ? ' has-active-filters' : ''}`} type="button" aria-label={activeFilters.length ? `Filter Work Orders, ${activeFilters.length} active` : 'Filter Work Orders'} onClick={() => window.dispatchEvent(new CustomEvent('workbench:work-orders-utility-page', { detail: { page: 'filters', resetDraft: true } }))}><Filter size={23} aria-hidden="true" />{activeFilters.length > 0 && <span className="work-orders-mobile-filter-badge" aria-hidden="true">{activeFilters.length > 99 ? '99+' : activeFilters.length}</span>}</button>} showAction={canCreateWorkOrders} className={`work-orders-page${isMobileRecordView ? ' is-mobile-record-view' : ''}`} bodyClassName="work-orders-layout" subnavigation={canViewWorkOrders ? <WorkOrderFilters
     filters={activeFilters}
     onFiltersChange={changeInboxFilters}
     assigneeOptions={filterAssigneeOptions}

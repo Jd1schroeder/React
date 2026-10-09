@@ -544,6 +544,12 @@
   to { opacity: 1; transform: translateX(0); }
 }
 
+@media (--wb-viewport-max-700) {
+  .mobile-primary-navigation.is-work-order-filters-open .mobile-navigation-sort-back {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mobile-navigation-sheet,
   .mobile-primary-navigation-item,
