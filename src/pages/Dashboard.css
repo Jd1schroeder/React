@@ -388,6 +388,17 @@ button.dashboard-metric-card:hover {
 .dashboard-metric-sheet-icon.is-red { color: var(--status-danger); }
 .dashboard-metric-sheet-icon.is-amber { color: var(--warning); }
 .dashboard-metric-sheet-icon.is-green { color: var(--status-success-muted); }
+.dashboard-group-sheet-icon { color: var(--blue); }
+.dashboard-group-sheet .dashboard-metric-order-title::before {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin: 0 8px 1px 0;
+  border-radius: 50%;
+  background: var(--blue);
+  content: '';
+  vertical-align: middle;
+}
 
 .dashboard-metric-sheet-close {
   display: grid;
@@ -502,6 +513,16 @@ button.dashboard-metric-card:hover {
   justify-content: space-between;
   gap: 8px;
 }
+
+.dashboard-group-sheet-load-status,
+.dashboard-group-sheet-load-error {
+  margin: 12px 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.dashboard-group-sheet-load-error { color: var(--danger); }
 
 .dashboard-metric-sheet-footer {
   flex: none;

@@ -22,7 +22,10 @@ vi.mock('../src/services/workOrderService', () => ({
   getUnreadWorkOrderCount: serviceMocks.getUnreadWorkOrderCount,
 }))
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
 beforeEach(() => {
   vi.clearAllMocks()
   serviceMocks.getUnreadWorkOrderCount.mockResolvedValue(89)
@@ -57,7 +60,7 @@ describe('mobile navigation', () => {
     render(<MobileNavigation activePage="Work Orders" onNavigate={onNavigate} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'More modules and settings' }))
-    expect(screen.getByRole('dialog', { name: 'Modules and settings' })).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Modules and settings' })).toHaveClass('mobile-edge-to-edge-sheet')
     fireEvent.change(screen.getByRole('searchbox', { name: 'Search modules' }), { target: { value: 'Asset Health' } })
     fireEvent.click(screen.getByRole('button', { name: 'Asset Health' }))
 
@@ -70,6 +73,20 @@ describe('mobile navigation', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'More modules and settings' }))
     fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(screen.queryByRole('dialog', { name: 'Modules and settings' })).not.toBeInTheDocument()
+  })
+
+  it('dismisses the More sheet with a downward header pull on mobile', () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }))
+    render(<MobileNavigation activePage="Dashboard" onNavigate={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'More modules and settings' }))
+    const sheet = screen.getByRole('dialog', { name: 'Modules and settings' })
+    const header = sheet.querySelector('.mobile-navigation-sheet-header')
+    fireEvent.touchStart(header, { touches: [{ clientY: 100 }] })
+    fireEvent.touchMove(header, { touches: [{ clientY: 260 }] })
+    fireEvent.touchEnd(header, { changedTouches: [{ clientY: 260 }] })
 
     expect(screen.queryByRole('dialog', { name: 'Modules and settings' })).not.toBeInTheDocument()
   })

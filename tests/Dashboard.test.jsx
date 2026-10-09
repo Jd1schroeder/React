@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { Dashboard } from '../src/pages/Dashboard'
@@ -7,6 +7,7 @@ const dashboardMocks = vi.hoisted(() => ({
   getDashboardOverview: vi.fn(),
   getDashboardMetricWorkOrders: vi.fn(),
   getDashboardRecentActivityPage: vi.fn(),
+  getDashboardWorkOrderGroupPage: vi.fn(),
   workspace: {
     organization: { id: 'organization-1', name: 'Simona PMC' },
     profile: { first_name: 'Joshua', last_name: 'Schroeder', avatar_url: 'https://example.com/josh-avatar.png' },
@@ -28,6 +29,7 @@ vi.mock('../src/services/dashboardService', () => ({
   getDashboardOverview: dashboardMocks.getDashboardOverview,
   getDashboardMetricWorkOrders: dashboardMocks.getDashboardMetricWorkOrders,
   getDashboardRecentActivityPage: dashboardMocks.getDashboardRecentActivityPage,
+  getDashboardWorkOrderGroupPage: dashboardMocks.getDashboardWorkOrderGroupPage,
 }))
 
 afterEach(() => {
@@ -37,6 +39,7 @@ afterEach(() => {
 beforeEach(() => {
   vi.clearAllMocks()
   dashboardMocks.getDashboardMetricWorkOrders.mockResolvedValue([])
+  dashboardMocks.getDashboardWorkOrderGroupPage.mockResolvedValue([])
   dashboardMocks.getDashboardOverview.mockResolvedValue({
     canViewWorkOrders: true,
     metrics: { highPriorityCount: 30, overdueCount: 0, dueTodayCount: 4, completedCount: 99 },
@@ -213,6 +216,7 @@ describe('mobile Overview dashboard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create' }))
 
     const picker = await screen.findByRole('dialog', { name: 'What would you like to Create?' })
+    expect(picker).toHaveClass('mobile-edge-to-edge-sheet')
     const workOrderOption = within(picker).getByRole('button', { name: 'Work Order' })
     expect(workOrderOption).toBeEnabled()
     const purchaseOrderOption = within(picker).getByRole('button', { name: /Purchase Order/ })
@@ -241,6 +245,28 @@ describe('mobile Overview dashboard', () => {
     expect(createButton).toHaveFocus()
   })
 
+  it('dismisses dashboard metric and create sheets with a downward header pull on mobile', async () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }))
+    renderDashboard()
+    await screen.findByRole('heading', { name: 'Welcome to Simona PMC' })
+
+    fireEvent.click(screen.getByRole('button', { name: /Overdue Work Orders/ }))
+    const metricSheet = await screen.findByRole('dialog', { name: 'Overdue Work Orders' })
+    const metricHeader = metricSheet.querySelector('.dashboard-metric-sheet-header')
+    fireEvent.touchStart(metricHeader, { touches: [{ clientY: 100 }] })
+    fireEvent.touchMove(metricHeader, { touches: [{ clientY: 260 }] })
+    fireEvent.touchEnd(metricHeader, { changedTouches: [{ clientY: 260 }] })
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Overdue Work Orders' })).not.toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    const createSheet = await screen.findByRole('dialog', { name: 'What would you like to Create?' })
+    const createHeader = createSheet.querySelector('.dashboard-create-header')
+    fireEvent.touchStart(createHeader, { touches: [{ clientY: 100 }] })
+    fireEvent.touchMove(createHeader, { touches: [{ clientY: 260 }] })
+    fireEvent.touchEnd(createHeader, { changedTouches: [{ clientY: 260 }] })
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'What would you like to Create?' })).not.toBeInTheDocument())
+  })
+
   it('opens an overdue Work Orders bottom sheet with the empty state and create action', async () => {
     const onNavigate = vi.fn()
     render(<MemoryRouter><div className="page-content" style={{ overflowY: 'auto' }}><Dashboard onNavigate={onNavigate} /></div></MemoryRouter>)
@@ -249,7 +275,7 @@ describe('mobile Overview dashboard', () => {
     fireEvent.click(screen.getByRole('button', { name: /Overdue Work Orders/ }))
 
     const overdueSheet = await screen.findByRole('dialog', { name: 'Overdue Work Orders' })
-    expect(overdueSheet).toHaveClass('is-empty')
+    expect(overdueSheet).toHaveClass('is-empty', 'mobile-edge-to-edge-sheet')
     expect(document.querySelector('.page-content').style.overflowY).toBe('auto')
     expect(await screen.findByText('All good here!')).toBeInTheDocument()
     expect(screen.getByText('There are no Overdue Work Orders')).toBeInTheDocument()
@@ -285,6 +311,82 @@ describe('mobile Overview dashboard', () => {
     const completedSheet = await screen.findByRole('dialog', { name: 'Completed Work Orders' })
     expect(within(completedSheet).getByRole('link', { name: /Pump inspection/ })).toHaveAttribute('href', '/workorders/completed-order')
     expect(dashboardMocks.getDashboardMetricWorkOrders).toHaveBeenNthCalledWith(2, expect.objectContaining({ metric: 'completed' }))
+  })
+
+  it.each([
+    { id: 'assigned-to-me', label: 'Assigned to Me', title: 'Assigned To Me' },
+    { id: 'assigned-to-my-teams', label: 'Assigned to My Teams', title: 'Assigned To My Teams' },
+  ])('opens the mobile View all sheet for $title', async ({ id, label, title }) => {
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }))
+    const group = {
+      id,
+      label,
+      count: 1,
+      workOrders: [{ id: 'preview-order', title: 'Preview order', work_order_number: 10, status: 'Open', priority: 'High' }],
+    }
+    dashboardMocks.getDashboardOverview.mockResolvedValueOnce({
+      canViewWorkOrders: true,
+      metrics: { highPriorityCount: 0, overdueCount: 0, dueTodayCount: 0, completedCount: 0 },
+      groups: [group],
+      recentActivity: [],
+      recentActivityHasMore: false,
+      recentActivityCursor: null,
+      activityAvailable: true,
+    })
+    dashboardMocks.getDashboardWorkOrderGroupPage.mockResolvedValueOnce({ items: [{
+      id: 'work-order-10',
+      title: 'Line 5 first set of pull-rolls stopped running',
+      work_order_number: 17652,
+      status: 'In Progress',
+      priority: 'High',
+    }], hasMore: false, nextOffset: 1 })
+    renderDashboard()
+
+    const viewAll = within(await screen.findByRole('region', { name: label })).getByRole('link', { name: 'View all' })
+    fireEvent.click(viewAll)
+
+    const sheet = await screen.findByRole('dialog', { name: title })
+    expect(sheet).toHaveClass('mobile-edge-to-edge-sheet')
+    const workOrderLink = await within(sheet).findByRole('link', { name: /Line 5 first set.*17652/ })
+    expect(workOrderLink).toHaveAttribute('href', '/workorders/work-order-10')
+    expect(within(sheet).getByText('In Progress')).toBeInTheDocument()
+    expect(dashboardMocks.getDashboardWorkOrderGroupPage).toHaveBeenCalledWith({
+      organizationId: 'organization-1',
+      groupId: id,
+      offset: 0,
+      totalCount: 1,
+      grants: dashboardMocks.workspace.authorization.grants,
+    })
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: title })).not.toBeInTheDocument())
+    expect(viewAll).toHaveFocus()
+  })
+
+  it('dismisses the assigned-work sheet on a downward header pull, not a list swipe', async () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }))
+    dashboardMocks.getDashboardWorkOrderGroupPage.mockResolvedValueOnce({ items: [{
+      id: 'work-order-1',
+      title: 'Pump inspection',
+      work_order_number: 17497,
+      status: 'Open',
+      priority: 'High',
+    }], hasMore: false, nextOffset: 1 })
+    renderDashboard()
+
+    fireEvent.click(within(await screen.findByRole('region', { name: 'Assigned to Me' })).getByRole('link', { name: 'View all' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Assigned To Me' })
+    const workOrderLink = await within(sheet).findByRole('link', { name: /Pump inspection.*17497/ })
+    fireEvent.touchStart(workOrderLink, { touches: [{ clientY: 100 }] })
+    fireEvent.touchMove(workOrderLink, { touches: [{ clientY: 300 }] })
+    fireEvent.touchEnd(workOrderLink, { changedTouches: [{ clientY: 300 }] })
+    expect(screen.getByRole('dialog', { name: 'Assigned To Me' })).toBeInTheDocument()
+
+    const sheetHeader = sheet.querySelector('.dashboard-group-sheet-header')
+    fireEvent.touchStart(sheetHeader, { touches: [{ clientY: 100 }] })
+    fireEvent.touchMove(sheetHeader, { touches: [{ clientY: 300 }] })
+    fireEvent.touchEnd(sheetHeader, { changedTouches: [{ clientY: 300 }] })
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Assigned To Me' })).not.toBeInTheDocument())
   })
 
   it('opens an explicit Requests placeholder instead of fabricating approval records', async () => {

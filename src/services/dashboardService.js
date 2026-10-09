@@ -3,6 +3,7 @@ import { assertPermission, hasPermission } from './authorizationService'
 import { listWorkOrderInboxCounts, listWorkOrderInboxPage } from './workOrderService'
 
 const recentActivityPageSize = 8
+const dashboardWorkOrderGroupIds = new Set(['assigned-to-me', 'assigned-to-my-teams'])
 
 async function countWorkOrders(organizationId, configureQuery) {
   const query = supabase.from('work_orders')
@@ -142,4 +143,28 @@ export async function getDashboardMetricWorkOrders({ organizationId, metric, tod
     includeRelations: false,
     grants,
   })
+}
+
+export async function getDashboardWorkOrderGroupPage({ organizationId, groupId, offset = 0, totalCount, grants }) {
+  if (!organizationId) throw new Error('Choose a workspace to view these Work Orders.')
+  if (!dashboardWorkOrderGroupIds.has(groupId)) throw new Error('This Dashboard list is not available.')
+  if (!Number.isFinite(totalCount) || totalCount < 0) throw new Error('A Work Order count is required to page this Dashboard list.')
+
+  const pageSize = 50
+  const items = await listWorkOrderInboxPage({
+    organizationId,
+    tab: 'To Do',
+    group: groupId,
+    search: '',
+    sort: 'priority-highest',
+    offset,
+    pageSize,
+    includeRelations: false,
+    grants,
+  })
+  return {
+    items,
+    hasMore: items.length === pageSize && offset + items.length < totalCount,
+    nextOffset: offset + items.length,
+  }
 }

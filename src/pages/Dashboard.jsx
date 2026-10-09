@@ -21,12 +21,15 @@ import {
   Settings,
   ThumbsUp,
   UserPlus,
+  UserRound,
+  UsersRound,
   X,
 } from 'lucide-react'
 import { useWorkspace } from '../components/layout/useWorkspace'
 import { Avatar } from '../components/ui/Avatar'
+import { useMobileSheetDismiss } from '../components/layout/useMobileSheetDismiss'
 import { hasPermission } from '../services/authorizationService'
-import { getDashboardMetricWorkOrders, getDashboardOverview, getDashboardRecentActivityPage } from '../services/dashboardService'
+import { getDashboardMetricWorkOrders, getDashboardOverview, getDashboardRecentActivityPage, getDashboardWorkOrderGroupPage } from '../services/dashboardService'
 import { getRecordPath } from '../routes'
 import { PriorityBadge } from '../components/ui/PriorityBadge'
 import { workOrderStatusOptions } from './work-orders/workOrderStatusOptions'
@@ -102,6 +105,16 @@ const dashboardCreateOptions = [
   { label: 'Location', icon: MapPin },
 ]
 
+const dashboardWorkOrderGroupIcons = {
+  'assigned-to-me': UserRound,
+  'assigned-to-my-teams': UsersRound,
+}
+
+const dashboardWorkOrderGroupTitles = {
+  'assigned-to-me': 'Assigned To Me',
+  'assigned-to-my-teams': 'Assigned To My Teams',
+}
+
 function DashboardQuickAction({ icon: Icon, label, hint, disabled = false, disabledMessage = 'Coming soon', onClick, badge }) {
   return (
     <button className="dashboard-quick-action" type="button" disabled={disabled} onClick={onClick} title={hint}>
@@ -132,6 +145,7 @@ function DashboardMetricSheet({ metric, count, organizationId, grants, timeZone,
   const [retryVersion, setRetryVersion] = useState(0)
   const dialogRef = useRef(null)
   const closeButtonRef = useRef(null)
+  const sheetDismiss = useMobileSheetDismiss(onClose)
   const Icon = metric.icon
 
   useEffect(() => {
@@ -191,8 +205,8 @@ function DashboardMetricSheet({ metric, count, organizationId, grants, timeZone,
 
   return createPortal(
     <div className="dashboard-metric-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
-      <section ref={dialogRef} className={`dashboard-metric-sheet${isEmpty || isRequestPlaceholder ? ' is-empty' : ' is-list'}${isRequestPlaceholder ? ' is-compact' : ''}`} role="dialog" aria-modal="true" aria-labelledby="dashboard-metric-sheet-title">
-        <header className="dashboard-metric-sheet-header">
+      <section ref={dialogRef} className={`dashboard-metric-sheet mobile-edge-to-edge-sheet${isEmpty || isRequestPlaceholder ? ' is-empty' : ' is-list'} ${sheetDismiss.dragClassName}`} style={sheetDismiss.dragStyle} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby="dashboard-metric-sheet-title">
+        <header className="dashboard-metric-sheet-header mobile-sheet-drag-handle" {...sheetDismiss.dragHandleProps}>
           <Icon className={`dashboard-metric-sheet-icon is-${metric.tone}`} size={36} strokeWidth={2.4} aria-hidden="true" />
           <h2 id="dashboard-metric-sheet-title">{metric.label}</h2>
           <button ref={closeButtonRef} className="dashboard-metric-sheet-close" type="button" aria-label="Close" onClick={onClose}><X size={28} aria-hidden="true" /></button>
@@ -224,9 +238,141 @@ function DashboardMetricSheet({ metric, count, organizationId, grants, timeZone,
   )
 }
 
+function DashboardWorkOrderGroupSheet({ group, organizationId, grants, onClose, triggerRef }) {
+  const [workOrders, setWorkOrders] = useState([])
+  const [status, setStatus] = useState(group.count > 0 ? 'loading' : 'ready')
+  const [error, setError] = useState('')
+  const [loadMoreError, setLoadMoreError] = useState('')
+  const [nextOffset, setNextOffset] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [retryVersion, setRetryVersion] = useState(0)
+  const dialogRef = useRef(null)
+  const closeButtonRef = useRef(null)
+  const loadingMoreRef = useRef(false)
+  const Icon = dashboardWorkOrderGroupIcons[group.id] ?? UserRound
+  const sheetDismiss = useMobileSheetDismiss(onClose)
+
+  useEffect(() => {
+    if (group.count === 0) return undefined
+    let active = true
+    getDashboardWorkOrderGroupPage({ organizationId, groupId: group.id, offset: 0, totalCount: group.count, grants })
+      .then((page) => {
+        if (!active) return
+        setWorkOrders(page.items)
+        setNextOffset(page.nextOffset)
+        setHasMore(page.hasMore)
+        setStatus('ready')
+        setError('')
+      })
+      .catch((loadError) => {
+        if (!active) return
+        setStatus('error')
+        setError(loadError.message || 'Unable to load these Work Orders.')
+      })
+    return () => { active = false }
+  }, [grants, group.count, group.id, organizationId, retryVersion])
+
+  useEffect(() => {
+    const triggerElement = triggerRef.current
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    closeButtonRef.current?.focus()
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onClose()
+        return
+      }
+      if (event.key !== 'Tab' || !dialogRef.current) return
+      const focusable = [...dialogRef.current.querySelectorAll('button:not(:disabled), a[href]')]
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable.at(-1)
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleKeyDown)
+      if (triggerElement?.isConnected) triggerElement.focus()
+    }
+  }, [onClose, triggerRef])
+
+  const loadNextPage = useCallback(async () => {
+    if (!hasMore || loadingMoreRef.current) return
+    loadingMoreRef.current = true
+    setIsLoadingMore(true)
+    setLoadMoreError('')
+    try {
+      const page = await getDashboardWorkOrderGroupPage({ organizationId, groupId: group.id, offset: nextOffset, totalCount: group.count, grants })
+      setWorkOrders((current) => {
+        const existingIds = new Set(current.map((order) => order.id))
+        return [...current, ...page.items.filter((order) => !existingIds.has(order.id))]
+      })
+      setNextOffset(page.nextOffset)
+      setHasMore(page.hasMore)
+    } catch (loadError) {
+      setLoadMoreError(loadError.message || 'Unable to load more Work Orders.')
+    } finally {
+      loadingMoreRef.current = false
+      setIsLoadingMore(false)
+    }
+  }, [group.count, group.id, grants, hasMore, nextOffset, organizationId])
+
+  return createPortal(
+    <div className="dashboard-metric-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      <section
+        ref={dialogRef}
+        className={`dashboard-metric-sheet mobile-edge-to-edge-sheet is-list dashboard-group-sheet ${sheetDismiss.dragClassName}`}
+        style={sheetDismiss.dragStyle}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dashboard-group-sheet-title"
+        onTransitionEnd={sheetDismiss.onTransitionEnd}
+      >
+        <header className="dashboard-metric-sheet-header dashboard-group-sheet-header mobile-sheet-drag-handle" {...sheetDismiss.dragHandleProps}>
+          <Icon className="dashboard-metric-sheet-icon dashboard-group-sheet-icon" size={36} strokeWidth={2.4} aria-hidden="true" />
+          <h2 id="dashboard-group-sheet-title">{dashboardWorkOrderGroupTitles[group.id] ?? group.label}</h2>
+          <button ref={closeButtonRef} className="dashboard-metric-sheet-close" type="button" aria-label="Close" onClick={onClose}><X size={28} aria-hidden="true" /></button>
+        </header>
+
+        <div className="dashboard-metric-sheet-content" aria-live="polite">
+          {status === 'loading' && <p className="dashboard-metric-sheet-message" role="status">Loading Work Orders...</p>}
+          {status === 'error' && <div className="dashboard-metric-sheet-error" role="alert"><p>{error}</p><button type="button" onClick={() => { setStatus('loading'); setRetryVersion((version) => version + 1) }}>Try again</button></div>}
+          {status === 'ready' && workOrders.length === 0 && <p className="dashboard-metric-sheet-message">No Work Orders are currently in this list.</p>}
+          {status === 'ready' && workOrders.length > 0 && <ul className="dashboard-metric-order-list">
+            {workOrders.map((order) => (
+              <li key={order.id}>
+                <Link className="dashboard-metric-order-row" to={getRecordPath('workorders', order.id)}>
+                  <span className="dashboard-metric-order-title">{order.title}</span>
+                  <span className="dashboard-metric-order-number">#{order.work_order_number}</span>
+                  <span className="dashboard-metric-order-meta"><WorkOrderStatus status={order.status} /><PriorityBadge priority={order.priority} /></span>
+                </Link>
+              </li>
+            ))}
+          </ul>}
+          {isLoadingMore && <p className="dashboard-group-sheet-load-status" role="status">Loading more Work Orders...</p>}
+          {loadMoreError && <p className="dashboard-group-sheet-load-error" role="alert">{loadMoreError}</p>}
+        </div>
+
+        {hasMore && <footer className="dashboard-metric-sheet-footer"><button className="dashboard-metric-view-all" type="button" onClick={() => void loadNextPage()} disabled={isLoadingMore}>{loadMoreError ? 'Try again' : 'Load more Work Orders'} <ArrowRight size={20} aria-hidden="true" /></button></footer>}
+      </section>
+    </div>,
+    document.body,
+  )
+}
+
 function DashboardCreateSheet({ onClose, onNavigate, triggerRef }) {
   const dialogRef = useRef(null)
   const closeButtonRef = useRef(null)
+  const sheetDismiss = useMobileSheetDismiss(onClose)
 
   useEffect(() => {
     const triggerElement = triggerRef.current
@@ -268,8 +414,8 @@ function DashboardCreateSheet({ onClose, onNavigate, triggerRef }) {
 
   return createPortal(
     <div className="dashboard-create-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
-      <section ref={dialogRef} className="dashboard-create-sheet" role="dialog" aria-modal="true" aria-labelledby="dashboard-create-title">
-        <header className="dashboard-create-header">
+      <section ref={dialogRef} className={`dashboard-create-sheet mobile-edge-to-edge-sheet ${sheetDismiss.dragClassName}`} style={sheetDismiss.dragStyle} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby="dashboard-create-title">
+        <header className="dashboard-create-header mobile-sheet-drag-handle" {...sheetDismiss.dragHandleProps}>
           <h2 id="dashboard-create-title">What would you like to Create?</h2>
           <button ref={closeButtonRef} className="dashboard-metric-sheet-close" type="button" aria-label="Close" onClick={onClose}><X size={28} aria-hidden="true" /></button>
         </header>
@@ -298,7 +444,7 @@ function WorkOrderStatus({ status }) {
   return <span className={`dashboard-work-order-status is-${(status ?? 'open').toLowerCase().replaceAll(' ', '-')}`}><Icon size={15} aria-hidden="true" />{status === 'Completed' ? 'Done' : status}</span>
 }
 
-function WorkOrderGroupCard({ group }) {
+function WorkOrderGroupCard({ group, onViewAll }) {
   return (
     <section className="dashboard-work-order-group" aria-label={group.label}>
       <header className="dashboard-work-order-group-header">
@@ -318,7 +464,7 @@ function WorkOrderGroupCard({ group }) {
           </li>
         ))}
       </ul> : <p className="dashboard-work-order-empty">No work orders in this list right now.</p>}
-      <Link className="dashboard-view-all" to="/workorders">View all <ArrowRight size={18} aria-hidden="true" /></Link>
+      <Link className="dashboard-view-all" to="/workorders" onClick={(event) => onViewAll(group, event)}>View all <ArrowRight size={18} aria-hidden="true" /></Link>
     </section>
   )
 }
@@ -427,14 +573,17 @@ export function Dashboard({ onNavigate }) {
   const [refreshVersion, setRefreshVersion] = useState(0)
   const [isCreateButtonCollapsed, setIsCreateButtonCollapsed] = useState(false)
   const [activeMetricKey, setActiveMetricKey] = useState(null)
+  const [activeWorkOrderGroup, setActiveWorkOrderGroup] = useState(null)
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false)
   const dashboardRef = useRef(null)
   const metricTriggerRef = useRef(null)
+  const groupTriggerRef = useRef(null)
   const createTriggerRef = useRef(null)
   const canViewWorkOrders = hasPermission(grants, 'work_orders.view')
   const canCreateWorkOrders = canViewWorkOrders && hasPermission(grants, 'work_orders.create')
   const canInviteUsers = hasPermission(grants, 'organization.invite_users')
   const closeMetricSheet = useCallback(() => setActiveMetricKey(null), [])
+  const closeGroupSheet = useCallback(() => setActiveWorkOrderGroup(null), [])
   const closeCreateSheet = useCallback(() => setIsCreateSheetOpen(false), [])
   const openCreateSheet = useCallback((event) => {
     createTriggerRef.current = event.currentTarget
@@ -443,6 +592,13 @@ export function Dashboard({ onNavigate }) {
   const openMetricSheet = useCallback((metricKey, event) => {
     metricTriggerRef.current = event.currentTarget
     setActiveMetricKey(metricKey)
+  }, [])
+  const openGroupSheet = useCallback((group, event) => {
+    const isMobile = window.matchMedia?.('(max-width: 840px)').matches ?? window.innerWidth <= 840
+    if (!isMobile) return
+    event.preventDefault()
+    groupTriggerRef.current = event.currentTarget
+    setActiveWorkOrderGroup(group)
   }, [])
 
   useEffect(() => {
@@ -516,7 +672,7 @@ export function Dashboard({ onNavigate }) {
         </div>
         {loadState === 'loading' && <p className="dashboard-section-state" role="status">Loading your work...</p>}
         {loadState === 'ready' && overview?.canViewWorkOrders && <div className="dashboard-work-order-carousel">
-          {overview.groups.map((group) => <WorkOrderGroupCard group={group} key={group.id} />)}
+          {overview.groups.map((group) => <WorkOrderGroupCard group={group} onViewAll={openGroupSheet} key={group.id} />)}
         </div>}
         {loadState === 'ready' && !overview?.canViewWorkOrders && <p className="dashboard-section-state">Work Orders are not available for your account.</p>}
       </section>
@@ -553,6 +709,14 @@ export function Dashboard({ onNavigate }) {
       onClose={closeMetricSheet}
       onNavigate={onNavigate}
       triggerRef={metricTriggerRef}
+    />}
+    {activeWorkOrderGroup && <DashboardWorkOrderGroupSheet
+      key={activeWorkOrderGroup.id}
+      group={activeWorkOrderGroup}
+      organizationId={organizationId}
+      grants={grants}
+      onClose={closeGroupSheet}
+      triggerRef={groupTriggerRef}
     />}
     {isCreateSheetOpen && <DashboardCreateSheet onClose={closeCreateSheet} onNavigate={onNavigate} triggerRef={createTriggerRef} />}
   </>

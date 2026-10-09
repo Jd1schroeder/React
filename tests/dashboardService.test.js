@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getDashboardMetricWorkOrders, getDashboardRecentActivityPage } from '../src/services/dashboardService'
+import { getDashboardMetricWorkOrders, getDashboardRecentActivityPage, getDashboardWorkOrderGroupPage } from '../src/services/dashboardService'
 
 const serviceMocks = vi.hoisted(() => ({
   listWorkOrderInboxPage: vi.fn(),
@@ -63,6 +63,42 @@ describe('getDashboardMetricWorkOrders', () => {
       includeRelations: false,
       grants: { 'work_orders.view': 'any' },
     })
+  })
+})
+
+describe('getDashboardWorkOrderGroupPage', () => {
+  it.each(['assigned-to-me', 'assigned-to-my-teams'])('requests a server-filtered page for %s', async (groupId) => {
+    const workOrders = Array.from({ length: 50 }, (_, index) => ({ id: `work-order-${index + 1}` }))
+    serviceMocks.listWorkOrderInboxPage.mockResolvedValue(workOrders)
+
+    await expect(getDashboardWorkOrderGroupPage({
+      organizationId: 'organization-1',
+      groupId,
+      offset: 50,
+      totalCount: 150,
+      grants: { 'work_orders.view': 'any' },
+    })).resolves.toEqual({ items: workOrders, hasMore: true, nextOffset: 100 })
+
+    expect(serviceMocks.listWorkOrderInboxPage).toHaveBeenCalledWith({
+      organizationId: 'organization-1',
+      tab: 'To Do',
+      group: groupId,
+      search: '',
+      sort: 'priority-highest',
+      offset: 50,
+      pageSize: 50,
+      includeRelations: false,
+      grants: { 'work_orders.view': 'any' },
+    })
+  })
+
+  it('rejects unknown dashboard groups', async () => {
+    await expect(getDashboardWorkOrderGroupPage({
+      organizationId: 'organization-1',
+      groupId: 'all-open',
+      grants: { 'work_orders.view': 'any' },
+    })).rejects.toThrow('This Dashboard list is not available.')
+    expect(serviceMocks.listWorkOrderInboxPage).not.toHaveBeenCalled()
   })
 })
 

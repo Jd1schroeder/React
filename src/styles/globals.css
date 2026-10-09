@@ -87,3 +87,50 @@ body,
   height: 100%;
   min-height: 100%;
 }
+
+@media (max-width: 840px) {
+  .mobile-edge-to-edge-sheet[role='dialog'] {
+    width: 100%;
+    max-width: none;
+  }
+
+  .mobile-sheet-drag-handle {
+    position: relative;
+    touch-action: pan-x;
+    user-select: none;
+  }
+
+  .mobile-sheet-drag-handle::before {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    width: 40px;
+    height: 4px;
+    transform: translateX(-50%);
+    border-radius: var(--radius-pill);
+    background: var(--text-secondary);
+    content: '';
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .mobile-edge-to-edge-sheet.is-mobile-sheet-drag-ready {
+    animation: none;
+  }
+
+  .mobile-edge-to-edge-sheet.is-mobile-sheet-dragging {
+    transform: translateY(var(--mobile-sheet-drag-offset, 0px));
+    transition: none;
+  }
+
+  .mobile-edge-to-edge-sheet.is-mobile-sheet-snapping-back {
+    transform: translateY(0);
+    transition: transform 180ms ease-out;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-edge-to-edge-sheet.is-mobile-sheet-snapping-back {
+    transition: none;
+  }
+}

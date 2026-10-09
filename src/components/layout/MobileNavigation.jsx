@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useWorkspace } from './useWorkspace'
 import { settingsNavigation, settingsPageByLabel, sidebarGroups } from './sidebarConfig'
@@ -6,6 +6,7 @@ import { setActiveOrganization } from '../../services/workspaceService'
 import { supabase } from '../../lib/supabase'
 import { getUnreadWorkOrderCount } from '../../services/workOrderService'
 import { Avatar } from '../ui/Avatar'
+import { useMobileSheetDismiss } from './useMobileSheetDismiss'
 import {
   Boxes,
   Check,
@@ -43,6 +44,8 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const organizationId = workspace.organization?.id
   const grants = workspace.authorization?.grants
   const canViewWorkOrders = Boolean(grants?.['work_orders.view'])
+  const closeMoreMenu = useCallback(() => setIsMoreOpen(false), [])
+  const sheetDismiss = useMobileSheetDismiss(closeMoreMenu)
   const unreadWorkOrderCount = canViewWorkOrders && unreadWorkOrderBadge?.organizationId === organizationId
     ? unreadWorkOrderBadge.count
     : null
@@ -151,8 +154,8 @@ export function MobileNavigation({ activePage, onNavigate }) {
     </nav>
     {isMoreOpen && createPortal(
       <div className="mobile-navigation-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsMoreOpen(false) }}>
-        <section ref={dialogRef} className="mobile-navigation-sheet" role="dialog" aria-modal="true" aria-labelledby="mobile-navigation-title">
-          <header className="mobile-navigation-sheet-header">
+        <section ref={dialogRef} className={`mobile-navigation-sheet mobile-edge-to-edge-sheet ${sheetDismiss.dragClassName}`} style={sheetDismiss.dragStyle} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby="mobile-navigation-title">
+          <header className="mobile-navigation-sheet-header mobile-sheet-drag-handle" {...sheetDismiss.dragHandleProps}>
             <div>
               <p>Workbench</p>
               <h2 id="mobile-navigation-title">Modules and settings</h2>
