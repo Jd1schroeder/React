@@ -255,6 +255,7 @@
     border-top: var(--border-width-normal) solid var(--line);
     background: var(--surface);
     box-shadow: 0 -3px 12px rgb(16 24 40 / 6%);
+    overflow: clip;
   }
 
   .mobile-primary-navigation-tabs { display: contents; }
@@ -274,12 +275,29 @@
     border-radius: var(--radius-control);
     color: var(--text-secondary);
     background: transparent;
+    isolation: isolate;
     font: inherit;
     font-size: var(--font-size-xs);
     font-weight: var(--font-medium);
     line-height: 1.1;
     text-align: center;
     touch-action: manipulation;
+  }
+
+  .mobile-primary-navigation-item::before {
+    position: absolute;
+    z-index: -1;
+    top: 50%;
+    left: 50%;
+    width: 112px;
+    height: 112px;
+    border-radius: 50%;
+    background: var(--surface-control-hover);
+    content: '';
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.7);
+    transition: opacity 320ms ease-out, transform 240ms ease-out;
   }
 
   .mobile-primary-navigation-item svg {
@@ -306,7 +324,12 @@
 
   .mobile-primary-navigation-item.is-active {
     color: var(--blue);
-    background: var(--blue-soft);
+    background: transparent;
+  }
+
+  .mobile-primary-navigation-item:active::before {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 
   .mobile-primary-navigation-item:focus-visible,
@@ -591,6 +614,7 @@
 @media (prefers-reduced-motion: reduce) {
   .mobile-navigation-sheet,
   .mobile-primary-navigation-item,
+  .mobile-primary-navigation-item::before,
   .mobile-navigation-back-label {
     scroll-behavior: auto;
     transition: none;
