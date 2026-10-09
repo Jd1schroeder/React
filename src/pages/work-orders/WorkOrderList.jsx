@@ -294,6 +294,7 @@ export function WorkOrderList({
   onStatusChange,
   canChangeStatusForOrder,
   onReadAll,
+  onClearFilters,
   isReadAllSaving = false,
   sortId,
   onSortChange,
@@ -316,6 +317,7 @@ export function WorkOrderList({
   const expandedGroups = expandedGroupsByScope[expandedGroupsScopeKey] ??
     readWorkOrderInboxExpandedGroups(expandedGroupsStorageKey, activeTab);
   const [showEmptyCategories, setShowEmptyCategories] = useState(false);
+  const [filteredResultsExpanded, setFilteredResultsExpanded] = useState(true);
   const [groupPages, setGroupPages] = useState({});
   const [groupLoading, setGroupLoading] = useState({});
   const [groupErrors, setGroupErrors] = useState({});
@@ -366,8 +368,10 @@ export function WorkOrderList({
     setIsReadAllTooltipVisible(false);
     setReadAllTooltipPosition(null);
   };
-  const groups =
-    activeTab === "Done"
+  const isFilteredResultsView = filters.length > 0;
+  const groups = isFilteredResultsView
+    ? [{ id: activeTab === "Done" ? "completed" : "all-open", label: "Search results" }]
+    : activeTab === "Done"
       ? [{ id: "completed", label: "Completed work orders" }]
       : [
           { id: "assigned-to-me", label: "Assigned to Me" },
@@ -375,14 +379,16 @@ export function WorkOrderList({
           { id: "created-by-me", label: "Created by Me" },
           { id: "all-open", label: "All Open Work Orders" },
         ];
-  const visibleGroups = showEmptyCategories
+  const visibleGroups = isFilteredResultsView
+    ? groups
+    : showEmptyCategories
     ? groups
     : groups.filter((group) => (groupCounts[group.id] ?? 0) > 0);
-  const hasHiddenEmptyCategories = groups.some(
+  const hasHiddenEmptyCategories = !isFilteredResultsView && groups.some(
     (group) => (groupCounts[group.id] ?? 0) === 0,
   );
   const allVisibleGroupsCollapsed = visibleGroups.every(
-    (group) => !expandedGroups[group.id],
+    (group) => !(isFilteredResultsView ? filteredResultsExpanded : expandedGroups[group.id]),
   );
   const selectedSortGroup = workOrderSortGroups.find((group) =>
     group.options.some((option) => option.id === sortId),
@@ -483,12 +489,16 @@ export function WorkOrderList({
   };
 
   useEffect(() => {
+    setFilteredResultsExpanded(true);
+  }, [activeTab, filters, search]);
+
+  useEffect(() => {
     queryGeneration.current += 1;
     setGroupPages({});
     setGroupErrors({});
     setGroupLoading({});
     for (const group of groups) {
-      if (expandedGroups[group.id]) loadGroup(group.id, true);
+      if (isFilteredResultsView || expandedGroups[group.id]) loadGroup(group.id, true);
     }
     // Changing filters/sort/records invalidates the page cursor and reloads open groups.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -666,45 +676,54 @@ export function WorkOrderList({
           </div>
         </div>
         {visibleGroups.map((group) => {
-          const expanded = expandedGroups[group.id] ?? false;
+          const expanded = isFilteredResultsView
+            ? filteredResultsExpanded
+            : expandedGroups[group.id] ?? false;
           return (
             <section className="work-order-group" key={group.id}>
-              <button
-                className={`work-order-assignment-heading ${expanded ? "expanded" : ""}`}
-                aria-expanded={expanded}
-                onMouseEnter={() => prefetchGroup(group.id)}
-                onFocus={() => prefetchGroup(group.id)}
-                onClick={() => {
-                  const nextExpandedGroups = { ...expandedGroups };
-                  if (expanded) delete nextExpandedGroups[group.id];
-                  else nextExpandedGroups[group.id] = true;
-                  setExpandedGroupsByScope((current) => ({
-                    ...current,
-                    [expandedGroupsScopeKey]: nextExpandedGroups,
-                  }));
-                  writeWorkOrderInboxExpandedGroups(
-                    expandedGroupsStorageKey,
-                    activeTab,
-                    nextExpandedGroups,
-                  );
-                  if (!expanded) {
-                    const loadedOrders = groupPages[group.id]?.orders;
-                    if (loadedOrders) {
-                      onOrdersLoaded(loadedOrders, { selectFirst: true });
+              <div className={`work-order-group-heading-row${isFilteredResultsView ? " is-filtered-results" : ""}`}>
+                <button
+                  className={`work-order-assignment-heading ${expanded ? "expanded" : ""}`}
+                  aria-expanded={expanded}
+                  onMouseEnter={() => !isFilteredResultsView && prefetchGroup(group.id)}
+                  onFocus={() => !isFilteredResultsView && prefetchGroup(group.id)}
+                  onClick={() => {
+                    if (isFilteredResultsView) {
+                      setFilteredResultsExpanded(!expanded);
                     } else {
-                      void loadGroup(group.id, true).then((orders) => {
-                        if (orders?.length)
-                          onOrdersLoaded(orders, { selectFirst: true });
-                      });
+                      const nextExpandedGroups = { ...expandedGroups };
+                      if (expanded) delete nextExpandedGroups[group.id];
+                      else nextExpandedGroups[group.id] = true;
+                      setExpandedGroupsByScope((current) => ({
+                        ...current,
+                        [expandedGroupsScopeKey]: nextExpandedGroups,
+                      }));
+                      writeWorkOrderInboxExpandedGroups(
+                        expandedGroupsStorageKey,
+                        activeTab,
+                        nextExpandedGroups,
+                      );
                     }
-                  }
-                }}
-              >
-                <span>
-                  {group.label} ({groupCounts[group.id] ?? 0})
-                </span>
-                <ChevronDown size={15} />
-              </button>
+                    if (!expanded) {
+                      const loadedOrders = groupPages[group.id]?.orders;
+                      if (loadedOrders) {
+                        onOrdersLoaded(loadedOrders, { selectFirst: !isFilteredResultsView });
+                      } else {
+                        void loadGroup(group.id, true).then((orders) => {
+                          if (orders?.length && !isFilteredResultsView)
+                            onOrdersLoaded(orders, { selectFirst: true });
+                        });
+                      }
+                    }
+                  }}
+                >
+                  <span>
+                    {group.label} ({groupCounts[group.id] ?? 0})
+                  </span>
+                  <ChevronDown size={15} />
+                </button>
+                {isFilteredResultsView && <button type="button" className="work-order-clear-filters" onClick={onClearFilters}>Clear Filters</button>}
+              </div>
               {expanded && (
                 <>
                   {(groupPages[group.id]?.orders ?? []).map(renderOrder)}

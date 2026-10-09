@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, CircleAlert, Clock3, List, MapPin, Plus, Search, SlidersHorizontal, Trash2, UserRound, WandSparkles, X } from 'lucide-react'
+import { CalendarDays, Check, ChevronLeft, ChevronRight, CircleAlert, CircleDot, Clock3, List, MapPin, Plus, Search, SlidersHorizontal, Trash2, UserRound, WandSparkles, X } from 'lucide-react'
+import { Avatar } from '../../components/ui/Avatar'
 import { normalizeWorkOrderFilters } from '../../utils/workOrderFilters'
 import { workOrderFilterDefinitions } from './workOrderFilterOptions'
 import './WorkOrderFilterPage.css'
@@ -8,6 +9,83 @@ const PRIMARY_FIELDS = ['assigned_to', 'due_date', 'priority']
 const MORE_FIELDS = ['status', 'start_date', 'work_type']
 const PAGE_SIZES = [10, 25, 50]
 const PAGE_FIELD_LABELS = { assigned_to: 'Assigned to', due_date: 'Due Date', start_date: 'Start Date', work_type: 'Work Type' }
+const DUE_DATE_PRESETS = ['Today', 'Tomorrow', 'Next 7 Days', 'Next 30 Days', 'This Month', 'Overdue', 'Custom Date']
+
+function dateKeyInTimezone(date, timezone) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone || undefined,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const values = Object.fromEntries(parts.filter((part) => part.type !== 'literal').map((part) => [part.type, part.value]))
+  return `${values.year}-${values.month}-${values.day}`
+}
+
+function addCalendarDays(dateKey, days) {
+  const date = new Date(`${dateKey}T00:00:00.000Z`)
+  date.setUTCDate(date.getUTCDate() + days)
+  return date.toISOString().slice(0, 10)
+}
+
+function filterForDueDatePreset(preset, today) {
+  const tomorrow = addCalendarDays(today, 1)
+  if (preset === 'Today') return { operator: 'on', values: [today] }
+  if (preset === 'Tomorrow') return { operator: 'on', values: [tomorrow] }
+  if (preset === 'Next 7 Days') return { operator: 'between', values: [today, addCalendarDays(today, 6)] }
+  if (preset === 'Next 30 Days') return { operator: 'between', values: [today, addCalendarDays(today, 29)] }
+  if (preset === 'This Month') {
+    const [year, month] = today.split('-').map(Number)
+    const endOfMonth = new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10)
+    return { operator: 'between', values: [today, endOfMonth] }
+  }
+  if (preset === 'Overdue') return { operator: 'before', values: [today] }
+  return { operator: 'on', values: [''] }
+}
+
+function selectedDueDatePreset(operator, values, today) {
+  const tomorrow = addCalendarDays(today, 1)
+  if (operator === 'on' && values[0] === today) return 'Today'
+  if (operator === 'on' && values[0] === tomorrow) return 'Tomorrow'
+  if (operator === 'between' && values[0] === today && values[1] === addCalendarDays(today, 6)) return 'Next 7 Days'
+  if (operator === 'between' && values[0] === today && values[1] === addCalendarDays(today, 29)) return 'Next 30 Days'
+  if (operator === 'between') {
+    const [year, month] = today.split('-').map(Number)
+    const endOfMonth = new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10)
+    if (values[0] === today && values[1] === endOfMonth) return 'This Month'
+  }
+  if (operator === 'before' && values[0] === today) return 'Overdue'
+  if (operator === 'on' && values[0]) return 'Custom Date'
+  return ''
+}
+
+function showNativeDatePicker(input) {
+  if (!input) return
+  try {
+    if (typeof input.showPicker === 'function') {
+      input.showPicker()
+      return
+    }
+  } catch {
+    // Fall back to the input's native click behavior if showPicker is unavailable.
+  }
+  input.focus()
+  input.click()
+}
+
+function openNativeDatePicker(event) {
+  showNativeDatePicker(event.currentTarget.parentElement?.querySelector('input[type="date"]'))
+}
+
+function openPickerOutsideDateText(event) {
+  const input = event.currentTarget
+  const bounds = input.getBoundingClientRect()
+  const clickX = event.clientX - bounds.left
+  const textStart = Number.parseFloat(window.getComputedStyle(input).paddingLeft) || 40
+  const dateTextWidth = 112
+  if (clickX >= textStart - 2 && clickX <= textStart + dateTextWidth) return
+  showNativeDatePicker(input)
+}
 
 function fieldLabel(field) {
   return PAGE_FIELD_LABELS[field] ?? workOrderFilterDefinitions[field]?.label
@@ -41,6 +119,7 @@ export function WorkOrderFilterPage({
   onOpenSort,
   pageSize = 50,
   onPageSizeChange,
+  timezone,
   onBack,
   onApply,
 }) {
@@ -50,6 +129,7 @@ export function WorkOrderFilterPage({
   const [savedScope, setSavedScope] = useState('personal')
   const [fieldSearch, setFieldSearch] = useState('')
   const [dateDraft, setDateDraft] = useState(['', ''])
+  const [dateOperatorDraft, setDateOperatorDraft] = useState('')
   useEffect(() => {
     window.dispatchEvent(new CustomEvent('workbench:work-orders-filter-subpage', {
       detail: { page: screen.type === 'filters' ? null : screen.type },
@@ -91,7 +171,10 @@ export function WorkOrderFilterPage({
   }
   const openField = (field) => {
     const current = activeByField.get(field)
-    if (field === 'due_date' || field === 'start_date') setDateDraft([current?.values[0] ?? '', current?.values[1] ?? ''])
+    if (field === 'due_date' || field === 'start_date') {
+      setDateDraft([current?.values[0] ?? '', current?.values[1] ?? ''])
+      setDateOperatorDraft(current?.operator ?? workOrderFilterDefinitions[field].defaultOperator)
+    }
     if (field === 'assigned_to') setFieldSearch('')
     setScreen({ type: 'field', field })
   }
@@ -131,15 +214,18 @@ export function WorkOrderFilterPage({
   const renderFieldEditor = (field) => {
     const definition = workOrderFilterDefinitions[field]
     const active = activeByField.get(field)
-    const operator = active?.operator ?? definition.defaultOperator
-    const values = active?.values ?? []
     const isDate = field === 'due_date' || field === 'start_date'
+    const operator = active?.operator ?? (isDate ? dateOperatorDraft || definition.defaultOperator : definition.defaultOperator)
+    const values = active?.values ?? []
     const isEmptyOperator = operator === 'is_empty' || operator === 'is_not_empty'
     const updateOperator = (nextOperator) => {
+      if (isDate) setDateOperatorDraft(nextOperator)
       if (nextOperator === 'is_empty' || nextOperator === 'is_not_empty') {
+        setDateDraft(['', ''])
         setFilter(field, nextOperator, [])
       } else if (isDate) {
-        setDateDraft([values[0] ?? '', nextOperator === 'between' ? values[1] ?? '' : ''])
+        const nextDateDraft = [values[0] ?? '', nextOperator === 'between' ? values[1] ?? '' : '']
+        setDateDraft(nextDateDraft)
         onFiltersChange(normalizedFilters.filter((filter) => filter.field !== field))
       } else if (values.length) {
         setFilter(field, nextOperator, values)
@@ -155,27 +241,71 @@ export function WorkOrderFilterPage({
       if (nextValues.slice(0, required).every(Boolean)) setFilter(field, operator, nextValues.slice(0, required))
       else onFiltersChange(normalizedFilters.filter((filter) => filter.field !== field))
     }
+    const selectDueDatePreset = (preset) => {
+      const selected = filterForDueDatePreset(preset, dateKeyInTimezone(new Date(), timezone))
+      setDateOperatorDraft(selected.operator)
+      setDateDraft(selected.values)
+      if (selected.values.every(Boolean)) setFilter(field, selected.operator, selected.values)
+      else onFiltersChange(normalizedFilters.filter((filter) => filter.field !== field))
+    }
     const options = field === 'assigned_to' ? assigneeOptions : definition.options ?? []
+    const selectedPreset = field === 'due_date'
+      ? selectedDueDatePreset(operator, values.length ? values : dateDraft, dateKeyInTimezone(new Date(), timezone))
+      : ''
+    const showDateFields = isDate && !isEmptyOperator && !(field === 'due_date' && selectedPreset && selectedPreset !== 'Custom Date')
 
     return <section className="work-order-filter-page-editor" aria-label={`${fieldLabel(field)} options`}>
-      <label className="work-order-filter-page-control-label" htmlFor={`work-order-filter-operator-${field}`}>Condition</label>
-      <select id={`work-order-filter-operator-${field}`} value={operator} onChange={(event) => updateOperator(event.target.value)}>
-        {definition.operators.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-      </select>
-      {isDate && !isEmptyOperator && <div className="work-order-filter-page-date-fields">
+      <div className="work-order-filter-page-condition">
+        <label className="work-order-filter-page-control-label" htmlFor={`work-order-filter-condition-${field}`}>Condition</label>
+        <select
+          id={`work-order-filter-condition-${field}`}
+          className="work-order-filter-page-condition-select"
+          aria-label="Condition"
+          value={operator}
+          onChange={(event) => updateOperator(event.target.value)}
+        >
+          {definition.operators.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select>
+      </div>
+      {field === 'due_date' && <div className="work-order-filter-page-date-presets" role="group" aria-label="Quick due date options">
+          {DUE_DATE_PRESETS.map((preset) => <button
+            className="work-order-filter-page-date-preset"
+            key={preset}
+            type="button"
+            aria-pressed={selectedPreset === preset}
+            onClick={() => selectDueDatePreset(preset)}
+          ><span className="work-order-filter-page-date-preset-label">{preset === 'Custom Date' && <CalendarDays size={17} aria-hidden="true" />}{preset}</span><span className={`work-order-filter-page-date-preset-check${selectedPreset === preset ? ' is-checked' : ''}`} aria-hidden="true">{selectedPreset === preset && <Check size={14} />}</span></button>)}
+      </div>}
+      {showDateFields && <div className="work-order-filter-page-date-fields">
         <label>{operator === 'between' ? 'Start date' : fieldLabel(field)}
-          <input type="date" value={values[0] ?? ''} onChange={(event) => updateDate(0, event.target.value)} />
+          <span className="work-order-filter-page-date-input">
+            <button className="work-order-filter-page-date-picker-trigger" type="button" aria-label={`Open ${operator === 'between' ? 'Start date' : fieldLabel(field)} picker`} onClick={openNativeDatePicker}><CalendarDays size={18} aria-hidden="true" /></button>
+            <input type="date" value={dateDraft[0] ?? ''} onClick={openPickerOutsideDateText} onChange={(event) => updateDate(0, event.target.value)} />
+          </span>
         </label>
         {operator === 'between' && <label>End date
-          <input type="date" value={values[1] ?? ''} min={values[0] || undefined} onChange={(event) => updateDate(1, event.target.value)} />
+          <span className="work-order-filter-page-date-input">
+            <button className="work-order-filter-page-date-picker-trigger" type="button" aria-label="Open End date picker" onClick={openNativeDatePicker}><CalendarDays size={18} aria-hidden="true" /></button>
+            <input type="date" value={dateDraft[1] ?? ''} min={dateDraft[0] || undefined} onClick={openPickerOutsideDateText} onChange={(event) => updateDate(1, event.target.value)} />
+          </span>
         </label>}
       </div>}
       {!isDate && !isEmptyOperator && <div className="work-order-filter-page-values">
         {field === 'assigned_to' && <FilterSearchField value={fieldSearch} onChange={setFieldSearch} placeholder="Search people and teams" ariaLabel="Search people and teams" />}
-        {options.filter((option) => option.label.toLocaleLowerCase().includes(field === 'assigned_to' ? fieldSearch.trim().toLocaleLowerCase() : '')).map((option) => <label className="work-order-filter-page-value" key={option.value}>
-          <span>{option.label}</span>
-          <input type="checkbox" checked={values.includes(option.value)} onChange={() => toggleValue(field, option.value)} />
-        </label>)}
+        {options.filter((option) => option.label.toLocaleLowerCase().includes(field === 'assigned_to' ? fieldSearch.trim().toLocaleLowerCase() : '')).map((option) => {
+          const PriorityIcon = option.Icon ?? (option.value === 'None' ? CircleDot : null)
+          const priorityTone = option.iconTone ?? 'none'
+          const AssigneeIcon = option.icon
+          return <label className={`work-order-filter-page-value${field === 'priority' ? ' is-priority' : ''}`} key={option.value}>
+            <span className="work-order-filter-page-value-label">
+              {field === 'assigned_to' && option.avatar && <span aria-hidden="true"><Avatar className="work-order-filter-page-assignee-avatar" {...option.avatar} alt="" /></span>}
+              {field === 'assigned_to' && AssigneeIcon && <AssigneeIcon className="work-order-filter-page-assignee-team-icon" size={18} aria-hidden="true" />}
+              {field === 'priority' && PriorityIcon && <PriorityIcon className={`work-order-filter-page-priority-icon is-${priorityTone}`} size={18} aria-hidden="true" />}
+              <span>{option.label}</span>
+            </span>
+            <input type="checkbox" checked={values.includes(option.value)} onChange={() => toggleValue(field, option.value)} />
+          </label>
+        })}
         {field === 'assigned_to' && options.filter((option) => option.label.toLocaleLowerCase().includes(fieldSearch.trim().toLocaleLowerCase())).length === 0 && <p className="work-order-filter-page-empty">No people or teams available.</p>}
       </div>}
     </section>

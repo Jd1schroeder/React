@@ -354,12 +354,22 @@
   color: var(--blue) !important;
   background: var(--blue-soft) !important;
 }
+.work-order-group-heading-row {
+  display: flex;
+  min-width: 0;
+  align-items: stretch;
+}
+.work-order-group-heading-row.is-filtered-results {
+  background: var(--surface);
+}
 .work-order-assignment-heading {
   display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
   align-items: center;
   justify-content: flex-start;
   gap: var(--spacing-2);
-  width: 100%;
+  width: auto;
   padding: var(--spacing-3) var(--spacing-5);
   border: 0;
   color: var(--ink);
@@ -369,6 +379,25 @@
   background: var(--surface);
   text-align: left;
   cursor: pointer;
+}
+.work-order-clear-filters {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--spacing-5);
+  border: 0;
+  color: var(--blue);
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-root);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.work-order-clear-filters:hover { color: var(--blue-hover); text-decoration: underline; }
+.work-order-clear-filters:focus-visible {
+  outline: var(--focus-border-width) solid var(--focus-border-color);
+  outline-offset: calc(-1 * var(--spacing-1));
 }
 .work-order-assignment-heading:hover {
   background: var(--surface-hover);

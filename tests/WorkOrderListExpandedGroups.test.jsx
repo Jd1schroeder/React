@@ -29,6 +29,7 @@ const createListProps = (overrides = {}) => ({
   onStatusChange: vi.fn(),
   canChangeStatusForOrder: vi.fn(() => false),
   onReadAll: vi.fn(),
+  onClearFilters: vi.fn(),
   sortId: 'priority-highest',
   onSortChange: vi.fn(),
   unreadFirst: false,
@@ -95,6 +96,25 @@ describe('Work Order Inbox expanded-group storage', () => {
     fireEvent.click(reopenedHeading)
     expect(reopenedHeading).toHaveAttribute('aria-expanded', 'false')
     expect(window.localStorage.getItem(key)).toBeNull()
+  })
+
+  it('shows filtered Work Orders in one expanded Search results group with a clear action', async () => {
+    const onClearFilters = vi.fn()
+    const props = createListProps({
+      filters: [{ field: 'priority', operator: 'one_of', values: ['High'] }],
+      groupCounts: { 'all-open': 17, completed: 0 },
+      onClearFilters,
+    })
+
+    render(<WorkOrderList {...props} />)
+
+    expect(screen.getByRole('button', { name: 'Search results (17)' })).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.queryByRole('button', { name: 'Assigned to Me (1)' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Clear Filters' })).toBeInTheDocument()
+    await waitFor(() => expect(props.onLoadGroupPage).toHaveBeenCalledWith(expect.objectContaining({ group: 'all-open' })))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Filters' }))
+    expect(onClearFilters).toHaveBeenCalledOnce()
   })
 
   it('persists only the group IDs allowed for the current tab', () => {
