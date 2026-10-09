@@ -121,11 +121,11 @@
 .work-order-sort-switch {
   position: relative;
   display: flex;
-  width: 56px;
-  height: 34px;
+  width: 44px;
+  height: 24px;
   flex: none;
   align-items: center;
-  padding: var(--spacing-1);
+  padding: 3px;
   border: 0;
   border-radius: var(--radius-pill);
   background: var(--surface-control-hover);
@@ -134,8 +134,8 @@
 }
 
 .work-order-sort-switch > span {
-  width: 28px;
-  height: 28px;
+  width: 18px;
+  height: 18px;
   border-radius: var(--radius-circle);
   background: var(--surface);
   box-shadow: var(--elevation-1);
@@ -143,7 +143,7 @@
 }
 
 .work-order-sort-switch[aria-checked="true"] { background: var(--blue); }
-.work-order-sort-switch[aria-checked="true"] > span { transform: translateX(22px); }
+.work-order-sort-switch[aria-checked="true"] > span { transform: translateX(20px); }
 
 .work-order-sort-group {
   padding: 0 var(--spacing-2);

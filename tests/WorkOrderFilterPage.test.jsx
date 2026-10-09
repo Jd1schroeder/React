@@ -123,4 +123,36 @@ describe('Work Order filter page', () => {
       vi.useRealTimers()
     }
   })
+
+  it('offers the same quick filters and date range for Start Date', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-09T12:00:00.000Z'))
+    try {
+      const onFiltersChange = vi.fn()
+      render(<WorkOrderFilterPage filters={[]} onFiltersChange={onFiltersChange} timezone="UTC" pageSize={50} onPageSizeChange={vi.fn()} onBack={vi.fn()} onApply={vi.fn()} onOpenSort={vi.fn()} />)
+
+      fireEvent.click(screen.getByRole('button', { name: 'More Filters' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Start Date' }))
+      const quickDates = screen.getByRole('group', { name: 'Quick start date options' })
+      expect(within(quickDates).getAllByRole('button').map((button) => button.textContent)).toEqual([
+        'Today', 'Tomorrow', 'Next 7 Days', 'Next 30 Days', 'This Month', 'Overdue', 'Custom Date',
+      ])
+
+      fireEvent.click(within(quickDates).getByRole('button', { name: 'Today' }))
+      expect(onFiltersChange).toHaveBeenLastCalledWith([
+        { field: 'start_date', operator: 'on', values: ['2026-10-09'] },
+      ])
+      expect(within(quickDates).getByRole('button', { name: 'Today' })).toHaveAttribute('aria-pressed', 'true')
+      expect(screen.queryByLabelText('Start Date', { selector: 'input' })).not.toBeInTheDocument()
+
+      fireEvent.change(screen.getByRole('combobox', { name: 'Condition' }), { target: { value: 'between' } })
+      fireEvent.change(screen.getByLabelText('Start date', { selector: 'input' }), { target: { value: '2026-10-12' } })
+      fireEvent.change(screen.getByLabelText('End date', { selector: 'input' }), { target: { value: '2026-10-15' } })
+      expect(onFiltersChange).toHaveBeenLastCalledWith([
+        { field: 'start_date', operator: 'between', values: ['2026-10-12', '2026-10-15'] },
+      ])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })

@@ -9,7 +9,7 @@ const PRIMARY_FIELDS = ['assigned_to', 'due_date', 'priority']
 const MORE_FIELDS = ['status', 'start_date', 'work_type']
 const PAGE_SIZES = [10, 25, 50]
 const PAGE_FIELD_LABELS = { assigned_to: 'Assigned to', due_date: 'Due Date', start_date: 'Start Date', work_type: 'Work Type' }
-const DUE_DATE_PRESETS = ['Today', 'Tomorrow', 'Next 7 Days', 'Next 30 Days', 'This Month', 'Overdue', 'Custom Date']
+const DATE_PRESETS = ['Today', 'Tomorrow', 'Next 7 Days', 'Next 30 Days', 'This Month', 'Overdue', 'Custom Date']
 
 function dateKeyInTimezone(date, timezone) {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -28,7 +28,7 @@ function addCalendarDays(dateKey, days) {
   return date.toISOString().slice(0, 10)
 }
 
-function filterForDueDatePreset(preset, today) {
+function filterForDatePreset(preset, today) {
   const tomorrow = addCalendarDays(today, 1)
   if (preset === 'Today') return { operator: 'on', values: [today] }
   if (preset === 'Tomorrow') return { operator: 'on', values: [tomorrow] }
@@ -43,7 +43,7 @@ function filterForDueDatePreset(preset, today) {
   return { operator: 'on', values: [''] }
 }
 
-function selectedDueDatePreset(operator, values, today) {
+function selectedDatePreset(operator, values, today) {
   const tomorrow = addCalendarDays(today, 1)
   if (operator === 'on' && values[0] === today) return 'Today'
   if (operator === 'on' && values[0] === tomorrow) return 'Tomorrow'
@@ -241,18 +241,18 @@ export function WorkOrderFilterPage({
       if (nextValues.slice(0, required).every(Boolean)) setFilter(field, operator, nextValues.slice(0, required))
       else onFiltersChange(normalizedFilters.filter((filter) => filter.field !== field))
     }
-    const selectDueDatePreset = (preset) => {
-      const selected = filterForDueDatePreset(preset, dateKeyInTimezone(new Date(), timezone))
+    const selectDatePreset = (preset) => {
+      const selected = filterForDatePreset(preset, dateKeyInTimezone(new Date(), timezone))
       setDateOperatorDraft(selected.operator)
       setDateDraft(selected.values)
       if (selected.values.every(Boolean)) setFilter(field, selected.operator, selected.values)
       else onFiltersChange(normalizedFilters.filter((filter) => filter.field !== field))
     }
     const options = field === 'assigned_to' ? assigneeOptions : definition.options ?? []
-    const selectedPreset = field === 'due_date'
-      ? selectedDueDatePreset(operator, values.length ? values : dateDraft, dateKeyInTimezone(new Date(), timezone))
+    const selectedPreset = isDate
+      ? selectedDatePreset(operator, values.length ? values : dateDraft, dateKeyInTimezone(new Date(), timezone))
       : ''
-    const showDateFields = isDate && !isEmptyOperator && !(field === 'due_date' && selectedPreset && selectedPreset !== 'Custom Date')
+    const showDateFields = isDate && !isEmptyOperator && !(selectedPreset && selectedPreset !== 'Custom Date')
 
     return <section className="work-order-filter-page-editor" aria-label={`${fieldLabel(field)} options`}>
       <div className="work-order-filter-page-condition">
@@ -267,13 +267,13 @@ export function WorkOrderFilterPage({
           {definition.operators.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
       </div>
-      {field === 'due_date' && <div className="work-order-filter-page-date-presets" role="group" aria-label="Quick due date options">
-          {DUE_DATE_PRESETS.map((preset) => <button
+      {isDate && <div className="work-order-filter-page-date-presets" role="group" aria-label={`Quick ${fieldLabel(field).toLocaleLowerCase()} options`}>
+          {DATE_PRESETS.map((preset) => <button
             className="work-order-filter-page-date-preset"
             key={preset}
             type="button"
             aria-pressed={selectedPreset === preset}
-            onClick={() => selectDueDatePreset(preset)}
+            onClick={() => selectDatePreset(preset)}
           ><span className="work-order-filter-page-date-preset-label">{preset === 'Custom Date' && <CalendarDays size={17} aria-hidden="true" />}{preset}</span><span className={`work-order-filter-page-date-preset-check${selectedPreset === preset ? ' is-checked' : ''}`} aria-hidden="true">{selectedPreset === preset && <Check size={14} />}</span></button>)}
       </div>}
       {showDateFields && <div className="work-order-filter-page-date-fields">
