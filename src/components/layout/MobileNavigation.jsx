@@ -19,6 +19,7 @@ import {
   House,
   Filter,
   LogOut,
+  Menu,
   MessageCircle,
   Search,
   X,
@@ -258,6 +259,7 @@ export function MobileNavigation({ activePage, onNavigate }) {
           aria-expanded={isMoreOpen}
           onClick={() => setIsMoreOpen(true)}
         >
+          <Menu size={21} strokeWidth={1.9} aria-hidden="true" />
           <span>More</span>
         </button>
       </div>
