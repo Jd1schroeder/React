@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { NewWorkOrderForm } from '../src/pages/work-orders/NewWorkOrderForm'
 
@@ -125,5 +125,33 @@ describe('NewWorkOrderForm edit mode', () => {
       pictures: [],
       files: [],
     }))
+  })
+})
+
+describe('NewWorkOrderForm mobile controls', () => {
+  it('submits from the mobile header action', () => {
+    const onCreate = vi.fn()
+    render(<NewWorkOrderForm onCreate={onCreate} onCancel={vi.fn()} />)
+
+    fireEvent.change(screen.getByPlaceholderText('What needs to be done? (Required)'), { target: { value: 'Inspect pump' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create Work Order' }))
+
+    expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ title: 'Inspect pump' }))
+  })
+
+  it('opens a photo source sheet and launches the camera input', async () => {
+    const selectedCaptureModes = []
+    const inputClick = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(function click() {
+      selectedCaptureModes.push(this.getAttribute('capture'))
+    })
+    render(<NewWorkOrderForm onCreate={vi.fn()} onCancel={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add or take pictures' }))
+    expect(screen.getByRole('dialog', { name: 'Select from' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Camera' }))
+
+    await waitFor(() => expect(selectedCaptureModes).toEqual(['environment']))
+    expect(screen.queryByRole('dialog', { name: 'Select from' })).not.toBeInTheDocument()
+    inputClick.mockRestore()
   })
 })

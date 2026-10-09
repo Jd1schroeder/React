@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MobileNavigation } from '../src/components/layout/MobileNavigation'
 
@@ -39,6 +39,18 @@ describe('mobile navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Assets' }))
 
     expect(onNavigate).toHaveBeenCalledWith('Assets')
+  })
+
+  it('replaces Work Order calendar and filter actions with record Back and Create controls', async () => {
+    render(<MobileNavigation activePage="Work Orders" onNavigate={vi.fn()} />)
+    act(() => window.dispatchEvent(new CustomEvent('workbench:work-orders-record-view', { detail: { kind: 'create' } })))
+
+    expect(screen.getByRole('navigation', { name: 'Primary navigation' })).toHaveClass('is-work-order-record-view')
+    expect(screen.queryByRole('button', { name: 'Toggle Work Order calendar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Filter Work Orders' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Create Work Order' })).toHaveAttribute('form', 'new-work-order-form-create')
+    expect(await screen.findByRole('button', { name: 'Work Orders, 89 unread' })).toBeInTheDocument()
   })
 
   it('shows the mobile overview destinations and the live Work Order unread badge', async () => {

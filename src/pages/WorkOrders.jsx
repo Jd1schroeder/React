@@ -23,7 +23,7 @@ import { getWorkOrderInboxPreferences, saveWorkOrderInboxPreferences } from '../
 import { createWorkOrderComment, deleteWorkOrderComment, getWorkOrderLinkPreviews, listWorkOrderActivity, updateWorkOrderComment } from '../services/workOrderCommentService'
 import { createWorkOrderSavedFilter, deleteWorkOrderSavedFilter, listWorkOrderSavedFilters, updateWorkOrderSavedFilter } from '../services/workOrderSavedFilterService'
 import { WorkOrderCalendar, WorkOrderCalendarResults } from './work-orders/WorkOrderCalendar'
-import { getWorkOrderCalendarRange } from './work-orders/workOrderCalendarDates'
+import { buildWorkOrderCalendarMarkers, getWorkOrderCalendarRange } from './work-orders/workOrderCalendarDates'
 
 function dateKeyForTimezone(timezone) {
   const parts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' })
@@ -349,20 +349,12 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     listWorkOrderCalendarDates({ organizationId, startDate: calendarRange.startDate, endDate: calendarRange.endDate, grants })
       .then((records) => {
         if (!active) return
-        const nextMarkers = records.reduce((result, record) => {
-          if (!record.due_date) return result
-          const marker = result[record.due_date] ?? { open: 0, completed: 0 }
-          if (record.status === 'Completed') marker.completed += 1
-          else marker.open += 1
-          result[record.due_date] = marker
-          return result
-        }, {})
-        setCalendarMarkers(nextMarkers)
+        setCalendarMarkers(buildWorkOrderCalendarMarkers(records, dateKeyForTimezone(workspace.preferences?.timezone)))
         setCalendarMarkersRangeKey(calendarRangeKey)
       })
       .catch(() => { if (active) { setCalendarMarkers({}); setCalendarMarkersRangeKey(calendarRangeKey) } })
     return () => { active = false }
-  }, [calendarRange.endDate, calendarRange.startDate, calendarRangeKey, calendarView, canViewWorkOrders, grants, organizationId])
+  }, [calendarRange.endDate, calendarRange.startDate, calendarRangeKey, calendarView, canViewWorkOrders, grants, organizationId, refreshVersion, workspace.preferences?.timezone])
 
   useEffect(() => {
     if (!canViewWorkOrders || !organizationId || calendarView === 'all') return undefined
@@ -739,6 +731,31 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   }
   const isEditingSelected = Boolean(selected && editingWorkOrderId === selected.id)
   const isMobileRecordView = Boolean(recordId || isCreating || isEditingSelected)
+  const mobileRecordViewKind = isCreating ? 'create' : isEditingSelected ? 'edit' : recordId ? 'detail' : null
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('workbench:work-orders-record-view', { detail: { kind: mobileRecordViewKind } }))
+  }, [mobileRecordViewKind])
+  useEffect(() => () => {
+    window.dispatchEvent(new CustomEvent('workbench:work-orders-record-view', { detail: { kind: null } }))
+  }, [])
+  useEffect(() => {
+    const returnFromRecordView = () => {
+      if (isCreating) {
+        setIsCreating(false)
+        setCopySource(null)
+      } else if (isEditingSelected) {
+        guardNavigation(() => {
+          setHasUnsavedChanges(false)
+          setEditingWorkOrderId(null)
+        })
+      } else {
+        setLocalSelectedId(undefined)
+        onNavigate?.('Work Orders')
+      }
+    }
+    window.addEventListener('workbench:work-orders-record-back', returnFromRecordView)
+    return () => window.removeEventListener('workbench:work-orders-record-back', returnFromRecordView)
+  }, [guardNavigation, isCreating, isEditingSelected, onNavigate, setHasUnsavedChanges])
   const recordLookupFinished = recordLookupResult?.key === recordLookupKey
   const isLoadingSelectedRecord = Boolean(recordId && !selected && !recordLookupFinished)
   const missingRecord = Boolean(recordId && !selected && recordLookupFinished && recordLookupResult.status === 'not-found')

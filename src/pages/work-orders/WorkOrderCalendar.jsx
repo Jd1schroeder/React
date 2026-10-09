@@ -52,13 +52,13 @@ export function WorkOrderCalendar({ view, selectedDate, onViewChange, onDateChan
       {weekdays.map((weekday, index) => <div className="work-order-calendar-weekday" aria-hidden="true" key={`${weekday}-${index}`}>{weekday}</div>)}
       {dates.map((key) => {
         const marker = markers[key]
-        const hasMarkers = marker?.open > 0 || marker?.completed > 0
+        const hasMarkers = marker?.open > 0 || marker?.completed > 0 || marker?.late > 0
         const outsideMonth = dateFromKey(key).getUTCMonth() !== currentMonth
         return <button
           key={key}
           type="button"
           className={`work-order-calendar-day${selectedDate === key ? ' is-selected' : ''}${outsideMonth ? ' is-outside-month' : ''}`}
-          aria-label={`${calendarLabelDate(key, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}${marker ? `, ${marker.open} open and ${marker.completed} completed Work Orders` : ''}`}
+          aria-label={`${calendarLabelDate(key, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}${marker ? `, ${marker.open} open, ${marker.completed} completed, and ${marker.late} late Work Orders` : ''}`}
           aria-pressed={selectedDate === key}
           onClick={() => onDateChange(key)}
         >
@@ -66,6 +66,7 @@ export function WorkOrderCalendar({ view, selectedDate, onViewChange, onDateChan
           {hasMarkers && <span className="work-order-calendar-markers" aria-hidden="true">
             {marker?.open > 0 && <i className="is-open" />}
             {marker?.completed > 0 && <i className="is-completed" />}
+            {marker?.late > 0 && <i className="is-late" />}
           </span>}
         </button>
       })}

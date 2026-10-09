@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  ArrowLeft,
   CirclePlus,
   List,
   LockKeyhole,
@@ -208,16 +209,26 @@ export function NewWorkOrderForm({
     >
       <header className="new-work-order-header">
         <div className="new-work-order-header-content">
+          <button type="button" className="new-work-order-mobile-back" aria-label="Back" onClick={onCancel}><ArrowLeft size={25} aria-hidden="true" /><span className="new-work-order-mobile-back-label">Back</span></button>
           <h2 id="new-work-order-title">{mode === "edit" ? "Edit Work Order" : "New Work Order"}</h2>
+          <Button
+            type="submit"
+            form={`new-work-order-form-${mode}`}
+            className="new-work-order-mobile-submit"
+            aria-label={mode === "edit" ? "Save Work Order" : "Create Work Order"}
+            disabled={isSaving || !form.title.trim()}
+          >
+            {isSaving ? (mode === "edit" ? "Saving..." : "Creating...") : (mode === "edit" ? "Save" : "Create")}
+          </Button>
         </div>
       </header>
-      <form className="new-work-order-form" onSubmit={submit}>
+      <form id={`new-work-order-form-${mode}`} className="new-work-order-form" onSubmit={submit}>
         <div className="new-work-order-scroll">
           <FormRow className="new-work-order-title-row">
             <FormField label="What needs to be done?" className="new-work-order-title-field">
               <input required value={form.title} onChange={(event) => update("title", event.target.value)} placeholder="What needs to be done? (Required)" />
             </FormField>
-            <button type="button" className="new-work-order-secondary" disabled>
+            <button type="button" className="new-work-order-secondary new-work-order-template-button" disabled>
               <LockKeyhole size={15} aria-hidden="true" /> Use a Template
             </button>
           </FormRow>
@@ -238,6 +249,7 @@ export function NewWorkOrderForm({
             </FormRow>
           )}
           <FormRow><ImageDropzone
+            sourcePicker={mode === "create"}
             initialAttachments={existingImages}
             onChange={setPictures}
             onThumbnailChange={setThumbnail}
@@ -250,7 +262,7 @@ export function NewWorkOrderForm({
             </FormField>
           </FormRow>
           <section className="new-work-order-suborders">
-            <h3>Sub-Work Orders (0)</h3>
+            <h3>Sub-Work Orders <span className="new-work-order-suborders-count">(0)</span></h3>
             <p>
               Split large tasks into sub-work orders to track work separately.
             </p>

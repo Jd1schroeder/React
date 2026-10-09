@@ -44,3 +44,15 @@ export function getWorkOrderCalendarRange(view, selectedDate) {
     : addCalendarDays(firstVisibleDate, monthGridDays - 1)
   return { startDate: firstVisibleDate, endDate: lastVisibleDate }
 }
+
+export function buildWorkOrderCalendarMarkers(records, todayDate) {
+  return records.reduce((result, record) => {
+    if (!record.due_date) return result
+    const marker = result[record.due_date] ?? { open: 0, completed: 0, late: 0 }
+    if (record.status === 'Completed') marker.completed += 1
+    else if (todayDate && record.due_date < todayDate) marker.late += 1
+    else marker.open += 1
+    result[record.due_date] = marker
+    return result
+  }, {})
+}

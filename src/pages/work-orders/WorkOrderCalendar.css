@@ -116,7 +116,8 @@
 }
 
 .work-order-calendar-markers i.is-completed { background: var(--status-completed); }
-.work-order-calendar-day.is-selected .work-order-calendar-markers i { background: var(--white); }
+.work-order-calendar-markers i.is-late { background: var(--danger); }
+.work-order-calendar-day.is-selected .work-order-calendar-markers i { border: 1px solid var(--white); }
 
 .work-order-calendar-selected-date {
   margin: 0;

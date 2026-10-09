@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Camera, X } from "lucide-react";
+import { useMobileSheetDismiss } from "../layout/useMobileSheetDismiss";
 import "./ImageDropzone.css";
 
 const defaultAccept = "image/*";
@@ -29,8 +31,16 @@ export function ImageDropzone({
   onExistingAttachmentsChange,
   onExistingThumbnailChange,
   allowThumbnailSelection = true,
+  sourcePicker = false,
 }) {
   const inputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const sourcePickerTriggerRef = useRef(null);
+  const sourcePickerRef = useRef(null);
+  const cameraActionRef = useRef(null);
+  const [isSourcePickerOpen, setIsSourcePickerOpen] = useState(false);
+  const closeSourcePicker = useCallback(() => setIsSourcePickerOpen(false), []);
+  const sheetDismiss = useMobileSheetDismiss(closeSourcePicker, sourcePickerRef);
   const [items, setItems] = useState(() => initialAttachments.map((attachment) => ({
     id: attachment.id,
     name: attachment.file_name,
@@ -64,6 +74,23 @@ export function ImageDropzone({
     () => () => itemsRef.current.filter((item) => !item.isExisting).forEach(({ url }) => URL.revokeObjectURL(url)),
     [],
   );
+
+  useEffect(() => {
+    if (!isSourcePickerOpen) return undefined;
+    const previousActiveElement = document.activeElement;
+    const previousBodyOverflow = document.body.style.overflow;
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") closeSourcePicker();
+    };
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeyDown);
+    cameraActionRef.current?.focus();
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+      if (previousActiveElement instanceof HTMLElement) previousActiveElement.focus();
+    };
+  }, [closeSourcePicker, isSourcePickerOpen]);
 
   const updateFiles = (fileList, append = true) => {
     const selectedFiles = filterImageFiles(fileList, accept);
@@ -101,6 +128,11 @@ export function ImageDropzone({
   const handleInputChange = (event) => {
     updateFiles(event.target.files);
     event.target.value = "";
+  };
+
+  const chooseSource = (inputRef) => {
+    inputRef.current?.click();
+    setIsSourcePickerOpen(false);
   };
 
   const removeFile = (itemToRemove) => {
@@ -179,11 +211,12 @@ export function ImageDropzone({
           <button
             type="button"
             className="image-dropzone-trigger"
-            onClick={() => inputRef.current?.click()}
+            ref={sourcePicker ? sourcePickerTriggerRef : undefined}
+            onClick={() => sourcePicker ? setIsSourcePickerOpen(true) : inputRef.current?.click()}
           >
             <Camera size={20} aria-hidden="true" />
             <span>
-              {items.length ? "Add more pictures" : "Add or drag pictures"}
+              {items.length ? "Add more pictures" : sourcePicker ? "Add or take pictures" : "Add or drag pictures"}
             </span>
           </button>
         )}
@@ -195,7 +228,30 @@ export function ImageDropzone({
           multiple={multiple}
           onChange={handleInputChange}
         />
+        {sourcePicker && <input
+          ref={cameraInputRef}
+          className="image-dropzone-input"
+          type="file"
+          accept={accept}
+          capture="environment"
+          multiple={multiple}
+          onChange={handleInputChange}
+          aria-label="Take pictures"
+        />}
       </div>
+      {sourcePicker && isSourcePickerOpen && createPortal(
+        <div className={`image-source-picker-backdrop mobile-sheet-backdrop ${sheetDismiss.backdropClassName}`} onMouseDown={(event) => { if (event.target === event.currentTarget) closeSourcePicker(); }}>
+          <section ref={sourcePickerRef} className={`image-source-picker mobile-edge-to-edge-sheet ${sheetDismiss.dragClassName}`} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby="image-source-picker-title">
+            <header className="image-source-picker-header mobile-sheet-drag-handle" {...sheetDismiss.dragHandleProps}>
+              <h2 id="image-source-picker-title">Select from</h2>
+            </header>
+            <button ref={cameraActionRef} type="button" onClick={() => chooseSource(cameraInputRef)}>Camera</button>
+            <button type="button" onClick={() => chooseSource(inputRef)}>My Photos</button>
+            <button type="button" onClick={closeSourcePicker}>Cancel</button>
+          </section>
+        </div>,
+        document.body,
+      )}
     </section>
   );
 }

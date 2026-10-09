@@ -49,6 +49,7 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const [workOrderUtilityPage, setWorkOrderUtilityPage] = useState(null)
   const [workOrderFilterSubpage, setWorkOrderFilterSubpage] = useState(null)
   const [activeWorkOrderFilterCount, setActiveWorkOrderFilterCount] = useState(0)
+  const [workOrderRecordView, setWorkOrderRecordView] = useState(null)
   const organizationId = workspace.organization?.id
   const grants = workspace.authorization?.grants
   const canViewWorkOrders = Boolean(grants?.['work_orders.view'])
@@ -71,11 +72,14 @@ export function MobileNavigation({ activePage, onNavigate }) {
   useEffect(() => {
     const syncUtilityPage = (event) => setWorkOrderUtilityPage(event.detail?.page ?? null)
     const syncFilterSubpage = (event) => setWorkOrderFilterSubpage(event.detail?.page ?? null)
+    const syncRecordView = (event) => setWorkOrderRecordView(event.detail?.kind ?? null)
     window.addEventListener('workbench:work-orders-utility-page', syncUtilityPage)
     window.addEventListener('workbench:work-orders-filter-subpage', syncFilterSubpage)
+    window.addEventListener('workbench:work-orders-record-view', syncRecordView)
     return () => {
       window.removeEventListener('workbench:work-orders-utility-page', syncUtilityPage)
       window.removeEventListener('workbench:work-orders-filter-subpage', syncFilterSubpage)
+      window.removeEventListener('workbench:work-orders-record-view', syncRecordView)
     }
   }, [])
 
@@ -214,8 +218,9 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const displayName = [firstName, lastName].filter(Boolean).join(' ') || workspace.user?.email || 'Account'
 
   return <>
-    <nav className={`mobile-primary-navigation${workOrderUtilityPage ? ` is-work-order-${workOrderUtilityPage}-open` : ''}`} aria-label="Primary navigation">
-      {activePage === 'Work Orders' && !workOrderUtilityPage && <button className="mobile-navigation-work-order-action is-calendar" type="button" aria-label="Toggle Work Order calendar" title="Toggle Work Order calendar" onClick={() => window.dispatchEvent(new CustomEvent('workbench:work-orders-calendar-toggle'))}><CalendarDays size={23} aria-hidden="true" /></button>}
+    <nav className={`mobile-primary-navigation${workOrderUtilityPage ? ` is-work-order-${workOrderUtilityPage}-open` : ''}${workOrderRecordView ? ' is-work-order-record-view' : ''}`} aria-label="Primary navigation">
+      {activePage === 'Work Orders' && workOrderRecordView && !workOrderUtilityPage && <button className="mobile-navigation-record-back" type="button" aria-label="Back" onClick={() => window.dispatchEvent(new CustomEvent('workbench:work-orders-record-back'))}><ChevronLeft size={22} aria-hidden="true" /><span>Back</span></button>}
+      {activePage === 'Work Orders' && !workOrderUtilityPage && !workOrderRecordView && <button className="mobile-navigation-work-order-action is-calendar" type="button" aria-label="Toggle Work Order calendar" title="Toggle Work Order calendar" onClick={() => window.dispatchEvent(new CustomEvent('workbench:work-orders-calendar-toggle'))}><CalendarDays size={23} aria-hidden="true" /></button>}
       {activePage === 'Work Orders' && workOrderUtilityPage && <button className="mobile-navigation-sort-back" type="button" aria-label={workOrderUtilityPage === 'sort' ? 'Back to filters' : workOrderFilterSubpage ? 'Back to Add Filter' : 'Back to Work Orders'} onClick={() => {
         if (workOrderUtilityPage === 'sort') {
           setWorkOrderUtilityPage('filters')
@@ -260,7 +265,8 @@ export function MobileNavigation({ activePage, onNavigate }) {
         <ChevronRight size={22} strokeWidth={2.4} aria-hidden="true" />
       </button>
       {activePage === 'Work Orders' && workOrderUtilityPage === 'filters' && <span className="mobile-navigation-sort-end-spacer" aria-hidden="true" />}
-      {activePage === 'Work Orders' && !workOrderUtilityPage && <button
+      {activePage === 'Work Orders' && workOrderRecordView && !workOrderUtilityPage && workOrderRecordView !== 'detail' && <button className="mobile-navigation-record-submit" type="submit" form={`new-work-order-form-${workOrderRecordView}`} aria-label={workOrderRecordView === 'edit' ? 'Save Work Order' : 'Create Work Order'}>{workOrderRecordView === 'edit' ? 'Save' : 'Create'}</button>}
+      {activePage === 'Work Orders' && !workOrderUtilityPage && !workOrderRecordView && <button
         className={`mobile-navigation-work-order-action is-filter${activeWorkOrderFilterCount ? ' has-active-filters' : ''}`}
         type="button"
         aria-label={activeWorkOrderFilterCount ? `Filter Work Orders, ${activeWorkOrderFilterCount} active` : 'Filter Work Orders'}

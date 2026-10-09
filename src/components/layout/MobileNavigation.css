@@ -8,6 +8,8 @@
 .mobile-navigation-scroll-forward,
 .mobile-navigation-scroll-back,
 .mobile-navigation-work-order-action,
+.mobile-navigation-record-back,
+.mobile-navigation-record-submit,
 .mobile-navigation-sort-back,
 .mobile-navigation-sort-done,
 .mobile-navigation-sort-end-spacer { display: none; }
@@ -333,6 +335,42 @@
     border-top: 0;
     background: var(--surface);
     box-shadow: none;
+  }
+
+  .mobile-primary-navigation.is-work-order-record-view { justify-content: space-between; }
+
+  .mobile-primary-navigation.is-work-order-record-view .mobile-primary-navigation-tabs {
+    max-width: calc(100% - 184px);
+    margin-inline: 0;
+  }
+
+  .mobile-navigation-record-back,
+  .mobile-navigation-record-submit {
+    display: inline-flex;
+    width: 80px;
+    min-height: 44px;
+    flex: 0 0 80px;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    color: var(--blue);
+    background: transparent;
+    font: inherit;
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+  }
+
+  .mobile-navigation-record-back {
+    justify-content: flex-start;
+    gap: var(--spacing-1);
+  }
+
+  .mobile-navigation-record-submit { justify-content: flex-end; }
+
+  .mobile-navigation-record-back:focus-visible,
+  .mobile-navigation-record-submit:focus-visible {
+    outline: var(--focus-border-width) solid var(--focus-border-color);
+    outline-offset: 1px;
   }
 
   .mobile-primary-navigation-tabs {
