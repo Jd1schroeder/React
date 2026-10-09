@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import {
   ArrowUp,
   ArrowRight,
+  BellOff,
   CalendarDays,
   Check,
   ChevronRight,
@@ -15,6 +16,7 @@ import {
   List,
   LockKeyhole,
   MapPin,
+  MessageCircle,
   Network,
   Plus,
   ScanQrCode,
@@ -649,6 +651,8 @@ export function Dashboard({ onNavigate }) {
         <DashboardQuickAction icon={UserPlus} label="Invite" hint={canInviteUsers ? 'Invite a teammate' : 'Only users with invite permission can invite teammates'} disabled={!canInviteUsers} disabledMessage="Admin only" onClick={() => onNavigate('Settings / Invite Users')} />
         <DashboardQuickAction icon={ScanQrCode} label="Scan Code" hint="Code scanning is not available yet" disabled />
         <DashboardQuickAction icon={CircleHelp} label="Support" hint="Open messages" onClick={() => onNavigate('Messages')} />
+        <DashboardQuickAction icon={BellOff} label="Pause" hint="Temporarily pause all notifications" disabled disabledMessage="Unavailable" />
+        <DashboardQuickAction icon={MessageCircle} label="Messages" hint="Open messages" onClick={() => onNavigate('Messages')} />
       </nav>
 
       <section className="dashboard-section dashboard-status-section" aria-labelledby="dashboard-status-title">

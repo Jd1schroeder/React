@@ -395,3 +395,38 @@
     bottom: calc(76px + env(safe-area-inset-bottom));
   }
 }
+
+@media (min-width: 701px) and (max-width: 1199px) {
+  .app-shell {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100svh;
+    flex-direction: column;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .mobile-primary-navigation { order: 0; }
+  .mobile-app-header { order: 1; }
+
+  .main-shell {
+    order: 2;
+    height: 0;
+    min-height: 0;
+    flex: 1 1 0%;
+  }
+
+  .page-content {
+    max-width: none;
+    height: 100%;
+    min-height: 0;
+    scrollbar-gutter: stable;
+  }
+
+  .page-content-inner {
+    min-height: 100%;
+    padding: var(--spacing-5) var(--spacing-6);
+  }
+}

@@ -57,3 +57,41 @@
     outline-offset: -2px;
   }
 }
+
+@media (min-width: 701px) and (max-width: 1199px) {
+  .mobile-app-header {
+    position: relative;
+    z-index: 30;
+    box-sizing: border-box;
+    display: grid;
+    min-height: 78px;
+    flex: 0 0 auto;
+    place-items: center;
+    padding: 8px 92px;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+    background: var(--surface);
+  }
+
+  .mobile-app-header-title {
+    width: 100%;
+    overflow: hidden;
+    margin: 0;
+    color: inherit;
+    font-size: var(--font-size-xl-compact);
+    font-weight: var(--font-bold);
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-app-header-account {
+    top: 7px;
+    right: 18px;
+    color: var(--text-secondary-strong);
+  }
+
+  .mobile-app-header-account:focus-visible {
+    outline-color: var(--focus-border-color);
+  }
+}

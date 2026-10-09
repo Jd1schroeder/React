@@ -11,6 +11,7 @@ import {
   Boxes,
   Check,
   ChevronDown,
+  ChevronRight,
   ClipboardCheck,
   Ellipsis,
   Home,
@@ -29,6 +30,18 @@ const primaryDestinations = [
   { label: 'Messages', page: 'Messages', icon: MessageCircle },
 ]
 
+const primaryDestinationPages = new Set(primaryDestinations.map(({ page }) => page))
+const tabletDestinations = [
+  ...primaryDestinations.map(({ label, page }) => ({ label, page })),
+  ...sidebarGroups.flatMap(({ items }) => items.flatMap((item) => [
+    { label: item.label, page: item.page },
+    ...(item.children ?? []).map((child) => ({ label: `${item.label} · ${child.label}`, page: child.page })),
+  ])),
+].filter((destination, index, destinations) =>
+  !primaryDestinationPages.has(destination.page)
+    && destinations.findIndex((candidate) => candidate.page === destination.page) === index,
+)
+
 function isPrimaryPage(page, activePage) {
   return activePage === page
 }
@@ -39,8 +52,10 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const dialogRef = useRef(null)
   const closeButtonRef = useRef(null)
   const moreButtonRef = useRef(null)
+  const navigationTabsRef = useRef(null)
   const workspace = useWorkspace()
   const [unreadWorkOrderBadge, setUnreadWorkOrderBadge] = useState(null)
+  const [hasMoreNavigationTabs, setHasMoreNavigationTabs] = useState(false)
   const organizationId = workspace.organization?.id
   const grants = workspace.authorization?.grants
   const canViewWorkOrders = Boolean(grants?.['work_orders.view'])
@@ -59,6 +74,40 @@ export function MobileNavigation({ activePage, onNavigate }) {
     }),
   })).filter((group) => !query || group.items.length > 0), [query])
   const isMoreCurrent = !primaryDestinations.some((item) => isPrimaryPage(item.page, activePage))
+
+  useEffect(() => {
+    const tabs = navigationTabsRef.current
+    if (!tabs) return undefined
+    const updateOverflow = () => {
+      const items = tabs.querySelectorAll('.mobile-primary-navigation-item')
+      const lastItem = items[items.length - 1]
+      if (!lastItem) {
+        setHasMoreNavigationTabs(false)
+        return
+      }
+      const tabsRect = tabs.getBoundingClientRect()
+      const lastItemEnd = tabs.scrollLeft + lastItem.getBoundingClientRect().right - tabsRect.left
+      setHasMoreNavigationTabs(lastItemEnd > tabs.scrollLeft + tabs.clientWidth + 2)
+    }
+    updateOverflow()
+    tabs.addEventListener('scroll', updateOverflow, { passive: true })
+    window.addEventListener('resize', updateOverflow)
+    const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(updateOverflow)
+    resizeObserver?.observe(tabs)
+    return () => {
+      tabs.removeEventListener('scroll', updateOverflow)
+      window.removeEventListener('resize', updateOverflow)
+      resizeObserver?.disconnect()
+    }
+  }, [])
+
+  useEffect(() => {
+    const isTablet = window.matchMedia?.('(min-width: 701px) and (max-width: 1199px)').matches
+    if (!isTablet) return
+    navigationTabsRef.current
+      ?.querySelector('.tablet-navigation-item[aria-current="page"], .mobile-primary-navigation-item[aria-current="page"]')
+      ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+  }, [activePage])
 
   useEffect(() => {
     if (!organizationId || !canViewWorkOrders) {
@@ -114,6 +163,17 @@ export function MobileNavigation({ activePage, onNavigate }) {
     setSearch('')
     onNavigate(page)
   }
+  const scrollNavigationForward = () => {
+    const tabs = navigationTabsRef.current
+    if (!tabs) return
+    const tabsRect = tabs.getBoundingClientRect()
+    const nextItem = [...tabs.querySelectorAll('.mobile-primary-navigation-item')].find((item) =>
+      item.getBoundingClientRect().left - tabsRect.left > tabs.clientLeft + 8,
+    )
+    if (!nextItem) return
+    const nextItemLeft = tabs.scrollLeft + nextItem.getBoundingClientRect().left - tabsRect.left - tabs.clientLeft - 4
+    tabs.scrollTo({ left: nextItemLeft, behavior: 'smooth' })
+  }
   const handleSignOut = async () => {
     setIsMoreOpen(false)
     await supabase.auth.signOut()
@@ -126,30 +186,47 @@ export function MobileNavigation({ activePage, onNavigate }) {
 
   return <>
     <nav className="mobile-primary-navigation" aria-label="Primary navigation">
-      {primaryDestinations.map(({ label, page, icon: Icon }) => (
+      <div className="mobile-primary-navigation-tabs" ref={navigationTabsRef}>
+        {primaryDestinations.map(({ label, page, icon: Icon }) => (
+          <button
+            key={page}
+            type="button"
+            className={`mobile-primary-navigation-item${isPrimaryPage(page, activePage) ? ' is-active' : ''}`}
+            aria-current={isPrimaryPage(page, activePage) ? 'page' : undefined}
+            aria-label={label === 'Work Orders' && unreadWorkOrderCount > 0 ? `Work Orders, ${unreadWorkOrderCount} unread` : label}
+            onClick={() => navigateTo(page)}
+          >
+            <Icon size={21} strokeWidth={1.9} aria-hidden="true" />
+            <span>{label}</span>
+            {label === 'Work Orders' && unreadWorkOrderCount > 0 && <span className="mobile-navigation-badge" aria-hidden="true">{unreadWorkOrderCount > 99 ? '99+' : unreadWorkOrderCount}</span>}
+          </button>
+        ))}
+        {tabletDestinations.map(({ label, page }) => (
+          <button
+            key={page}
+            type="button"
+            className={`mobile-primary-navigation-item tablet-navigation-item${activePage === page ? ' is-active' : ''}`}
+            aria-current={activePage === page ? 'page' : undefined}
+            onClick={() => navigateTo(page)}
+          >
+            <span>{label}</span>
+          </button>
+        ))}
         <button
-          key={page}
+          ref={moreButtonRef}
           type="button"
-          className={`mobile-primary-navigation-item${isPrimaryPage(page, activePage) ? ' is-active' : ''}`}
-          aria-current={isPrimaryPage(page, activePage) ? 'page' : undefined}
-          aria-label={label === 'Work Orders' && unreadWorkOrderCount > 0 ? `Work Orders, ${unreadWorkOrderCount} unread` : label}
-          onClick={() => navigateTo(page)}
+          className={`mobile-primary-navigation-item mobile-primary-navigation-more${isMoreOpen || isMoreCurrent ? ' is-active' : ''}`}
+          aria-label="More modules and settings"
+          aria-expanded={isMoreOpen}
+          onClick={() => setIsMoreOpen(true)}
         >
-          <Icon size={21} strokeWidth={1.9} aria-hidden="true" />
-          <span>{label}</span>
-          {label === 'Work Orders' && unreadWorkOrderCount > 0 && <span className="mobile-navigation-badge" aria-hidden="true">{unreadWorkOrderCount > 99 ? '99+' : unreadWorkOrderCount}</span>}
+          <Ellipsis size={21} strokeWidth={1.9} aria-hidden="true" />
+          <ChevronRight className="tablet-navigation-chevron" size={21} strokeWidth={2.3} aria-hidden="true" />
+          <span>More</span>
         </button>
-      ))}
-      <button
-        ref={moreButtonRef}
-        type="button"
-        className={`mobile-primary-navigation-item${isMoreOpen || isMoreCurrent ? ' is-active' : ''}`}
-        aria-label="More modules and settings"
-        aria-expanded={isMoreOpen}
-        onClick={() => setIsMoreOpen(true)}
-      >
-        <Ellipsis size={21} strokeWidth={1.9} aria-hidden="true" />
-        <span>More</span>
+      </div>
+      <button className="mobile-navigation-scroll-forward" type="button" aria-label="Show more navigation options" onClick={scrollNavigationForward} hidden={!hasMoreNavigationTabs}>
+        <ChevronRight size={22} strokeWidth={2.4} aria-hidden="true" />
       </button>
     </nav>
     {isMoreOpen && createPortal(
