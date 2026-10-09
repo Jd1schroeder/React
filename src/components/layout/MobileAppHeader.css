@@ -35,7 +35,7 @@
     z-index: 30;
     box-sizing: border-box;
     display: grid;
-    min-height: calc(68px + env(safe-area-inset-top));
+    min-height: calc(52px + env(safe-area-inset-top));
     flex: 0 0 auto;
     place-items: center;
     padding: calc(6px + env(safe-area-inset-top)) 76px 6px 16px;
@@ -59,6 +59,7 @@
 
   .mobile-app-header-account {
     color: inherit;
+    min-height: 44px;
   }
 
   .mobile-app-header-account:focus-visible {
