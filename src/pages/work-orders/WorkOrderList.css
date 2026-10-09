@@ -690,6 +690,7 @@
   line-height: 1;
   white-space: nowrap;
 }
+.work-order-status-static.is-responsive-static { display: none; }
 
 @media (--wb-viewport-tablet-and-down) {
   .work-order-sort-row {
@@ -720,10 +721,42 @@
 
   .work-order-status-trigger,
   .work-order-status-static {
-    min-height: 36px;
-    padding-right: var(--spacing-2);
-    padding-left: var(--spacing-2);
-    font-size: var(--font-size-sm-compact);
+    box-sizing: border-box;
+    height: 24px;
+    min-height: 24px;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: var(--font-size-sm);
+    line-height: 18px;
+  }
+
+  .work-order-status-static svg {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+  }
+
+  .work-order-status-label {
+    font-size: var(--font-size-sm);
+    line-height: 18px;
+  }
+
+  .work-order-item-status-row > .work-order-status-control.is-responsive-static {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  .work-order-status-control.is-responsive-static .work-order-status-trigger {
+    display: none;
+  }
+
+  .work-order-status-static.is-responsive-static {
+    display: inline-flex;
+  }
+
+  .work-order-status-menu {
+    display: none;
   }
 }
 .work-order-status-label {

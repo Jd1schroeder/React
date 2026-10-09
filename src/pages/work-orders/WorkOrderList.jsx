@@ -128,7 +128,13 @@ function WorkOrderStatusMenu({ order, onStatusChange, canChangeStatus }) {
   }
 
   return (
-    <div className="work-order-status-control" ref={rootRef}>
+    <div className="work-order-status-control is-responsive-static" ref={rootRef}>
+      <span className={`work-order-status-static is-responsive-static ${currentStatus?.tone ?? ""}`}>
+        <CurrentIcon size={12} />
+        <span className="work-order-status-label">
+          {currentStatus?.label ?? order.status}
+        </span>
+      </span>
       <button
         type="button"
         className={`work-order-status-trigger ${currentStatus?.tone ?? ""}`}
