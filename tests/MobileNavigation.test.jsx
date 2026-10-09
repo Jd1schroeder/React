@@ -78,16 +78,38 @@ describe('mobile navigation', () => {
   })
 
   it('dismisses the More sheet with a downward header pull on mobile', () => {
-    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }))
+    vi.stubGlobal('matchMedia', vi.fn((query) => ({ matches: query === '(max-width: 840px)' })))
     render(<MobileNavigation activePage="Dashboard" onNavigate={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'More modules and settings' }))
     const sheet = screen.getByRole('dialog', { name: 'Modules and settings' })
     const header = sheet.querySelector('.mobile-navigation-sheet-header')
     fireEvent.touchStart(header, { touches: [{ clientY: 100 }] })
-    fireEvent.touchMove(header, { touches: [{ clientY: 260 }] })
-    fireEvent.touchEnd(header, { changedTouches: [{ clientY: 260 }] })
+    fireEvent.touchMove(header, { touches: [{ clientY: 160 }] })
+    expect(sheet.style.getPropertyValue('--mobile-sheet-drag-offset')).toBe('60px')
+    fireEvent.touchEnd(header, { changedTouches: [{ clientY: 160 }] })
 
+    expect(sheet).toHaveClass('is-mobile-sheet-dismissing')
+    expect(screen.getByRole('dialog', { name: 'Modules and settings' })).toBeInTheDocument()
+    fireEvent.transitionEnd(sheet, { propertyName: 'transform' })
     expect(screen.queryByRole('dialog', { name: 'Modules and settings' })).not.toBeInTheDocument()
+  })
+
+  it('snaps the More sheet back after a pull that is too short to dismiss it', () => {
+    vi.stubGlobal('matchMedia', vi.fn((query) => ({ matches: query === '(max-width: 840px)' })))
+    render(<MobileNavigation activePage="Dashboard" onNavigate={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'More modules and settings' }))
+    const sheet = screen.getByRole('dialog', { name: 'Modules and settings' })
+    const header = sheet.querySelector('.mobile-navigation-sheet-header')
+    fireEvent.touchStart(header, { touches: [{ clientY: 100 }] })
+    fireEvent.touchMove(header, { touches: [{ clientY: 120 }] })
+    fireEvent.touchEnd(header, { changedTouches: [{ clientY: 120 }] })
+
+    expect(sheet).toHaveClass('is-mobile-sheet-snapping-back')
+    fireEvent.transitionEnd(sheet, { propertyName: 'transform' })
+    expect(sheet).not.toHaveClass('is-mobile-sheet-snapping-back')
+    expect(sheet.style.getPropertyValue('--mobile-sheet-drag-offset')).toBe('0px')
+    expect(screen.getByRole('dialog', { name: 'Modules and settings' })).toBeInTheDocument()
   })
 })

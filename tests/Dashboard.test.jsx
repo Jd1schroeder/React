@@ -246,7 +246,7 @@ describe('mobile Overview dashboard', () => {
   })
 
   it('dismisses dashboard metric and create sheets with a downward header pull on mobile', async () => {
-    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }))
+    vi.stubGlobal('matchMedia', vi.fn((query) => ({ matches: query === '(max-width: 840px)' })))
     renderDashboard()
     await screen.findByRole('heading', { name: 'Welcome to Simona PMC' })
 
@@ -256,6 +256,8 @@ describe('mobile Overview dashboard', () => {
     fireEvent.touchStart(metricHeader, { touches: [{ clientY: 100 }] })
     fireEvent.touchMove(metricHeader, { touches: [{ clientY: 260 }] })
     fireEvent.touchEnd(metricHeader, { changedTouches: [{ clientY: 260 }] })
+    expect(metricSheet).toHaveClass('is-mobile-sheet-dismissing')
+    fireEvent.transitionEnd(metricSheet, { propertyName: 'transform' })
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Overdue Work Orders' })).not.toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: 'Create' }))
@@ -264,6 +266,8 @@ describe('mobile Overview dashboard', () => {
     fireEvent.touchStart(createHeader, { touches: [{ clientY: 100 }] })
     fireEvent.touchMove(createHeader, { touches: [{ clientY: 260 }] })
     fireEvent.touchEnd(createHeader, { changedTouches: [{ clientY: 260 }] })
+    expect(createSheet).toHaveClass('is-mobile-sheet-dismissing')
+    fireEvent.transitionEnd(createSheet, { propertyName: 'transform' })
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'What would you like to Create?' })).not.toBeInTheDocument())
   })
 
@@ -317,7 +321,7 @@ describe('mobile Overview dashboard', () => {
     { id: 'assigned-to-me', label: 'Assigned to Me', title: 'Assigned To Me' },
     { id: 'assigned-to-my-teams', label: 'Assigned to My Teams', title: 'Assigned To My Teams' },
   ])('opens the mobile View all sheet for $title', async ({ id, label, title }) => {
-    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }))
+    vi.stubGlobal('matchMedia', vi.fn((query) => ({ matches: query === '(max-width: 840px)' })))
     const group = {
       id,
       label,
@@ -364,7 +368,7 @@ describe('mobile Overview dashboard', () => {
   })
 
   it('dismisses the assigned-work sheet on a downward header pull, not a list swipe', async () => {
-    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }))
+    vi.stubGlobal('matchMedia', vi.fn((query) => ({ matches: query === '(max-width: 840px)' })))
     dashboardMocks.getDashboardWorkOrderGroupPage.mockResolvedValueOnce({ items: [{
       id: 'work-order-1',
       title: 'Pump inspection',
@@ -386,6 +390,8 @@ describe('mobile Overview dashboard', () => {
     fireEvent.touchStart(sheetHeader, { touches: [{ clientY: 100 }] })
     fireEvent.touchMove(sheetHeader, { touches: [{ clientY: 300 }] })
     fireEvent.touchEnd(sheetHeader, { changedTouches: [{ clientY: 300 }] })
+    expect(sheet).toHaveClass('is-mobile-sheet-dismissing')
+    fireEvent.transitionEnd(sheet, { propertyName: 'transform' })
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Assigned To Me' })).not.toBeInTheDocument())
   })
 

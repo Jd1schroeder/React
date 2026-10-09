@@ -45,7 +45,7 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const grants = workspace.authorization?.grants
   const canViewWorkOrders = Boolean(grants?.['work_orders.view'])
   const closeMoreMenu = useCallback(() => setIsMoreOpen(false), [])
-  const sheetDismiss = useMobileSheetDismiss(closeMoreMenu)
+  const sheetDismiss = useMobileSheetDismiss(closeMoreMenu, dialogRef)
   const unreadWorkOrderCount = canViewWorkOrders && unreadWorkOrderBadge?.organizationId === organizationId
     ? unreadWorkOrderBadge.count
     : null
@@ -153,8 +153,8 @@ export function MobileNavigation({ activePage, onNavigate }) {
       </button>
     </nav>
     {isMoreOpen && createPortal(
-      <div className="mobile-navigation-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsMoreOpen(false) }}>
-        <section ref={dialogRef} className={`mobile-navigation-sheet mobile-edge-to-edge-sheet ${sheetDismiss.dragClassName}`} style={sheetDismiss.dragStyle} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby="mobile-navigation-title">
+      <div className={`mobile-navigation-backdrop mobile-sheet-backdrop ${sheetDismiss.backdropClassName}`} onMouseDown={(event) => { if (event.target === event.currentTarget) setIsMoreOpen(false) }}>
+        <section ref={dialogRef} className={`mobile-navigation-sheet mobile-edge-to-edge-sheet ${sheetDismiss.dragClassName}`} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby="mobile-navigation-title">
           <header className="mobile-navigation-sheet-header mobile-sheet-drag-handle" {...sheetDismiss.dragHandleProps}>
             <div>
               <p>Workbench</p>

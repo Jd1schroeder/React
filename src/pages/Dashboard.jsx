@@ -145,7 +145,7 @@ function DashboardMetricSheet({ metric, count, organizationId, grants, timeZone,
   const [retryVersion, setRetryVersion] = useState(0)
   const dialogRef = useRef(null)
   const closeButtonRef = useRef(null)
-  const sheetDismiss = useMobileSheetDismiss(onClose)
+  const sheetDismiss = useMobileSheetDismiss(onClose, dialogRef)
   const Icon = metric.icon
 
   useEffect(() => {
@@ -204,8 +204,8 @@ function DashboardMetricSheet({ metric, count, organizationId, grants, timeZone,
   const handleViewAll = () => onNavigate(`/workorders?dashboardFilter=${metric.key}`)
 
   return createPortal(
-    <div className="dashboard-metric-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
-      <section ref={dialogRef} className={`dashboard-metric-sheet mobile-edge-to-edge-sheet${isEmpty || isRequestPlaceholder ? ' is-empty' : ' is-list'} ${sheetDismiss.dragClassName}`} style={sheetDismiss.dragStyle} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby="dashboard-metric-sheet-title">
+    <div className={`dashboard-metric-backdrop mobile-sheet-backdrop ${sheetDismiss.backdropClassName}`} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      <section ref={dialogRef} className={`dashboard-metric-sheet mobile-edge-to-edge-sheet${isEmpty || isRequestPlaceholder ? ' is-empty' : ' is-list'} ${sheetDismiss.dragClassName}`} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby="dashboard-metric-sheet-title">
         <header className="dashboard-metric-sheet-header mobile-sheet-drag-handle" {...sheetDismiss.dragHandleProps}>
           <Icon className={`dashboard-metric-sheet-icon is-${metric.tone}`} size={36} strokeWidth={2.4} aria-hidden="true" />
           <h2 id="dashboard-metric-sheet-title">{metric.label}</h2>
@@ -251,7 +251,7 @@ function DashboardWorkOrderGroupSheet({ group, organizationId, grants, onClose, 
   const closeButtonRef = useRef(null)
   const loadingMoreRef = useRef(false)
   const Icon = dashboardWorkOrderGroupIcons[group.id] ?? UserRound
-  const sheetDismiss = useMobileSheetDismiss(onClose)
+  const sheetDismiss = useMobileSheetDismiss(onClose, dialogRef)
 
   useEffect(() => {
     if (group.count === 0) return undefined
@@ -327,11 +327,10 @@ function DashboardWorkOrderGroupSheet({ group, organizationId, grants, onClose, 
   }, [group.count, group.id, grants, hasMore, nextOffset, organizationId])
 
   return createPortal(
-    <div className="dashboard-metric-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+    <div className={`dashboard-metric-backdrop mobile-sheet-backdrop ${sheetDismiss.backdropClassName}`} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section
         ref={dialogRef}
         className={`dashboard-metric-sheet mobile-edge-to-edge-sheet is-list dashboard-group-sheet ${sheetDismiss.dragClassName}`}
-        style={sheetDismiss.dragStyle}
         role="dialog"
         aria-modal="true"
         aria-labelledby="dashboard-group-sheet-title"
@@ -372,7 +371,7 @@ function DashboardWorkOrderGroupSheet({ group, organizationId, grants, onClose, 
 function DashboardCreateSheet({ onClose, onNavigate, triggerRef }) {
   const dialogRef = useRef(null)
   const closeButtonRef = useRef(null)
-  const sheetDismiss = useMobileSheetDismiss(onClose)
+  const sheetDismiss = useMobileSheetDismiss(onClose, dialogRef)
 
   useEffect(() => {
     const triggerElement = triggerRef.current
@@ -413,8 +412,8 @@ function DashboardCreateSheet({ onClose, onNavigate, triggerRef }) {
   }
 
   return createPortal(
-    <div className="dashboard-create-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
-      <section ref={dialogRef} className={`dashboard-create-sheet mobile-edge-to-edge-sheet ${sheetDismiss.dragClassName}`} style={sheetDismiss.dragStyle} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby="dashboard-create-title">
+    <div className={`dashboard-create-backdrop mobile-sheet-backdrop ${sheetDismiss.backdropClassName}`} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      <section ref={dialogRef} className={`dashboard-create-sheet mobile-edge-to-edge-sheet ${sheetDismiss.dragClassName}`} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby="dashboard-create-title">
         <header className="dashboard-create-header mobile-sheet-drag-handle" {...sheetDismiss.dragHandleProps}>
           <h2 id="dashboard-create-title">What would you like to Create?</h2>
           <button ref={closeButtonRef} className="dashboard-metric-sheet-close" type="button" aria-label="Close" onClick={onClose}><X size={28} aria-hidden="true" /></button>
