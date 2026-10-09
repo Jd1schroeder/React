@@ -1010,5 +1010,4 @@
 
 @media (--wb-viewport-tablet) {
   .work-orders-page:not(.is-mobile-record-view) .panel-subnavigation { display: none; }
-  .work-orders-page:not(.is-mobile-record-view).is-mobile-filters-open .panel-subnavigation { display: flex; }
 }

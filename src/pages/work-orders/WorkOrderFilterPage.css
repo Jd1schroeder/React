@@ -1,0 +1,278 @@
+.page-content-inner:has(> .work-order-filter-page) {
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+}
+
+.work-order-filter-page {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  color: var(--ink);
+  background: var(--surface-subtle);
+}
+
+.work-order-filter-page-titlebar {
+  display: grid;
+  min-height: 56px;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  border-bottom: var(--border-width-normal) solid var(--line);
+  background: var(--surface);
+}
+
+.work-order-filter-page-titlebar h1 {
+  margin: 0;
+  font-size: var(--font-size-lg-plus);
+  font-weight: var(--font-semibold);
+  text-align: center;
+}
+
+.work-order-filter-page-row:focus-visible,
+.work-order-filter-page-footer button:focus-visible,
+.work-order-filter-page-search-clear:focus-visible,
+.work-order-filter-page-values input:focus-visible,
+.work-order-filter-page-editor select:focus-visible,
+.work-order-filter-page-editor input:focus-visible,
+.work-order-filter-page-saved-tabs button:focus-visible,
+.work-order-filter-page-saved-item:focus-visible {
+  outline: var(--focus-border-width) solid var(--focus-border-color);
+  outline-offset: 1px;
+}
+
+.work-order-filter-page-search {
+  box-sizing: border-box;
+  display: flex;
+  min-height: 56px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin: var(--spacing-3) var(--spacing-5);
+  padding: 0 var(--spacing-3);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-control);
+  color: var(--icon-secondary);
+  background: var(--surface);
+}
+
+.work-order-filter-page-search input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  border: 0;
+  outline: 0;
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-lg);
+}
+
+.work-order-filter-page-search input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.work-order-filter-page-search input::placeholder { color: var(--text-secondary-muted); }
+.work-order-filter-page-search-clear {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-circle);
+  color: var(--icon-secondary);
+  background: transparent;
+  cursor: pointer;
+}
+.work-order-filter-page-search-clear:hover { color: var(--blue); background: var(--surface-control-hover); }
+.work-order-filter-page-search-main { margin-bottom: var(--spacing-4); }
+
+.work-order-filter-page-main,
+.work-order-filter-page-detail {
+  box-sizing: border-box;
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  overflow-y: auto;
+  padding: var(--spacing-4) max(var(--spacing-5), calc((100% - 860px) / 2));
+  scrollbar-gutter: stable;
+}
+
+.work-order-filter-page-detail { padding-top: var(--spacing-4); }
+
+.work-order-filter-page-row {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-height: 66px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: 0 var(--spacing-4);
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-lg);
+  text-align: left;
+  cursor: pointer;
+}
+
+.work-order-filter-page-row > svg:first-child { flex: none; color: var(--blue); }
+.work-order-filter-page-chevron { flex: none; margin-left: auto; color: var(--blue); }
+.work-order-filter-page-chevron.is-expanded { transform: rotate(90deg); }
+
+.work-order-filter-page-sort,
+.work-order-filter-page-results,
+.work-order-filter-page-card {
+  flex: 0 0 auto;
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.work-order-filter-page-sort { margin-bottom: var(--spacing-1); }
+
+.work-order-filter-page-card {
+  overflow: hidden;
+  padding: 0 var(--spacing-3);
+}
+
+.work-order-filter-page-card > .work-order-filter-page-row + .work-order-filter-page-row {
+  border-top: var(--border-width-normal) solid var(--line);
+}
+
+.work-order-filter-page-row.is-muted { color: var(--text-secondary); }
+.work-order-filter-page-row.is-muted > svg:first-child { color: var(--text-secondary); }
+.work-order-filter-page-row:disabled { cursor: not-allowed; opacity: 0.62; }
+.work-order-filter-page-row small { display: block; margin-top: 2px; color: var(--text-tertiary); font-size: var(--font-size-xs); }
+.work-order-filter-page-row.is-selected { color: var(--blue); }
+
+.work-order-filter-page-results { gap: var(--spacing-2); margin-top: var(--spacing-1); }
+.work-order-filter-page-results-value { margin-left: auto; color: var(--blue); }
+
+.work-order-filter-page-footer {
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 0 auto;
+  padding: var(--spacing-3) var(--spacing-5) calc(var(--spacing-3) + env(safe-area-inset-bottom));
+  background: var(--surface-subtle);
+}
+
+.work-order-filter-page-footer button:not(.work-order-filter-page-clear) {
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  color: var(--white);
+  background: var(--blue);
+  font: inherit;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+}
+
+.work-order-filter-page-footer button:hover { background: var(--blue-hover); }
+
+.work-order-filter-page-footer.has-clear-action { gap: var(--spacing-3); }
+.work-order-filter-page-footer .work-order-filter-page-clear {
+  display: inline-flex;
+  width: auto;
+  min-width: 0;
+  flex: 1 1 0%;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  padding: 0 var(--spacing-4);
+  border: var(--border-width-normal) solid var(--blue);
+  border-radius: var(--radius-pill);
+  color: var(--blue);
+  background: var(--surface);
+}
+.work-order-filter-page-footer .work-order-filter-page-clear:hover { background: var(--surface-control-hover); }
+.work-order-filter-page-footer.has-clear-action button:not(.work-order-filter-page-clear) {
+  width: auto;
+  min-width: 0;
+  flex: 1 1 0%;
+}
+
+.work-order-filter-page-editor {
+  display: grid;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.work-order-filter-page-control-label,
+.work-order-filter-page-date-fields label { color: var(--text-secondary); font-size: var(--font-size-sm); }
+.work-order-filter-page-editor select,
+.work-order-filter-page-date-fields input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 46px;
+  padding: 0 var(--spacing-3);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+}
+
+.work-order-filter-page-date-fields { display: grid; gap: var(--spacing-3); }
+.work-order-filter-page-date-fields label { display: grid; gap: var(--spacing-1); }
+.work-order-filter-page-values { display: grid; }
+.work-order-filter-page-value {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  border-bottom: var(--border-width-normal) solid var(--line);
+  font-size: var(--font-size-md);
+}
+.work-order-filter-page-value:last-child { border-bottom: 0; }
+.work-order-filter-page-value input { width: 18px; height: 18px; accent-color: var(--blue); }
+.work-order-filter-page-values .work-order-filter-page-search { margin: var(--spacing-2) 0; }
+.work-order-filter-page-empty { margin: var(--spacing-4); color: var(--text-secondary); }
+
+.work-order-filter-page-saved-tabs { display: flex; border-bottom: var(--border-width-normal) solid var(--line); }
+.work-order-filter-page-saved-tabs button {
+  min-height: 46px;
+  flex: 1;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.work-order-filter-page-saved-tabs button.is-active { border-bottom-color: var(--blue); color: var(--blue); }
+.work-order-filter-page-saved-item {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  justify-content: space-between;
+  border: 0;
+  border-bottom: var(--border-width-normal) solid var(--line);
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.work-order-filter-page-saved-item svg { color: var(--blue); }
+
+@media (prefers-reduced-motion: reduce) {
+  .work-order-filter-page-chevron { transition: none; }
+}

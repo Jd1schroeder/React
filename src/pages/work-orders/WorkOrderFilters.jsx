@@ -2,104 +2,18 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Avatar } from '../../components/ui/Avatar'
 import {
-  CalendarDays,
   ChevronDown,
-  CircleArrowDown,
-  CircleArrowUp,
-  CircleCheck,
-  CircleMinus,
-  Flag,
   Plus,
   Trash2,
-  Users,
   UsersRound,
-  Wrench,
 } from 'lucide-react'
 import { normalizeWorkOrderFilters } from '../../utils/workOrderFilters'
 import { WorkOrderSavedFilters } from './WorkOrderSavedFilters'
-import { workOrderStatusOptions } from './workOrderStatusOptions'
+import { workOrderFilterDefinitions, selectableWorkOrderFilterFields } from './workOrderFilterOptions'
 import './WorkOrderFilters.css'
 
-const fieldDefinitions = {
-  assigned_to: {
-    label: 'Assigned To',
-    Icon: Users,
-    defaultOperator: 'one_of',
-    operators: [
-      ['one_of', 'One of'],
-      ['none_of', 'None of'],
-      ['is_empty', 'Is empty'],
-      ['is_not_empty', 'Is not empty'],
-    ],
-    pinned: true,
-  },
-  status: {
-    label: 'Status',
-    Icon: CircleCheck,
-    defaultOperator: 'one_of',
-    operators: [['one_of', 'One of'], ['none_of', 'None of']],
-    options: workOrderStatusOptions,
-    pinned: true,
-  },
-  due_date: {
-    label: 'Due date',
-    Icon: CalendarDays,
-    defaultOperator: 'on',
-    operators: [
-      ['on', 'On'],
-      ['before', 'Before'],
-      ['after', 'After'],
-      ['between', 'Between'],
-      ['is_empty', 'Is empty'],
-      ['is_not_empty', 'Is not empty'],
-    ],
-  },
-  start_date: {
-    label: 'Start date',
-    Icon: CalendarDays,
-    defaultOperator: 'on',
-    operators: [
-      ['on', 'On'],
-      ['before', 'Before'],
-      ['after', 'After'],
-      ['between', 'Between'],
-      ['is_empty', 'Is empty'],
-      ['is_not_empty', 'Is not empty'],
-    ],
-  },
-  priority: {
-    label: 'Priority',
-    Icon: Flag,
-    defaultOperator: 'one_of',
-    operators: [
-      ['one_of', 'One of'],
-      ['none_of', 'None of'],
-      ['is_empty', 'Is empty'],
-      ['is_not_empty', 'Is not empty'],
-    ],
-    options: [
-      { value: 'None', label: 'None' },
-      { value: 'Low', label: 'Low', Icon: CircleArrowDown, iconTone: 'low' },
-      { value: 'Medium', label: 'Medium', Icon: CircleMinus, iconTone: 'medium' },
-      { value: 'High', label: 'High', Icon: CircleArrowUp, iconTone: 'high' },
-    ],
-  },
-  work_type: {
-    label: 'Work type',
-    Icon: Wrench,
-    defaultOperator: 'one_of',
-    operators: [['one_of', 'One of'], ['none_of', 'None of']],
-    options: [
-      { value: 'reactive', label: 'Reactive' },
-      { value: 'preventive', label: 'Preventive' },
-    ],
-  },
-}
-
-const selectableFields = ['due_date', 'priority', 'work_type', 'start_date']
-
 function operatorLabel(field, operator) {
-  return fieldDefinitions[field]?.operators.find(([value]) => value === operator)?.[1] ?? 'One of'
+  return workOrderFilterDefinitions[field]?.operators.find(([value]) => value === operator)?.[1] ?? 'One of'
 }
 
 function filterCount(filter) {
@@ -147,7 +61,7 @@ export function WorkOrderFilters({
 
   const filterByField = new Map(normalizedFilters.map((filter) => [filter.field, filter]))
   const activeFilter = activeField ? filterByField.get(activeField) : null
-  const activeDefinition = activeField ? fieldDefinitions[activeField] : null
+  const activeDefinition = activeField ? workOrderFilterDefinitions[activeField] : null
 
   const changeFilter = (field, operator, values) => {
     const next = normalizeWorkOrderFilters([
@@ -167,7 +81,7 @@ export function WorkOrderFilters({
   }
 
   const openField = (field) => {
-    const definition = fieldDefinitions[field]
+    const definition = workOrderFilterDefinitions[field]
     const current = filterByField.get(field)
     setOperatorDraft(current?.operator ?? definition.defaultOperator)
     setOperatorMenuOpen(false)
@@ -243,7 +157,7 @@ export function WorkOrderFilters({
   }, [activeField])
 
   const renderFilterChip = (field) => {
-    const definition = fieldDefinitions[field]
+    const definition = workOrderFilterDefinitions[field]
     const Icon = definition.Icon
     const filter = filterByField.get(field)
     const count = filterCount(filter)
@@ -320,7 +234,7 @@ export function WorkOrderFilters({
     <div className="work-order-actions" ref={rootRef} role="group" aria-label="Work Order filters">
       {renderFilterChip('assigned_to')}
       {renderFilterChip('status')}
-      {selectableFields.filter((field) => filterByField.has(field)).map(renderFilterChip)}
+      {selectableWorkOrderFilterFields.filter((field) => filterByField.has(field)).map(renderFilterChip)}
       <div className="work-order-filter-button-wrap">
         <button
           ref={(node) => { if (node) triggerRefs.current.set('add', node); else triggerRefs.current.delete('add') }}
@@ -370,11 +284,11 @@ export function WorkOrderFilters({
           >
           {activeField === 'add'
             ? <div className="work-order-filter-add-options">
-                {selectableFields.filter((field) => !filterByField.has(field)).map((field) => {
-                  const { Icon, label } = fieldDefinitions[field]
+                {selectableWorkOrderFilterFields.filter((field) => !filterByField.has(field)).map((field) => {
+                  const { Icon, label } = workOrderFilterDefinitions[field]
                   return <button type="button" key={field} onClick={() => openField(field)}><Icon size={15} aria-hidden="true" />{label}</button>
                 })}
-                {selectableFields.every((field) => filterByField.has(field)) && <p>All available filters are already added.</p>}
+                {selectableWorkOrderFilterFields.every((field) => filterByField.has(field)) && <p>All available filters are already added.</p>}
               </div>
             : <>
                 <header className="work-order-filter-popover-header">

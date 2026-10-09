@@ -8,6 +8,7 @@ import {
 import { createPortal } from "react-dom";
 import { Button } from "../../components/ui/Button";
 import { PriorityBadge } from "../../components/ui/PriorityBadge";
+import { workOrderSortGroups } from "./workOrderSortOptions";
 import {
   getWorkOrderInboxExpandedGroupsKey,
   readWorkOrderInboxExpandedGroups,
@@ -188,7 +189,6 @@ function WorkOrderStatusMenu({ order, onStatusChange, canChangeStatus }) {
     </div>
   );
 }
-
 function WorkOrderListItem({
   order,
   selected,
@@ -270,7 +270,6 @@ function WorkOrderListItem({
     </div>
   );
 }
-
 export function WorkOrderList({
   userId,
   organizationId,
@@ -294,6 +293,7 @@ export function WorkOrderList({
   onSortChange,
   unreadFirst,
   onUnreadFirstChange,
+  pageSize = 50,
 }) {
   const expandedGroupsStorageKey = getWorkOrderInboxExpandedGroupsKey({
     userId,
@@ -378,7 +378,7 @@ export function WorkOrderList({
   const allVisibleGroupsCollapsed = visibleGroups.every(
     (group) => !expandedGroups[group.id],
   );
-  const selectedSortGroup = sortGroups.find((group) =>
+  const selectedSortGroup = workOrderSortGroups.find((group) =>
     group.options.some((option) => option.id === sortId),
   );
   const selectedSort = selectedSortGroup?.options.find(
@@ -404,6 +404,7 @@ export function WorkOrderList({
           unreadFirst,
           offset,
           filters,
+          pageSize,
         });
         if (generation !== queryGeneration.current) return;
         setGroupPages((current) => ({
@@ -485,7 +486,7 @@ export function WorkOrderList({
     }
     // Changing filters/sort/records invalidates the page cursor and reloads open groups.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, filters, search, sortId, unreadFirst, refreshVersion]);
+  }, [activeTab, filters, search, sortId, unreadFirst, pageSize, refreshVersion]);
 
   useEffect(() => {
     if (!sortMenuOpen) return undefined;
@@ -591,7 +592,7 @@ export function WorkOrderList({
                         onClick={() => onUnreadFirstChange(!unreadFirst)}
                       />
                     </div>
-                    {sortGroups.map((group) => (
+                    {workOrderSortGroups.map((group) => (
                       <section className="sort-menu-group" key={group.id}>
                         <button
                           type="button"
@@ -771,38 +772,3 @@ export function WorkOrderList({
     </section>
   );
 }
-
-const sortGroups = [
-  {
-    id: "creation",
-    label: "Creation Date",
-    options: [
-      { id: "created-oldest", label: "Oldest First" },
-      { id: "created-newest", label: "Newest First" },
-    ],
-  },
-  {
-    id: "due",
-    label: "Due Date",
-    options: [
-      { id: "due-earliest", label: "Earliest First" },
-      { id: "due-latest", label: "Latest First" },
-    ],
-  },
-  {
-    id: "updated",
-    label: "Last Updated",
-    options: [
-      { id: "updated-oldest", label: "Least Recent First" },
-      { id: "updated-newest", label: "Most Recent First" },
-    ],
-  },
-  {
-    id: "priority",
-    label: "Priority",
-    options: [
-      { id: "priority-highest", label: "Highest First" },
-      { id: "priority-lowest", label: "Lowest First" },
-    ],
-  },
-];

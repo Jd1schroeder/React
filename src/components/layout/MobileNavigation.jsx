@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useWorkspace } from './useWorkspace'
 import { settingsNavigation, settingsPageByLabel, sidebarGroups } from './sidebarConfig'
@@ -46,7 +46,9 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const workspace = useWorkspace()
   const [unreadWorkOrderBadge, setUnreadWorkOrderBadge] = useState(null)
   const [navigationOverflow, setNavigationOverflow] = useState({ previous: false, next: false })
-  const [areWorkOrderFiltersOpen, setAreWorkOrderFiltersOpen] = useState(false)
+  const [workOrderUtilityPage, setWorkOrderUtilityPage] = useState(null)
+  const [workOrderFilterSubpage, setWorkOrderFilterSubpage] = useState(null)
+  const [activeWorkOrderFilterCount, setActiveWorkOrderFilterCount] = useState(0)
   const organizationId = workspace.organization?.id
   const grants = workspace.authorization?.grants
   const canViewWorkOrders = Boolean(grants?.['work_orders.view'])
@@ -65,6 +67,26 @@ export function MobileNavigation({ activePage, onNavigate }) {
     }),
   })).filter((group) => !query || group.items.length > 0), [query])
   const isMoreCurrent = !primaryDestinations.some((item) => isPrimaryPage(item.page, activePage))
+
+  useEffect(() => {
+    const syncUtilityPage = (event) => setWorkOrderUtilityPage(event.detail?.page ?? null)
+    const syncFilterSubpage = (event) => setWorkOrderFilterSubpage(event.detail?.page ?? null)
+    window.addEventListener('workbench:work-orders-utility-page', syncUtilityPage)
+    window.addEventListener('workbench:work-orders-filter-subpage', syncFilterSubpage)
+    return () => {
+      window.removeEventListener('workbench:work-orders-utility-page', syncUtilityPage)
+      window.removeEventListener('workbench:work-orders-filter-subpage', syncFilterSubpage)
+    }
+  }, [])
+
+  useLayoutEffect(() => {
+    const syncActiveFilterCount = (event) => {
+      const count = Number(event.detail?.count)
+      setActiveWorkOrderFilterCount(Number.isFinite(count) ? Math.max(0, count) : 0)
+    }
+    window.addEventListener('workbench:work-orders-active-filter-count', syncActiveFilterCount)
+    return () => window.removeEventListener('workbench:work-orders-active-filter-count', syncActiveFilterCount)
+  }, [])
 
   useEffect(() => {
     const tabs = navigationTabsRef.current
@@ -156,7 +178,7 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const navigateTo = (page) => {
     setIsMoreOpen(false)
     setSearch('')
-    setAreWorkOrderFiltersOpen(false)
+    setWorkOrderUtilityPage(null)
     onNavigate(page)
   }
   const scrollNavigationForward = () => {
@@ -192,8 +214,19 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const displayName = [firstName, lastName].filter(Boolean).join(' ') || workspace.user?.email || 'Account'
 
   return <>
-    <nav className="mobile-primary-navigation" aria-label="Primary navigation">
-      {activePage === 'Work Orders' && <button className="mobile-navigation-work-order-action is-calendar" type="button" disabled aria-label="Calendar view coming soon" title="Calendar view coming soon"><CalendarDays size={23} aria-hidden="true" /></button>}
+    <nav className={`mobile-primary-navigation${workOrderUtilityPage ? ` is-work-order-${workOrderUtilityPage}-open` : ''}`} aria-label="Primary navigation">
+      {activePage === 'Work Orders' && !workOrderUtilityPage && <button className="mobile-navigation-work-order-action is-calendar" type="button" disabled aria-label="Calendar view coming soon" title="Calendar view coming soon"><CalendarDays size={23} aria-hidden="true" /></button>}
+      {activePage === 'Work Orders' && workOrderUtilityPage && <button className="mobile-navigation-sort-back" type="button" aria-label={workOrderUtilityPage === 'sort' ? 'Back to filters' : workOrderFilterSubpage ? 'Back to Add Filter' : 'Back to Work Orders'} onClick={() => {
+        if (workOrderUtilityPage === 'sort') {
+          setWorkOrderUtilityPage('filters')
+          window.dispatchEvent(new CustomEvent('workbench:work-orders-utility-page', { detail: { page: 'filters' } }))
+        } else if (workOrderFilterSubpage) {
+          window.dispatchEvent(new CustomEvent('workbench:work-orders-filter-subpage-back'))
+        } else {
+          setWorkOrderUtilityPage(null)
+          window.dispatchEvent(new CustomEvent('workbench:work-orders-utility-page', { detail: { page: null } }))
+        }
+      }}><ChevronLeft size={22} aria-hidden="true" />{(workOrderUtilityPage === 'sort' || (workOrderUtilityPage === 'filters' && workOrderFilterSubpage)) && <span key={`${workOrderUtilityPage}-${workOrderFilterSubpage ?? ''}`} className="mobile-navigation-back-label">Back</span>}</button>}
       <button className="mobile-navigation-scroll-back" type="button" aria-label="Show previous navigation options" onClick={scrollNavigationBackward} hidden={!navigationOverflow.previous}>
         <ChevronLeft size={22} strokeWidth={2.4} />
       </button>
@@ -226,17 +259,20 @@ export function MobileNavigation({ activePage, onNavigate }) {
       <button className="mobile-navigation-scroll-forward" type="button" aria-label="Show more navigation options" onClick={scrollNavigationForward} hidden={!navigationOverflow.next}>
         <ChevronRight size={22} strokeWidth={2.4} aria-hidden="true" />
       </button>
-      {activePage === 'Work Orders' && <button
-        className="mobile-navigation-work-order-action is-filter"
+      {activePage === 'Work Orders' && workOrderUtilityPage === 'filters' && <span className="mobile-navigation-sort-end-spacer" aria-hidden="true" />}
+      {activePage === 'Work Orders' && !workOrderUtilityPage && <button
+        className={`mobile-navigation-work-order-action is-filter${activeWorkOrderFilterCount ? ' has-active-filters' : ''}`}
         type="button"
-        aria-label="Toggle Work Order filters"
-        aria-expanded={areWorkOrderFiltersOpen}
+        aria-label={activeWorkOrderFilterCount ? `Filter Work Orders, ${activeWorkOrderFilterCount} active` : 'Filter Work Orders'}
         onClick={() => {
-          const isOpen = !areWorkOrderFiltersOpen
-          setAreWorkOrderFiltersOpen(isOpen)
-          window.dispatchEvent(new CustomEvent('workbench:work-orders-toggle-filters', { detail: { isOpen } }))
+          setWorkOrderUtilityPage('filters')
+          window.dispatchEvent(new CustomEvent('workbench:work-orders-utility-page', { detail: { page: 'filters', resetDraft: true } }))
         }}
-      ><Filter size={23} aria-hidden="true" /></button>}
+      ><Filter size={23} aria-hidden="true" />{activeWorkOrderFilterCount > 0 && <span className="mobile-navigation-filter-badge" aria-hidden="true">{activeWorkOrderFilterCount > 99 ? '99+' : activeWorkOrderFilterCount}</span>}</button>}
+      {activePage === 'Work Orders' && workOrderUtilityPage === 'sort' && <button className="mobile-navigation-sort-done" type="button" onClick={() => {
+        setWorkOrderUtilityPage(null)
+        window.dispatchEvent(new CustomEvent('workbench:work-orders-utility-page', { detail: { page: null, action: 'done' } }))
+      }}>Done</button>}
     </nav>
     {isMoreOpen && createPortal(
       <div className={`mobile-navigation-backdrop mobile-sheet-backdrop ${sheetDismiss.backdropClassName}`} onMouseDown={(event) => { if (event.target === event.currentTarget) setIsMoreOpen(false) }}>

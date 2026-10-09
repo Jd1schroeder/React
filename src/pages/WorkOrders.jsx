@@ -9,6 +9,8 @@ import { useUnsavedChanges } from '../components/layout/useUnsavedChanges'
 import { WorkOrderDetail } from './work-orders/WorkOrderDetail'
 import { WorkOrderList } from './work-orders/WorkOrderList'
 import { WorkOrderFilters } from './work-orders/WorkOrderFilters'
+import { WorkOrderSortPage } from './work-orders/WorkOrderSortPage'
+import { WorkOrderFilterPage } from './work-orders/WorkOrderFilterPage'
 import { matchesWorkOrderFilters, normalizeWorkOrderFilters } from '../utils/workOrderFilters'
 import { canAccessRecord, hasPermission } from '../services/authorizationService'
 import { listOrganizationMembers, listOrganizationTeamMemberships, listOrganizationTeams } from '../services/organizationService'
@@ -108,6 +110,11 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     normalizeFilters: normalizeWorkOrderFilters,
   })
   const activeFilters = dashboardFilter ? dashboardFilters : inboxFilters
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('workbench:work-orders-active-filter-count', {
+      detail: { count: activeFilters.length },
+    }))
+  }, [activeFilters.length])
   const clearDashboardFilter = useCallback(() => {
     if (!dashboardFilter) return
     const nextParams = new URLSearchParams(location.search)
@@ -128,7 +135,11 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   const [refreshVersion, setRefreshVersion] = useState(0)
   const [localSelectedId, setLocalSelectedId] = useState()
   const [search, setSearch] = useState('')
-  const [areMobileFiltersOpen, setAreMobileFiltersOpen] = useState(false)
+  const [utilityPage, setUtilityPage] = useState(null)
+  const [draftFilters, setDraftFilters] = useState([])
+  const [draftSavedFilterId, setDraftSavedFilterId] = useState(null)
+  const [pageSize, setPageSize] = useState(50)
+  const [draftPageSize, setDraftPageSize] = useState(50)
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [loadState, setLoadState] = useState('loading')
   const [error, setError] = useState('')
@@ -200,6 +211,26 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     setActiveSavedFilterId(null)
     clearDashboardFilter()
   }
+  const changeDraftFilters = useCallback((nextFilters) => {
+    setDraftFilters(nextFilters)
+    setDraftSavedFilterId(null)
+  }, [])
+  const applyFilterPage = useCallback(() => {
+    setInboxFilters(draftFilters)
+    setActiveSavedFilterId(draftSavedFilterId)
+    setPageSize(draftPageSize)
+    clearDashboardFilter()
+    setUtilityPage(null)
+    window.dispatchEvent(new CustomEvent('workbench:work-orders-utility-page', { detail: { page: null } }))
+  }, [clearDashboardFilter, draftFilters, draftPageSize, draftSavedFilterId, setInboxFilters])
+  const openSortFromFilterPage = useCallback(() => {
+    setUtilityPage('sort')
+    window.dispatchEvent(new CustomEvent('workbench:work-orders-utility-page', { detail: { page: 'sort' } }))
+  }, [])
+  const returnToFilterPage = useCallback(() => {
+    setUtilityPage('filters')
+    window.dispatchEvent(new CustomEvent('workbench:work-orders-utility-page', { detail: { page: 'filters' } }))
+  }, [])
   const changeInboxTab = (tab) => {
     setActiveTab(tab)
     clearDashboardFilter()
@@ -377,8 +408,8 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
       })
     return () => { active = false }
   }, [canViewWorkOrders, grants, markViewed, organizationId, recordId, recordLookupKey, recordLookupResult?.key, workOrdersById, workspace.preferences])
-  const loadGroupPage = async ({ tab, group, sort, unreadFirst, offset, filters }) => {
-    const orders = await listWorkOrderInboxPage({ organizationId, tab, group, search: debouncedSearch, sort, unreadFirst, offset, filters, grants })
+  const loadGroupPage = async ({ tab, group, sort, unreadFirst, offset, filters, pageSize: requestedPageSize }) => {
+    const orders = await listWorkOrderInboxPage({ organizationId, tab, group, search: debouncedSearch, sort, unreadFirst, offset, pageSize: requestedPageSize, filters, grants })
     return orders.map((order) => normalizeWorkOrder(order, workspace.preferences))
   }
   const loadWorkOrderActivity = useCallback((order, before) => listWorkOrderActivity({
@@ -640,13 +671,37 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   }), [guardNavigation])
 
   useEffect(() => {
-    const toggleFilters = (event) => setAreMobileFiltersOpen(Boolean(event.detail?.isOpen))
-    window.addEventListener('workbench:work-orders-toggle-filters', toggleFilters)
-    return () => window.removeEventListener('workbench:work-orders-toggle-filters', toggleFilters)
-  }, [])
+    const syncUtilityPage = (event) => {
+      const page = event.detail?.page ?? null
+      if (page === 'filters' && event.detail?.resetDraft) {
+        setDraftFilters(activeFilters)
+        setDraftSavedFilterId(activeSavedFilterId)
+        setDraftPageSize(pageSize)
+      } else if (page === null && event.detail?.action === 'done') {
+        applyFilterPage()
+      }
+      setUtilityPage(page)
+    }
+    window.addEventListener('workbench:work-orders-utility-page', syncUtilityPage)
+    return () => window.removeEventListener('workbench:work-orders-utility-page', syncUtilityPage)
+  }, [activeFilters, activeSavedFilterId, applyFilterPage, pageSize])
 
   return <>
-  <PanelLayout title="Work orders" modeIcon={PanelLeft} searchValue={search} onSearch={setSearch} searchPlaceholder="Search Work Orders" actionLabel="New work order" onAction={startCreateWorkOrder} showHeaderSearch={canViewWorkOrders} showAction={canCreateWorkOrders} className={`work-orders-page${isMobileRecordView ? ' is-mobile-record-view' : ''}${areMobileFiltersOpen ? ' is-mobile-filters-open' : ''}`} bodyClassName="work-orders-layout" subnavigation={canViewWorkOrders ? <WorkOrderFilters
+  {utilityPage === 'filters' && canViewWorkOrders && !isMobileRecordView ? <WorkOrderFilterPage
+    filters={draftFilters}
+    onFiltersChange={changeDraftFilters}
+    assigneeOptions={filterAssigneeOptions}
+    savedFilters={savedFiltersLoadedForOrganization === organizationId ? savedWorkOrderFilters : []}
+    savedFiltersLoading={savedFiltersLoadingForOrganization === organizationId}
+    savedFiltersError={savedFiltersErrorOrganization === organizationId ? savedFiltersError : ''}
+    savedFiltersLoaded={savedFiltersLoadedForOrganization === organizationId}
+    onLoadSavedFilters={loadSavedWorkOrderFilters}
+    onSelectSavedFilter={(item) => { setDraftFilters(item.filters); setDraftSavedFilterId(item.id) }}
+    onOpenSort={openSortFromFilterPage}
+    pageSize={draftPageSize}
+    onPageSizeChange={setDraftPageSize}
+    onApply={applyFilterPage}
+  /> : utilityPage === 'sort' && canViewWorkOrders && !isMobileRecordView ? <WorkOrderSortPage sortId={sortId} onSortChange={changeInboxSort} unreadFirst={unreadFirst} onUnreadFirstChange={changeUnreadFirst} onBack={returnToFilterPage} onDone={applyFilterPage} /> : <PanelLayout title="Work orders" modeIcon={PanelLeft} searchValue={search} onSearch={setSearch} searchPlaceholder="Search Work Orders" actionLabel="New work order" onAction={startCreateWorkOrder} showHeaderSearch={canViewWorkOrders} showAction={canCreateWorkOrders} className={`work-orders-page${isMobileRecordView ? ' is-mobile-record-view' : ''}`} bodyClassName="work-orders-layout" subnavigation={canViewWorkOrders ? <WorkOrderFilters
     filters={activeFilters}
     onFiltersChange={changeInboxFilters}
     assigneeOptions={filterAssigneeOptions}
@@ -667,9 +722,9 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     {isLoading && <div className="work-orders-loading">Loading Work Orders...</div>}
     {!isLoading && error && <div className="work-orders-loading" role="alert">{error}</div>}
     {!isLoading && !error && !canViewWorkOrders && <div className="work-orders-loading" role="status">You do not have permission to view Work Orders.</div>}
-    {!isLoading && !error && canViewWorkOrders && <>{readError && <div className="work-orders-loading" role="alert">{readError}</div>}{inboxPreferenceError && <div className="work-orders-loading" role="alert">{inboxPreferenceError}</div>}<WorkOrderList userId={userId} organizationId={organizationId} activeTab={activeTab} setActiveTab={changeInboxTab} search={debouncedSearch} filters={activeFilters} groupCounts={groupCounts} readStatusById={workOrdersById} selected={selected} onOrdersLoaded={storeOrders} onLoadGroupPage={loadGroupPage} onHydrateAttachments={hydrateGroupAttachments} refreshVersion={refreshVersion} onSelect={selectOrder} onStatusChange={changeStatus} onReadAll={() => { setReadError(''); setIsReadAllConfirmOpen(true) }} isReadAllSaving={isSavingReadState || search !== debouncedSearch} canChangeStatusForOrder={canChangeStatusForOrder} sortId={sortId} onSortChange={changeInboxSort} unreadFirst={unreadFirst} onUnreadFirstChange={changeUnreadFirst} />{isCreating ? <NewWorkOrderForm initialWorkOrder={copySource} onCancel={() => { setIsCreating(false); setCopySource(null) }} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : isEditingSelected ? <NewWorkOrderForm mode="edit" initialWorkOrder={selected} onCancel={() => guardNavigation(() => { setHasUnsavedChanges(false); setEditingWorkOrderId(null) })} onDirtyChange={setHasUnsavedChanges} onUpdate={handleUpdate} isSaving={isSavingEdit} error={editError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : <WorkOrderDetail selected={selected} isLoadingRecord={isLoadingSelectedRecord} missingRecord={missingRecord} onBack={() => { setLocalSelectedId(undefined); onNavigate?.('Work Orders') }} onEdit={() => selected && handleEdit(selected)} onCopy={() => selected && handleCopy(selected)} onStatusChange={changeStatus} onPreparePdfExport={prepareWorkOrderForPdfExport} assigneeOptions={assigneeOptions} memberDirectory={memberDirectory} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} dateFormat={workspace.preferences?.date_format} timezone={workspace.preferences?.timezone} onLoadActivity={loadWorkOrderActivity} onPostComment={postWorkOrderComment} onUpdateComment={editWorkOrderComment} onDeleteComment={removeWorkOrderComment} canDeleteAnyComments={canDeleteAnyWorkOrderComment} onResolveWorkOrderLinks={resolveWorkOrderLinks} />}</>}
-  </PanelLayout>
-  {canCreateWorkOrders && !isMobileRecordView && <FloatingCreateButton className="is-mobile-only work-orders-create-button" label="New Work Order" aria-label="New Work Order" scrollContainerSelector=".work-order-list" onClick={startCreateWorkOrder} />}
+    {!isLoading && !error && canViewWorkOrders && <>{readError && <div className="work-orders-loading" role="alert">{readError}</div>}{inboxPreferenceError && <div className="work-orders-loading" role="alert">{inboxPreferenceError}</div>}<WorkOrderList userId={userId} organizationId={organizationId} activeTab={activeTab} setActiveTab={changeInboxTab} search={debouncedSearch} filters={activeFilters} groupCounts={groupCounts} readStatusById={workOrdersById} selected={selected} onOrdersLoaded={storeOrders} onLoadGroupPage={loadGroupPage} onHydrateAttachments={hydrateGroupAttachments} refreshVersion={refreshVersion} onSelect={selectOrder} onStatusChange={changeStatus} onReadAll={() => { setReadError(''); setIsReadAllConfirmOpen(true) }} isReadAllSaving={isSavingReadState || search !== debouncedSearch} canChangeStatusForOrder={canChangeStatusForOrder} sortId={sortId} onSortChange={changeInboxSort} unreadFirst={unreadFirst} onUnreadFirstChange={changeUnreadFirst} pageSize={pageSize} />{isCreating ? <NewWorkOrderForm initialWorkOrder={copySource} onCancel={() => { setIsCreating(false); setCopySource(null) }} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : isEditingSelected ? <NewWorkOrderForm mode="edit" initialWorkOrder={selected} onCancel={() => guardNavigation(() => { setHasUnsavedChanges(false); setEditingWorkOrderId(null) })} onDirtyChange={setHasUnsavedChanges} onUpdate={handleUpdate} isSaving={isSavingEdit} error={editError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : <WorkOrderDetail selected={selected} isLoadingRecord={isLoadingSelectedRecord} missingRecord={missingRecord} onBack={() => { setLocalSelectedId(undefined); onNavigate?.('Work Orders') }} onEdit={() => selected && handleEdit(selected)} onCopy={() => selected && handleCopy(selected)} onStatusChange={changeStatus} onPreparePdfExport={prepareWorkOrderForPdfExport} assigneeOptions={assigneeOptions} memberDirectory={memberDirectory} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} dateFormat={workspace.preferences?.date_format} timezone={workspace.preferences?.timezone} onLoadActivity={loadWorkOrderActivity} onPostComment={postWorkOrderComment} onUpdateComment={editWorkOrderComment} onDeleteComment={removeWorkOrderComment} canDeleteAnyComments={canDeleteAnyWorkOrderComment} onResolveWorkOrderLinks={resolveWorkOrderLinks} />}</>}
+  </PanelLayout>}
+  {canCreateWorkOrders && !isMobileRecordView && !utilityPage && <FloatingCreateButton className="is-mobile-only work-orders-create-button" label="New Work Order" aria-label="New Work Order" scrollContainerSelector=".work-order-list" onClick={startCreateWorkOrder} />}
   {isReadAllConfirmOpen && createPortal(<div className="work-order-read-confirm-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !isSavingReadState) setIsReadAllConfirmOpen(false) }}>
     <section className="work-order-read-confirm" role="dialog" aria-modal="true" aria-labelledby="work-order-read-confirm-title">
       <button type="button" className="work-order-read-confirm-close" aria-label="Close confirmation" onClick={() => setIsReadAllConfirmOpen(false)} disabled={isSavingReadState}><X size={18} /></button>
