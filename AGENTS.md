@@ -44,6 +44,8 @@ For each task:
 
 Do not load every Skill, Pattern, or Decision by default. Follow cross-references only as needed; indexes route discovery and are not substitutes for the underlying guidance.
 
+Filesystem-backed bundled Skills may live in the active user's `.codex/plugins/cache/openai-bundled` directory even when a session alias expands to a workspace path. If the expanded path does not exist, search the user-level plugin cache before reporting the Skill unavailable. Preserve the full catalog suffix: versioned packages commonly place the file at `<plugin>/<version>/skills/<skill-name>/SKILL.md` (including the skill-name directory after `skills`). Resolve the version dynamically rather than recording a version-specific path.
+
 ## 4. Implementation workflow
 
 ### Understand
