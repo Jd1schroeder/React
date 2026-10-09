@@ -20,7 +20,7 @@ import {
   Filter,
   LogOut,
   Menu,
-  MessageCircle,
+  MessagesCircle,
   Search,
   X,
 } from 'lucide-react'
@@ -30,7 +30,7 @@ const primaryDestinations = [
   { label: 'Overview', page: 'Dashboard', icon: Home },
   { label: 'Work Orders', page: 'Work Orders', icon: ClipboardCheck },
   { label: 'Assets', page: 'Assets', icon: Boxes },
-  { label: 'Messages', page: 'Messages', icon: MessageCircle },
+  { label: 'Messages', page: 'Messages', icon: MessagesCircle },
 ]
 
 function isPrimaryPage(page, activePage) {
