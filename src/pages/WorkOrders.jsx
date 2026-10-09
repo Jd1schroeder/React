@@ -4,6 +4,7 @@ import { CheckCircle2, PanelLeft, UsersRound, X } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import './WorkOrders.css'
 import { PanelLayout } from '../components/layout/PanelLayout'
+import { FloatingCreateButton } from '../components/ui/FloatingCreateButton'
 import { useUnsavedChanges } from '../components/layout/useUnsavedChanges'
 import { WorkOrderDetail } from './work-orders/WorkOrderDetail'
 import { WorkOrderList } from './work-orders/WorkOrderList'
@@ -127,6 +128,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   const [refreshVersion, setRefreshVersion] = useState(0)
   const [localSelectedId, setLocalSelectedId] = useState()
   const [search, setSearch] = useState('')
+  const [areMobileFiltersOpen, setAreMobileFiltersOpen] = useState(false)
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [loadState, setLoadState] = useState('loading')
   const [error, setError] = useState('')
@@ -630,9 +632,21 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   const recordLookupFinished = recordLookupResult?.key === recordLookupKey
   const isLoadingSelectedRecord = Boolean(recordId && !selected && !recordLookupFinished)
   const missingRecord = Boolean(recordId && !selected && recordLookupFinished && recordLookupResult.status === 'not-found')
+  const startCreateWorkOrder = useCallback(() => guardNavigation(() => {
+    setEditingWorkOrderId(null)
+    setCopySource(null)
+    setCreateError('')
+    setIsCreating(true)
+  }), [guardNavigation])
+
+  useEffect(() => {
+    const toggleFilters = (event) => setAreMobileFiltersOpen(Boolean(event.detail?.isOpen))
+    window.addEventListener('workbench:work-orders-toggle-filters', toggleFilters)
+    return () => window.removeEventListener('workbench:work-orders-toggle-filters', toggleFilters)
+  }, [])
 
   return <>
-  <PanelLayout title="Work orders" modeIcon={PanelLeft} searchValue={search} onSearch={setSearch} searchPlaceholder="Search Work Orders" actionLabel="New work order" onAction={() => guardNavigation(() => { setEditingWorkOrderId(null); setCopySource(null); setCreateError(''); setIsCreating(true) })} showHeaderSearch={canViewWorkOrders} showAction={canCreateWorkOrders} className={`work-orders-page${isMobileRecordView ? ' is-mobile-record-view' : ''}`} bodyClassName="work-orders-layout" subnavigation={canViewWorkOrders ? <WorkOrderFilters
+  <PanelLayout title="Work orders" modeIcon={PanelLeft} searchValue={search} onSearch={setSearch} searchPlaceholder="Search Work Orders" actionLabel="New work order" onAction={startCreateWorkOrder} showHeaderSearch={canViewWorkOrders} showAction={canCreateWorkOrders} className={`work-orders-page${isMobileRecordView ? ' is-mobile-record-view' : ''}${areMobileFiltersOpen ? ' is-mobile-filters-open' : ''}`} bodyClassName="work-orders-layout" subnavigation={canViewWorkOrders ? <WorkOrderFilters
     filters={activeFilters}
     onFiltersChange={changeInboxFilters}
     assigneeOptions={filterAssigneeOptions}
@@ -655,6 +669,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     {!isLoading && !error && !canViewWorkOrders && <div className="work-orders-loading" role="status">You do not have permission to view Work Orders.</div>}
     {!isLoading && !error && canViewWorkOrders && <>{readError && <div className="work-orders-loading" role="alert">{readError}</div>}{inboxPreferenceError && <div className="work-orders-loading" role="alert">{inboxPreferenceError}</div>}<WorkOrderList userId={userId} organizationId={organizationId} activeTab={activeTab} setActiveTab={changeInboxTab} search={debouncedSearch} filters={activeFilters} groupCounts={groupCounts} readStatusById={workOrdersById} selected={selected} onOrdersLoaded={storeOrders} onLoadGroupPage={loadGroupPage} onHydrateAttachments={hydrateGroupAttachments} refreshVersion={refreshVersion} onSelect={selectOrder} onStatusChange={changeStatus} onReadAll={() => { setReadError(''); setIsReadAllConfirmOpen(true) }} isReadAllSaving={isSavingReadState || search !== debouncedSearch} canChangeStatusForOrder={canChangeStatusForOrder} sortId={sortId} onSortChange={changeInboxSort} unreadFirst={unreadFirst} onUnreadFirstChange={changeUnreadFirst} />{isCreating ? <NewWorkOrderForm initialWorkOrder={copySource} onCancel={() => { setIsCreating(false); setCopySource(null) }} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : isEditingSelected ? <NewWorkOrderForm mode="edit" initialWorkOrder={selected} onCancel={() => guardNavigation(() => { setHasUnsavedChanges(false); setEditingWorkOrderId(null) })} onDirtyChange={setHasUnsavedChanges} onUpdate={handleUpdate} isSaving={isSavingEdit} error={editError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} /> : <WorkOrderDetail selected={selected} isLoadingRecord={isLoadingSelectedRecord} missingRecord={missingRecord} onBack={() => { setLocalSelectedId(undefined); onNavigate?.('Work Orders') }} onEdit={() => selected && handleEdit(selected)} onCopy={() => selected && handleCopy(selected)} onStatusChange={changeStatus} onPreparePdfExport={prepareWorkOrderForPdfExport} assigneeOptions={assigneeOptions} memberDirectory={memberDirectory} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} dateFormat={workspace.preferences?.date_format} timezone={workspace.preferences?.timezone} onLoadActivity={loadWorkOrderActivity} onPostComment={postWorkOrderComment} onUpdateComment={editWorkOrderComment} onDeleteComment={removeWorkOrderComment} canDeleteAnyComments={canDeleteAnyWorkOrderComment} onResolveWorkOrderLinks={resolveWorkOrderLinks} />}</>}
   </PanelLayout>
+  {canCreateWorkOrders && !isMobileRecordView && <FloatingCreateButton className="is-mobile-only work-orders-create-button" label="New Work Order" aria-label="New Work Order" scrollContainerSelector=".work-order-list" onClick={startCreateWorkOrder} />}
   {isReadAllConfirmOpen && createPortal(<div className="work-order-read-confirm-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !isSavingReadState) setIsReadAllConfirmOpen(false) }}>
     <section className="work-order-read-confirm" role="dialog" aria-modal="true" aria-labelledby="work-order-read-confirm-title">
       <button type="button" className="work-order-read-confirm-close" aria-label="Close confirmation" onClick={() => setIsReadAllConfirmOpen(false)} disabled={isSavingReadState}><X size={18} /></button>

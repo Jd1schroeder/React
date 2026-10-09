@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import { useWorkspace } from '../components/layout/useWorkspace'
 import { Avatar } from '../components/ui/Avatar'
+import { FloatingCreateButton } from '../components/ui/FloatingCreateButton'
 import { useMobileSheetDismiss } from '../components/layout/useMobileSheetDismiss'
 import { hasPermission } from '../services/authorizationService'
 import { getDashboardMetricWorkOrders, getDashboardOverview, getDashboardRecentActivityPage, getDashboardWorkOrderGroupPage } from '../services/dashboardService'
@@ -572,11 +573,9 @@ export function Dashboard({ onNavigate }) {
   const [loadState, setLoadState] = useState('loading')
   const [error, setError] = useState('')
   const [refreshVersion, setRefreshVersion] = useState(0)
-  const [isCreateButtonCollapsed, setIsCreateButtonCollapsed] = useState(false)
   const [activeMetricKey, setActiveMetricKey] = useState(null)
   const [activeWorkOrderGroup, setActiveWorkOrderGroup] = useState(null)
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false)
-  const dashboardRef = useRef(null)
   const metricTriggerRef = useRef(null)
   const groupTriggerRef = useRef(null)
   const createTriggerRef = useRef(null)
@@ -600,16 +599,6 @@ export function Dashboard({ onNavigate }) {
     event.preventDefault()
     groupTriggerRef.current = event.currentTarget
     setActiveWorkOrderGroup(group)
-  }, [])
-
-  useEffect(() => {
-    const scrollContainer = dashboardRef.current?.closest('.page-content')
-    if (!scrollContainer) return undefined
-
-    const updateCreateButton = () => setIsCreateButtonCollapsed(scrollContainer.scrollTop > 8)
-    updateCreateButton()
-    scrollContainer.addEventListener('scroll', updateCreateButton, { passive: true })
-    return () => scrollContainer.removeEventListener('scroll', updateCreateButton)
   }, [])
 
   useEffect(() => {
@@ -640,7 +629,7 @@ export function Dashboard({ onNavigate }) {
   const organizationName = workspace.organization?.name || 'your workspace'
 
   return <>
-    <div className="dashboard-page" ref={dashboardRef}>
+    <div className="dashboard-page">
       <section className="dashboard-welcome" aria-labelledby="dashboard-title">
         <p className="dashboard-greeting">{displayGreeting}{firstName ? `, ${firstName}` : ''}!</p>
         <h1 id="dashboard-title">Welcome to {organizationName}</h1>
@@ -671,7 +660,7 @@ export function Dashboard({ onNavigate }) {
       <section className="dashboard-section dashboard-todo-section" aria-labelledby="dashboard-todo-title">
         <div className="dashboard-section-heading">
           <h2 id="dashboard-todo-title">To Do List</h2>
-          {canCreateWorkOrders && <button className={`dashboard-create-button${isCreateButtonCollapsed ? ' is-collapsed' : ''}`} type="button" aria-label="Create" aria-haspopup="dialog" onClick={openCreateSheet}><Plus size={24} aria-hidden="true" /><span>Create</span></button>}
+          {canCreateWorkOrders && <FloatingCreateButton className="dashboard-create-button" label="Create" aria-label="Create" aria-haspopup="dialog" onClick={openCreateSheet} />}
         </div>
         {loadState === 'loading' && <p className="dashboard-section-state" role="status">Loading your work...</p>}
         {loadState === 'ready' && overview?.canViewWorkOrders && <div className="dashboard-work-order-carousel">

@@ -9,6 +9,7 @@ import { Avatar } from '../ui/Avatar'
 import { useMobileSheetDismiss } from './useMobileSheetDismiss'
 import {
   Boxes,
+  CalendarDays,
   Check,
   ChevronDown,
   ChevronLeft,
@@ -16,6 +17,7 @@ import {
   ClipboardCheck,
   Home,
   House,
+  Filter,
   LogOut,
   MessageCircle,
   Search,
@@ -44,6 +46,7 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const workspace = useWorkspace()
   const [unreadWorkOrderBadge, setUnreadWorkOrderBadge] = useState(null)
   const [navigationOverflow, setNavigationOverflow] = useState({ previous: false, next: false })
+  const [areWorkOrderFiltersOpen, setAreWorkOrderFiltersOpen] = useState(false)
   const organizationId = workspace.organization?.id
   const grants = workspace.authorization?.grants
   const canViewWorkOrders = Boolean(grants?.['work_orders.view'])
@@ -153,6 +156,7 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const navigateTo = (page) => {
     setIsMoreOpen(false)
     setSearch('')
+    setAreWorkOrderFiltersOpen(false)
     onNavigate(page)
   }
   const scrollNavigationForward = () => {
@@ -189,6 +193,7 @@ export function MobileNavigation({ activePage, onNavigate }) {
 
   return <>
     <nav className="mobile-primary-navigation" aria-label="Primary navigation">
+      {activePage === 'Work Orders' && <button className="mobile-navigation-work-order-action is-calendar" type="button" disabled aria-label="Calendar view coming soon" title="Calendar view coming soon"><CalendarDays size={23} aria-hidden="true" /></button>}
       <button className="mobile-navigation-scroll-back" type="button" aria-label="Show previous navigation options" onClick={scrollNavigationBackward} hidden={!navigationOverflow.previous}>
         <ChevronLeft size={22} strokeWidth={2.4} />
       </button>
@@ -221,6 +226,17 @@ export function MobileNavigation({ activePage, onNavigate }) {
       <button className="mobile-navigation-scroll-forward" type="button" aria-label="Show more navigation options" onClick={scrollNavigationForward} hidden={!navigationOverflow.next}>
         <ChevronRight size={22} strokeWidth={2.4} aria-hidden="true" />
       </button>
+      {activePage === 'Work Orders' && <button
+        className="mobile-navigation-work-order-action is-filter"
+        type="button"
+        aria-label="Toggle Work Order filters"
+        aria-expanded={areWorkOrderFiltersOpen}
+        onClick={() => {
+          const isOpen = !areWorkOrderFiltersOpen
+          setAreWorkOrderFiltersOpen(isOpen)
+          window.dispatchEvent(new CustomEvent('workbench:work-orders-toggle-filters', { detail: { isOpen } }))
+        }}
+      ><Filter size={23} aria-hidden="true" /></button>}
     </nav>
     {isMoreOpen && createPortal(
       <div className={`mobile-navigation-backdrop mobile-sheet-backdrop ${sheetDismiss.backdropClassName}`} onMouseDown={(event) => { if (event.target === event.currentTarget) setIsMoreOpen(false) }}>

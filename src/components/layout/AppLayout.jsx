@@ -8,7 +8,7 @@ export function AppLayout({ activePage, onNavigate, children }) {
     <WorkspaceProvider onNavigate={onNavigate}>
       <div className="app-shell">
         <Sidebar activePage={activePage} onNavigate={onNavigate} />
-        <MobileAppHeader onNavigate={onNavigate} />
+        {activePage !== 'Work Orders' && <MobileAppHeader onNavigate={onNavigate} />}
         <div className="main-shell">
           <main className="page-content page-content-full">
             <div className="page-content-inner">{children}</div>

@@ -32,6 +32,15 @@
   --sidebar-hover-radius: 8px;
   --sidebar-expanded-width: 246px;
   --sidebar-collapsed-width: 50px;
+  --mobile-primary-navigation-height: 72px;
+  --floating-create-mobile-width: 144px;
+  --floating-create-mobile-height: 54px;
+  --floating-create-mobile-collapsed-size: 52px;
+  --floating-create-tablet-width: 160px;
+  --floating-create-tablet-height: 60px;
+  --floating-create-tablet-collapsed-size: 56px;
+  --work-order-create-mobile-width: 190px;
+  --work-order-create-tablet-width: 204px;
   --auth-visual-column: minmax(420px, 48%);
   --radius-sm: 4px;
   --radius-xs: 3px;

@@ -708,32 +708,6 @@ button.dashboard-metric-card:hover {
   margin-bottom: 12px;
 }
 
-.dashboard-create-button {
-  display: inline-flex;
-  min-height: 48px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 18px;
-  border: 0;
-  border-radius: 999px;
-  color: var(--white);
-  background: var(--blue);
-  box-shadow: var(--elevation-3);
-  font: inherit;
-  font-size: var(--font-size-md);
-  font-weight: var(--font-bold);
-  cursor: pointer;
-}
-
-.dashboard-create-button:hover {
-  background: var(--action-blue-strong);
-}
-.dashboard-create-button:focus-visible {
-  outline: 3px solid var(--focus-border-color);
-  outline-offset: 2px;
-}
-
 .dashboard-work-order-carousel {
   display: grid;
   grid-auto-columns: minmax(280px, 1fr);
@@ -1079,63 +1053,6 @@ button.dashboard-metric-card:hover {
   .dashboard-section-heading {
     margin-bottom: 10px;
   }
-  .dashboard-create-button {
-    position: fixed;
-    z-index: 35;
-    right: 18px;
-    bottom: calc(82px + env(safe-area-inset-bottom));
-    width: 144px;
-    min-width: 144px;
-    height: 54px;
-    gap: 6px;
-    padding: 0 14px;
-    border-radius: 999px;
-    box-shadow: var(--elevation-4);
-    transition:
-      width 260ms cubic-bezier(0.22, 1, 0.36, 1),
-      min-width 260ms cubic-bezier(0.22, 1, 0.36, 1),
-      height 220ms ease,
-      gap 220ms ease,
-      padding 220ms ease,
-      border-radius 260ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 220ms ease;
-  }
-  .dashboard-create-button > span {
-    max-width: 72px;
-    min-width: 0;
-    overflow: hidden;
-    opacity: 1;
-    transform: translateX(0);
-    white-space: nowrap;
-    transition:
-      max-width 220ms ease,
-      opacity 140ms ease,
-      transform 220ms ease,
-      visibility 0s;
-  }
-  .dashboard-create-button.is-collapsed {
-    width: 52px;
-    min-width: 52px;
-    height: 52px;
-    gap: 0;
-    padding: 0;
-    border-radius: 50%;
-  }
-  .dashboard-create-button.is-collapsed > span {
-    max-width: 0;
-    opacity: 0;
-    transform: translateX(6px);
-    visibility: hidden;
-    transition:
-      max-width 220ms ease,
-      opacity 120ms ease,
-      transform 220ms ease,
-      visibility 0s linear 140ms;
-  }
-  .dashboard-create-button svg {
-    width: 24px;
-    height: 24px;
-  }
   .dashboard-metric-backdrop {
     align-items: flex-end;
     padding: 0;
@@ -1272,59 +1189,6 @@ button.dashboard-metric-card:hover {
   .dashboard-work-order-group {
     padding: 22px;
   }
-  .dashboard-create-button {
-    position: fixed;
-    z-index: 35;
-    right: 28px;
-    bottom: 28px;
-    width: 160px;
-    min-width: 160px;
-    height: 60px;
-    gap: 8px;
-    padding: 0 18px;
-    border-radius: 999px;
-    box-shadow: var(--elevation-4);
-    transition:
-      width 260ms cubic-bezier(0.22, 1, 0.36, 1),
-      min-width 260ms cubic-bezier(0.22, 1, 0.36, 1),
-      height 220ms ease,
-      gap 220ms ease,
-      padding 220ms ease,
-      border-radius 260ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 220ms ease;
-  }
-  .dashboard-create-button > span {
-    max-width: 72px;
-    min-width: 0;
-    overflow: hidden;
-    opacity: 1;
-    transform: translateX(0);
-    white-space: nowrap;
-    transition:
-      max-width 220ms ease,
-      opacity 140ms ease,
-      transform 220ms ease,
-      visibility 0s;
-  }
-  .dashboard-create-button.is-collapsed {
-    width: 56px;
-    min-width: 56px;
-    height: 56px;
-    gap: 0;
-    padding: 0;
-    border-radius: 50%;
-  }
-  .dashboard-create-button.is-collapsed > span {
-    max-width: 0;
-    opacity: 0;
-    transform: translateX(6px);
-    visibility: hidden;
-    transition:
-      max-width 220ms ease,
-      opacity 120ms ease,
-      transform 220ms ease,
-      visibility 0s linear 140ms;
-  }
 }
 
 @media (--wb-viewport-tablet-compact) {
@@ -1345,10 +1209,6 @@ button.dashboard-metric-card:hover {
 
 @media (prefers-reduced-motion: reduce) {
   button.dashboard-metric-card {
-    transition: none;
-  }
-  .dashboard-create-button,
-  .dashboard-create-button > span {
     transition: none;
   }
   .dashboard-metric-backdrop,

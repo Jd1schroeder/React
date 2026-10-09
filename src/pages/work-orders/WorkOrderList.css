@@ -692,6 +692,10 @@
 }
 
 @media (--wb-viewport-tablet-and-down) {
+  .work-order-sort-row {
+    display: none;
+  }
+
   .work-order-sort-selector {
     height: 48px;
   }

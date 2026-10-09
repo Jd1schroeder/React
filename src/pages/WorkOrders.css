@@ -205,6 +205,26 @@
   background: var(--surface-toast-action-hover);
 }
 @media (--wb-viewport-tablet-and-down) {
+  .work-orders-page:not(.is-mobile-record-view) .panel-navigation {
+    padding: var(--spacing-3) var(--spacing-4) var(--spacing-2);
+  }
+
+  .work-orders-page:not(.is-mobile-record-view) .panel-view-title {
+    display: none;
+  }
+
+  .work-orders-page:not(.is-mobile-record-view) .panel-view-header {
+    gap: 0;
+  }
+
+  .work-orders-page:not(.is-mobile-record-view) .panel-view-header-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .work-orders-page:not(.is-mobile-record-view) .panel-view-header-actions > .button {
+    display: none;
+  }
+
   .panel-view-body.work-orders-layout {
     grid-template-columns: 1fr;
     overflow: hidden;
@@ -910,6 +930,10 @@
     min-height: 48px;
   }
 
+  .work-orders-create-button {
+    z-index: 35;
+  }
+
   .work-orders-page:not(.is-mobile-record-view) .detail-pane,
   .work-orders-page.is-mobile-record-view .inbox-pane {
     display: none;
@@ -982,4 +1006,9 @@
     min-height: 0;
     padding: var(--spacing-4);
   }
+}
+
+@media (--wb-viewport-tablet) {
+  .work-orders-page:not(.is-mobile-record-view) .panel-subnavigation { display: none; }
+  .work-orders-page:not(.is-mobile-record-view).is-mobile-filters-open .panel-subnavigation { display: flex; }
 }
