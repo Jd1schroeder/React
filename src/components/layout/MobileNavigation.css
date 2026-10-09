@@ -282,7 +282,6 @@
     line-height: 1.1;
     text-align: center;
     touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
   }
 
   .mobile-primary-navigation-item::before {

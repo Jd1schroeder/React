@@ -4,6 +4,12 @@
   box-sizing: border-box;
 }
 
+@media (--wb-viewport-max-840) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
 @supports not selector(::-webkit-scrollbar) {
   * {
     scrollbar-color: var(--scrollbar-thumb) transparent;
