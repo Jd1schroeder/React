@@ -868,6 +868,8 @@
 }
 
 @media (--wb-viewport-tablet-and-down) {
+  .work-orders-page.is-calendar-view .panel-subnavigation { display: none; }
+
   .work-orders-page.is-mobile-record-view .panel-navigation,
   .work-orders-page.is-mobile-record-view .panel-subnavigation {
     display: none;

@@ -215,7 +215,7 @@ export function MobileNavigation({ activePage, onNavigate }) {
 
   return <>
     <nav className={`mobile-primary-navigation${workOrderUtilityPage ? ` is-work-order-${workOrderUtilityPage}-open` : ''}`} aria-label="Primary navigation">
-      {activePage === 'Work Orders' && !workOrderUtilityPage && <button className="mobile-navigation-work-order-action is-calendar" type="button" disabled aria-label="Calendar view coming soon" title="Calendar view coming soon"><CalendarDays size={23} aria-hidden="true" /></button>}
+      {activePage === 'Work Orders' && !workOrderUtilityPage && <button className="mobile-navigation-work-order-action is-calendar" type="button" aria-label="Toggle Work Order calendar" title="Toggle Work Order calendar" onClick={() => window.dispatchEvent(new CustomEvent('workbench:work-orders-calendar-toggle'))}><CalendarDays size={23} aria-hidden="true" /></button>}
       {activePage === 'Work Orders' && workOrderUtilityPage && <button className="mobile-navigation-sort-back" type="button" aria-label={workOrderUtilityPage === 'sort' ? 'Back to filters' : workOrderFilterSubpage ? 'Back to Add Filter' : 'Back to Work Orders'} onClick={() => {
         if (workOrderUtilityPage === 'sort') {
           setWorkOrderUtilityPage('filters')

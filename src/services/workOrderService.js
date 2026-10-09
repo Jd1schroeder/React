@@ -74,6 +74,42 @@ export async function listWorkOrderInboxCounts({ organizationId, tab, search, fi
   return data ?? {}
 }
 
+export async function listWorkOrderCalendarDates({ organizationId, startDate, endDate, grants }) {
+  assertPermission(grants, 'work_orders.view')
+  const rows = []
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await supabase
+      .from('work_orders')
+      .select('due_date, status')
+      .eq('organization_id', organizationId)
+      .gte('due_date', startDate)
+      .lte('due_date', endDate)
+      .order('due_date')
+      .range(offset, offset + 999)
+    if (error) throw error
+    rows.push(...(data ?? []))
+    if ((data ?? []).length < 1000) return rows
+  }
+}
+
+export async function listWorkOrderCalendarDay({ organizationId, date, grants }) {
+  assertPermission(grants, 'work_orders.view')
+  const rows = []
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await supabase
+      .from('work_orders')
+      .select(workOrderFields)
+      .eq('organization_id', organizationId)
+      .eq('due_date', date)
+      .order('due_time', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + 999)
+    if (error) throw error
+    rows.push(...(data ?? []))
+    if ((data ?? []).length < 1000) return loadWorkOrderRelations(rows)
+  }
+}
+
 export async function getUnreadWorkOrderCount({ organizationId, grants }) {
   assertPermission(grants, 'work_orders.view')
   const { data, error } = await supabase.rpc('get_unread_work_order_count', {

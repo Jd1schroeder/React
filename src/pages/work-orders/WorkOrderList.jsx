@@ -195,7 +195,7 @@ function WorkOrderStatusMenu({ order, onStatusChange, canChangeStatus }) {
     </div>
   );
 }
-function WorkOrderListItem({
+export function WorkOrderListItem({
   order,
   selected,
   isRead,

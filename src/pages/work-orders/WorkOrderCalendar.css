@@ -1,0 +1,157 @@
+.work-order-calendar {
+  flex: 0 0 auto;
+  border-bottom: var(--border-width-normal) solid var(--line);
+  background: var(--surface);
+}
+
+.work-order-calendar-switch {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  border: 0;
+  color: var(--white);
+  background: var(--blue);
+  font: inherit;
+  font-size: var(--font-size-lg);
+  cursor: pointer;
+}
+
+.work-order-calendar-switch:hover { background: var(--blue-hover); }
+
+.work-order-calendar-period {
+  display: grid;
+  min-height: 56px;
+  grid-template-columns: 48px minmax(0, 1fr) 48px;
+  align-items: center;
+  padding: 0 var(--spacing-2);
+}
+
+.work-order-calendar-period > button {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: var(--blue);
+  background: transparent;
+  cursor: pointer;
+}
+
+.work-order-calendar-period > button:hover { background: var(--blue-soft); }
+.work-order-calendar-period > button:focus-visible,
+.work-order-calendar-day:focus-visible,
+.work-order-calendar-switch:focus-visible {
+  outline: var(--focus-border-width) solid var(--focus-border-color);
+  outline-offset: 2px;
+}
+
+.work-order-calendar-period h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--font-size-xl-compact);
+  font-weight: var(--font-semibold);
+  text-align: center;
+}
+
+.work-order-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  padding: 0 var(--spacing-2) var(--spacing-2);
+}
+
+.work-order-calendar-weekday {
+  display: grid;
+  min-height: 30px;
+  place-items: center;
+  color: var(--text-secondary-strong);
+  font-size: var(--font-size-sm);
+}
+
+.work-order-calendar-day {
+  box-sizing: border-box;
+  display: flex;
+  min-width: 0;
+  min-height: 58px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 2px;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-lg);
+  cursor: pointer;
+}
+
+.work-order-calendar-day:hover { background: var(--surface-control-hover); }
+.work-order-calendar-day.is-outside-month { color: var(--muted); }
+.work-order-calendar-day.is-selected {
+  width: 52px;
+  height: 52px;
+  min-height: 52px;
+  align-self: center;
+  justify-self: center;
+  border-radius: var(--radius-circle);
+  color: var(--white);
+  background: var(--blue);
+}
+
+.work-order-calendar-markers {
+  display: flex;
+  min-height: 7px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.work-order-calendar-markers i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+
+.work-order-calendar-markers i.is-completed { background: var(--status-completed); }
+.work-order-calendar-day.is-selected .work-order-calendar-markers i { background: var(--white); }
+
+.work-order-calendar-selected-date {
+  margin: 0;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-top: var(--border-width-normal) solid var(--line);
+  color: var(--ink);
+  background: var(--surface-subtle);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-semibold);
+}
+
+.work-order-calendar-results {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  background: var(--surface);
+}
+
+.work-order-calendar-results-message {
+  margin: 0;
+  padding: var(--spacing-6) var(--spacing-4);
+  color: var(--muted);
+  text-align: center;
+}
+
+.work-order-calendar-results .work-order-item { min-height: 98px; }
+
+@media (--wb-viewport-max-700) {
+  .work-order-calendar-period { min-height: 50px; }
+  .work-order-calendar-period h2 { font-size: var(--font-size-lg-plus); }
+  .work-order-calendar-day { min-height: 52px; font-size: var(--font-size-md-plus); }
+  .work-order-calendar-day.is-selected { width: 46px; height: 46px; min-height: 46px; }
+  .work-order-calendar-selected-date { padding: var(--spacing-3) var(--spacing-4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work-order-calendar * { scroll-behavior: auto !important; }
+}
