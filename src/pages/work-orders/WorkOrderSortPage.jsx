@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { workOrderSortGroups } from './workOrderSortOptions'
 import './WorkOrderSortPage.css'
 
@@ -52,30 +52,36 @@ export function WorkOrderSortPage({ sortId, onSortChange, unreadFirst, onUnreadF
               aria-expanded={isExpanded}
               onClick={() => setExpandedGroup((current) => current === group.id ? null : group.id)}
             >
-              {isExpanded ? <ChevronDown size={20} aria-hidden="true" /> : <ChevronRight size={20} aria-hidden="true" />}
+              <ChevronRight size={20} aria-hidden="true" />
               <span>{group.label}</span>
             </button>
-            {isExpanded && <div className="work-order-sort-options" role="radiogroup" aria-label={group.label}>
-              {group.options.map((option) => {
-                const isSelected = sortId === option.id
-                return <label
-                  className={`work-order-sort-option${isSelected ? ' is-selected' : ''}`}
-                  key={option.id}
-                >
-                  <span>{option.label}</span>
-                  <input
-                    className="work-order-sort-option-radio"
-                    type="radio"
-                    name="work-order-sort"
-                    value={option.id}
-                    checked={isSelected}
-                    onChange={() => onSortChange(option.id)}
-                    aria-label={`${group.label}: ${option.label}`}
-                  />
-                  <span className="work-order-sort-option-indicator" aria-hidden="true">{isSelected ? '✓' : ''}</span>
-                </label>
-              })}
-            </div>}
+            <div
+              className={`work-order-sort-options-clip${isExpanded ? ' is-expanded' : ''}`}
+              aria-hidden={!isExpanded}
+              inert={!isExpanded}
+            >
+              <div className="work-order-sort-options" role="radiogroup" aria-label={group.label}>
+                {group.options.map((option) => {
+                  const isSelected = sortId === option.id
+                  return <label
+                    className={`work-order-sort-option${isSelected ? ' is-selected' : ''}`}
+                    key={option.id}
+                  >
+                    <span>{option.label}</span>
+                    <input
+                      className="work-order-sort-option-radio"
+                      type="radio"
+                      name="work-order-sort"
+                      value={option.id}
+                      checked={isSelected}
+                      onChange={() => onSortChange(option.id)}
+                      aria-label={`${group.label}: ${option.label}`}
+                    />
+                    <span className="work-order-sort-option-indicator" aria-hidden="true">{isSelected ? '✓' : ''}</span>
+                  </label>
+                })}
+              </div>
+            </div>
           </section>
         })}
       </div>
