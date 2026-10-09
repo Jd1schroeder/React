@@ -282,6 +282,7 @@
     line-height: 1.1;
     text-align: center;
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .mobile-primary-navigation-item::before {
@@ -292,7 +293,7 @@
     width: 112px;
     height: 112px;
     border-radius: 50%;
-    background: var(--surface-control-hover);
+    background: var(--line);
     content: '';
     opacity: 0;
     pointer-events: none;
