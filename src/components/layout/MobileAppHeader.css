@@ -29,6 +29,8 @@
   outline-offset: -2px;
 }
 
+.mobile-app-header-back { display: none; }
+
 @media (--wb-viewport-max-840) {
   .mobile-app-header {
     position: relative;
@@ -55,6 +57,39 @@
     text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .mobile-app-header.is-my-account {
+    grid-template-columns: minmax(0, 1fr);
+    place-items: center stretch;
+    padding-right: var(--spacing-4);
+    padding-left: 64px;
+  }
+
+  .mobile-app-header.is-my-account .mobile-app-header-title {
+    font-size: var(--font-size-2xl-compact);
+    font-weight: var(--font-normal);
+    text-align: left;
+  }
+
+  .mobile-app-header-back {
+    position: absolute;
+    top: calc(6px + env(safe-area-inset-top));
+    left: var(--spacing-3);
+    display: grid;
+    width: 44px;
+    min-height: 44px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-control);
+    color: inherit;
+    background: transparent;
+  }
+
+  .mobile-app-header-back:focus-visible {
+    outline: var(--focus-border-width) solid var(--white);
+    outline-offset: -2px;
   }
 
   .mobile-app-header-account {
@@ -102,5 +137,28 @@
 
   .mobile-app-header-account:focus-visible {
     outline-color: var(--focus-border-color);
+  }
+
+  .mobile-app-header.is-my-account {
+    place-items: center stretch;
+    padding-right: var(--spacing-4);
+    padding-left: 64px;
+    color: var(--white);
+    background: var(--blue);
+    border-bottom: 0;
+  }
+
+  .mobile-app-header.is-my-account .mobile-app-header-title {
+    font-size: var(--font-size-2xl-compact);
+    font-weight: var(--font-normal);
+    text-align: left;
+  }
+
+  .mobile-app-header.is-my-account .mobile-app-header-back {
+    top: 10px;
+  }
+
+  .mobile-app-header.is-my-account .mobile-app-header-back:focus-visible {
+    outline-color: var(--white);
   }
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Camera, ChevronRight, LockKeyhole, LogOut, Mail, Monitor, Pencil, Smartphone, X } from "lucide-react";
+import { Bell, BellOff, Camera, ChevronRight, LockKeyhole, LogOut, Mail, Monitor, Pencil, Smartphone, X } from "lucide-react";
 import { Avatar } from "../../components/ui/Avatar";
 import { Select } from "../../components/ui/Select";
 import { supabase } from "../../lib/supabase";
@@ -43,7 +43,7 @@ export function ProfilePreferencesPage({ onNavigate }) {
   const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
 
   const user = workspace.user;
-  const displayName = [user?.user_metadata?.first_name, user?.user_metadata?.last_name].filter(Boolean).join(" ") || user?.email || "Your profile";
+  const displayName = [editForm.firstName, editForm.lastName].filter(Boolean).join(" ") || user?.email || "Your profile";
   const role = workspace.organization?.role === "owner" ? "Administrator" : workspace.organization?.role || "Member";
   const handleAvatarChange = (event) => {
     const file = event.target.files?.[0];
@@ -183,11 +183,11 @@ export function ProfilePreferencesPage({ onNavigate }) {
         <section className="profile-settings-card profile-personal-info-card">
           <div className="profile-identity">
             <label className="profile-avatar-upload"><input type="file" accept="image/gif,image/jpeg,image/png,image/heic,image/heif" onChange={handleAvatarChange} /><Avatar className="profile-avatar-display" src={avatarUrl} firstName={editForm.firstName} lastName={editForm.lastName} alt={`${displayName} profile`} /><span className="profile-avatar-overlay"><Camera size={22} /></span></label>
-            <div className="profile-identity-copy"><div className="profile-name-row"><h2>{displayName}</h2><button type="button" className="profile-edit-button" onClick={() => setIsEditModalOpen(true)}><Pencil size={16} /><span className="sr-only">Edit personal info</span></button></div><p>{role}</p><div className="profile-info-grid"><div><span>Email</span><strong>{editForm.email || "Not provided"}</strong></div><div><span>Phone Number</span><strong>{editForm.phone || "Not provided"}</strong></div></div></div>
+            <div className="profile-identity-copy"><div className="profile-name-row"><h2>{displayName}</h2><button type="button" className="profile-edit-button" onClick={() => setIsEditModalOpen(true)}><Pencil size={16} /><span className="sr-only">Edit personal info</span></button></div><p>{role}</p><div className="profile-info-grid"><div><Mail size={19} aria-hidden="true" /><span className="sr-only">Email</span><strong>{editForm.email || "Not provided"}</strong></div><div><Smartphone size={19} aria-hidden="true" /><span className="sr-only">Phone Number</span><strong>{editForm.phone || "Not provided"}</strong></div></div></div>
           </div>
-          <button type="button" className="profile-signout-button" onClick={handleSignOut}><LogOut size={16} /> Sign out</button>
         </section>
-        <section className="profile-settings-card profile-preferences-card"><div className="profile-card-heading"><h2>Localization Settings</h2></div><div className="profile-preference-list">
+        <button type="button" className="profile-pause-notifications" onClick={() => onNavigate("Settings / Notification Settings")}><BellOff size={20} aria-hidden="true" /><span>Pause Notifications</span></button>
+        <section className="profile-settings-card profile-preferences-card"><div className="profile-card-heading"><h2>Account Settings</h2></div><button type="button" className="profile-mobile-notification-link" onClick={() => onNavigate("Settings / Notification Settings")}><span className="profile-mobile-setting-icon"><Bell size={22} aria-hidden="true" /></span><span>Notification Settings</span><ChevronRight size={20} aria-hidden="true" /></button><div className="profile-preference-list">
           <PreferenceSelect label="Language" value={preferences.language} onChange={(value) => savePreferences({ ...preferences, language: value })} ariaLabel="Language" options={[{ label: "English", value: "English" }, { label: "Spanish", value: "Spanish", disabled: true, icon: LockKeyhole }, { label: "French", value: "French", disabled: true, icon: LockKeyhole }]} />
           <PreferenceSelect label="Date Format" value={preferences.dateFormat} onChange={(value) => savePreferences({ ...preferences, dateFormat: value })} ariaLabel="Date Format" options={["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"]} />
           <PreferenceSelect label="Time Format" value={preferences.timeFormat} onChange={(value) => savePreferences({ ...preferences, timeFormat: value })} ariaLabel="Time Format" options={["11:59 PM", "23:59"]} />
@@ -196,6 +196,7 @@ export function ProfilePreferencesPage({ onNavigate }) {
         <section className="profile-settings-card profile-passkeys-card"><div className="profile-card-heading"><div><h2>Passkeys</h2><p>Use your phone's biometrics or device PIN to sign in securely.</p></div><button type="button" className="profile-passkey-button" onClick={addPasskey} disabled={isRegisteringPasskey}>{isRegisteringPasskey ? "Waiting for verification..." : "Add passkey"}</button></div>{passkeys.length > 0 && <div className="profile-passkey-list">{passkeys.map((passkey) => <div className="profile-passkey-row" key={passkey.id}><strong>{passkey.friendly_name || "Passkey"}</strong><span>Added {formatDateForUser(passkey.created_at, preferences.dateFormat, workspace.preferences?.timezone)}</span></div>)}</div>}{passkeyNotice && <p className="profile-passkey-notice">{passkeyNotice}</p>}{passkeyError && <p className="profile-session-error" role="alert">{passkeyError}</p>}</section>
         <section className="profile-settings-card profile-sessions-card"><h2>Sessions</h2><h3>Linked Devices</h3>{sessionsLoading ? <div className="profile-empty-state"><Monitor size={18} /><span>Loading linked devices...</span></div> : sessions.length ? <div className="profile-session-list">{sessions.map((session) => <button type="button" className="profile-session-row" key={session.session_id} onClick={() => setSelectedSession(session)}><span className="profile-session-icon">{session.device_type === "mobile" || session.device_type === "tablet" ? <Smartphone size={17} /> : <Monitor size={17} />}</span><strong>{session.device_name}</strong>{session.is_current && <span className="profile-session-current">This device</span>}<ChevronRight size={18} aria-hidden="true" /></button>)}</div> : <div className="profile-empty-state"><Monitor size={18} /><span>No linked devices available.</span></div>}{sessionError && <p className="profile-session-error" role="alert">{sessionError}</p>}</section>
         <section className="profile-settings-card profile-quit-card"><div className="profile-quit-copy"><LogOut size={22} /><div><h2>Quit Organization</h2><p>If you quit, you will lose access to this organization and will need to be re-invited to join again.</p></div></div><button type="button" className="profile-danger-button" disabled>Quit Organization</button></section>
+        <section className="profile-settings-card profile-signout-card"><button type="button" className="profile-signout-button" onClick={handleSignOut}><LogOut size={20} aria-hidden="true" /><span>Sign Out</span><ChevronRight size={20} aria-hidden="true" /></button></section>
       </section>
     </SettingsLayout>
     {isEditModalOpen && <ProfileEditModal avatarUrl={avatarUrl} editForm={editForm} onAvatarChange={handleAvatarChange} onChange={(field, value) => setEditForm((current) => ({ ...current, [field]: value }))} onClose={() => setIsEditModalOpen(false)} onSave={saveProfile} isSaving={isSavingProfile} error={profileSaveError} />}
@@ -203,8 +204,17 @@ export function ProfilePreferencesPage({ onNavigate }) {
   </div>;
 }
 
-function PreferenceSelect({ label, ...props }) {
-  return <label>{label}<Select {...props} /></label>;
+function PreferenceSelect({ label, ariaLabel, options = [], onChange, value, ...props }) {
+  const normalizedOptions = options.map((option) => typeof option === "string" ? { label: option, value: option } : option);
+  return <label className="profile-preference-select-label">
+    <span>{label}</span>
+    <span className="profile-preference-select-desktop"><Select ariaLabel={ariaLabel ?? label} options={options} onChange={onChange} value={value} {...props} /></span>
+    <span className="profile-preference-select-native">
+      <select aria-label={ariaLabel ?? label} value={value} onChange={(event) => onChange?.(event.target.value)} {...props}>
+        {normalizedOptions.map((option) => <option key={option.value} value={option.value} disabled={option.disabled}>{option.label}</option>)}
+      </select>
+    </span>
+  </label>;
 }
 
 function ProfileEditModal({ avatarUrl, editForm, error, isSaving, onAvatarChange, onChange, onClose, onSave }) {
