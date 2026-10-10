@@ -1,28 +1,16 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useEffect, useRef, useState } from 'react'
 import { useWorkspace } from './useWorkspace'
-import { settingsNavigation, settingsPageByLabel, sidebarGroups } from './sidebarConfig'
-import { setActiveOrganization } from '../../services/workspaceService'
-import { supabase } from '../../lib/supabase'
 import { getUnreadWorkOrderCount } from '../../services/workOrderService'
-import { Avatar } from '../ui/Avatar'
-import { useMobileSheetDismiss } from './useMobileSheetDismiss'
+import { MobileWorkOrderNavigationActions } from './MobileWorkOrderNavigationActions'
+import { useMobileWorkOrderNavigation } from './useMobileWorkOrderNavigation'
 import {
   Boxes,
-  CalendarDays,
-  Check,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
   Home,
-  House,
-  Filter,
-  LogOut,
   Menu,
   MessagesCircle,
-  Search,
-  X,
 } from 'lucide-react'
 import './MobileNavigation.css'
 
@@ -38,64 +26,23 @@ function isPrimaryPage(page, activePage) {
 }
 
 export function MobileNavigation({ activePage, onNavigate }) {
-  const [isMoreOpen, setIsMoreOpen] = useState(false)
-  const [search, setSearch] = useState('')
-  const dialogRef = useRef(null)
-  const closeButtonRef = useRef(null)
-  const moreButtonRef = useRef(null)
   const navigationTabsRef = useRef(null)
   const workspace = useWorkspace()
+  const workOrderNavigation = useMobileWorkOrderNavigation()
   const [unreadWorkOrderBadge, setUnreadWorkOrderBadge] = useState(null)
   const [navigationOverflow, setNavigationOverflow] = useState({ previous: false, next: false })
-  const [workOrderUtilityPage, setWorkOrderUtilityPage] = useState(null)
-  const [workOrderFilterSubpage, setWorkOrderFilterSubpage] = useState(null)
-  const [activeWorkOrderFilterCount, setActiveWorkOrderFilterCount] = useState(0)
-  const [workOrderRecordView, setWorkOrderRecordView] = useState(null)
   const organizationId = workspace.organization?.id
   const grants = workspace.authorization?.grants
   const canViewWorkOrders = Boolean(grants?.['work_orders.view'])
-  const closeMoreMenu = useCallback(() => setIsMoreOpen(false), [])
-  const sheetDismiss = useMobileSheetDismiss(closeMoreMenu, dialogRef)
+  const isMoreCurrent = !primaryDestinations.some((item) => isPrimaryPage(item.page, activePage))
   const unreadWorkOrderCount = canViewWorkOrders && unreadWorkOrderBadge?.organizationId === organizationId
     ? unreadWorkOrderBadge.count
     : null
-  const query = search.trim().toLocaleLowerCase()
-  const visibleGroups = useMemo(() => sidebarGroups.map((group) => ({
-    ...group,
-    items: group.items.flatMap((item) => {
-      const children = item.children?.filter((child) => !query || child.label.toLocaleLowerCase().includes(query))
-      const matches = !query || item.label.toLocaleLowerCase().includes(query) || children?.length > 0
-      return matches ? [{ ...item, children: query && !item.label.toLocaleLowerCase().includes(query) ? children : item.children }] : []
-    }),
-  })).filter((group) => !query || group.items.length > 0), [query])
-  const isMoreCurrent = !primaryDestinations.some((item) => isPrimaryPage(item.page, activePage))
-
-  useEffect(() => {
-    const syncUtilityPage = (event) => setWorkOrderUtilityPage(event.detail?.page ?? null)
-    const syncFilterSubpage = (event) => setWorkOrderFilterSubpage(event.detail?.page ?? null)
-    const syncRecordView = (event) => setWorkOrderRecordView(event.detail?.kind ?? null)
-    window.addEventListener('workbench:work-orders-utility-page', syncUtilityPage)
-    window.addEventListener('workbench:work-orders-filter-subpage', syncFilterSubpage)
-    window.addEventListener('workbench:work-orders-record-view', syncRecordView)
-    return () => {
-      window.removeEventListener('workbench:work-orders-utility-page', syncUtilityPage)
-      window.removeEventListener('workbench:work-orders-filter-subpage', syncFilterSubpage)
-      window.removeEventListener('workbench:work-orders-record-view', syncRecordView)
-    }
-  }, [])
-
-  useLayoutEffect(() => {
-    const syncActiveFilterCount = (event) => {
-      const count = Number(event.detail?.count)
-      setActiveWorkOrderFilterCount(Number.isFinite(count) ? Math.max(0, count) : 0)
-    }
-    window.addEventListener('workbench:work-orders-active-filter-count', syncActiveFilterCount)
-    return () => window.removeEventListener('workbench:work-orders-active-filter-count', syncActiveFilterCount)
-  }, [])
 
   useEffect(() => {
     const tabs = navigationTabsRef.current
     if (!tabs) return undefined
+
     const updateOverflow = () => {
       const items = tabs.querySelectorAll('.mobile-primary-navigation-item')
       const firstItem = items[0]
@@ -111,6 +58,7 @@ export function MobileNavigation({ activePage, onNavigate }) {
         next: lastItemEnd > tabs.scrollLeft + tabs.clientWidth + 2,
       })
     }
+
     updateOverflow()
     tabs.addEventListener('scroll', updateOverflow, { passive: true })
     window.addEventListener('resize', updateOverflow)
@@ -127,18 +75,18 @@ export function MobileNavigation({ activePage, onNavigate }) {
     const tabs = navigationTabsRef.current
     if (!tabs || window.getComputedStyle(tabs).overflowX !== 'auto') return
     tabs
-      .querySelector('.tablet-navigation-item[aria-current="page"], .mobile-primary-navigation-item[aria-current="page"]')
+      .querySelector('.mobile-primary-navigation-item[aria-current="page"]')
       ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
   }, [activePage])
 
   useEffect(() => {
-    if (!organizationId || !canViewWorkOrders) {
-      return undefined
-    }
+    if (!organizationId || !canViewWorkOrders) return undefined
+
     let active = true
     const loadUnreadCount = () => getUnreadWorkOrderCount({ organizationId, grants })
       .then((count) => { if (active) setUnreadWorkOrderBadge({ organizationId, count }) })
       .catch(() => { if (active) setUnreadWorkOrderBadge({ organizationId, count: null }) })
+
     void loadUnreadCount()
     window.addEventListener('workbench:unread-work-order-count-invalidated', loadUnreadCount)
     return () => {
@@ -147,43 +95,8 @@ export function MobileNavigation({ activePage, onNavigate }) {
     }
   }, [canViewWorkOrders, grants, organizationId])
 
-  useEffect(() => {
-    if (!isMoreOpen) return undefined
-    const moreButton = moreButtonRef.current
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    closeButtonRef.current?.focus()
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        setIsMoreOpen(false)
-        return
-      }
-      if (event.key !== 'Tab' || !dialogRef.current) return
-      const focusable = [...dialogRef.current.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href]')]
-      if (focusable.length === 0) return
-      const first = focusable[0]
-      const last = focusable.at(-1)
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault()
-        last.focus()
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault()
-        first.focus()
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => {
-      document.body.style.overflow = previousOverflow
-      document.removeEventListener('keydown', handleKeyDown)
-      if (moreButton?.isConnected) moreButton.focus()
-    }
-  }, [isMoreOpen])
-
   const navigateTo = (page) => {
-    setIsMoreOpen(false)
-    setSearch('')
-    setWorkOrderUtilityPage(null)
+    workOrderNavigation.reset()
     onNavigate(page)
   }
   const scrollNavigationForward = () => {
@@ -208,131 +121,44 @@ export function MobileNavigation({ activePage, onNavigate }) {
     const previousItemLeft = tabs.scrollLeft + previousItem.getBoundingClientRect().left - tabsRect.left - tabs.clientLeft - 4
     tabs.scrollTo({ left: previousItemLeft, behavior: 'smooth' })
   }
-  const handleSignOut = async () => {
-    setIsMoreOpen(false)
-    await supabase.auth.signOut()
-    onNavigate('Login')
-  }
 
-  const firstName = workspace.profile?.first_name || workspace.user?.user_metadata?.first_name || ''
-  const lastName = workspace.profile?.last_name || workspace.user?.user_metadata?.last_name || ''
-  const displayName = [firstName, lastName].filter(Boolean).join(' ') || workspace.user?.email || 'Account'
-
-  return <>
-    <nav className={`mobile-primary-navigation${workOrderUtilityPage ? ` is-work-order-${workOrderUtilityPage}-open` : ''}${workOrderRecordView ? ' is-work-order-record-view' : ''}`} aria-label="Primary navigation">
-      {activePage === 'Work Orders' && workOrderRecordView && !workOrderUtilityPage && <button className="mobile-navigation-record-back" type="button" aria-label="Back" onClick={() => window.dispatchEvent(new CustomEvent('workbench:work-orders-record-back'))}><ChevronLeft size={22} aria-hidden="true" /><span>Back</span></button>}
-      {activePage === 'Work Orders' && !workOrderUtilityPage && !workOrderRecordView && <button className="mobile-navigation-work-order-action is-calendar" type="button" aria-label="Toggle Work Order calendar" title="Toggle Work Order calendar" onClick={() => window.dispatchEvent(new CustomEvent('workbench:work-orders-calendar-toggle'))}><CalendarDays size={23} aria-hidden="true" /></button>}
-      {activePage === 'Work Orders' && workOrderUtilityPage && <button className="mobile-navigation-sort-back" type="button" aria-label={workOrderUtilityPage === 'sort' ? 'Back to filters' : workOrderFilterSubpage ? 'Back to Add Filter' : 'Back to Work Orders'} onClick={() => {
-        if (workOrderUtilityPage === 'sort') {
-          setWorkOrderUtilityPage('filters')
-          window.dispatchEvent(new CustomEvent('workbench:work-orders-utility-page', { detail: { page: 'filters' } }))
-        } else if (workOrderFilterSubpage) {
-          window.dispatchEvent(new CustomEvent('workbench:work-orders-filter-subpage-back'))
-        } else {
-          setWorkOrderUtilityPage(null)
-          window.dispatchEvent(new CustomEvent('workbench:work-orders-utility-page', { detail: { page: null } }))
-        }
-      }}><ChevronLeft size={22} aria-hidden="true" />{(workOrderUtilityPage === 'sort' || (workOrderUtilityPage === 'filters' && workOrderFilterSubpage)) && <span key={`${workOrderUtilityPage}-${workOrderFilterSubpage ?? ''}`} className="mobile-navigation-back-label">Back</span>}</button>}
-      <button className="mobile-navigation-scroll-back" type="button" aria-label="Show previous navigation options" onClick={scrollNavigationBackward} hidden={!navigationOverflow.previous}>
-        <ChevronLeft size={22} strokeWidth={2.4} />
-      </button>
-      <div className="mobile-primary-navigation-tabs" ref={navigationTabsRef}>
-        {primaryDestinations.map(({ label, page, icon: Icon }) => (
-          <button
-            key={page}
-            type="button"
-            className={`mobile-primary-navigation-item${isPrimaryPage(page, activePage) ? ' is-active' : ''}`}
-            aria-current={isPrimaryPage(page, activePage) ? 'page' : undefined}
-            aria-label={label === 'Work Orders' && unreadWorkOrderCount > 0 ? `Work Orders, ${unreadWorkOrderCount} unread` : label}
-            onClick={() => navigateTo(page)}
-          >
-            <Icon size={21} strokeWidth={1.9} aria-hidden="true" />
-            <span>{label}</span>
-            {label === 'Work Orders' && unreadWorkOrderCount > 0 && <span className="mobile-navigation-badge" aria-hidden="true">{unreadWorkOrderCount > 99 ? '99+' : unreadWorkOrderCount}</span>}
-          </button>
-        ))}
+  return <nav
+    className={`mobile-primary-navigation${workOrderNavigation.utilityPage ? ` is-work-order-${workOrderNavigation.utilityPage}-open` : ''}${workOrderNavigation.recordView ? ' is-work-order-record-view' : ''}`}
+    aria-label="Primary navigation"
+  >
+    <MobileWorkOrderNavigationActions activePage={activePage} navigation={workOrderNavigation} position="leading" />
+    <button className="mobile-navigation-scroll-back" type="button" aria-label="Show previous navigation options" onClick={scrollNavigationBackward} hidden={!navigationOverflow.previous}>
+      <ChevronLeft size={22} strokeWidth={2.4} />
+    </button>
+    <div className="mobile-primary-navigation-tabs" ref={navigationTabsRef}>
+      {primaryDestinations.map(({ label, page, icon: Icon }) => (
         <button
+          key={page}
           type="button"
-          className={`mobile-primary-navigation-item mobile-primary-navigation-more${isMoreCurrent ? ' is-active' : ''}`}
-          aria-label="More"
-          aria-current={isMoreCurrent ? 'page' : undefined}
-          onClick={() => navigateTo('More')}
+          className={`mobile-primary-navigation-item${isPrimaryPage(page, activePage) ? ' is-active' : ''}`}
+          aria-current={isPrimaryPage(page, activePage) ? 'page' : undefined}
+          aria-label={label === 'Work Orders' && unreadWorkOrderCount > 0 ? `Work Orders, ${unreadWorkOrderCount} unread` : label}
+          onClick={() => navigateTo(page)}
         >
-          <Menu size={21} strokeWidth={1.9} aria-hidden="true" />
-          <span>More</span>
+          <Icon size={21} strokeWidth={1.9} aria-hidden="true" />
+          <span>{label}</span>
+          {label === 'Work Orders' && unreadWorkOrderCount > 0 && <span className="mobile-navigation-badge" aria-hidden="true">{unreadWorkOrderCount > 99 ? '99+' : unreadWorkOrderCount}</span>}
         </button>
-      </div>
-      <button className="mobile-navigation-scroll-forward" type="button" aria-label="Show more navigation options" onClick={scrollNavigationForward} hidden={!navigationOverflow.next}>
-        <ChevronRight size={22} strokeWidth={2.4} aria-hidden="true" />
-      </button>
-      {activePage === 'Work Orders' && workOrderUtilityPage === 'filters' && <span className="mobile-navigation-sort-end-spacer" aria-hidden="true" />}
-      {activePage === 'Work Orders' && workOrderRecordView && !workOrderUtilityPage && workOrderRecordView !== 'detail' && <button className="mobile-navigation-record-submit" type="submit" form={`new-work-order-form-${workOrderRecordView}`} aria-label={workOrderRecordView === 'edit' ? 'Save Work Order' : 'Create Work Order'}>{workOrderRecordView === 'edit' ? 'Save' : 'Create'}</button>}
-      {activePage === 'Work Orders' && !workOrderUtilityPage && !workOrderRecordView && <button
-        className={`mobile-navigation-work-order-action is-filter${activeWorkOrderFilterCount ? ' has-active-filters' : ''}`}
+      ))}
+      <button
         type="button"
-        aria-label={activeWorkOrderFilterCount ? `Filter Work Orders, ${activeWorkOrderFilterCount} active` : 'Filter Work Orders'}
-        onClick={() => {
-          setWorkOrderUtilityPage('filters')
-          window.dispatchEvent(new CustomEvent('workbench:work-orders-utility-page', { detail: { page: 'filters', resetDraft: true } }))
-        }}
-      ><Filter size={23} aria-hidden="true" />{activeWorkOrderFilterCount > 0 && <span className="mobile-navigation-filter-badge" aria-hidden="true">{activeWorkOrderFilterCount > 99 ? '99+' : activeWorkOrderFilterCount}</span>}</button>}
-      {activePage === 'Work Orders' && workOrderUtilityPage === 'sort' && <button className="mobile-navigation-sort-done" type="button" onClick={() => {
-        setWorkOrderUtilityPage(null)
-        window.dispatchEvent(new CustomEvent('workbench:work-orders-utility-page', { detail: { page: null, action: 'done' } }))
-      }}>Done</button>}
-    </nav>
-    {isMoreOpen && createPortal(
-      <div className={`mobile-navigation-backdrop mobile-sheet-backdrop ${sheetDismiss.backdropClassName}`} onMouseDown={(event) => { if (event.target === event.currentTarget) setIsMoreOpen(false) }}>
-        <section ref={dialogRef} className={`mobile-navigation-sheet mobile-edge-to-edge-sheet ${sheetDismiss.dragClassName}`} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby="mobile-navigation-title">
-          <header className="mobile-navigation-sheet-header mobile-sheet-drag-handle" {...sheetDismiss.dragHandleProps}>
-            <div>
-              <p>Workbench</p>
-              <h2 id="mobile-navigation-title">Modules and settings</h2>
-            </div>
-            <button ref={closeButtonRef} className="mobile-navigation-close" type="button" aria-label="Close navigation" onClick={() => setIsMoreOpen(false)}><X size={22} /></button>
-          </header>
-          <label className="mobile-navigation-search">
-            <Search size={19} aria-hidden="true" />
-            <span className="mobile-navigation-visually-hidden">Search modules</span>
-            <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Find a module" />
-          </label>
-          <div className="mobile-navigation-sheet-scroll">
-            {(!query || 'dashboard'.includes(query)) && <section className="mobile-navigation-group">
-              <h3>Home</h3>
-              <button type="button" className="mobile-navigation-link" onClick={() => navigateTo('Dashboard')}><House size={18} aria-hidden="true" /><span>Dashboard</span></button>
-            </section>}
-            {visibleGroups.map((group) => <section className="mobile-navigation-group" key={group.label}>
-              <h3>{group.label}</h3>
-              {group.items.map((item) => {
-                const Icon = item.icon
-                return <div key={item.page}>
-                  <button type="button" className={`mobile-navigation-link${activePage === item.page ? ' is-current' : ''}`} aria-current={activePage === item.page ? 'page' : undefined} onClick={() => navigateTo(item.page)}>
-                    {Icon ? <Icon size={18} aria-hidden="true" /> : <span className="mobile-navigation-link-spacer" aria-hidden="true" />}
-                    <span>{item.label}</span>
-                    {activePage === item.page && <Check className="mobile-navigation-current-icon" size={18} aria-hidden="true" />}
-                  </button>
-                  {item.children?.map((child) => <button type="button" key={child.page} className={`mobile-navigation-link is-nested${activePage === child.page ? ' is-current' : ''}`} aria-current={activePage === child.page ? 'page' : undefined} onClick={() => navigateTo(child.page)}><span className="mobile-navigation-link-spacer" aria-hidden="true" /><span>{child.label}</span>{activePage === child.page && <Check className="mobile-navigation-current-icon" size={18} aria-hidden="true" />}</button>)}
-                </div>
-              })}
-            </section>)}
-            {visibleGroups.length === 0 && <p className="mobile-navigation-empty">No modules match “{search}”.</p>}
-            <section className="mobile-navigation-group">
-              <h3>Organization settings</h3>
-              {settingsNavigation.organization.map((label) => <button type="button" className="mobile-navigation-link" key={label} onClick={() => navigateTo(settingsPageByLabel[label])}><span className="mobile-navigation-link-spacer" aria-hidden="true" /><span>{label}</span></button>)}
-            </section>
-            <section className="mobile-navigation-group">
-              <h3>Your account</h3>
-              {settingsNavigation.personal.map((label) => <button type="button" className="mobile-navigation-link" key={label} onClick={() => navigateTo(settingsPageByLabel[label])}><span className="mobile-navigation-link-spacer" aria-hidden="true" /><span>{label}</span></button>)}
-              <div className="mobile-navigation-account"><Avatar src={workspace.profile?.avatar_url} firstName={firstName} lastName={lastName} alt="" /><span>{displayName}</span></div>
-            </section>
-            {workspace.organizations?.length > 1 && <label className="mobile-navigation-workspace">
-              <span>Workspace</span>
-              <span className="mobile-navigation-workspace-select"><select aria-label="Workspace" value={workspace.organization?.id ?? ''} onChange={(event) => setActiveOrganization(event.target.value)}>{workspace.organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}</select><ChevronDown size={17} aria-hidden="true" /></span>
-            </label>}
-            <button type="button" className="mobile-navigation-signout" onClick={() => { void handleSignOut() }}><LogOut size={18} aria-hidden="true" /> Sign out</button>
-          </div>
-        </section>
-      </div>, document.body,
-    )}
-  </>
+        className={`mobile-primary-navigation-item mobile-primary-navigation-more${isMoreCurrent ? ' is-active' : ''}`}
+        aria-label="More"
+        aria-current={isMoreCurrent ? 'page' : undefined}
+        onClick={() => navigateTo('More')}
+      >
+        <Menu size={21} strokeWidth={1.9} aria-hidden="true" />
+        <span>More</span>
+      </button>
+    </div>
+    <button className="mobile-navigation-scroll-forward" type="button" aria-label="Show more navigation options" onClick={scrollNavigationForward} hidden={!navigationOverflow.next}>
+      <ChevronRight size={22} strokeWidth={2.4} aria-hidden="true" />
+    </button>
+    <MobileWorkOrderNavigationActions activePage={activePage} navigation={workOrderNavigation} position="trailing" />
+  </nav>
 }

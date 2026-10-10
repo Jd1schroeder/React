@@ -3,8 +3,6 @@
 }
 
 .mobile-primary-navigation-tabs { display: contents; }
-.tablet-navigation-chevron { display: none; }
-.tablet-navigation-item,
 .mobile-navigation-scroll-forward,
 .mobile-navigation-scroll-back,
 .mobile-navigation-work-order-action,
@@ -13,234 +11,6 @@
 .mobile-navigation-sort-back,
 .mobile-navigation-sort-done,
 .mobile-navigation-sort-end-spacer { display: none; }
-
-.mobile-navigation-backdrop {
-  position: fixed;
-  z-index: 2000;
-  inset: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  background: rgb(18 28 38 / 42%);
-}
-
-.mobile-navigation-sheet {
-  box-sizing: border-box;
-  display: flex;
-  width: min(100%, 640px);
-  max-height: min(90dvh, 820px);
-  flex-direction: column;
-  padding: var(--spacing-4) var(--spacing-5) calc(var(--spacing-4) + env(safe-area-inset-bottom));
-  border: var(--border-width-normal) solid var(--line);
-  border-bottom: 0;
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-  color: var(--ink);
-  background: var(--surface);
-  box-shadow: var(--elevation-6);
-}
-
-.mobile-navigation-sheet-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-4);
-  padding-bottom: var(--spacing-3);
-}
-
-.mobile-navigation-sheet-header p {
-  margin: 0 0 var(--spacing-1);
-  color: var(--text-secondary);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-semibold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.mobile-navigation-sheet-header h2 {
-  margin: 0;
-  font-size: var(--font-size-xl-compact);
-  line-height: var(--line-height-lg-px);
-}
-
-.mobile-navigation-close {
-  display: grid;
-  width: 48px;
-  height: 48px;
-  flex: none;
-  place-items: center;
-  border: var(--border-width-normal) solid var(--line);
-  border-radius: var(--radius-control);
-  color: var(--ink);
-  background: var(--surface);
-}
-
-.mobile-navigation-search {
-  box-sizing: border-box;
-  display: flex;
-  min-height: 48px;
-  flex: none;
-  align-items: center;
-  gap: var(--spacing-3);
-  padding: 0 var(--spacing-3);
-  border: var(--border-width-normal) solid var(--line);
-  border-radius: var(--radius-control);
-  color: var(--icon-secondary);
-  background: var(--surface);
-}
-
-.mobile-navigation-search input {
-  width: 100%;
-  min-width: 0;
-  min-height: 44px;
-  border: 0;
-  outline: 0;
-  color: var(--ink);
-  background: transparent;
-  font: inherit;
-}
-
-.mobile-navigation-sheet-scroll {
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding-top: var(--spacing-2);
-}
-
-.mobile-navigation-group {
-  padding: var(--spacing-3) 0;
-  border-bottom: var(--border-width-normal) solid var(--border-subtle);
-}
-
-.mobile-navigation-group h3 {
-  margin: 0;
-  padding: var(--spacing-2) var(--spacing-2) var(--spacing-1);
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-semibold);
-}
-
-.mobile-navigation-link {
-  box-sizing: border-box;
-  display: flex;
-  width: 100%;
-  min-height: 48px;
-  align-items: center;
-  gap: var(--spacing-3);
-  padding: 0 var(--spacing-2);
-  border: 0;
-  border-radius: var(--radius-control);
-  color: var(--ink);
-  background: transparent;
-  font: inherit;
-  text-align: left;
-}
-
-.mobile-navigation-link:hover,
-.mobile-navigation-link:focus-visible,
-.mobile-navigation-link.is-current {
-  color: var(--blue);
-  background: var(--blue-soft);
-  outline: none;
-}
-
-.mobile-navigation-link > svg {
-  flex: none;
-  color: var(--blue);
-}
-
-.mobile-navigation-link > span:nth-child(2) {
-  min-width: 0;
-  flex: 1;
-  overflow-wrap: anywhere;
-}
-
-.mobile-navigation-link.is-nested {
-  padding-left: 42px;
-}
-
-.mobile-navigation-link-spacer {
-  width: 18px;
-  flex: none;
-}
-
-.mobile-navigation-current-icon {
-  margin-left: auto;
-}
-
-.mobile-navigation-account {
-  display: flex;
-  min-height: 48px;
-  align-items: center;
-  gap: var(--spacing-3);
-  padding: 0 var(--spacing-2);
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-}
-
-.mobile-navigation-workspace {
-  display: grid;
-  gap: var(--spacing-2);
-  padding: var(--spacing-4) 0;
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-semibold);
-}
-
-.mobile-navigation-workspace-select {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.mobile-navigation-workspace select {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 48px;
-  padding: 0 42px 0 var(--spacing-3);
-  appearance: none;
-  border: var(--border-width-normal) solid var(--line);
-  border-radius: var(--radius-control);
-  color: var(--ink);
-  background: var(--surface);
-  font: inherit;
-  font-weight: var(--font-normal);
-}
-
-.mobile-navigation-workspace-select > svg {
-  position: absolute;
-  right: var(--spacing-3);
-  pointer-events: none;
-}
-
-.mobile-navigation-signout {
-  display: flex;
-  min-height: 48px;
-  align-items: center;
-  gap: var(--spacing-3);
-  padding: 0 var(--spacing-2);
-  border: 0;
-  color: var(--danger, #c62828);
-  background: transparent;
-  font: inherit;
-  text-align: left;
-}
-
-.mobile-navigation-empty {
-  margin: 0;
-  padding: var(--spacing-7) var(--spacing-2);
-  color: var(--text-secondary);
-  text-align: center;
-}
-
-.mobile-navigation-visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  clip-path: inset(50%);
-}
 
 @media (--wb-viewport-max-840) {
   .mobile-primary-navigation {
@@ -314,7 +84,7 @@
     place-items: center;
     padding: 0 4px;
     border: 2px solid var(--surface);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     color: var(--white);
     background: var(--blue);
     font-size: 10px;
@@ -332,17 +102,11 @@
     transform: translate(-50%, -50%) scale(1);
   }
 
-  .mobile-primary-navigation-item:focus-visible,
-  .mobile-navigation-close:focus-visible,
-  .mobile-navigation-signout:focus-visible,
-  .mobile-navigation-workspace select:focus-visible {
+  .mobile-primary-navigation-item:focus-visible {
     outline: var(--focus-border-width) solid var(--focus-border-color);
     outline-offset: 1px;
   }
 
-  .mobile-navigation-backdrop {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
 }
 
 @media (--wb-viewport-tablet) {
@@ -405,17 +169,17 @@
     min-height: 52px;
     align-items: center;
     justify-content: flex-start;
-    gap: 4px;
-    padding: 4px;
-    border: 1px solid var(--line);
-    border-radius: 999px;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2);
+    border: var(--border-width-normal) solid var(--line);
+    border-radius: var(--radius-pill);
     background: var(--surface-muted);
     overflow-x: auto;
     overflow-y: hidden;
     overscroll-behavior-inline: contain;
     scroll-behavior: smooth;
     scroll-snap-type: x mandatory;
-    scroll-padding-inline: 4px;
+    scroll-padding-inline: var(--spacing-2);
     scrollbar-width: none;
   }
 
@@ -430,10 +194,10 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 0 16px;
+    gap: var(--spacing-3);
+    padding: 0 var(--spacing-5);
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     color: var(--text-secondary-strong);
     background: transparent;
     font: inherit;
@@ -446,18 +210,10 @@
   }
 
   .mobile-primary-navigation-item > svg { display: none; }
-  .mobile-primary-navigation-item > .tablet-navigation-chevron { display: block; }
-  .tablet-navigation-item { display: flex; }
   .mobile-primary-navigation-item.is-active {
     color: var(--blue);
     background: var(--surface);
     box-shadow: var(--elevation-1);
-  }
-
-  .mobile-primary-navigation-more.is-active {
-    color: var(--text-secondary-strong);
-    background: transparent;
-    box-shadow: none;
   }
 
   .mobile-primary-navigation-more {
@@ -612,7 +368,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mobile-navigation-sheet,
   .mobile-primary-navigation-item,
   .mobile-primary-navigation-item::before,
   .mobile-navigation-back-label {

@@ -14,10 +14,6 @@ vi.mock('../src/components/layout/useWorkspace', () => ({
   }),
 }))
 
-vi.mock('../src/lib/supabase', () => ({
-  supabase: { auth: { signOut: vi.fn() } },
-}))
-
 vi.mock('../src/services/workOrderService', () => ({
   getUnreadWorkOrderCount: serviceMocks.getUnreadWorkOrderCount,
 }))
@@ -51,6 +47,28 @@ describe('mobile navigation', () => {
     expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create Work Order' })).toHaveAttribute('form', 'new-work-order-form-create')
     expect(await screen.findByRole('button', { name: 'Work Orders, 89 unread' })).toBeInTheDocument()
+  })
+
+  it('keeps Work Order calendar and filter actions in the Work Orders navigation feature', () => {
+    const onCalendarToggle = vi.fn()
+    const onUtilityPage = vi.fn()
+    window.addEventListener('workbench:work-orders-calendar-toggle', onCalendarToggle)
+    window.addEventListener('workbench:work-orders-utility-page', onUtilityPage)
+    try {
+      render(<MobileNavigation activePage="Work Orders" onNavigate={vi.fn()} />)
+
+      fireEvent.click(screen.getByRole('button', { name: 'Toggle Work Order calendar' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Filter Work Orders' }))
+
+      expect(onCalendarToggle).toHaveBeenCalledOnce()
+      expect(onUtilityPage).toHaveBeenCalledWith(expect.objectContaining({
+        detail: { page: 'filters', resetDraft: true },
+      }))
+      expect(screen.getByRole('navigation', { name: 'Primary navigation' })).toHaveClass('is-work-order-filters-open')
+    } finally {
+      window.removeEventListener('workbench:work-orders-calendar-toggle', onCalendarToggle)
+      window.removeEventListener('workbench:work-orders-utility-page', onUtilityPage)
+    }
   })
 
   it('shows the mobile overview destinations and the live Work Order unread badge', async () => {
