@@ -93,7 +93,10 @@ export const notificationGroups = [
   {
     title: "Requests",
     description: "Follow everything related to your requests.",
-    groups: [{ title: "Requiring approval", events: ["Assigned to my teams", "Unassigned"] }],
+    groups: [
+      { title: "Requiring Approval", events: ["Assigned to my team", "Unassigned"] },
+      { title: "Created by me", events: ["All new comments", "Only mentions in comments", "Status has changed"] },
+    ],
   },
   {
     title: "Purchase Orders",

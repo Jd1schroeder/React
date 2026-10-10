@@ -7,7 +7,7 @@ import { RolesPage } from "./settings/RolesPage";
 import { TeammateTeamsPage } from "./settings/TeammateTeamsPage";
 import "./SettingsPage.css";
 
-export function SettingsPage({ pageName, sessionId, onNavigate }) {
+export function SettingsPage({ pageName, sessionId, onNavigate, onMobileHeaderTitleChange, onMobileHeaderBackChange }) {
   if (pageName === "Settings / Manage Teammates") return <ManageTeammatesPage onNavigate={onNavigate} />;
   if (pageName === "Settings / Teammates / Roles") return <RolesPage onNavigate={onNavigate} />;
   if (pageName === "Settings / Teammates / Teams") return <TeammateTeamsPage onNavigate={onNavigate} />;
@@ -15,6 +15,6 @@ export function SettingsPage({ pageName, sessionId, onNavigate }) {
   if (pageName === "Settings / Profile Preferences") return <ProfilePreferencesPage onNavigate={onNavigate} />;
   if (pageName === "Settings / Edit Account") return <ProfilePreferencesPage pageName={pageName} onNavigate={onNavigate} />;
   if (pageName === "Settings / Linked Device") return <ProfilePreferencesPage pageName={pageName} sessionId={sessionId} onNavigate={onNavigate} />;
-  if (pageName === "Settings / Notification Settings") return <NotificationSettingsPage onNavigate={onNavigate} />;
+  if (pageName === "Settings / Notification Settings") return <NotificationSettingsPage onNavigate={onNavigate} onMobileHeaderTitleChange={onMobileHeaderTitleChange} onMobileHeaderBackChange={onMobileHeaderBackChange} />;
   return <GeneralSettingsPage pageName={pageName} onNavigate={onNavigate} />;
 }

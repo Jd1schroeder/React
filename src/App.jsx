@@ -1,4 +1,4 @@
-import { Component, Suspense, useCallback, useEffect } from 'react'
+import { Component, Suspense, useCallback, useEffect, useState } from 'react'
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useNavigate, useParams } from 'react-router-dom'
 import { AppLayout } from './components/layout/AppLayout'
 import { UnsavedChangesProvider } from './components/layout/UnsavedChangesProvider'
@@ -34,16 +34,21 @@ function PageRoute({ pageName, isPublic = false }) {
   const navigate = useNavigate()
   const { guardNavigation } = useUnsavedChanges()
   const { recordId, userId, sessionId } = useParams()
+  const [mobileHeader, setMobileHeader] = useState({ pageName: null, title: '', back: null })
+  const updateMobileHeaderTitle = useCallback((title) => setMobileHeader((current) => ({ pageName, title, back: current.pageName === pageName ? current.back : null })), [pageName])
+  const updateMobileHeaderBack = useCallback((back) => setMobileHeader((current) => ({ pageName, title: current.pageName === pageName ? current.title : '', back })), [pageName])
+  const mobileHeaderTitle = mobileHeader.pageName === pageName ? mobileHeader.title : ''
+  const mobileHeaderBack = mobileHeader.pageName === pageName ? mobileHeader.back : null
   const onNavigate = useCallback((target) => guardNavigation(() => navigate(target.startsWith('/') ? target : getPagePath(target))), [guardNavigation, navigate])
   const onNavigateBack = useCallback(() => guardNavigation(() => {
     if (Number.isInteger(window.history.state?.idx) && window.history.state.idx > 0) navigate(-1)
-    else navigate(getPagePath(['Settings / Edit Account', 'Settings / Linked Device'].includes(pageName) ? 'Settings / Profile Preferences' : 'More'))
+    else navigate(getPagePath(['Settings / Edit Account', 'Settings / Linked Device', 'Settings / Notification Settings'].includes(pageName) ? 'Settings / Profile Preferences' : 'More'))
   }), [guardNavigation, navigate, pageName])
   const onNavigateRecord = useCallback((type, id) => guardNavigation(() => navigate(getRecordPath(type, id))), [guardNavigation, navigate])
-  const content = <RouteErrorBoundary><Page pageName={pageName} recordId={recordId} userId={userId} sessionId={sessionId} onNavigate={onNavigate} onNavigateRecord={onNavigateRecord} /></RouteErrorBoundary>
+  const content = <RouteErrorBoundary><Page pageName={pageName} recordId={recordId} userId={userId} sessionId={sessionId} onNavigate={onNavigate} onNavigateRecord={onNavigateRecord} onMobileHeaderTitleChange={updateMobileHeaderTitle} onMobileHeaderBackChange={updateMobileHeaderBack} /></RouteErrorBoundary>
 
   if (isPublic) return content
-  return <AppLayout activePage={pageName} onNavigate={onNavigate} onNavigateBack={onNavigateBack}>{content}</AppLayout>
+  return <AppLayout activePage={pageName} mobileHeaderTitle={mobileHeaderTitle} mobileHeaderBack={mobileHeaderBack || onNavigateBack} onNavigate={onNavigate} onNavigateBack={onNavigateBack}>{content}</AppLayout>
 }
 
 function LegacyHashRedirect() {

@@ -57,4 +57,19 @@ describe('mobile app header', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Back' }))
     expect(onNavigateBack).toHaveBeenCalledOnce()
   })
+
+  it('shows a Notification Settings title with the same account-page back action', () => {
+    const onNavigateBack = vi.fn()
+    render(<MobileAppHeader activePage="Settings / Notification Settings" onNavigateBack={onNavigateBack} />)
+
+    expect(screen.getByRole('heading', { name: 'Notification Settings' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    expect(onNavigateBack).toHaveBeenCalledOnce()
+  })
+
+  it('allows notification subflows to set their category as the header title', () => {
+    render(<MobileAppHeader activePage="Settings / Notification Settings" titleOverride="Work Orders" onNavigateBack={vi.fn()} />)
+
+    expect(screen.getByRole('heading', { name: 'Work Orders' })).toBeInTheDocument()
+  })
 })
