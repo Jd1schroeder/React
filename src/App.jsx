@@ -37,8 +37,8 @@ function PageRoute({ pageName, isPublic = false }) {
   const onNavigate = useCallback((target) => guardNavigation(() => navigate(target.startsWith('/') ? target : getPagePath(target))), [guardNavigation, navigate])
   const onNavigateBack = useCallback(() => guardNavigation(() => {
     if (Number.isInteger(window.history.state?.idx) && window.history.state.idx > 0) navigate(-1)
-    else navigate(getPagePath('More'))
-  }), [guardNavigation, navigate])
+    else navigate(getPagePath(pageName === 'Settings / Edit Account' ? 'Settings / Profile Preferences' : 'More'))
+  }), [guardNavigation, navigate, pageName])
   const onNavigateRecord = useCallback((type, id) => guardNavigation(() => navigate(getRecordPath(type, id))), [guardNavigation, navigate])
   const content = <RouteErrorBoundary><Page pageName={pageName} recordId={recordId} userId={userId} onNavigate={onNavigate} onNavigateRecord={onNavigateRecord} /></RouteErrorBoundary>
 

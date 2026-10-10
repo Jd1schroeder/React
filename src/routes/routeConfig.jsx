@@ -39,6 +39,7 @@ export const pages = {
   'Settings / Customizations': SettingsPage,
   'Settings / Integrations': SettingsPage,
   'Settings / Profile Preferences': SettingsPage,
+  'Settings / Edit Account': SettingsPage,
   'Settings / Notification Settings': SettingsPage,
   'Settings / Invite Users': SettingsPage,
   Dashboard: DashboardPage,

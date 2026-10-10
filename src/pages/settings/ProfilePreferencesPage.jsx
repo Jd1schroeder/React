@@ -12,7 +12,8 @@ import flagUnitedStates from "../../assets/flags/us.svg";
 import { SettingsLayout } from "./SettingsLayout";
 import "./ProfilePreferencesPage.css";
 
-export function ProfilePreferencesPage({ onNavigate }) {
+export function ProfilePreferencesPage({ pageName = "Settings / Profile Preferences", onNavigate }) {
+  const isEditPage = pageName === "Settings / Edit Account";
   const workspace = useWorkspace();
   const [avatarUrl, setAvatarUrl] = useState(() => workspace.profile?.avatar_url ?? workspace.user?.user_metadata?.avatar_url ?? "");
   const [avatarPath, setAvatarPath] = useState(() => workspace.profile?.avatar_path ?? "");
@@ -64,6 +65,7 @@ export function ProfilePreferencesPage({ onNavigate }) {
       setAvatarPath(persistedAvatarPath ?? "");
       window.dispatchEvent(new Event("workbench:profile-updated"));
       setIsEditModalOpen(false);
+      if (isEditPage) onNavigate("Settings / Profile Preferences");
     } catch (error) {
       setProfileSaveError(error.message || "Unable to update your profile.");
     } finally {
@@ -176,14 +178,31 @@ export function ProfilePreferencesPage({ onNavigate }) {
     }
   };
 
+  const openEditAccount = () => {
+    if (window.matchMedia?.("(max-width: 1199px)").matches) onNavigate("Settings / Edit Account");
+    else setIsEditModalOpen(true);
+  };
+
+  if (isEditPage) {
+    return <ProfileEditPage
+      avatarUrl={avatarUrl}
+      editForm={editForm}
+      onAvatarChange={handleAvatarChange}
+      onChange={(field, value) => setEditForm((current) => ({ ...current, [field]: value }))}
+      onSave={saveProfile}
+      isSaving={isSavingProfile}
+      error={profileSaveError}
+    />;
+  }
+
   return <div className="settings-page profile-preferences-page">
     <header className="settings-page-header"><p className="eyebrow">Personal Settings</p><h1>Profile Preferences</h1><p>Manage your profile and personal workspace preferences.</p></header>
     <SettingsLayout pageName="Settings / Profile Preferences" onNavigate={onNavigate}>
       <section className="profile-preferences-content" aria-label="Profile preferences">
         <section className="profile-settings-card profile-personal-info-card">
           <div className="profile-identity">
-            <label className="profile-avatar-upload"><input type="file" accept="image/gif,image/jpeg,image/png,image/heic,image/heif" onChange={handleAvatarChange} /><Avatar className="profile-avatar-display" src={avatarUrl} firstName={editForm.firstName} lastName={editForm.lastName} alt={`${displayName} profile`} /><span className="profile-avatar-overlay"><Camera size={22} /></span></label>
-            <div className="profile-identity-copy"><div className="profile-name-row"><h2>{displayName}</h2><button type="button" className="profile-edit-button" onClick={() => setIsEditModalOpen(true)}><Pencil size={16} /><span className="sr-only">Edit personal info</span></button></div><p>{role}</p><div className="profile-info-grid"><div><Mail size={19} aria-hidden="true" /><span className="sr-only">Email</span><strong>{editForm.email || "Not provided"}</strong></div><div><Smartphone size={19} aria-hidden="true" /><span className="sr-only">Phone Number</span><strong>{editForm.phone || "Not provided"}</strong></div></div></div>
+            <div className="profile-avatar-readonly"><Avatar className="profile-avatar-display" src={avatarUrl} firstName={editForm.firstName} lastName={editForm.lastName} alt={`${displayName} profile`} /></div>
+            <div className="profile-identity-copy"><div className="profile-name-row"><h2>{displayName}</h2><button type="button" className="profile-edit-button" onClick={openEditAccount}><Pencil size={16} /><span className="sr-only">Edit personal info</span></button></div><p>{role}</p><div className="profile-info-grid"><div><Mail size={19} aria-hidden="true" /><span className="sr-only">Email</span><strong>{editForm.email || "Not provided"}</strong></div><div><Smartphone size={19} aria-hidden="true" /><span className="sr-only">Phone Number</span><strong>{editForm.phone || "Not provided"}</strong></div></div></div>
           </div>
         </section>
         <button type="button" className="profile-pause-notifications" onClick={() => onNavigate("Settings / Notification Settings")}><BellOff size={20} aria-hidden="true" /><span>Pause Notifications</span></button>
@@ -217,17 +236,43 @@ function PreferenceSelect({ label, ariaLabel, options = [], onChange, value, ...
   </label>;
 }
 
+function ProfileAvatarPicker({ avatarUrl, editForm, onAvatarChange, className = "profile-modal-avatar-upload" }) {
+  return <label className={className}><input type="file" accept="image/gif,image/jpeg,image/png,image/heic,image/heif" onChange={onAvatarChange} /><Avatar className="profile-modal-avatar-display" src={avatarUrl} firstName={editForm.firstName} lastName={editForm.lastName} alt="Profile" /><span className="profile-modal-avatar-overlay"><Camera size={22} /></span></label>;
+}
+
+function ProfileEditFields({ avatarUrl, editForm, onAvatarChange, onChange, includeAvatar = true }) {
+  return <>
+    {includeAvatar && <ProfileAvatarPicker avatarUrl={avatarUrl} editForm={editForm} onAvatarChange={onAvatarChange} />}
+    <ProfileModalField label="First Name" required value={editForm.firstName} onChange={(value) => onChange("firstName", value)} />
+    <ProfileModalField label="Last Name" value={editForm.lastName} onChange={(value) => onChange("lastName", value)} />
+    <div className="profile-modal-field"><label htmlFor="profile-edit-phone">Mobile Phone Number <span>(Required)</span></label><div className="profile-modal-phone"><button type="button" aria-label="Phone country code"><img src={flagUnitedStates} alt="" /><span>+1</span></button><input id="profile-edit-phone" type="tel" value={editForm.phone} onChange={(event) => onChange("phone", event.target.value)} /></div></div>
+    <div className="profile-modal-field"><label htmlFor="profile-edit-email">Email <span>(Required)</span></label><div className="profile-modal-input-with-icon"><Mail size={18} /><input id="profile-edit-email" type="email" value={editForm.email} onChange={(event) => onChange("email", event.target.value)} /></div></div>
+  </>;
+}
+
+function ProfileEditPage({ avatarUrl, editForm, error, isSaving, onAvatarChange, onChange, onSave }) {
+  const isValid = editForm.firstName.trim() && editForm.email.trim() && editForm.phone.trim();
+  return <section className="profile-edit-page" aria-label="Edit account information">
+    <div className="profile-edit-page-content">
+      <ProfileAvatarPicker className="profile-modal-avatar-upload profile-edit-page-avatar" avatarUrl={avatarUrl} editForm={editForm} onAvatarChange={onAvatarChange} />
+      <div className="profile-edit-page-card">
+        <ProfileEditFields avatarUrl={avatarUrl} editForm={editForm} onAvatarChange={onAvatarChange} onChange={onChange} includeAvatar={false} />
+        {error && <p className="profile-modal-error" role="alert">{error}</p>}
+      </div>
+    </div>
+    <footer className="profile-edit-page-footer">
+      <button type="button" className="profile-modal-update" disabled={!isValid || isSaving} onClick={onSave}>{isSaving ? "Updating..." : "Update"}</button>
+    </footer>
+  </section>;
+}
+
 function ProfileEditModal({ avatarUrl, editForm, error, isSaving, onAvatarChange, onChange, onClose, onSave }) {
   const isValid = editForm.firstName.trim() && editForm.email.trim() && editForm.phone.trim();
   return <div className="profile-edit-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
     <section className="profile-edit-modal" role="dialog" aria-modal="true" aria-labelledby="profile-edit-title" onMouseDown={(event) => event.stopPropagation()}>
       <header className="profile-edit-modal-header"><h2 id="profile-edit-title">Edit Account</h2><button type="button" className="profile-modal-close" onClick={onClose} aria-label="Close"><X size={20} /></button></header>
       <div className="profile-edit-modal-content">
-        <label className="profile-modal-avatar-upload"><input type="file" accept="image/gif,image/jpeg,image/png,image/heic,image/heif" onChange={onAvatarChange} /><Avatar className="profile-modal-avatar-display" src={avatarUrl} firstName={editForm.firstName} lastName={editForm.lastName} alt="Profile" /><span className="profile-modal-avatar-overlay"><Camera size={22} /></span></label>
-        <ProfileModalField label="First Name" required value={editForm.firstName} onChange={(value) => onChange("firstName", value)} />
-        <ProfileModalField label="Last Name" value={editForm.lastName} onChange={(value) => onChange("lastName", value)} />
-        <div className="profile-modal-field"><label htmlFor="profile-edit-phone">Mobile Phone Number <span>(Required)</span></label><div className="profile-modal-phone"><button type="button" aria-label="Phone country code"><img src={flagUnitedStates} alt="" /><span>+1</span></button><input id="profile-edit-phone" type="tel" value={editForm.phone} onChange={(event) => onChange("phone", event.target.value)} /></div></div>
-        <div className="profile-modal-field"><label htmlFor="profile-edit-email">Email <span>(Required)</span></label><div className="profile-modal-input-with-icon"><Mail size={18} /><input id="profile-edit-email" type="email" value={editForm.email} onChange={(event) => onChange("email", event.target.value)} /></div></div>
+        <ProfileEditFields avatarUrl={avatarUrl} editForm={editForm} onAvatarChange={onAvatarChange} onChange={onChange} />
       </div>
       {error && <p className="profile-modal-error" role="alert">{error}</p>}
       <footer className="profile-edit-modal-footer"><button type="button" className="profile-modal-cancel" onClick={onClose} disabled={isSaving}>Cancel</button><button type="button" className="profile-modal-update" disabled={!isValid || isSaving} onClick={onSave}>{isSaving ? "Updating..." : "Update"}</button></footer>

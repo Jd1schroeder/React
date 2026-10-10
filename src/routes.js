@@ -14,6 +14,7 @@ export const pagePaths = {
   'Settings / Customizations': '/settings/customizations',
   'Settings / Integrations': '/settings/integrations',
   'Settings / Profile Preferences': '/settings/profile-preferences',
+  'Settings / Edit Account': '/settings/profile-preferences/edit',
   'Settings / Notification Settings': '/settings/notification-settings',
   'Settings / Invite Users': '/settings/invite-users',
   Dashboard: '/dashboard',

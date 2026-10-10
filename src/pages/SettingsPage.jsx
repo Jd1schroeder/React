@@ -13,6 +13,7 @@ export function SettingsPage({ pageName, onNavigate }) {
   if (pageName === "Settings / Teammates / Teams") return <TeammateTeamsPage onNavigate={onNavigate} />;
   if (pageName === "Settings / Invite Users") return <InviteUsersPage onNavigate={onNavigate} />;
   if (pageName === "Settings / Profile Preferences") return <ProfilePreferencesPage onNavigate={onNavigate} />;
+  if (pageName === "Settings / Edit Account") return <ProfilePreferencesPage pageName={pageName} onNavigate={onNavigate} />;
   if (pageName === "Settings / Notification Settings") return <NotificationSettingsPage onNavigate={onNavigate} />;
   return <GeneralSettingsPage pageName={pageName} onNavigate={onNavigate} />;
 }
