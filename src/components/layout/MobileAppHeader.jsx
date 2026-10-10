@@ -4,8 +4,8 @@ import './MobileAppHeader.css'
 
 export function MobileAppHeader({ activePage, onNavigate, onNavigateBack }) {
   const workspace = useWorkspace()
-  const isAccountPage = activePage === 'Settings / Profile Preferences' || activePage === 'Settings / Edit Account'
-  const title = activePage === 'Settings / Edit Account' ? 'Edit Account' : 'My Account'
+  const isAccountPage = ['Settings / Profile Preferences', 'Settings / Edit Account', 'Settings / Linked Device'].includes(activePage)
+  const title = activePage === 'Settings / Edit Account' ? 'Edit Account' : activePage === 'Settings / Linked Device' ? 'Linked Device' : 'My Account'
 
   return (
     <header className={`mobile-app-header${isAccountPage ? ' is-my-account' : ''}`}>
