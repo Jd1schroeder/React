@@ -59,7 +59,7 @@ describe('mobile navigation', () => {
     expect(screen.getByRole('button', { name: 'Overview' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('button', { name: 'Assets' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Messages' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'More modules and settings' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'More' })).toBeInTheDocument()
     expect(await screen.findByRole('button', { name: 'Work Orders, 89 unread' })).toBeInTheDocument()
     expect(serviceMocks.getUnreadWorkOrderCount).toHaveBeenCalledWith({
       organizationId: 'organization-a',
@@ -67,61 +67,19 @@ describe('mobile navigation', () => {
     })
   })
 
-  it('searches all modules from the More sheet and closes after navigation', () => {
+  it('navigates to the More page instead of opening a menu', () => {
     const onNavigate = vi.fn()
     render(<MobileNavigation activePage="Work Orders" onNavigate={onNavigate} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'More modules and settings' }))
-    expect(screen.getByRole('dialog', { name: 'Modules and settings' })).toHaveClass('mobile-edge-to-edge-sheet')
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Search modules' }), { target: { value: 'Asset Health' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Asset Health' }))
+    fireEvent.click(screen.getByRole('button', { name: 'More' }))
 
-    expect(onNavigate).toHaveBeenCalledWith('Reporting / Asset Health')
-    expect(screen.queryByRole('dialog', { name: 'Modules and settings' })).not.toBeInTheDocument()
+    expect(onNavigate).toHaveBeenCalledWith('More')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('closes the More sheet on Escape', () => {
-    render(<MobileNavigation activePage="Dashboard" onNavigate={vi.fn()} />)
+  it('marks More active when a secondary page is active', () => {
+    render(<MobileNavigation activePage="Vendors" onNavigate={vi.fn()} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'More modules and settings' }))
-    fireEvent.keyDown(document, { key: 'Escape' })
-
-    expect(screen.queryByRole('dialog', { name: 'Modules and settings' })).not.toBeInTheDocument()
-  })
-
-  it('dismisses the More sheet with a downward header pull on mobile', () => {
-    vi.stubGlobal('matchMedia', vi.fn((query) => ({ matches: query === '(max-width: 840px)' })))
-    render(<MobileNavigation activePage="Dashboard" onNavigate={vi.fn()} />)
-
-    fireEvent.click(screen.getByRole('button', { name: 'More modules and settings' }))
-    const sheet = screen.getByRole('dialog', { name: 'Modules and settings' })
-    const header = sheet.querySelector('.mobile-navigation-sheet-header')
-    fireEvent.touchStart(header, { touches: [{ clientY: 100 }] })
-    fireEvent.touchMove(header, { touches: [{ clientY: 160 }] })
-    expect(sheet.style.getPropertyValue('--mobile-sheet-drag-offset')).toBe('60px')
-    fireEvent.touchEnd(header, { changedTouches: [{ clientY: 160 }] })
-
-    expect(sheet).toHaveClass('is-mobile-sheet-dismissing')
-    expect(screen.getByRole('dialog', { name: 'Modules and settings' })).toBeInTheDocument()
-    fireEvent.transitionEnd(sheet, { propertyName: 'transform' })
-    expect(screen.queryByRole('dialog', { name: 'Modules and settings' })).not.toBeInTheDocument()
-  })
-
-  it('snaps the More sheet back after a pull that is too short to dismiss it', () => {
-    vi.stubGlobal('matchMedia', vi.fn((query) => ({ matches: query === '(max-width: 840px)' })))
-    render(<MobileNavigation activePage="Dashboard" onNavigate={vi.fn()} />)
-
-    fireEvent.click(screen.getByRole('button', { name: 'More modules and settings' }))
-    const sheet = screen.getByRole('dialog', { name: 'Modules and settings' })
-    const header = sheet.querySelector('.mobile-navigation-sheet-header')
-    fireEvent.touchStart(header, { touches: [{ clientY: 100 }] })
-    fireEvent.touchMove(header, { touches: [{ clientY: 120 }] })
-    fireEvent.touchEnd(header, { changedTouches: [{ clientY: 120 }] })
-
-    expect(sheet).toHaveClass('is-mobile-sheet-snapping-back')
-    fireEvent.transitionEnd(sheet, { propertyName: 'transform' })
-    expect(sheet).not.toHaveClass('is-mobile-sheet-snapping-back')
-    expect(sheet.style.getPropertyValue('--mobile-sheet-drag-offset')).toBe('0px')
-    expect(screen.getByRole('dialog', { name: 'Modules and settings' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'More' })).toHaveAttribute('aria-current', 'page')
   })
 })

@@ -17,6 +17,7 @@ export const pagePaths = {
   'Settings / Notification Settings': '/settings/notification-settings',
   'Settings / Invite Users': '/settings/invite-users',
   Dashboard: '/dashboard',
+  More: '/more',
   'Work Orders': '/workorders',
   Requests: '/requests',
   Messages: '/messages',

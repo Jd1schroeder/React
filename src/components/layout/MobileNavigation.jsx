@@ -252,12 +252,11 @@ export function MobileNavigation({ activePage, onNavigate }) {
           </button>
         ))}
         <button
-          ref={moreButtonRef}
           type="button"
-          className={`mobile-primary-navigation-item mobile-primary-navigation-more${isMoreOpen || isMoreCurrent ? ' is-active' : ''}`}
-          aria-label="More modules and settings"
-          aria-expanded={isMoreOpen}
-          onClick={() => setIsMoreOpen(true)}
+          className={`mobile-primary-navigation-item mobile-primary-navigation-more${isMoreCurrent ? ' is-active' : ''}`}
+          aria-label="More"
+          aria-current={isMoreCurrent ? 'page' : undefined}
+          onClick={() => navigateTo('More')}
         >
           <Menu size={21} strokeWidth={1.9} aria-hidden="true" />
           <span>More</span>
