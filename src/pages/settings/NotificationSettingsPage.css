@@ -233,6 +233,8 @@
 .notification-message-mode-options input { width: 22px; height: 22px; margin: 0; accent-color: var(--blue); }
 
 @media (--wb-viewport-tablet-and-down) {
+  .notification-settings-page { --notification-mobile-row-height: 68px; }
+
   .settings-page.notification-settings-page {
     display: block;
     padding: 0;
@@ -262,7 +264,7 @@
     align-items: center;
     gap: var(--spacing-5);
     width: calc(100% - 48px);
-    min-height: 112px;
+    min-height: var(--notification-mobile-row-height);
     margin: 0 24px;
     padding: 0;
     border: 0;
@@ -274,18 +276,21 @@
   .notification-mobile-category-row + .notification-mobile-category-row { border-top: var(--border-width-normal) solid var(--line); }
   .notification-mobile-category-row > svg { flex: 0 0 auto; color: var(--blue); }
   .notification-mobile-category-name { flex: 1; font-size: var(--font-size-xl-compact); }
-  .notification-mobile-category-icon { display: grid; flex: 0 0 62px; width: 62px; height: 62px; place-items: center; border-radius: var(--radius-circle); color: var(--blue); background: var(--blue-soft); }
+  .notification-mobile-category-icon { display: grid; flex: 0 0 48px; width: 48px; height: 48px; place-items: center; border-radius: var(--radius-circle); color: var(--blue); background: var(--blue-soft); }
   .notification-mobile-channel-screen,
   .notification-mobile-event-screen,
   .notification-mobile-direct-screen { min-width: 0; }
   .notification-mobile-channel-instruction { margin: 0 0 var(--spacing-3); color: var(--muted); font-size: var(--font-size-xl-compact); }
   .notification-mobile-channel-list { padding: 0 24px; }
-  .notification-mobile-channel-row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-4); width: 100%; min-height: 112px; padding: 0; border: 0; color: var(--ink); background: var(--surface); font: inherit; font-size: var(--font-size-xl-compact); text-align: left; }
+  .notification-mobile-channel-row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-4); width: 100%; min-height: var(--notification-mobile-row-height); padding: 0; border: 0; color: var(--ink); background: var(--surface); font: inherit; font-size: var(--font-size-xl-compact); text-align: left; }
   .notification-mobile-channel-row + .notification-mobile-channel-row { border-top: var(--border-width-normal) solid var(--line); }
   .notification-mobile-channel-row svg { color: var(--blue); }
   .notification-mobile-channel-heading { margin: 0 0 var(--spacing-5); padding: 0 2px; color: var(--ink); font-size: var(--font-size-lg); font-weight: var(--font-bold); text-transform: uppercase; }
-  .notification-mobile-events { padding: var(--spacing-5) var(--spacing-5) var(--spacing-6); }
-  .notification-mobile-event { min-height: 92px; font-size: var(--font-size-xl-compact); }
+  .notification-mobile-events { padding: var(--spacing-4) var(--spacing-5); }
+  .notification-mobile-event-group + .notification-mobile-event-group { margin-top: var(--spacing-3); padding-top: var(--spacing-3); }
+  .notification-mobile-event-group h3 { padding-bottom: var(--spacing-3); }
+  .notification-mobile-event { min-height: var(--notification-mobile-row-height); font-size: var(--font-size-xl-compact); }
+  .notification-message-mode-options label { min-height: var(--notification-mobile-row-height); }
   .notification-toggle > span:not(.sr-only) { width: 48px; height: 27px; background: var(--muted); }
   .notification-toggle > span:not(.sr-only)::after { top: 2px; left: 2px; width: 23px; height: 23px; }
   .notification-toggle input:checked + span::after { transform: translateX(21px); }
@@ -296,7 +301,7 @@
   .notification-mobile-direct-channel > h2 { margin: 0 0 var(--spacing-5); padding: 0 2px; color: var(--ink); font-size: var(--font-size-lg); font-weight: var(--font-bold); text-transform: uppercase; }
   .notification-mobile-request-settings > .notification-mobile-status { margin-bottom: var(--spacing-3); }
   .notification-mobile-purchase-card { padding: var(--spacing-4) var(--spacing-5); }
-  .notification-mobile-purchase-event { min-height: 76px; font-size: var(--font-size-xl-compact); }
+  .notification-mobile-purchase-event { min-height: var(--notification-mobile-row-height); font-size: var(--font-size-xl-compact); }
 
   .notification-card {
     padding: var(--spacing-6);

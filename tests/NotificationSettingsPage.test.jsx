@@ -37,6 +37,38 @@ describe('NotificationSettingsPage mobile flow', () => {
     })))
   })
 
+  it('backs from Work Orders preferences to channel selection, then to categories', async () => {
+    const onMobileHeaderBackChange = vi.fn()
+    const { container } = render(<NotificationSettingsPage onNavigate={vi.fn()} onMobileHeaderBackChange={onMobileHeaderBackChange} />)
+    const mobile = container.querySelector('.notification-mobile-settings')
+
+    fireEvent.click(await within(mobile).findByRole('button', { name: /Work Orders/ }))
+    fireEvent.click(within(mobile).getByRole('button', { name: /Email Notifications/ }))
+    expect(within(mobile).getByRole('heading', { name: 'Email Notifications' })).toBeInTheDocument()
+
+    await waitFor(() => expect(onMobileHeaderBackChange).toHaveBeenLastCalledWith(expect.any(Function)))
+    const initialBackUpdates = onMobileHeaderBackChange.mock.calls.length
+    onMobileHeaderBackChange.mock.lastCall[0]()
+    await within(mobile).findByRole('button', { name: /Email Notifications/ })
+    await waitFor(() => expect(onMobileHeaderBackChange.mock.calls.length).toBeGreaterThan(initialBackUpdates))
+
+    await waitFor(() => expect(onMobileHeaderBackChange).toHaveBeenLastCalledWith(expect.any(Function)))
+    onMobileHeaderBackChange.mock.lastCall[0]()
+    await within(mobile).findByRole('button', { name: /Work Orders/ })
+  })
+
+  it('backs directly from a non-Work Orders category to the category list', async () => {
+    const onMobileHeaderBackChange = vi.fn()
+    const { container } = render(<NotificationSettingsPage onNavigate={vi.fn()} onMobileHeaderBackChange={onMobileHeaderBackChange} />)
+    const mobile = container.querySelector('.notification-mobile-settings')
+
+    fireEvent.click(await within(mobile).findByRole('button', { name: /Requests/ }))
+    await waitFor(() => expect(onMobileHeaderBackChange).toHaveBeenLastCalledWith(expect.any(Function)))
+    onMobileHeaderBackChange.mock.lastCall[0]()
+
+    await within(mobile).findByRole('button', { name: /Requests/ })
+  })
+
   it('opens Requests directly on its Email and Push settings with the complete Created by me group', async () => {
     const { container } = render(<NotificationSettingsPage onNavigate={vi.fn()} />)
     const mobile = container.querySelector('.notification-mobile-settings')

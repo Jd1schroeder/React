@@ -97,8 +97,8 @@ export function NotificationSettingsPage({ onNavigate, onMobileHeaderTitleChange
 
   useEffect(() => {
     if (!onMobileHeaderBackChange) return;
-    if (selectedChannel) onMobileHeaderBackChange(() => () => setSelectedChannel(null));
-    else if (selectedSection) onMobileHeaderBackChange(() => () => setSelectedCategory(null));
+    if (selectedChannel) onMobileHeaderBackChange(() => setSelectedChannel(null));
+    else if (selectedSection) onMobileHeaderBackChange(() => setSelectedCategory(null));
     else onMobileHeaderBackChange(null);
   }, [onMobileHeaderBackChange, selectedChannel, selectedSection]);
 
