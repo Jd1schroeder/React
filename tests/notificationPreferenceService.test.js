@@ -7,7 +7,7 @@ const supabaseMock = vi.hoisted(() => ({
 
 vi.mock('../src/lib/supabase', () => ({ supabase: supabaseMock }))
 
-const { loadNotificationSettings, saveNotificationSettings } = await import('../src/services/notificationPreferenceService')
+const { loadNotificationSettings, preloadNotificationSettings, saveNotificationSettings } = await import('../src/services/notificationPreferenceService')
 
 describe('notificationPreferenceService', () => {
   beforeEach(() => {
@@ -24,6 +24,20 @@ describe('notificationPreferenceService', () => {
     await expect(loadNotificationSettings()).resolves.toEqual({ 'Work Orders.Created by me.Becomes overdue.email': true })
     expect(supabaseMock.from).toHaveBeenCalledWith('user_preferences')
     expect(eq).toHaveBeenCalledWith('user_id', 'user-1')
+  })
+
+  it('shares a preloaded request and reuses its result for the page load', async () => {
+    const settings = { 'Messages.mode': 'All messages' }
+    const maybeSingle = vi.fn().mockResolvedValue({ data: { notification_settings: settings }, error: null })
+    const eq = vi.fn().mockReturnValue({ maybeSingle })
+    const select = vi.fn().mockReturnValue({ eq })
+    supabaseMock.from.mockReturnValue({ select })
+
+    await expect(preloadNotificationSettings('prefetch-user')).resolves.toEqual(settings)
+    await expect(loadNotificationSettings('prefetch-user')).resolves.toEqual(settings)
+
+    expect(supabaseMock.auth.getUser).not.toHaveBeenCalled()
+    expect(supabaseMock.from).toHaveBeenCalledOnce()
   })
 
   it('saves preferences to the signed-in user row', async () => {

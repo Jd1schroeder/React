@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, BellOff, Camera, ChevronRight, LockKeyhole, LogOut, Mail, Monitor, Pencil, Smartphone, X } from "lucide-react";
+import { Bell, BellOff, BellRing, Camera, ChevronRight, LockKeyhole, LogOut, Mail, Monitor, Pencil, Smartphone, X } from "lucide-react";
 import { Avatar } from "../../components/ui/Avatar";
 import { Select } from "../../components/ui/Select";
 import { supabase } from "../../lib/supabase";
@@ -8,8 +8,10 @@ import { updateAuthContact, updateProfile, updateUserPreferences, uploadAvatar }
 import { isCurrentSessionValid, listCurrentUserSessions, registerCurrentSession, revokeCurrentUserSession, subscribeToSessionUpdates } from "../../services/sessionService";
 import { formatDateForUser } from "../../utils/dateFormatting";
 import { useWorkspace } from "../../components/layout/useWorkspace";
+import { preloadNotificationSettings } from "../../services/notificationPreferenceService";
 import flagUnitedStates from "../../assets/flags/us.svg";
 import { SettingsLayout } from "./SettingsLayout";
+import { PauseNotificationsSheet } from "./PauseNotificationsSheet";
 import "./ProfilePreferencesPage.css";
 
 export function ProfilePreferencesPage({ pageName = "Settings / Profile Preferences", sessionId, onNavigate }) {
@@ -22,6 +24,14 @@ export function ProfilePreferencesPage({ pageName = "Settings / Profile Preferen
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileSaveError, setProfileSaveError] = useState("");
+  const [isPauseMenuOpen, setIsPauseMenuOpen] = useState(false);
+  const [pauseUntil, setPauseUntil] = useState(null);
+  useEffect(() => {
+    if (!pauseUntil) return undefined;
+    const remaining = Math.max(0, pauseUntil.getTime() - Date.now());
+    const timeoutId = window.setTimeout(() => setPauseUntil(null), remaining);
+    return () => window.clearTimeout(timeoutId);
+  }, [pauseUntil]);
   const [editForm, setEditForm] = useState(() => ({
     firstName: workspace.profile?.first_name ?? workspace.user?.user_metadata?.first_name ?? "",
     lastName: workspace.profile?.last_name ?? workspace.user?.user_metadata?.last_name ?? "",
@@ -46,6 +56,10 @@ export function ProfilePreferencesPage({ pageName = "Settings / Profile Preferen
   const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
 
   const user = workspace.user;
+  useEffect(() => {
+    if (!user?.id || isEditPage || isSessionDetailPage) return;
+    preloadNotificationSettings(user.id).catch(() => {});
+  }, [user?.id, isEditPage, isSessionDetailPage]);
   const displayName = [editForm.firstName, editForm.lastName].filter(Boolean).join(" ") || user?.email || "Your profile";
   const role = workspace.organization?.role === "owner" ? "Administrator" : workspace.organization?.role || "Member";
   const handleAvatarChange = (event) => {
@@ -239,7 +253,8 @@ export function ProfilePreferencesPage({ pageName = "Settings / Profile Preferen
             <div className="profile-identity-copy"><div className="profile-name-row"><h2>{displayName}</h2><button type="button" className="profile-edit-button" onClick={openEditAccount}><Pencil size={16} /><span className="sr-only">Edit personal info</span></button></div><p>{role}</p><div className="profile-info-grid"><div><Mail size={19} aria-hidden="true" /><span className="sr-only">Email</span><strong>{editForm.email || "Not provided"}</strong></div><div><Smartphone size={19} aria-hidden="true" /><span className="sr-only">Phone Number</span><strong>{editForm.phone || "Not provided"}</strong></div></div></div>
           </div>
         </section>
-        <button type="button" className="profile-pause-notifications" onClick={() => onNavigate("Settings / Notification Settings")}><BellOff size={20} aria-hidden="true" /><span>Pause Notifications</span></button>
+        <button type="button" className="profile-pause-notifications" onClick={() => setIsPauseMenuOpen(true)}>{pauseUntil ? <BellRing size={20} aria-hidden="true" /> : <BellOff size={20} aria-hidden="true" />}<span>{pauseUntil ? "Resume Notifications" : "Pause Notifications"}</span></button>
+        {pauseUntil && <p className="profile-pause-notice" role="status">Notifications paused until {formatPauseUntil(pauseUntil)}</p>}
         <section className="profile-settings-card profile-preferences-card"><div className="profile-card-heading"><h2>Account Settings</h2></div><button type="button" className="profile-mobile-notification-link" onClick={() => onNavigate("Settings / Notification Settings")}><span className="profile-mobile-setting-icon"><Bell size={22} aria-hidden="true" /></span><span>Notification Settings</span><ChevronRight size={20} aria-hidden="true" /></button><div className="profile-preference-list">
           <PreferenceSelect label="Language" value={preferences.language} onChange={(value) => savePreferences({ ...preferences, language: value })} ariaLabel="Language" options={[{ label: "English", value: "English" }, { label: "Spanish", value: "Spanish", disabled: true, icon: LockKeyhole }, { label: "French", value: "French", disabled: true, icon: LockKeyhole }]} />
           <PreferenceSelect label="Date Format" value={preferences.dateFormat} onChange={(value) => savePreferences({ ...preferences, dateFormat: value })} ariaLabel="Date Format" options={["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"]} />
@@ -253,6 +268,7 @@ export function ProfilePreferencesPage({ pageName = "Settings / Profile Preferen
       </section>
     </SettingsLayout>
     {isEditModalOpen && <ProfileEditModal avatarUrl={avatarUrl} editForm={editForm} onAvatarChange={handleAvatarChange} onChange={(field, value) => setEditForm((current) => ({ ...current, [field]: value }))} onClose={() => setIsEditModalOpen(false)} onSave={saveProfile} isSaving={isSavingProfile} error={profileSaveError} />}
+    {isPauseMenuOpen && <PauseNotificationsSheet pausedUntil={pauseUntil} onCancel={() => setIsPauseMenuOpen(false)} onResume={() => { setPauseUntil(null); setIsPauseMenuOpen(false); }} onSelect={(option) => { const duration = { "Pause for 30 minutes": 30 * 60_000, "Pause for 1 hour": 60 * 60_000, "Pause for 4 hours": 4 * 60 * 60_000, "Pause until tomorrow": 24 * 60 * 60_000, "Pause until next week": 7 * 24 * 60 * 60_000 }[option]; setPauseUntil(new Date(Date.now() + duration)); setIsPauseMenuOpen(false); }} />}
     {selectedSession && <LinkedDeviceModal session={selectedSession} timeZone={preferences.timezone ?? workspace.preferences?.timezone} dateFormat={preferences.dateFormat} onClose={() => setSelectedSession(null)} onRequestSignOut={requestSessionSignOut} />}
     {isConfirmingSessionRevoke && activeSession && <SessionRevokeConfirmation session={activeSession} isRevoking={isRevokingSession} error={sessionError} onCancel={() => setIsConfirmingSessionRevoke(false)} onConfirm={() => revokeSession(activeSession)} />}
   </div>;
@@ -352,6 +368,10 @@ function SessionRevokeConfirmation({ session, isRevoking, error, onCancel, onCon
       <footer className="profile-edit-modal-footer"><button type="button" className="profile-modal-cancel" onClick={onCancel} disabled={isRevoking}>Cancel</button><button type="button" className="profile-modal-update profile-session-confirm-button" onClick={onConfirm} disabled={isRevoking}><LogOut size={16} aria-hidden="true" />{isRevoking ? "Signing out..." : "Sign out"}</button></footer>
     </section>
   </div>;
+}
+
+function formatPauseUntil(date) {
+  return new Intl.DateTimeFormat(undefined, { month: "2-digit", day: "2-digit", year: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
 }
 
 function formatSessionConnection(value, dateFormat, timeZone) {

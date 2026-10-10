@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Bell, ChevronRight, ClipboardCheck, FileText, Info, MessageSquare, MessagesSquare } from "lucide-react";
 import { Select } from "../../components/ui/Select";
+import { useWorkspace } from "../../components/layout/useWorkspace";
 import { SettingsLayout } from "./SettingsLayout";
 import { notificationGroups } from "./settingsConfig";
 import { loadNotificationSettings, saveNotificationSettings } from "../../services/notificationPreferenceService";
@@ -30,6 +31,7 @@ const CATEGORY_ICONS = {
 };
 
 export function NotificationSettingsPage({ onNavigate, onMobileHeaderTitleChange, onMobileHeaderBackChange }) {
+  const { user } = useWorkspace();
   const [notificationState, setNotificationState] = useState(DEFAULT_NOTIFICATION_SETTINGS);
   const notificationStateRef = useRef(DEFAULT_NOTIFICATION_SETTINGS);
   const saveQueueRef = useRef(Promise.resolve());
@@ -43,7 +45,7 @@ export function NotificationSettingsPage({ onNavigate, onMobileHeaderTitleChange
 
   useEffect(() => {
     let isActive = true;
-    loadNotificationSettings()
+    loadNotificationSettings(user?.id)
       .then((savedSettings) => {
         if (!isActive) return;
         const nextSettings = { ...DEFAULT_NOTIFICATION_SETTINGS, ...savedSettings };
@@ -55,7 +57,7 @@ export function NotificationSettingsPage({ onNavigate, onMobileHeaderTitleChange
       })
       .finally(() => { if (isActive) setIsLoading(false); });
     return () => { isActive = false; };
-  }, [loadAttempt]);
+  }, [loadAttempt, user?.id]);
 
   const retryLoad = () => {
     setIsLoading(true);

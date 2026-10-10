@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { WorkspaceContext } from '../src/components/layout/WorkspaceContextValue'
 
 const preferenceMocks = vi.hoisted(() => ({
   loadNotificationSettings: vi.fn(),
@@ -9,6 +10,13 @@ const preferenceMocks = vi.hoisted(() => ({
 vi.mock('../src/services/notificationPreferenceService', () => preferenceMocks)
 
 import { NotificationSettingsPage } from '../src/pages/settings/NotificationSettingsPage'
+
+const workspace = { user: { id: 'user-1' } }
+const renderNotificationSettingsPage = (props) => render(
+  <WorkspaceContext.Provider value={workspace}>
+    <NotificationSettingsPage onNavigate={vi.fn()} {...props} />
+  </WorkspaceContext.Provider>,
+)
 
 afterEach(cleanup)
 
@@ -21,9 +29,10 @@ describe('NotificationSettingsPage mobile flow', () => {
 
   it('routes Work Orders through notification type selection and grouped preferences', async () => {
     const onMobileHeaderTitleChange = vi.fn()
-    const { container } = render(<NotificationSettingsPage onNavigate={vi.fn()} onMobileHeaderTitleChange={onMobileHeaderTitleChange} />)
+    const { container } = renderNotificationSettingsPage({ onMobileHeaderTitleChange })
     const mobile = container.querySelector('.notification-mobile-settings')
 
+    await waitFor(() => expect(preferenceMocks.loadNotificationSettings).toHaveBeenCalledWith('user-1'))
     fireEvent.click(await within(mobile).findByRole('button', { name: /Work Orders/ }))
     await waitFor(() => expect(onMobileHeaderTitleChange).toHaveBeenLastCalledWith('Work Orders'))
     fireEvent.click(within(mobile).getByRole('button', { name: /Email Notifications/ }))
@@ -39,7 +48,7 @@ describe('NotificationSettingsPage mobile flow', () => {
 
   it('backs from Work Orders preferences to channel selection, then to categories', async () => {
     const onMobileHeaderBackChange = vi.fn()
-    const { container } = render(<NotificationSettingsPage onNavigate={vi.fn()} onMobileHeaderBackChange={onMobileHeaderBackChange} />)
+    const { container } = renderNotificationSettingsPage({ onMobileHeaderBackChange })
     const mobile = container.querySelector('.notification-mobile-settings')
 
     fireEvent.click(await within(mobile).findByRole('button', { name: /Work Orders/ }))
@@ -59,7 +68,7 @@ describe('NotificationSettingsPage mobile flow', () => {
 
   it('backs directly from a non-Work Orders category to the category list', async () => {
     const onMobileHeaderBackChange = vi.fn()
-    const { container } = render(<NotificationSettingsPage onNavigate={vi.fn()} onMobileHeaderBackChange={onMobileHeaderBackChange} />)
+    const { container } = renderNotificationSettingsPage({ onMobileHeaderBackChange })
     const mobile = container.querySelector('.notification-mobile-settings')
 
     fireEvent.click(await within(mobile).findByRole('button', { name: /Requests/ }))
@@ -70,7 +79,7 @@ describe('NotificationSettingsPage mobile flow', () => {
   })
 
   it('opens Requests directly on its Email and Push settings with the complete Created by me group', async () => {
-    const { container } = render(<NotificationSettingsPage onNavigate={vi.fn()} />)
+    const { container } = renderNotificationSettingsPage({})
     const mobile = container.querySelector('.notification-mobile-settings')
 
     fireEvent.click(await within(mobile).findByRole('button', { name: /Requests/ }))
@@ -84,7 +93,7 @@ describe('NotificationSettingsPage mobile flow', () => {
   })
 
   it('opens Purchase Orders directly on its email preference', async () => {
-    const { container } = render(<NotificationSettingsPage onNavigate={vi.fn()} />)
+    const { container } = renderNotificationSettingsPage({})
     const mobile = container.querySelector('.notification-mobile-settings')
     fireEvent.click(await within(mobile).findByRole('button', { name: /Purchase Orders/ }))
 
@@ -98,7 +107,7 @@ describe('NotificationSettingsPage mobile flow', () => {
 
   it('opens Messages directly on its Push preference options', async () => {
     preferenceMocks.loadNotificationSettings.mockResolvedValue({ 'Messages.mode': 'All messages' })
-    const { container } = render(<NotificationSettingsPage onNavigate={vi.fn()} />)
+    const { container } = renderNotificationSettingsPage({})
     const mobile = container.querySelector('.notification-mobile-settings')
     fireEvent.click(await within(mobile).findByRole('button', { name: /Messages/ }))
 
