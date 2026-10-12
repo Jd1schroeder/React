@@ -415,7 +415,7 @@
   font-size: inherit;
 }
 
-@media (--wb-viewport-max-900) {
+@media (--wb-viewport-tablet-and-down) {
   .login-page {
     display: block;
     min-height: 100dvh;

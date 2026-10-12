@@ -380,7 +380,7 @@
   margin-top: var(--spacing-6);
 }
 
-@media (--wb-viewport-max-900) {
+@media (--wb-viewport-tablet-and-down) {
   .signup-page {
     display: block;
     background: var(--surface);
