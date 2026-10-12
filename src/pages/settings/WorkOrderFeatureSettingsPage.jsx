@@ -5,6 +5,7 @@ import { Select } from "../../components/ui/Select";
 import { useWorkspace } from "../../components/layout/useWorkspace";
 import { getNextWorkOrderNumber, updateOrganization, updateWorkOrderStartingNumber } from "../../services/organizationService";
 import { getFeatureLabel } from "../../utils/featureLabels";
+import { normalizeFeatureModules } from "../../utils/featureModules";
 import { normalizeWorkOrderSettings } from "../../utils/workOrderSettings";
 import { SettingsLayout } from "./SettingsLayout";
 import { WorkOrderStartingIdModal } from "./WorkOrderStartingIdModal";
@@ -22,12 +23,18 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
   const labels = organization.feature_labels;
   const workOrderLabel = getFeatureLabel(labels, "workOrder");
   const workOrderSingularLabel = getFeatureLabel(labels, "workOrder", "singular");
+  const workOrderTemplateLabel = getFeatureLabel(labels, "workOrderTemplate");
   const isOrganizationAdmin = organization.roleDefinition?.system_key === "organization_admin" || ["owner", "admin"].includes(organization.role);
   const savedSettings = normalizeWorkOrderSettings(organization.work_order_settings);
+  const savedFeatureModules = normalizeFeatureModules(organization.feature_modules);
   const [settings, setSettings] = useState(savedSettings);
   const [settingsOrganizationId, setSettingsOrganizationId] = useState(organization.id);
   const displayedSettings = settingsOrganizationId === organization.id ? settings : savedSettings;
+  const [featureModules, setFeatureModules] = useState(savedFeatureModules);
+  const [featureModulesOrganizationId, setFeatureModulesOrganizationId] = useState(organization.id);
+  const displayedFeatureModules = featureModulesOrganizationId === organization.id ? featureModules : savedFeatureModules;
   const [savingKey, setSavingKey] = useState("");
+  const [savingFeatureModule, setSavingFeatureModule] = useState("");
   const [saveError, setSaveError] = useState("");
   const [toast, setToast] = useState(null);
   const [isToastLeaving, setIsToastLeaving] = useState(false);
@@ -58,6 +65,30 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
       setToast({ message, tone: "error" });
     } finally {
       setSavingKey("");
+    }
+  };
+
+  const toggleFeatureModule = async (moduleKey, label) => {
+    if (!organization.id || !isOrganizationAdmin || savingFeatureModule) return;
+    const previous = displayedFeatureModules;
+    const next = { ...previous, [moduleKey]: !previous[moduleKey] };
+    setFeatureModules(next);
+    setFeatureModulesOrganizationId(organization.id);
+    setSavingFeatureModule(moduleKey);
+    setSaveError("");
+    try {
+      await updateOrganization({ organizationId: organization.id, updates: { feature_modules: next } });
+      workspace.patchOrganization?.(organization.id, { feature_modules: next });
+      setIsToastLeaving(false);
+      setToast({ message: `${label} turned ${next[moduleKey] ? "on" : "off"}.`, tone: "success" });
+    } catch (error) {
+      setFeatureModules(previous);
+      const message = error.message || "Unable to update feature modules.";
+      setSaveError(message);
+      setIsToastLeaving(false);
+      setToast({ message, tone: "error" });
+    } finally {
+      setSavingFeatureModule("");
     }
   };
 
@@ -133,6 +164,8 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
             <SettingToggle label={`Share ${workOrderSingularLabel} Externally`} description={`Share an external link to ${workOrderLabel.toLowerCase()} with your Vendor contacts. Control what they can see and do with each ${workOrderSingularLabel.toLowerCase()}.`} checked={displayedSettings.externalWorkOrders} onChange={(value) => updateSetting("externalWorkOrders", value)} saving={savingKey === "externalWorkOrders"} disabled={!isOrganizationAdmin} locked />
           </SettingsCard>
 
+          <WorkOrderTemplateModuleCard label={workOrderTemplateLabel} workOrderLabel={workOrderLabel} checked={displayedFeatureModules.workOrderTemplate} locked={!isOrganizationAdmin} saving={savingFeatureModule === "workOrderTemplate"} onChange={() => toggleFeatureModule("workOrderTemplate", workOrderTemplateLabel)} />
+
           <SettingsCard title="Comment requirements" description={`Configure when comments are required for key ${workOrderSingularLabel.toLowerCase()} actions.`}>
             <div className="work-order-comment-table" role="group" aria-label="Comment requirements">
               <div className="work-order-comment-header"><span>Comment requirements on {workOrderSingularLabel} status changes</span><div><strong>None</strong><strong>Optional</strong><strong>Mandatory</strong></div></div>
@@ -183,6 +216,29 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
 
 function SettingsCard({ title, description, children }) {
   return <section className="work-order-settings-card" aria-labelledby={`work-order-settings-${title.toLowerCase().replaceAll(" ", "-")}`}><h2 id={`work-order-settings-${title.toLowerCase().replaceAll(" ", "-")}`}>{title}</h2>{description && <p className="work-order-settings-card-description">{description}</p>}<div className="work-order-settings-card-body">{children}</div></section>;
+}
+
+function WorkOrderTemplateModuleCard({ label, workOrderLabel, checked, locked, saving, onChange }) {
+  return (
+    <section className="work-order-settings-card work-order-template-module-card" aria-labelledby="work-order-template-module-title">
+      <div className="work-order-template-module-content">
+        <div>
+          <h2 id="work-order-template-module-title">{label}</h2>
+          <p>Create {label} to standardize your {workOrderLabel}.</p>
+          <button type="button" className="work-order-template-preferences" disabled aria-label={`${label} preferences unavailable`}>
+            Set Preferences <LockKeyhole size={16} aria-hidden="true" />
+          </button>
+        </div>
+        <div className={`work-order-feature-module-control${locked ? " is-locked" : ""}`}>
+          {locked && <LockKeyhole size={16} aria-hidden="true" />}
+          <span>Feature Module: {checked ? "On" : "Off"}</span>
+          <button type="button" className={`work-order-feature-module-toggle${checked ? " is-on" : ""}`} role="switch" aria-checked={checked} aria-label={`${label} feature module ${checked ? "on" : "off"}`} onClick={onChange} disabled={locked || saving}>
+            <span aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function SettingToggle({ label, description, checked, onChange, disabled, locked = true, enterprise = false, saving }) {

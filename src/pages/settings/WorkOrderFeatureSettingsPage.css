@@ -66,6 +66,76 @@
   margin-top: var(--spacing-6);
 }
 
+.work-order-template-module-content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-7);
+}
+
+.work-order-template-module-card h2 {
+  margin: 0;
+}
+
+.work-order-template-module-card p {
+  margin: var(--spacing-3) 0 0;
+  color: var(--ink);
+  font-size: var(--font-size-body-sm);
+}
+
+.work-order-template-preferences {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-6);
+  padding: 0;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-semibold);
+  cursor: not-allowed;
+}
+
+.work-order-feature-module-control {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  color: var(--ink);
+  font-size: var(--font-size-body-sm);
+  white-space: nowrap;
+}
+
+.work-order-feature-module-control.is-locked,
+.work-order-feature-module-control.is-locked > svg { color: var(--muted); }
+
+.work-order-feature-module-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--muted);
+}
+
+.work-order-feature-module-toggle > span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-circle);
+  background: var(--surface);
+  transition: transform var(--transition-fast);
+}
+
+.work-order-feature-module-toggle.is-on { background: var(--blue); }
+.work-order-feature-module-toggle.is-on > span { transform: translateX(20px); }
+.work-order-feature-module-toggle:focus-visible { outline: 0; box-shadow: 0 0 0 var(--focus-border-width) var(--blue-focus-ring); }
+.work-order-feature-module-toggle:disabled { opacity: 0.65; cursor: not-allowed; }
+
 .work-order-setting-row,
 .work-order-select-setting,
 .work-order-multiple-assignees {
@@ -250,6 +320,8 @@
 
 @media (--wb-viewport-max-760) {
   .work-order-settings-card { padding: var(--spacing-5); }
+  .work-order-template-module-content { display: grid; gap: var(--spacing-5); }
+  .work-order-feature-module-control { justify-content: space-between; }
   .work-order-setting-row,
   .work-order-select-setting { display: grid; grid-template-columns: 1fr; }
   .work-order-setting-control { justify-content: space-between; }

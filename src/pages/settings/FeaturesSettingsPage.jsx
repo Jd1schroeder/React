@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   BarChart3,
   Boxes,
+  Bot,
   CalendarCog,
+  CheckCircle2,
   ChevronDown,
   ChevronRight,
   ChevronUp,
@@ -24,6 +27,7 @@ import {
 import { useWorkspace } from "../../components/layout/useWorkspace";
 import { updateOrganization } from "../../services/organizationService";
 import { DEFAULT_FEATURE_LABELS, FEATURE_LABEL_SECTIONS, getFeatureLabel, normalizeFeatureLabels } from "../../utils/featureLabels";
+import { normalizeFeatureModules } from "../../utils/featureModules";
 import "./FeaturesSettingsPage.css";
 
 const featureItems = [
@@ -64,11 +68,20 @@ const featureItems = [
     action: "Set Preferences",
   },
   {
+    title: "Tork",
+    description: "Use Tork to communicate and manage maintenance work with your team.",
+    icon: Bot,
+    action: "Set Preferences",
+    moduleKey: "tork",
+    moduleToggle: true,
+  },
+  {
     title: "Request Portals",
     labelKey: "requestPortal",
     description: (labels) => `Create, manage, and edit all ${getFeatureLabel(labels, "requestPortal")} in your organization.`,
     icon: PanelTop,
     action: "Go to Request Portals",
+    moduleKey: "requestPortal",
     moduleToggle: true,
   },
   {
@@ -77,6 +90,7 @@ const featureItems = [
     description: (labels) => `Customize your ${getFeatureLabel(labels, "purchaseOrder")} by adding titles and/or prefixes and setting default CC email addresses.`,
     icon: FileText,
     action: "Set Preferences",
+    moduleKey: "purchaseOrder",
     moduleToggle: true,
   },
   {
@@ -85,6 +99,7 @@ const featureItems = [
     description: (labels) => `Customize ${getFeatureLabel(labels, "part")} Inventory form, edit Escalation Teams, and adjust Barcode Generation settings.`,
     icon: Wrench,
     action: "Set Preferences",
+    moduleKey: "part",
     moduleToggle: true,
   },
   {
@@ -93,6 +108,7 @@ const featureItems = [
     description: (labels) => `Set (or Create) ${getFeatureLabel(labels, "meter")} and track their Readings.`,
     icon: Gauge,
     action: "Set Preferences",
+    moduleKey: "meter",
     moduleToggle: true,
   },
   {
@@ -101,6 +117,7 @@ const featureItems = [
     description: (labels) => `Create, manage, and edit ${getFeatureLabel(labels, "vendor")} to contact from your Organization.`,
     icon: Package,
     action: "Set Preferences",
+    moduleKey: "vendor",
     moduleToggle: true,
   },
   {
@@ -109,13 +126,7 @@ const featureItems = [
     description: (labels) => `Set inactivity timer for sessions on ${getFeatureLabel(labels, "workstation", "singular")}.`,
     icon: MonitorCog,
     action: "Set Preferences",
-    moduleToggle: true,
-  },
-  {
-    title: "Work Order Template",
-    labelKey: "workOrderTemplate",
-    description: (labels) => `Create ${getFeatureLabel(labels, "workOrderTemplate")} to standardize your ${getFeatureLabel(labels, "workOrder")}.`,
-    icon: FileText,
+    moduleKey: "workstation",
     moduleToggle: true,
   },
   {
@@ -123,6 +134,7 @@ const featureItems = [
     labelKey: "automation",
     description: (labels) => `Use conditions to trigger tasks and optimize your ${getFeatureLabel(labels, "automation")} operations.`,
     icon: Zap,
+    moduleKey: "automation",
     moduleToggle: true,
   },
   {
@@ -140,7 +152,13 @@ export function FeaturesSettingsPage({ onNavigate }) {
   const organizationId = organization.id;
   const isOrganizationAdmin = organization.roleDefinition?.system_key === "organization_admin" || ["owner", "admin"].includes(organization.role);
   const savedFeatureLabels = normalizeFeatureLabels(organization.feature_labels);
-  const [enabledModules, setEnabledModules] = useState(() => Object.fromEntries(featureItems.filter((item) => item.moduleToggle).map((item) => [item.title, true])));
+  const savedFeatureModules = normalizeFeatureModules(organization.feature_modules);
+  const [enabledModules, setEnabledModules] = useState(savedFeatureModules);
+  const [modulesOrganizationId, setModulesOrganizationId] = useState(organizationId);
+  const [savingModule, setSavingModule] = useState("");
+  const [moduleSaveError, setModuleSaveError] = useState("");
+  const [moduleToast, setModuleToast] = useState(null);
+  const [isModuleToastLeaving, setIsModuleToastLeaving] = useState(false);
   const [customLabels, setCustomLabels] = useState(savedFeatureLabels);
   const [labelsOrganizationId, setLabelsOrganizationId] = useState(organizationId);
   const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
@@ -150,7 +168,32 @@ export function FeaturesSettingsPage({ onNavigate }) {
   const [labelSaveError, setLabelSaveError] = useState("");
   const visibleLabels = labelsOrganizationId === organizationId ? customLabels : savedFeatureLabels;
 
-  const toggleModule = (title) => setEnabledModules((current) => ({ ...current, [title]: !current[title] }));
+  const displayedModules = modulesOrganizationId === organizationId ? enabledModules : savedFeatureModules;
+  const toggleModule = async (moduleKey) => {
+    if (!organizationId || !isOrganizationAdmin || savingModule) return;
+    const previous = displayedModules;
+    const next = { ...previous, [moduleKey]: !previous[moduleKey] };
+    setEnabledModules(next);
+    setModulesOrganizationId(organizationId);
+    setSavingModule(moduleKey);
+    setModuleSaveError("");
+    try {
+      await updateOrganization({ organizationId, updates: { feature_modules: next } });
+      workspace.patchOrganization?.(organizationId, { feature_modules: next });
+      const feature = featureItems.find((item) => item.moduleKey === moduleKey);
+      const label = feature?.labelKey ? getFeatureLabel(visibleLabels, feature.labelKey) : feature?.title || "Feature";
+      setIsModuleToastLeaving(false);
+      setModuleToast({ message: `${label} turned ${next[moduleKey] ? "on" : "off"}.` });
+    } catch (error) {
+      setEnabledModules(previous);
+      const message = error.message || "Unable to update feature modules.";
+      setModuleSaveError(message);
+      setIsModuleToastLeaving(false);
+      setModuleToast({ message, tone: "error" });
+    } finally {
+      setSavingModule("");
+    }
+  };
   const openLabelModal = (labelKey) => {
     setLabelDraft(visibleLabels);
     setExpandedLabel(labelKey);
@@ -177,6 +220,16 @@ export function FeaturesSettingsPage({ onNavigate }) {
   };
 
   useEffect(() => {
+    if (!moduleToast) return undefined;
+    const leaveTimeout = window.setTimeout(() => setIsModuleToastLeaving(true), 5000);
+    const removeTimeout = window.setTimeout(() => setModuleToast(null), 5220);
+    return () => {
+      window.clearTimeout(leaveTimeout);
+      window.clearTimeout(removeTimeout);
+    };
+  }, [moduleToast]);
+
+  useEffect(() => {
     if (!isLabelModalOpen) return undefined;
     const handleKeyDown = (event) => {
       if (event.key === "Escape") closeLabelModal();
@@ -185,44 +238,59 @@ export function FeaturesSettingsPage({ onNavigate }) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isLabelModalOpen]);
 
+  const dismissModuleToast = () => {
+    setIsModuleToastLeaving(true);
+    window.setTimeout(() => setModuleToast(null), 220);
+  };
+
   return (
     <>
       <section className="features-settings-content" aria-labelledby="features-settings-list-title">
         <h2 id="features-settings-list-title" className="sr-only">Feature modules</h2>
+        {moduleSaveError && <p className="feature-module-save-error" role="alert">{moduleSaveError}</p>}
         <div className="features-settings-list">
           {featureItems.map((feature) => {
             const Icon = feature.icon;
-            const isEnabled = enabledModules[feature.title] ?? true;
-            const isLocked = feature.actionPage !== "Settings / Features / Work Orders";
-            const featureLabel = getFeatureLabel(visibleLabels, feature.labelKey);
+            const isEnabled = feature.moduleKey ? displayedModules[feature.moduleKey] : true;
+            const isPreferencesLocked = feature.actionPage !== "Settings / Features / Work Orders";
+            const isModuleLocked = Boolean(feature.moduleKey && !isOrganizationAdmin);
+            const featureLabel = feature.labelKey ? getFeatureLabel(visibleLabels, feature.labelKey) : feature.title;
             return (
               <article className="feature-settings-card" key={feature.title}>
                 <div className="feature-settings-card-main">
                   <div className="feature-settings-card-heading">
                     <span className="feature-settings-icon"><Icon size={17} aria-hidden="true" /></span>
                     <h3>{featureLabel ?? feature.title}</h3>
-                    {isOrganizationAdmin && <button type="button" className="feature-settings-edit-labels" onClick={() => openLabelModal(feature.labelKey)}><Pencil size={15} aria-hidden="true" />Edit Labels</button>}
+                    {isOrganizationAdmin && feature.labelKey && <button type="button" className="feature-settings-edit-labels" onClick={() => openLabelModal(feature.labelKey)}><Pencil size={15} aria-hidden="true" />Edit Labels</button>}
                   </div>
                   <p>{typeof feature.description === "function" ? feature.description(visibleLabels) : feature.description}</p>
-                  {feature.action && <button type="button" className={`feature-settings-action${isLocked ? " is-locked" : ""}`} onClick={() => !isLocked && feature.actionPage && onNavigate?.(feature.actionPage)} disabled={isLocked} aria-label={isLocked ? `${featureLabel} preferences unavailable` : feature.action}>{feature.action}{isLocked ? <LockKeyhole size={16} aria-hidden="true" /> : <ChevronRight size={16} aria-hidden="true" />}</button>}
+                  {feature.action && <button type="button" className={`feature-settings-action${isPreferencesLocked ? " is-locked" : ""}`} onClick={() => !isPreferencesLocked && feature.actionPage && onNavigate?.(feature.actionPage)} disabled={isPreferencesLocked} aria-label={isPreferencesLocked ? `${featureLabel} preferences unavailable` : feature.action}>{feature.action}{isPreferencesLocked ? <LockKeyhole size={16} aria-hidden="true" /> : <ChevronRight size={16} aria-hidden="true" />}</button>}
                 </div>
-                {feature.moduleToggle && <FeatureModuleToggle title={feature.title} checked={isEnabled} locked={isLocked} onChange={() => toggleModule(feature.title)} />}
+                {feature.moduleToggle && <FeatureModuleToggle title={feature.title} checked={isEnabled} locked={isModuleLocked} saving={savingModule === feature.moduleKey} onChange={() => toggleModule(feature.moduleKey)} />}
               </article>
             );
           })}
         </div>
       </section>
+      {moduleToast && createPortal(
+        <div className={`feature-settings-toast${moduleToast.tone === "error" ? " is-error" : ""}${isModuleToastLeaving ? " is-leaving" : ""}`} role="status" aria-live="polite">
+          <CheckCircle2 size={18} aria-hidden="true" />
+          <span>{moduleToast.message}</span>
+          <button type="button" onClick={dismissModuleToast} aria-label="Dismiss notification"><X size={17} aria-hidden="true" /></button>
+        </div>,
+        document.body,
+      )}
       {isLabelModalOpen && <FeatureLabelsModal draft={labelDraft} savedLabels={visibleLabels} expandedLabel={expandedLabel} isSaving={isSavingLabels} error={labelSaveError} onChange={setLabelDraft} onExpand={setExpandedLabel} onClose={closeLabelModal} onSave={saveLabels} />}
     </>
   );
 }
 
-function FeatureModuleToggle({ title, checked, locked, onChange }) {
+function FeatureModuleToggle({ title, checked, locked, saving, onChange }) {
   return (
     <div className={`feature-module-control${locked ? " is-locked" : ""}`}>
       {locked && <LockKeyhole size={16} aria-hidden="true" />}
       <span>Feature Module: {checked ? "On" : "Off"}</span>
-      <button type="button" className={`feature-module-toggle${checked ? " is-on" : ""}`} role="switch" aria-checked={checked} aria-label={`${title} feature module ${checked ? "on" : "off"}`} onClick={onChange} disabled={locked}>
+      <button type="button" className={`feature-module-toggle${checked ? " is-on" : ""}`} role="switch" aria-checked={checked} aria-label={`${title} feature module ${checked ? "on" : "off"}`} onClick={onChange} disabled={locked || saving}>
         <span aria-hidden="true" />
       </button>
     </div>

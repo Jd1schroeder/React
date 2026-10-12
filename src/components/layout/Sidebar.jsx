@@ -15,6 +15,7 @@ import { setActiveOrganization } from "../../services/workspaceService";
 import { getUnreadWorkOrderCount } from "../../services/workOrderService";
 import { hasPermission } from "../../services/authorizationService";
 import { getFeatureLabel } from "../../utils/featureLabels";
+import { getFeatureModuleKeyForPage, isFeatureModuleEnabled } from "../../utils/featureModules";
 import { Avatar } from "../ui/Avatar";
 import { useWorkspace } from "./useWorkspace";
 
@@ -165,12 +166,15 @@ export function Sidebar({ activePage, onNavigate }) {
     };
   }, [canViewWorkOrders, organizationId, workspace.authorization?.grants, workspace.user?.id]);
 
+  const featureModules = workspace.organization?.feature_modules;
   const groupsWithUnreadCount = sidebarGroups.map((group) => ({
     ...group,
-    items: group.items.map((item) => item.page === "Work Orders"
-      ? { ...item, count: unreadWorkOrderCount }
-      : item),
-  }));
+    items: group.items
+      .filter((item) => isFeatureModuleEnabled(featureModules, getFeatureModuleKeyForPage(item.page)))
+      .map((item) => item.page === "Work Orders"
+        ? { ...item, count: unreadWorkOrderCount }
+        : item),
+  })).filter((group) => group.items.length > 0);
 
   return (
     <aside className={`sidebar ${collapsed ? "is-collapsed" : ""}`}>

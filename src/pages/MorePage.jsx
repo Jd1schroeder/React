@@ -3,6 +3,7 @@ import { BellOff, Bot, Building2, ChevronRight, UserRoundPlus } from 'lucide-rea
 import { sidebarGroups } from '../components/layout/sidebarConfig'
 import { useWorkspace } from '../components/layout/useWorkspace'
 import { getFeatureLabel } from '../utils/featureLabels'
+import { getFeatureModuleKeyForPage, isFeatureModuleEnabled } from '../utils/featureModules'
 import './MorePage.css'
 
 const featurePages = [
@@ -28,6 +29,8 @@ const featureColors = ['blue', 'orange', 'cyan', 'pink', 'yellow', 'purple', 'gr
 export function MorePage({ onNavigate }) {
   const workspace = useWorkspace()
   const organizationName = workspace.organization?.name || 'Workspace'
+  const featureModules = workspace.organization?.feature_modules
+  const visibleFeatureItems = featureItems.filter((item) => isFeatureModuleEnabled(featureModules, getFeatureModuleKeyForPage(item.page)))
 
   return <main className="more-page" aria-labelledby="more-page-title">
     <h1 id="more-page-title" className="more-page-visually-hidden">More</h1>
@@ -59,7 +62,7 @@ export function MorePage({ onNavigate }) {
     <section className="more-features" aria-labelledby="more-features-heading">
       <h2 id="more-features-heading">Product Features</h2>
       <div className="more-feature-grid">
-        {featureItems.map((item, index) => {
+        {visibleFeatureItems.map((item, index) => {
           const Icon = item.icon ?? Building2
           const color = featureColors[index % featureColors.length]
           return <button className="more-feature-card" key={item.page} type="button" onClick={() => onNavigate(item.page)}>

@@ -13,7 +13,7 @@ export async function getCurrentWorkspace(organizationId = window.localStorage.g
   const [membershipResult, profileResult, preferencesResult] = await Promise.allSettled([
     supabase
       .from('organization_members')
-      .select('organization_id, role, role_id, status, organization_roles(id, name, system_key, is_system), organizations(id, organization_number, name, slug, description, address_line_1, address_line_2, city, state_or_region, postal_code, country, logo_url, feature_labels, work_order_settings, work_order_start_number, timezone, status)')
+      .select('organization_id, role, role_id, status, organization_roles(id, name, system_key, is_system), organizations(id, organization_number, name, slug, description, address_line_1, address_line_2, city, state_or_region, postal_code, country, logo_url, feature_labels, feature_modules, work_order_settings, work_order_start_number, timezone, status)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: true }),
     supabase.from('profiles').select('id, user_number, first_name, last_name, phone, avatar_url').eq('id', user.id).maybeSingle(),
