@@ -85,7 +85,7 @@ export async function listWorkOrderActivity({ organizationId, workOrderId, grant
   }
 }
 
-export async function createWorkOrderComment({ organizationId, workOrderId, body, files = [], grants, record }) {
+export async function createWorkOrderComment({ organizationId, workOrderId, body, files = [], mentionedUserIds = [], mentionedTeamIds = [], grants, record }) {
   assertPermission(grants, 'work_orders.post_comments', record)
   const normalizedBody = body?.trim() || ''
   if (normalizedBody.length > 10000) throw new Error('Comments cannot be longer than 10,000 characters.')
@@ -125,15 +125,19 @@ export async function createWorkOrderComment({ organizationId, workOrderId, body
       })
     }
 
-    const { data, error } = await supabase.rpc('create_work_order_comment', {
+    const { data, error } = await supabase.rpc('create_work_order_comment_with_mentions', {
       target_organization_id: organizationId,
       target_work_order_id: workOrderId,
       target_comment_id: commentId,
       target_body: normalizedBody || null,
       target_attachments: attachments,
+      target_mentioned_user_ids: mentionedUserIds,
+      target_mentioned_team_ids: mentionedTeamIds,
     })
     if (error) throw error
-    return data
+    return data?.comment
+      ? { ...data.comment, assignments: data.assignments ?? [] }
+      : data
   } catch (error) {
     if (uploadedPaths.length) {
       await supabase.storage.from(commentAttachmentBucket).remove(uploadedPaths).catch(() => {})

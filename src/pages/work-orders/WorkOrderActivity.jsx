@@ -8,6 +8,7 @@ import { getRecordPath } from '../../routes'
 import { formatCalendarDateForUser, formatDateForUser } from '../../utils/dateFormatting'
 import { WORK_ORDER_ATTACHMENT_MAX_BYTES } from '../../utils/workOrderAttachments'
 import { extractWorkbenchWorkOrderLinks } from '../../utils/workOrderLinks'
+import { getWorkOrderMentionSuggestions, resolveWorkOrderMentionTargets } from '../../utils/workOrderMentions'
 import './WorkOrderActivity.css'
 
 const maxCommentAttachments = 20
@@ -408,6 +409,8 @@ export function WorkOrderActivity({
   sectionRef,
   memberDirectory = [],
   assigneeOptions = [],
+  mentionTargets = [],
+  assignMentionsEnabled = false,
   currentUserId,
   canDeleteAnyComments = false,
   canViewComments,
@@ -431,8 +434,11 @@ export function WorkOrderActivity({
   const [commentError, setCommentError] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [linkPreviews, setLinkPreviews] = useState({})
+  const [mentionCursor, setMentionCursor] = useState(null)
+  const [selectedMentionIndex, setSelectedMentionIndex] = useState(0)
   const requestedPreviewIds = useRef(new Set())
   const fileInputRef = useRef(null)
+  const commentInputRef = useRef(null)
 
   const loadActivity = useCallback(async ({ before = null, reset = false } = {}) => {
     if (!canViewComments || !onLoadActivity) return
@@ -507,6 +513,39 @@ export function WorkOrderActivity({
 
   const identitiesById = useMemo(() => new Map(memberDirectory.map((member) => [member.id, member])), [memberDirectory])
   const assigneeOptionsByValue = useMemo(() => new Map(assigneeOptions.map((option) => [option.value, option])), [assigneeOptions])
+  const mentionSuggestions = useMemo(() => assignMentionsEnabled
+    ? getWorkOrderMentionSuggestions(commentBody, mentionCursor ?? commentBody.length, mentionTargets)
+    : { activeMention: null, suggestions: [] }, [assignMentionsEnabled, commentBody, mentionCursor, mentionTargets])
+  const selectMention = (target) => {
+    const activeMention = mentionSuggestions.activeMention
+    if (!activeMention) return
+    const inserted = `@${target.mention} `
+    const nextBody = `${commentBody.slice(0, activeMention.start)}${inserted}${commentBody.slice(activeMention.end)}`
+    const nextCursor = activeMention.start + inserted.length
+    setCommentBody(nextBody)
+    setMentionCursor(nextCursor)
+    setSelectedMentionIndex(0)
+    window.requestAnimationFrame(() => {
+      commentInputRef.current?.focus()
+      commentInputRef.current?.setSelectionRange(nextCursor, nextCursor)
+    })
+  }
+  const handleMentionKeyDown = (event) => {
+    const suggestions = mentionSuggestions.suggestions
+    if (!suggestions.length) return
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setSelectedMentionIndex((current) => (current + 1) % suggestions.length)
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setSelectedMentionIndex((current) => (current - 1 + suggestions.length) % suggestions.length)
+    } else if (event.key === 'Enter' || event.key === 'Tab') {
+      event.preventDefault()
+      selectMention(suggestions[selectedMentionIndex] ?? suggestions[0])
+    } else if (event.key === 'Escape') {
+      setMentionCursor(null)
+    }
+  }
   const addFiles = (files) => {
     setCommentError('')
     const invalidFile = files.find((file) => !file.size || file.size > WORK_ORDER_ATTACHMENT_MAX_BYTES || file.name.length > 255)
@@ -529,8 +568,17 @@ export function WorkOrderActivity({
     setCommentError('')
     setIsSending(true)
     try {
-      await onPostComment(order, commentBody, selectedFiles)
+      const mentions = assignMentionsEnabled
+        ? resolveWorkOrderMentionTargets(commentBody, mentionTargets)
+        : { mentionedUserIds: [], mentionedTeamIds: [] }
+      if (assignMentionsEnabled) {
+        await onPostComment(order, commentBody, selectedFiles, mentions)
+      } else {
+        await onPostComment(order, commentBody, selectedFiles)
+      }
       setCommentBody('')
+      setMentionCursor(null)
+      setSelectedMentionIndex(0)
       setSelectedFiles([])
       if (fileInputRef.current) fileInputRef.current.value = ''
       await loadActivity({ reset: true })
@@ -563,15 +611,43 @@ export function WorkOrderActivity({
       {canPostComments && (
         <form className="work-order-comment-composer" onSubmit={sendComment}>
           <label className="work-order-comment-sr-only" htmlFor="work-order-comment-input">Write a comment</label>
-          <textarea
-            id="work-order-comment-input"
-            value={commentBody}
-            onChange={(event) => setCommentBody(event.target.value)}
+          <div className="work-order-comment-input-wrap">
+            <textarea
+              ref={commentInputRef}
+              id="work-order-comment-input"
+              value={commentBody}
+              onChange={(event) => {
+                setCommentBody(event.target.value)
+                setMentionCursor(event.target.selectionStart ?? event.target.value.length)
+                setSelectedMentionIndex(0)
+              }}
+              onClick={(event) => setMentionCursor(event.target.selectionStart ?? commentBody.length)}
+              onKeyUp={(event) => setMentionCursor(event.target.selectionStart ?? commentBody.length)}
+              onKeyDown={handleMentionKeyDown}
             maxLength={10000}
-            placeholder="Write a comment..."
-            rows={3}
-            disabled={isSending}
-          />
+              placeholder={assignMentionsEnabled ? 'Write a comment... Use @ to assign users or teams.' : 'Write a comment...'}
+              rows={3}
+              disabled={isSending}
+            />
+            {mentionSuggestions.suggestions.length > 0 && (
+              <div className="work-order-mention-suggestions" role="listbox" aria-label="Mention users or teams">
+                {mentionSuggestions.suggestions.map((target, index) => (
+                  <button
+                    key={`${target.type}:${target.id}`}
+                    type="button"
+                    role="option"
+                    aria-selected={index === selectedMentionIndex}
+                    className={index === selectedMentionIndex ? 'is-selected' : ''}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => selectMention(target)}
+                  >
+                    <span>@{target.mention}</span>
+                    <small>{target.label}{target.type === 'team' ? ' · Team' : ''}</small>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="work-order-comment-composer-footer">
             <label className="work-order-comment-attach" title="Attach images or files">
               <Paperclip size={18} aria-hidden="true" />

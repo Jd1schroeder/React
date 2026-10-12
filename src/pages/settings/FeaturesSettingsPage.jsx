@@ -32,6 +32,7 @@ const featureItems = [
     description: (labels) => `Customize ${getFeatureLabel(labels, "workOrder", "singular")} preferences like Time & Cost Tracking, Procedure Corrective Actions, and more.`,
     icon: ClipboardList,
     action: "Set Preferences",
+    actionPage: "Settings / Features / Work Orders",
   },
   {
     title: "Requests",
@@ -132,7 +133,7 @@ const featureItems = [
   },
 ];
 
-export function FeaturesSettingsPage() {
+export function FeaturesSettingsPage({ onNavigate }) {
   const workspace = useWorkspace();
   const organization = workspace.organization ?? {};
   const organizationId = organization.id;
@@ -201,7 +202,7 @@ export function FeaturesSettingsPage() {
                     {isOrganizationAdmin && <button type="button" className="feature-settings-edit-labels" onClick={() => openLabelModal(feature.labelKey)}><Pencil size={15} aria-hidden="true" />Edit Labels</button>}
                   </div>
                   <p>{typeof feature.description === "function" ? feature.description(visibleLabels) : feature.description}</p>
-                  {feature.action && <button type="button" className="feature-settings-action">{feature.action}<ChevronRight size={16} aria-hidden="true" /></button>}
+                  {feature.action && <button type="button" className="feature-settings-action" onClick={() => feature.actionPage && onNavigate?.(feature.actionPage)}>{feature.action}<ChevronRight size={16} aria-hidden="true" /></button>}
                 </div>
                 {feature.moduleToggle && <FeatureModuleToggle title={feature.title} checked={isEnabled} onChange={() => toggleModule(feature.title)} />}
               </article>

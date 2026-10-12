@@ -26,6 +26,9 @@ import { createWorkOrderComment, deleteWorkOrderComment, getWorkOrderLinkPreview
 import { createWorkOrderSavedFilter, deleteWorkOrderSavedFilter, listWorkOrderSavedFilters, updateWorkOrderSavedFilter } from '../services/workOrderSavedFilterService'
 import { WorkOrderCalendar, WorkOrderCalendarResults } from './work-orders/WorkOrderCalendar'
 import { buildWorkOrderCalendarMarkers, getWorkOrderCalendarRange } from './work-orders/workOrderCalendarDates'
+import { RequiredStatusCommentModal } from './work-orders/RequiredStatusCommentModal'
+import { normalizeWorkOrderSettings } from '../utils/workOrderSettings'
+import { buildWorkOrderMentionTargets } from '../utils/workOrderMentions'
 
 function dateKeyForTimezone(timezone) {
   const parts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' })
@@ -82,6 +85,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   const workspace = useWorkspace()
   const workOrderLabel = getFeatureLabel(workspace.organization?.feature_labels, 'workOrder')
   const workOrderSingularLabel = getFeatureLabel(workspace.organization?.feature_labels, 'workOrder', 'singular')
+  const workOrderSettings = normalizeWorkOrderSettings(workspace.organization?.work_order_settings)
   const { guardNavigation, setHasUnsavedChanges } = useUnsavedChanges()
   const organizationId = workspace.organization?.id ?? ''
   const grants = useMemo(() => workspace.authorization?.grants ?? {}, [workspace.authorization?.grants])
@@ -183,9 +187,13 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [editError, setEditError] = useState('')
   const [createError, setCreateError] = useState('')
+  const [pendingStatusChange, setPendingStatusChange] = useState(null)
+  const [statusCommentError, setStatusCommentError] = useState('')
+  const [isSavingStatusComment, setIsSavingStatusComment] = useState(false)
   const [assigneeOptions, setAssigneeOptions] = useState([])
   const [filterAssigneeOptions, setFilterAssigneeOptions] = useState([])
   const [memberDirectory, setMemberDirectory] = useState([])
+  const [mentionTargets, setMentionTargets] = useState([])
   const pendingReadIds = useRef(new Set())
   const savedFilterLoadToken = useRef(0)
   const inboxPreferencesReady = Boolean(organizationId && preferencesLoadedForOrganization === organizationId)
@@ -494,14 +502,31 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     record: workOrderAccessContext(order, userId, teamIds),
     before,
   }), [grants, organizationId, teamIds, userId])
-  const postWorkOrderComment = useCallback((order, body, files) => createWorkOrderComment({
-    organizationId,
-    workOrderId: order.id,
-    body,
-    files,
-    grants,
-    record: workOrderAccessContext(order, userId, teamIds),
-  }), [grants, organizationId, teamIds, userId])
+  const postWorkOrderComment = useCallback(async (order, body, files, mentions = {}) => {
+    const result = await createWorkOrderComment({
+      organizationId,
+      workOrderId: order.id,
+      body,
+      files,
+      mentionedUserIds: mentions.mentionedUserIds,
+      mentionedTeamIds: mentions.mentionedTeamIds,
+      grants,
+      record: workOrderAccessContext(order, userId, teamIds),
+    })
+    if (Array.isArray(result?.assignments)) {
+      setWorkOrdersById((current) => {
+        const currentOrder = current[order.id] ?? order
+        return {
+          ...current,
+          [order.id]: {
+            ...currentOrder,
+            work_order_assignments: result.assignments,
+          },
+        }
+      })
+    }
+    return result
+  }, [grants, organizationId, teamIds, userId])
   const editWorkOrderComment = useCallback((order, comment, body) => updateWorkOrderComment({
     organizationId,
     workOrderId: order.id,
@@ -579,6 +604,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
             firstName: member.profile?.first_name,
             lastName: member.profile?.last_name,
           })))
+        setMentionTargets(buildWorkOrderMentionTargets(members, teams))
         setFilterAssigneeOptions(
           membersWithAccounts
             .sort((first, second) => memberName(first).localeCompare(memberName(second)))
@@ -622,13 +648,17 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
           setAssigneeOptions([])
           setFilterAssigneeOptions([])
           setMemberDirectory([])
+          setMentionTargets([])
         }
       })
     return () => { active = false }
   }, [assignScope, canAssignWorkOrders, organizationId, teamIds])
-  const changeStatus = async (order, status) => {
+  const commitStatusChange = async (order, status, commentData = null) => {
     if (!organizationId || !order) return
     try {
+      if (commentData?.body?.trim() || commentData?.files?.length) {
+        await postWorkOrderComment(order, commentData.body, commentData.files)
+      }
       const updated = normalizeWorkOrder(await updateWorkOrderExecution({ organizationId, workOrderId: order.id, status, grants, record: { userId, ownerId: order.created_by, assigneeId: order.assigned_to, assigneeIds: order.work_order_assignments?.map((assignment) => assignment.user_id).filter(Boolean), teamId: order.team_id, assignedTeamIds: order.work_order_assignments?.map((assignment) => assignment.team_id).filter(Boolean), teamIds } }), workspace.preferences)
       setWorkOrdersById((current) => ({ ...current, [updated.id]: updated }))
       setRefreshVersion((version) => version + 1)
@@ -636,6 +666,30 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     } catch (updateError) {
       setError(updateError.message || 'Unable to update this Work Order.')
       throw updateError
+    }
+  }
+  const changeStatus = async (order, status, commentData = null) => {
+    if (!organizationId || !order) return
+    const requirementKey = { 'On Hold': 'onHold', Skipped: 'skipped', Cancelled: 'canceled', Canceled: 'canceled' }[status]
+    const requirement = requirementKey ? workOrderSettings.commentRequirements[requirementKey] : 'none'
+    if (!commentData && requirement !== 'none') {
+      setStatusCommentError('')
+      setPendingStatusChange({ order, status, requirement })
+      return
+    }
+    return commitStatusChange(order, status, commentData)
+  }
+  const submitRequiredStatusComment = async ({ body, files }) => {
+    if (!pendingStatusChange) return
+    setIsSavingStatusComment(true)
+    setStatusCommentError('')
+    try {
+      await commitStatusChange(pendingStatusChange.order, pendingStatusChange.status, { body, files })
+      setPendingStatusChange(null)
+    } catch (error) {
+      setStatusCommentError(error.message || 'Unable to update the Work Order status.')
+    } finally {
+      setIsSavingStatusComment(false)
     }
   }
   const canChangeStatusForOrder = (order) => canAccessRecord(grants, 'work_orders.change_status', {
@@ -790,7 +844,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     ? <NewWorkOrderForm initialWorkOrder={copySource} workOrderLabel={workOrderSingularLabel} onCancel={() => { setIsCreating(false); setCopySource(null) }} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} />
     : isEditingSelected
       ? <NewWorkOrderForm mode="edit" initialWorkOrder={selected} workOrderLabel={workOrderSingularLabel} onCancel={() => guardNavigation(() => { setHasUnsavedChanges(false); setEditingWorkOrderId(null) })} onDirtyChange={setHasUnsavedChanges} onUpdate={handleUpdate} isSaving={isSavingEdit} error={editError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} />
-      : <WorkOrderDetail selected={selected} isLoadingRecord={isLoadingSelectedRecord} missingRecord={missingRecord} onBack={() => { setLocalSelectedId(undefined); onNavigate?.('Work Orders') }} onEdit={() => selected && handleEdit(selected)} onCopy={() => selected && handleCopy(selected)} onStatusChange={changeStatus} onPreparePdfExport={prepareWorkOrderForPdfExport} assigneeOptions={assigneeOptions} memberDirectory={memberDirectory} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} dateFormat={workspace.preferences?.date_format} timezone={workspace.preferences?.timezone} onLoadActivity={loadWorkOrderActivity} onPostComment={postWorkOrderComment} onUpdateComment={editWorkOrderComment} onDeleteComment={removeWorkOrderComment} canDeleteAnyComments={canDeleteAnyWorkOrderComment} onResolveWorkOrderLinks={resolveWorkOrderLinks} />
+      : <WorkOrderDetail selected={selected} isLoadingRecord={isLoadingSelectedRecord} missingRecord={missingRecord} onBack={() => { setLocalSelectedId(undefined); onNavigate?.('Work Orders') }} onEdit={() => selected && handleEdit(selected)} onCopy={() => selected && handleCopy(selected)} onStatusChange={changeStatus} onPreparePdfExport={prepareWorkOrderForPdfExport} assigneeOptions={assigneeOptions} memberDirectory={memberDirectory} mentionTargets={mentionTargets} assignMentionsEnabled={Boolean(workOrderSettings.assignUsersTeamsOnMention)} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} dateFormat={workspace.preferences?.date_format} timezone={workspace.preferences?.timezone} onLoadActivity={loadWorkOrderActivity} onPostComment={postWorkOrderComment} onUpdateComment={editWorkOrderComment} onDeleteComment={removeWorkOrderComment} canDeleteAnyComments={canDeleteAnyWorkOrderComment} onResolveWorkOrderLinks={resolveWorkOrderLinks} />
 
   return <>
   {utilityPage === 'filters' && canViewWorkOrders && !isMobileRecordView ? <WorkOrderFilterPage
@@ -839,6 +893,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     </>}</>}
   </PanelLayout>}
   {canCreateWorkOrders && !isMobileRecordView && !utilityPage && <FloatingCreateButton className="is-mobile-only work-orders-create-button" label={`New ${workOrderSingularLabel}`} aria-label={`New ${workOrderSingularLabel}`} scrollContainerSelector=".work-order-list" onClick={startCreateWorkOrder} />}
+  {pendingStatusChange && <RequiredStatusCommentModal workOrderLabel={workOrderSingularLabel} status={pendingStatusChange.status} requirement={pendingStatusChange.requirement} error={statusCommentError} isSaving={isSavingStatusComment} onCancel={() => { if (!isSavingStatusComment) { setPendingStatusChange(null); setStatusCommentError('') } }} onSubmit={submitRequiredStatusComment} />}
   {isReadAllConfirmOpen && createPortal(<div className="work-order-read-confirm-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !isSavingReadState) setIsReadAllConfirmOpen(false) }}>
     <section className="work-order-read-confirm" role="dialog" aria-modal="true" aria-labelledby="work-order-read-confirm-title">
       <button type="button" className="work-order-read-confirm-close" aria-label="Close confirmation" onClick={() => setIsReadAllConfirmOpen(false)} disabled={isSavingReadState}><X size={18} /></button>

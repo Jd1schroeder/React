@@ -21,7 +21,7 @@ export async function getUserOrganizations() {
   const userId = await getUserId()
   const { data, error } = await supabase
     .from('organization_members')
-    .select('organization_id, role, status, organizations(id, organization_number, name, slug, description, address_line_1, address_line_2, city, state_or_region, postal_code, country, logo_url, feature_labels, timezone, status)')
+      .select('organization_id, role, status, organizations(id, organization_number, name, slug, description, address_line_1, address_line_2, city, state_or_region, postal_code, country, logo_url, feature_labels, work_order_settings, work_order_start_number, timezone, status)')
     .eq('user_id', userId)
     .eq('status', 'active')
   if (error) throw error
@@ -284,10 +284,27 @@ export async function updateOrganization({ organizationId, updates }) {
     .from('organizations')
     .update(updates)
     .eq('id', organizationId)
-    .select('id, organization_number, name, slug, description, address_line_1, address_line_2, city, state_or_region, postal_code, country, logo_url, feature_labels, timezone, status, updated_at, updated_by')
+    .select('id, organization_number, name, slug, description, address_line_1, address_line_2, city, state_or_region, postal_code, country, logo_url, feature_labels, work_order_settings, work_order_start_number, timezone, status, updated_at, updated_by')
     .single()
   if (error) throw error
   return data
+}
+
+export async function getNextWorkOrderNumber(organizationId) {
+  const { data, error } = await supabase.rpc('get_next_work_order_number', {
+    target_organization_id: organizationId,
+  })
+  if (error) throw error
+  return Number(data ?? 1)
+}
+
+export async function updateWorkOrderStartingNumber({ organizationId, startingNumber }) {
+  const { data, error } = await supabase.rpc('set_work_order_start_number', {
+    target_organization_id: organizationId,
+    target_start_number: startingNumber,
+  })
+  if (error) throw error
+  return Number(data ?? startingNumber)
 }
 
 export async function uploadOrganizationLogo(file, organizationId) {

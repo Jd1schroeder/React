@@ -42,7 +42,7 @@ export function GeneralSettingsPage({ pageName, onNavigate }) {
         {pageName === "Settings / General"
           ? <GeneralSettingsContent />
           : pageName === "Settings / Features"
-            ? <FeaturesSettingsPage />
+            ? <FeaturesSettingsPage onNavigate={onNavigate} />
           : <section className="settings-content" aria-labelledby="settings-content-title">
             <div className="settings-content-icon"><Icon size={22} /></div>
             <h2 id="settings-content-title">{current.title}</h2>

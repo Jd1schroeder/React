@@ -9,6 +9,8 @@ export const pagePaths = {
   'Privacy Policy': '/privacy',
   'Settings / General': '/settings/general',
   'Settings / Features': '/settings/features',
+  'Settings / Features / Work Orders': '/settings/features/workOrders',
+  'Settings / Features / Work Order': '/settings/features/workOrder',
   'Settings / Subscription': '/settings/subscription',
   'Settings / Manage Teammates': '/settings/teammates/users',
   'Settings / Teammates / Teams': '/settings/teammates/teams',

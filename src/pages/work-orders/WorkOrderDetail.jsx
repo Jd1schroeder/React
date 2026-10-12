@@ -145,6 +145,8 @@ export function WorkOrderDetail({
   teamIds = [],
   assigneeOptions = [],
   memberDirectory = [],
+  mentionTargets = [],
+  assignMentionsEnabled = false,
   dateFormat,
   timezone,
   onLoadActivity,
@@ -237,6 +239,11 @@ export function WorkOrderDetail({
     "work_orders.change_status",
     record,
   );
+  const canCancelSkip = canAccessRecord(
+    grants,
+    "work_orders.cancel_skip",
+    record,
+  );
   const canViewComments = canAccessRecord(
     grants,
     "work_orders.view_comments",
@@ -248,7 +255,7 @@ export function WorkOrderDetail({
     record,
   );
   const canUseComments = canViewComments || canPostComments;
-  const canUseMoreActions = canEditDetails || canChangeStatus || canUseComments || onToggleRead || canCreateWorkOrder;
+  const canUseMoreActions = canEditDetails || canChangeStatus || canCancelSkip || canUseComments || onToggleRead || canCreateWorkOrder;
   const assigneeOptionsByValue = new Map(assigneeOptions.map((option) => [option.value, option]));
   const identitiesById = new Map(memberDirectory.map((member) => [member.id, member]));
   const assignmentTargets = (selected.work_order_assignments ?? [])
@@ -374,10 +381,19 @@ export function WorkOrderDetail({
                 <button type="button" role="menuitem" onClick={() => { setIsPdfExportOpen(true); setIsMenuOpen(false); }}>
                   <span>Export to PDF</span>
                 </button>
+                {canCancelSkip ? <>
+                  <button type="button" role="menuitem" disabled={isChangingStatus || selected.status === "Skipped"} onClick={() => { setIsMenuOpen(false); void handleStatusChange("Skipped"); }}>
+                    <span>Skip Work Order</span>
+                  </button>
+                  <button type="button" role="menuitem" disabled={isChangingStatus || selected.status === "Cancelled"} onClick={() => { setIsMenuOpen(false); void handleStatusChange("Cancelled"); }}>
+                    <span>Cancel Work Order</span>
+                  </button>
+                </> : <button className="is-unavailable" type="button" role="menuitem" disabled title="Canceling and skipping Work Orders are not available for your role.">
+                  <span>Cancel Work Order</span><LockKeyhole size={14} aria-hidden="true" />
+                </button>}
                 {[
                   ["Save as Work Order Template", "Work Order templates are not available yet."],
                   ["Email to Vendors", "Emailing vendors is not available yet."],
-                  ["Cancel Work Order", "Cancelling Work Orders is not available yet."],
                   ["Delete", "Deleting Work Orders is not available yet."],
                 ].map(([label, unavailableMessage]) => (
                   <button className="is-unavailable" type="button" role="menuitem" key={label} disabled title={unavailableMessage}>
@@ -517,6 +533,8 @@ export function WorkOrderDetail({
               sectionRef={commentsRef}
               memberDirectory={memberDirectory}
               assigneeOptions={assigneeOptions}
+              mentionTargets={mentionTargets}
+              assignMentionsEnabled={assignMentionsEnabled}
               currentUserId={userId}
               canDeleteAnyComments={canDeleteAnyComments}
               canViewComments={canViewComments}

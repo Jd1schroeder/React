@@ -36,6 +36,8 @@ export const pages = {
   'Privacy Policy': PrivacyPage,
   'Settings / General': SettingsPage,
   'Settings / Features': SettingsPage,
+  'Settings / Features / Work Orders': SettingsPage,
+  'Settings / Features / Work Order': SettingsPage,
   'Settings / Subscription': SettingsPage,
   'Settings / Manage Teammates': SettingsPage,
   'Settings / Teammates / Teams': SettingsPage,
