@@ -410,6 +410,7 @@
 
   .mobile-primary-navigation { order: 0; }
   .mobile-app-header { order: 1; }
+  .mobile-app-header:not(.is-my-account) { display: none; }
 
   .main-shell {
     order: 2;

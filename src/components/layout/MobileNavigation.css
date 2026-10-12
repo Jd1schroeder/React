@@ -5,6 +5,7 @@
 .mobile-primary-navigation-tabs { display: contents; }
 .mobile-navigation-scroll-forward,
 .mobile-navigation-scroll-back,
+.mobile-navigation-account,
 .mobile-navigation-work-order-action,
 .mobile-navigation-record-back,
 .mobile-navigation-record-submit,
@@ -111,12 +112,13 @@
 
 @media (--wb-viewport-tablet) {
   .mobile-primary-navigation {
+    position: relative;
     box-sizing: border-box;
     display: flex;
     min-height: 60px;
     flex: 0 0 auto;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     gap: 8px;
     padding: 4px 20px;
     border-top: 0;
@@ -125,6 +127,11 @@
   }
 
   .mobile-primary-navigation.is-work-order-record-view { justify-content: space-between; }
+
+  .mobile-primary-navigation.has-work-order-actions { justify-content: space-between; }
+
+  .mobile-primary-navigation.is-work-order-sort-open,
+  .mobile-primary-navigation.is-work-order-filters-open { justify-content: space-between; }
 
   .mobile-primary-navigation.is-work-order-record-view .mobile-primary-navigation-tabs {
     max-width: calc(100% - 184px);
@@ -181,6 +188,34 @@
     scroll-snap-type: x mandatory;
     scroll-padding-inline: var(--spacing-2);
     scrollbar-width: none;
+  }
+
+  .mobile-navigation-account {
+    position: absolute;
+    top: 1px;
+    right: 18px;
+    display: flex;
+    width: 62px;
+    min-height: 58px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 2px;
+    border: 0;
+    border-radius: var(--radius-control);
+    color: var(--text-secondary-strong);
+    background: transparent;
+    font: inherit;
+    font-size: var(--font-size-xs);
+    line-height: 1.1;
+    touch-action: manipulation;
+  }
+
+  .mobile-navigation-account:hover { background: var(--surface-control-hover); }
+  .mobile-navigation-account:focus-visible {
+    outline: var(--focus-border-width) solid var(--focus-border-color);
+    outline-offset: -2px;
   }
 
   .mobile-primary-navigation-tabs::-webkit-scrollbar { display: none; }

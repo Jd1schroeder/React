@@ -11,6 +11,7 @@ import {
   Home,
   Menu,
   MessagesCircle,
+  Settings,
 } from 'lucide-react'
 import './MobileNavigation.css'
 
@@ -123,7 +124,7 @@ export function MobileNavigation({ activePage, onNavigate }) {
   }
 
   return <nav
-    className={`mobile-primary-navigation${workOrderNavigation.utilityPage ? ` is-work-order-${workOrderNavigation.utilityPage}-open` : ''}${workOrderNavigation.recordView ? ' is-work-order-record-view' : ''}`}
+    className={`mobile-primary-navigation${activePage === 'Work Orders' ? ' has-work-order-actions' : ''}${workOrderNavigation.utilityPage ? ` is-work-order-${workOrderNavigation.utilityPage}-open` : ''}${workOrderNavigation.recordView ? ' is-work-order-record-view' : ''}`}
     aria-label="Primary navigation"
   >
     <MobileWorkOrderNavigationActions activePage={activePage} navigation={workOrderNavigation} position="leading" />
@@ -156,6 +157,10 @@ export function MobileNavigation({ activePage, onNavigate }) {
         <span>More</span>
       </button>
     </div>
+    {['Dashboard', 'More'].includes(activePage) && <button className="mobile-navigation-account" type="button" onClick={() => onNavigate('Settings / Profile Preferences')} aria-label="Account">
+      <Settings size={26} strokeWidth={1.8} aria-hidden="true" />
+      <span>Account</span>
+    </button>}
     <button className="mobile-navigation-scroll-forward" type="button" aria-label="Show more navigation options" onClick={scrollNavigationForward} hidden={!navigationOverflow.next}>
       <ChevronRight size={22} strokeWidth={2.4} aria-hidden="true" />
     </button>
