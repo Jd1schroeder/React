@@ -3,6 +3,8 @@ import { listOrganizationInvitations } from './invitationService'
 import { getBaselinePermissions, validatePermissionGrants } from './permissionCatalog'
 export { organizationRoleCatalog } from './permissionCatalog'
 
+const organizationLogoBucket = 'organization-assets'
+
 export const membershipRoles = [
   { value: 'member', label: 'Member' },
   { value: 'admin', label: 'Administrator' },
@@ -19,7 +21,7 @@ export async function getUserOrganizations() {
   const userId = await getUserId()
   const { data, error } = await supabase
     .from('organization_members')
-    .select('organization_id, role, status, organizations(id, name, slug, description, logo_url, timezone, status)')
+    .select('organization_id, role, status, organizations(id, organization_number, name, slug, description, logo_url, timezone, status)')
     .eq('user_id', userId)
     .eq('status', 'active')
   if (error) throw error
@@ -42,7 +44,7 @@ export async function listOrganizationMembers(organizationId, { includePendingIn
   if (memberRows.length) {
     const { data, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, phone, avatar_url')
+      .select('id, user_number, first_name, last_name, phone, avatar_url')
       .in('id', memberRows.map((member) => member.user_id))
     if (profilesError) throw profilesError
     profiles = data ?? []
@@ -282,8 +284,30 @@ export async function updateOrganization({ organizationId, updates }) {
     .from('organizations')
     .update(updates)
     .eq('id', organizationId)
-    .select('id, name, slug, description, logo_url, timezone, status, updated_at, updated_by')
+    .select('id, organization_number, name, slug, description, logo_url, timezone, status, updated_at, updated_by')
     .single()
   if (error) throw error
   return data
+}
+
+export async function uploadOrganizationLogo(file, organizationId) {
+  if (!organizationId) throw new Error('An organization is required to upload a logo.')
+  if (!file?.type?.startsWith('image/')) throw new Error('Choose a JPG, PNG, or WebP image.')
+  if (file.size > 5 * 1024 * 1024) throw new Error('Organization logos must be 5 MB or smaller.')
+  const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
+  const path = `organizations/${organizationId}/logo-${crypto.randomUUID()}.${extension}`
+  const { error } = await supabase.storage.from(organizationLogoBucket).upload(path, file, {
+    cacheControl: '3600',
+    contentType: file.type,
+    upsert: false,
+  })
+  if (error) throw error
+  return path
+}
+
+export async function getOrganizationLogoSignedUrl(path) {
+  if (!path || path.startsWith('http')) return path || ''
+  const { data, error } = await supabase.storage.from(organizationLogoBucket).createSignedUrl(path, 60 * 60)
+  if (error) throw error
+  return data?.signedUrl ?? ''
 }

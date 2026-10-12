@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Building2,
   ChevronDown,
   ChevronRight,
   HelpCircle,
@@ -11,7 +10,6 @@ import {
 } from "lucide-react";
 import "./Sidebar.css";
 import { settingsNavigation, settingsPageByLabel, sidebarGroups } from "./sidebarConfig";
-import workbenchIcon from "../../assets/workbench-icon-2x.png";
 import { supabase } from "../../lib/supabase";
 import { setActiveOrganization } from "../../services/workspaceService";
 import { getUnreadWorkOrderCount } from "../../services/workOrderService";
@@ -139,6 +137,7 @@ export function Sidebar({ activePage, onNavigate }) {
   const displayName = [firstName, lastName].filter(Boolean).join(" ") || workspace.user?.email || "Account";
   const organizationName = workspace.organization?.name || "Workspace";
   const organizationId = workspace.organization?.id;
+  const hasMultipleOrganizations = workspace.organizations?.length > 1;
   const canViewWorkOrders = workspace.authorization?.status === "ready" && hasPermission(workspace.authorization.grants, "work_orders.view");
   const unreadWorkOrderCount = unreadWorkOrderBadge.organizationId === organizationId ? unreadWorkOrderBadge.count : null;
 
@@ -172,10 +171,14 @@ export function Sidebar({ activePage, onNavigate }) {
   return (
     <aside className={`sidebar ${collapsed ? "is-collapsed" : ""}`}>
       <div className="sidebar-header">
-        <div className="brand">
-          <img className="brand-mark" src={workbenchIcon} alt="Workbench logo" />
-          <span className="brand-name">Workbench</span>
-        </div>
+        {hasMultipleOrganizations ? <button type="button" className="brand workspace-brand" onClick={() => setIsWorkspaceOpen((value) => !value)} aria-haspopup="menu" aria-expanded={isWorkspaceOpen}>
+          <Avatar className="brand-mark organization-brand-avatar" src={workspace.organization?.logo_url} name={organizationName} alt={`${organizationName} logo`} />
+          <span className="brand-name">{organizationName}</span>
+          <ChevronDown className="workspace-brand-chevron" size={15} aria-hidden="true" />
+        </button> : <div className="brand">
+          <Avatar className="brand-mark organization-brand-avatar" src={workspace.organization?.logo_url} name={organizationName} alt={`${organizationName} logo`} />
+          <span className="brand-name">{organizationName}</span>
+        </div>}
         <button
           className="collapse-button"
           onClick={() => setCollapsed((value) => !value)}
@@ -188,17 +191,7 @@ export function Sidebar({ activePage, onNavigate }) {
           )}
         </button>
       </div>
-      {!collapsed && workspace.organizations?.length > 1 && (
-        <div className="workspace-section">
-          <button type="button" className="workspace-switcher" onClick={() => setIsWorkspaceOpen((value) => !value)} aria-haspopup="menu" aria-expanded={isWorkspaceOpen}>
-            <Building2 size={15} />
-            <span className="workspace-dot" />
-            <span className="workspace-name">{organizationName}</span>
-            <ChevronDown className="chevron" size={15} />
-          </button>
-          {isWorkspaceOpen && workspace.organizations?.length > 1 && <div className="workspace-menu" role="menu">{workspace.organizations.map((organization) => <button type="button" role="menuitem" className={organization.id === workspace.organization?.id ? 'is-active' : ''} key={organization.id} onClick={() => { setActiveOrganization(organization.id); setIsWorkspaceOpen(false) }}>{organization.name}</button>)}</div>}
-        </div>
-      )}
+      {isWorkspaceOpen && hasMultipleOrganizations && <div className="workspace-menu sidebar-workspace-menu" role="menu">{workspace.organizations.map((organization) => <button type="button" role="menuitem" className={organization.id === workspace.organization?.id ? 'is-active' : ''} key={organization.id} onClick={() => { setActiveOrganization(organization.id); setIsWorkspaceOpen(false) }}>{organization.name}</button>)}</div>}
       <nav className="sidebar-nav" aria-label="Main navigation">
         {groupsWithUnreadCount.map((group) => (
           <NavGroup

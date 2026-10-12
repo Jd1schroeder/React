@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { getAvatarSignedUrl } from './profileService'
+import { getOrganizationLogoSignedUrl } from './organizationService'
 import { permissionMap } from './authorizationService'
 
 export async function getCurrentWorkspace(organizationId = window.localStorage.getItem('workbench.activeOrganizationId')) {
@@ -12,10 +13,10 @@ export async function getCurrentWorkspace(organizationId = window.localStorage.g
   const [membershipResult, profileResult, preferencesResult] = await Promise.allSettled([
     supabase
       .from('organization_members')
-      .select('organization_id, role, role_id, status, organization_roles(id, name, system_key, is_system), organizations(id, name, slug, description, logo_url, timezone, status)')
+      .select('organization_id, role, role_id, status, organization_roles(id, name, system_key, is_system), organizations(id, organization_number, name, slug, description, logo_url, timezone, status)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: true }),
-    supabase.from('profiles').select('id, first_name, last_name, phone, avatar_url').eq('id', user.id).maybeSingle(),
+    supabase.from('profiles').select('id, user_number, first_name, last_name, phone, avatar_url').eq('id', user.id).maybeSingle(),
     supabase.from('user_preferences').select('language, date_format, time_format, week_start, timezone').eq('user_id', user.id).maybeSingle(),
   ])
 
@@ -73,11 +74,14 @@ export async function getCurrentWorkspace(organizationId = window.localStorage.g
   }
 
   const signedAvatarUrl = await signedAvatarUrlPromise
+  const signedOrganizationLogoUrl = organization?.logo_url
+    ? await getOrganizationLogoSignedUrl(organization.logo_url).catch(() => '')
+    : ''
   const profileWithAvatar = profile
     ? { ...profile, avatar_path: profile.avatar_url, avatar_url: signedAvatarUrl }
     : null
 
-  return { user, profile: profileWithAvatar, preferences, organizations, organization, accessStatus, authorization, teamIds }
+  return { user, profile: profileWithAvatar, preferences, organizations, organization: organization ? { ...organization, logo_url: signedOrganizationLogoUrl } : organization, accessStatus, authorization, teamIds }
 }
 
 export function setActiveOrganization(organizationId) {

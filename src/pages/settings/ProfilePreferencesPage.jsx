@@ -250,7 +250,7 @@ export function ProfilePreferencesPage({ pageName = "Settings / Profile Preferen
         <section className="profile-settings-card profile-personal-info-card">
           <div className="profile-identity">
             <div className="profile-avatar-readonly"><Avatar className="profile-avatar-display" src={avatarUrl} firstName={editForm.firstName} lastName={editForm.lastName} alt={`${displayName} profile`} /></div>
-            <div className="profile-identity-copy"><div className="profile-name-row"><h2>{displayName}</h2><button type="button" className="profile-edit-button" onClick={openEditAccount}><Pencil size={16} /><span className="sr-only">Edit personal info</span></button></div><p>{role}</p><div className="profile-info-grid"><div><Mail size={19} aria-hidden="true" /><span className="sr-only">Email</span><strong>{editForm.email || "Not provided"}</strong></div><div><Smartphone size={19} aria-hidden="true" /><span className="sr-only">Phone Number</span><strong>{editForm.phone || "Not provided"}</strong></div></div></div>
+            <div className="profile-identity-copy"><div className="profile-name-row"><h2>{displayName}</h2><button type="button" className="profile-edit-button" onClick={openEditAccount}><Pencil size={16} /><span className="sr-only">Edit personal info</span></button></div><p>{role}</p><div className="profile-info-grid"><div><Mail size={19} aria-hidden="true" /><span className="sr-only">Email</span><strong>{editForm.email || "Not provided"}</strong></div><div><Smartphone size={19} aria-hidden="true" /><span className="sr-only">Phone Number</span><strong>{editForm.phone || "Not provided"}</strong></div><div><span className="profile-user-number-label">User ID</span><strong>{workspace.profile?.user_number ?? "—"}</strong></div></div></div>
           </div>
         </section>
         <button type="button" className="profile-pause-notifications" onClick={() => setIsPauseMenuOpen(true)}>{pauseUntil ? <BellRing size={20} aria-hidden="true" /> : <BellOff size={20} aria-hidden="true" />}<span>{pauseUntil ? "Resume Notifications" : "Pause Notifications"}</span></button>
@@ -287,8 +287,13 @@ function PreferenceSelect({ label, ariaLabel, options = [], onChange, value, ...
   </label>;
 }
 
-function ProfileAvatarPicker({ avatarUrl, editForm, onAvatarChange, className = "profile-modal-avatar-upload" }) {
-  return <label className={className}><input type="file" accept="image/gif,image/jpeg,image/png,image/heic,image/heif" onChange={onAvatarChange} /><Avatar className="profile-modal-avatar-display" src={avatarUrl} firstName={editForm.firstName} lastName={editForm.lastName} alt="Profile" /><span className="profile-modal-avatar-overlay"><Camera size={22} /></span></label>;
+export function ProfileAvatarPicker({ avatarUrl, editForm, name, onAvatarChange, className = "profile-modal-avatar-upload" }) {
+  const handleDrop = (event) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files?.[0];
+    if (file) onAvatarChange({ target: { files: [file] } });
+  };
+  return <label className={className} onDragOver={(event) => event.preventDefault()} onDrop={handleDrop}><input type="file" accept="image/gif,image/jpeg,image/png,image/heic,image/heif" onChange={onAvatarChange} /><Avatar className="profile-modal-avatar-display" src={avatarUrl} firstName={editForm.firstName} lastName={editForm.lastName} name={name} alt="Profile" /><span className="profile-modal-avatar-overlay"><Camera size={22} /></span></label>;
 }
 
 function ProfileEditFields({ avatarUrl, editForm, onAvatarChange, onChange, includeAvatar = true }) {

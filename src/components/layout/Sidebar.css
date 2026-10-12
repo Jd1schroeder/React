@@ -37,6 +37,37 @@
   letter-spacing: 0;
 }
 
+.workspace-brand {
+  position: relative;
+  min-width: 0;
+  padding: 0;
+  border-radius: var(--sidebar-hover-radius);
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  text-align: left;
+}
+
+.workspace-brand:hover,
+.workspace-brand:focus-visible {
+  color: var(--ink);
+  background: var(--sidebar-hover);
+  outline: 0;
+}
+
+.workspace-brand-chevron {
+  flex: none;
+  margin-left: auto;
+  color: var(--sidebar-text-muted);
+}
+
+.avatar.organization-brand-avatar {
+  border-radius: var(--radius-md);
+  color: var(--blue);
+  background: var(--blue-soft);
+  font-size: var(--font-size-sm);
+}
+
 .brand-mark {
   width: 34px;
   height: 34px;
@@ -100,7 +131,8 @@
   color: var(--sidebar-text-muted);
 }
 
-.workspace-menu { position: absolute; z-index: 15; top: 54px; left: 8px; right: 8px; display: grid; gap: 2px; padding: 6px; border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); background: var(--surface); box-shadow: var(--elevation-menu); }
+.workspace-menu { position: absolute; z-index: 35; top: 54px; left: 8px; right: 8px; display: grid; gap: 2px; padding: 6px; border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); background: var(--surface); box-shadow: var(--elevation-menu); }
+.sidebar-workspace-menu { top: 50px; }
 .workspace-menu button { min-height: 34px; padding: 0 9px; border: 0; border-radius: var(--radius-sm); color: var(--ink); background: transparent; font-size: var(--font-size-sm); text-align: left; }
 .workspace-menu button:hover, .workspace-menu button.is-active { color: var(--blue); background: var(--sidebar-hover); }
 
@@ -480,6 +512,7 @@
 }
 
 .sidebar.is-collapsed .brand-name,
+.sidebar.is-collapsed .workspace-brand-chevron,
 .sidebar.is-collapsed .workspace-section,
 .sidebar.is-collapsed .nav-label-text,
 .sidebar.is-collapsed .nav-count,
