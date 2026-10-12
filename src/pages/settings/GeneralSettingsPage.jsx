@@ -138,7 +138,7 @@ function GeneralSettingsContent() {
         <Avatar src={organization.logo_url} name={organization.name} className="general-organization-logo" alt={`${organization.name ?? "Organization"} logo`} />
         <div className="general-organization-details">
           <h2 id="organization-summary-title">{organization.name ?? "Your organization"}</h2>
-          <p>{organization.description || "Workspace organization"}</p>
+          <p>{formatOrganizationAddress(organization) || "Workspace organization"}</p>
           <p>{organization.slug || "Organization"} <span aria-hidden="true">|</span> {memberLabel}</p>
           <p>Organization ID: {organization.organization_number ?? "—"}</p>
           <span className="general-plan-badge">{organization.plan_name ?? "Plan not configured"}</span>
@@ -175,14 +175,33 @@ function GeneralSettingsContent() {
   );
 }
 
+function formatOrganizationAddress(organization) {
+  return [
+    organization.address_line_1 ?? organization.description,
+    organization.address_line_2,
+    organization.city,
+    organization.state_or_region,
+    organization.postal_code,
+    organization.country,
+  ].filter(Boolean).join(", ");
+}
+
 function OrganizationProfileModal({ organization, onClose, onSaved }) {
   const [name, setName] = useState(organization.name ?? "");
-  const [address, setAddress] = useState(organization.description ?? "");
+  const [address, setAddress] = useState({
+    line1: organization.address_line_1 ?? organization.description ?? "",
+    line2: organization.address_line_2 ?? "",
+    city: organization.city ?? "",
+    state: organization.state_or_region ?? "",
+    postalCode: organization.postal_code ?? "",
+    country: organization.country ?? "",
+  });
   const [logoUrl, setLogoUrl] = useState(organization.logo_url ?? "");
   const [logoFile, setLogoFile] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const isValid = Boolean(name.trim());
+  const updateAddress = (field, value) => setAddress((current) => ({ ...current, [field]: value }));
 
   const chooseLogo = (event) => {
     const file = event.target.files?.[0];
@@ -206,7 +225,20 @@ function OrganizationProfileModal({ organization, onClose, onSaved }) {
     setError("");
     try {
       const logoPath = logoFile ? await uploadOrganizationLogo(logoFile, organization.id) : undefined;
-      await updateOrganization({ organizationId: organization.id, updates: { name: name.trim(), description: address.trim() || null, ...(logoPath ? { logo_url: logoPath } : {}) } });
+      await updateOrganization({
+        organizationId: organization.id,
+        updates: {
+          name: name.trim(),
+          description: address.line1.trim() || null,
+          address_line_1: address.line1.trim() || null,
+          address_line_2: address.line2.trim() || null,
+          city: address.city.trim() || null,
+          state_or_region: address.state.trim() || null,
+          postal_code: address.postalCode.trim() || null,
+          country: address.country.trim() || null,
+          ...(logoPath ? { logo_url: logoPath } : {}),
+        },
+      });
       await onSaved?.();
       onClose();
     } catch (saveError) {
@@ -223,7 +255,14 @@ function OrganizationProfileModal({ organization, onClose, onSaved }) {
         <div className="general-modal-content">
           <ProfileAvatarPicker avatarUrl={logoUrl} name={name} editForm={{ firstName: "", lastName: "" }} onAvatarChange={chooseLogo} className="profile-modal-avatar-upload general-organization-avatar-picker" />
           <label className="general-modal-field"><span>Organization Name <em>(Required)</em></span><input value={name} onChange={(event) => setName(event.target.value)} autoFocus /></label>
-          <label className="general-modal-field"><span>Address</span><input value={address} onChange={(event) => setAddress(event.target.value)} /></label>
+          <label className="general-modal-field"><span>Address line 1</span><input value={address.line1} onChange={(event) => updateAddress("line1", event.target.value)} autoComplete="address-line1" /></label>
+          <label className="general-modal-field"><span>Address line 2</span><input value={address.line2} onChange={(event) => updateAddress("line2", event.target.value)} autoComplete="address-line2" /></label>
+          <div className="general-modal-address-grid">
+            <label className="general-modal-field"><span>City</span><input value={address.city} onChange={(event) => updateAddress("city", event.target.value)} autoComplete="address-level2" /></label>
+            <label className="general-modal-field"><span>State / Province / Region</span><input value={address.state} onChange={(event) => updateAddress("state", event.target.value)} autoComplete="address-level1" /></label>
+            <label className="general-modal-field"><span>ZIP / Postal Code</span><input value={address.postalCode} onChange={(event) => updateAddress("postalCode", event.target.value)} autoComplete="postal-code" /></label>
+            <label className="general-modal-field"><span>Country</span><input value={address.country} onChange={(event) => updateAddress("country", event.target.value)} autoComplete="country-name" /></label>
+          </div>
           {error && <p className="general-modal-error" role="alert">{error}</p>}
         </div>
         <footer className="general-modal-footer"><button type="button" className="general-modal-cancel" onClick={onClose} disabled={isSaving}>Cancel</button><Button className="general-modal-update" disabled={!isValid || isSaving} onClick={save}>{isSaving ? "Updating..." : "Update"}</Button></footer>

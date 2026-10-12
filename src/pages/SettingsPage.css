@@ -176,10 +176,19 @@
 .general-organization-logo {
   width: 88px;
   height: 88px;
+  aspect-ratio: 1;
+  overflow: hidden;
   border-radius: var(--radius-sm);
   color: var(--blue);
   background: var(--blue-soft);
   font-size: var(--font-size-xl);
+}
+
+.general-organization-logo img {
+  box-sizing: border-box;
+  display: block;
+  padding: var(--spacing-2);
+  object-fit: contain !important;
 }
 
 .general-organization-details {
@@ -354,8 +363,9 @@ button.general-data-tile:focus-visible {
 
 .general-modal {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   width: min(100%, 480px);
-  max-height: min(700px, calc(100vh - 48px));
+  max-height: min(860px, calc(100vh - 32px));
   overflow: hidden;
   border: var(--border-width-normal) solid var(--line);
   border-radius: var(--radius-card);
@@ -399,6 +409,7 @@ button.general-data-tile:focus-visible {
 
 .general-modal-content {
   display: grid;
+  min-height: 0;
   gap: var(--spacing-6);
   overflow-y: auto;
   padding: var(--spacing-8) var(--spacing-5) var(--spacing-5);
@@ -411,6 +422,14 @@ button.general-data-tile:focus-visible {
 
 .general-organization-avatar-picker > .avatar {
   border-radius: var(--radius-md);
+}
+
+.general-organization-avatar-picker > .profile-modal-avatar-display > img {
+  box-sizing: border-box;
+  max-width: 100%;
+  max-height: 100%;
+  padding: var(--spacing-2);
+  object-fit: contain !important;
 }
 
 .general-modal-field {
@@ -428,6 +447,12 @@ button.general-data-tile:focus-visible {
   color: var(--muted);
   font-style: normal;
   font-weight: var(--font-normal);
+}
+
+.general-modal-address-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-6) var(--spacing-5);
 }
 
 .general-modal-field input {
@@ -477,6 +502,10 @@ button.general-data-tile:focus-visible {
 @media (--wb-viewport-max-760) {
   .general-modal-backdrop {
     padding: var(--spacing-5);
+  }
+
+  .general-modal-address-grid {
+    grid-template-columns: 1fr;
   }
 }
 

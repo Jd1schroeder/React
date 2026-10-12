@@ -21,7 +21,7 @@ export async function getUserOrganizations() {
   const userId = await getUserId()
   const { data, error } = await supabase
     .from('organization_members')
-    .select('organization_id, role, status, organizations(id, organization_number, name, slug, description, logo_url, timezone, status)')
+    .select('organization_id, role, status, organizations(id, organization_number, name, slug, description, address_line_1, address_line_2, city, state_or_region, postal_code, country, logo_url, timezone, status)')
     .eq('user_id', userId)
     .eq('status', 'active')
   if (error) throw error
@@ -284,7 +284,7 @@ export async function updateOrganization({ organizationId, updates }) {
     .from('organizations')
     .update(updates)
     .eq('id', organizationId)
-    .select('id, organization_number, name, slug, description, logo_url, timezone, status, updated_at, updated_by')
+    .select('id, organization_number, name, slug, description, address_line_1, address_line_2, city, state_or_region, postal_code, country, logo_url, timezone, status, updated_at, updated_by')
     .single()
   if (error) throw error
   return data

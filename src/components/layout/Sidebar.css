@@ -62,10 +62,19 @@
 }
 
 .avatar.organization-brand-avatar {
+  aspect-ratio: 1;
+  overflow: hidden;
   border-radius: var(--radius-md);
   color: var(--blue);
   background: var(--blue-soft);
   font-size: var(--font-size-sm);
+}
+
+.avatar.organization-brand-avatar img {
+  box-sizing: border-box;
+  display: block;
+  padding: 2px;
+  object-fit: contain !important;
 }
 
 .brand-mark {
