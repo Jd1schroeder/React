@@ -383,15 +383,18 @@
 @media (--wb-viewport-max-820) {
   .signup-page {
     display: block;
+    background: var(--surface);
+  }
+  .signup-page > .public-mobile-header {
+    padding: var(--spacing-5) var(--spacing-7) 0;
   }
 
   .signup-promo {
-    min-height: auto;
-    padding: var(--spacing-8) var(--spacing-7) var(--spacing-10);
+    display: none;
   }
 
   .signup-promo-copy {
-    margin: 76px 0 0;
+    margin: 32px 0 0;
   }
 
   .signup-promo-copy h1 {
@@ -403,12 +406,32 @@
   }
 
   .signup-panel {
-    min-height: auto;
-    padding: var(--spacing-8) var(--spacing-5) var(--spacing-11);
+    min-height: calc(100dvh - 62px);
+    place-items: start center;
+    overflow-y: visible;
+    padding: var(--spacing-6) var(--spacing-7) var(--spacing-11);
   }
 
   .signup-card {
-    padding: var(--spacing-8) var(--spacing-6) var(--spacing-7);
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .signup-heading {
+    text-align: left;
+  }
+
+  .signup-card-logo {
+    width: min(160px, 52vw);
+    height: clamp(72px, 10dvh, 84px);
+  }
+
+  .signup-card-logo-button {
+    display: none;
   }
 }
 

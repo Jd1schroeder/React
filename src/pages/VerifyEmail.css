@@ -140,6 +140,16 @@
   font-size: var(--font-size-body-sm);
 }
 @media (--wb-viewport-max-520) {
+  .verify-page {
+    display: block;
+    padding: var(--spacing-5) var(--spacing-6) var(--spacing-7);
+  }
+  .verify-page > .public-mobile-header {
+    margin-bottom: var(--spacing-5);
+  }
+  .verify-logo-button {
+    display: none;
+  }
   .verify-card {
     padding: 30px var(--spacing-6) var(--spacing-7);
   }

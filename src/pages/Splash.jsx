@@ -2,6 +2,7 @@ import { ArrowRight, CheckCircle2, ClipboardCheck, ShieldCheck, UsersRound } fro
 import { Button } from '../components/ui/Button'
 import workbenchIcon from '../assets/workbench-icon-2x.png'
 import workbenchLogo from '../assets/workbench-logo.png'
+import { PublicMobileHeader } from './auth/PublicMobileHeader'
 import './Splash.css'
 
 export function Splash({ onNavigate }) {
@@ -12,7 +13,8 @@ export function Splash({ onNavigate }) {
         <div className="splash-orb splash-orb-one" />
         <div className="splash-orb splash-orb-two" />
         <div className="splash-visual-content">
-          <div className="splash-brand"><img src={workbenchIcon} alt="" /><span>Workbench</span></div>
+          <PublicMobileHeader onNavigate={onNavigate} dark />
+          <div className="splash-brand splash-desktop-brand"><img src={workbenchIcon} alt="" /><span>Workbench</span></div>
           <div className="splash-message"><p>FACILITY OPERATIONS</p><h1>Keep every team, tool, and task moving.</h1><span>One clear workspace for the work that keeps your facility running.</span></div>
           <div className="splash-dashboard" aria-hidden="true"><div className="splash-dashboard-top" /><div className="splash-dashboard-row"><ClipboardCheck size={21} /><span /><i /></div><div className="splash-dashboard-row"><ShieldCheck size={21} /><span /><i /></div><div className="splash-dashboard-row"><UsersRound size={21} /><span /><i /></div></div>
         </div>

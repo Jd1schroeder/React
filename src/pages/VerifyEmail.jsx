@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '../components/ui/Button'
 import { supabase } from '../lib/supabase'
 import workbenchLogo from '../assets/workbench-logo.png'
+import { PublicMobileHeader } from './auth/PublicMobileHeader'
 import './VerifyEmail.css'
 
 export function VerifyEmail({ onNavigate }) {
@@ -30,6 +31,7 @@ export function VerifyEmail({ onNavigate }) {
 
   return (
     <main className="verify-page">
+      <PublicMobileHeader onNavigate={onNavigate} />
       <section className="verify-card" aria-labelledby="verify-title">
         <button type="button" className="verify-logo-button" onClick={() => onNavigate?.('Splash')} aria-label="Go to Workbench home"><img className="verify-logo" src={workbenchLogo} alt="Workbench CMMS" /></button>
         {isVerified ? (

@@ -7,6 +7,7 @@ import './Login.css'
 import './Signup.css'
 import { Brand } from './auth/Brand'
 import { PhoneField, TeamSizeDropdown } from './auth/AuthControls'
+import { PublicMobileHeader } from './auth/PublicMobileHeader'
 
 function getPostAuthenticationPage() {
   if (window.sessionStorage.getItem('workbench.pendingInviteToken')) return 'Accept Invite'
@@ -79,6 +80,7 @@ export function AuthPage({ mode = 'login', onNavigate }) {
   if (isSignup) {
     return (
       <main className="signup-page">
+        <PublicMobileHeader onNavigate={onNavigate} />
         <section className="signup-promo" aria-label="Workbench workspace benefits">
           <Brand onNavigate={onNavigate} />
           <div className="signup-promo-copy">
@@ -121,6 +123,7 @@ export function AuthPage({ mode = 'login', onNavigate }) {
 
   return (
     <main className="login-page">
+      <PublicMobileHeader onNavigate={onNavigate} />
       {submitError && <p className="auth-form-error login-page-error" role="alert">{submitError}</p>}
       <section className="login-hero" aria-label="Workbench facility operations">
         <div className="login-hero-grid" /><div className="login-hero-orb login-hero-orb-one" /><div className="login-hero-orb login-hero-orb-two" />

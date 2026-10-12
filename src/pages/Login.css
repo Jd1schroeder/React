@@ -418,19 +418,71 @@
 @media (--wb-viewport-max-820) {
   .login-page {
     display: block;
+    min-height: 100dvh;
+  }
+  .login-page > .public-mobile-header {
+    padding: var(--spacing-5) var(--spacing-7) 0;
   }
 
   .login-hero {
     display: none;
   }
 
-  .login-panel {
-    min-height: 100vh;
-    padding: var(--spacing-11) var(--spacing-7);
+  .login-page .login-panel {
+    min-height: 100dvh;
+    place-items: start center;
+    overflow-y: auto;
+    padding: clamp(20px, 3dvh, 28px) var(--spacing-7) var(--spacing-7);
   }
 
-  .login-heading {
-    margin-top: calc(var(--spacing-3) + var(--spacing-1));
+  .login-page .login-full-logo {
+    width: min(190px, 56vw);
+    height: clamp(72px, 11dvh, 92px);
+  }
+
+  .login-page .login-brand-panel {
+    display: none;
+  }
+
+  .login-page .login-heading {
+    margin: var(--spacing-3) 0 var(--spacing-4);
+  }
+
+  .login-page .login-heading p {
+    margin-top: var(--spacing-2);
+  }
+
+  .login-page .login-form {
+    gap: clamp(12px, 2.5dvh, 20px);
+  }
+
+  .login-page .login-field {
+    gap: var(--spacing-2);
+  }
+
+  .login-page .login-input-wrap {
+    height: clamp(48px, 6.8dvh, 54px);
+  }
+
+  .login-page .login-form > .button {
+    height: clamp(50px, 7dvh, 54px);
+  }
+
+  .login-page .login-passkey-button {
+    min-height: clamp(44px, 6.5dvh, 48px);
+    margin-top: var(--spacing-3);
+  }
+
+  .login-page .login-signup {
+    margin-top: var(--spacing-4);
+  }
+
+  .login-page .login-legal {
+    margin-top: clamp(14px, 2.5dvh, 20px);
+  }
+
+  .login-page .login-panel-footer {
+    margin-top: clamp(12px, 2.25dvh, 18px);
   }
 
   .login-signup-prompt,

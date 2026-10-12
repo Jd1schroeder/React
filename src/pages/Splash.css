@@ -58,6 +58,16 @@
   font-size: var(--font-size-xl);
   font-weight: var(--font-bold);
 }
+.splash-desktop-brand {
+  display: flex;
+}
+.splash-mobile-header {
+  display: contents;
+}
+.splash-mobile-menu,
+.splash-menu-button {
+  display: none;
+}
 .splash-brand img {
   width: 34px;
   height: 34px;
@@ -211,6 +221,9 @@
   .splash-visual-content {
     min-height: 47vh;
     padding: var(--spacing-8) var(--spacing-7) var(--spacing-4);
+  }
+  .splash-desktop-brand {
+    display: none;
   }
   .splash-message {
     margin-top: 50px;
