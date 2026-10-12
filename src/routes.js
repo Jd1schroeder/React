@@ -5,6 +5,8 @@ export const pagePaths = {
   'Verify Email': '/verify-email',
   'Forgot Password': '/forgot-password',
   'Accept Invite': '/accept-invite',
+  'Terms of Service': '/terms',
+  'Privacy Policy': '/privacy',
   'Settings / General': '/settings/general',
   'Settings / Features': '/settings/features',
   'Settings / Subscription': '/settings/subscription',

@@ -379,6 +379,9 @@
 .signup-card .login-panel-footer {
   margin-top: var(--spacing-6);
 }
+.signup-page > .public-legal-footer {
+  grid-column: 1 / -1;
+}
 
 @media (--wb-viewport-tablet-and-down) {
   .signup-page {

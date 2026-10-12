@@ -3,6 +3,7 @@ import { Button } from '../components/ui/Button'
 import workbenchIcon from '../assets/workbench-icon-2x.png'
 import workbenchLogo from '../assets/workbench-logo.png'
 import { PublicMobileHeader } from './auth/PublicMobileHeader'
+import { PublicLegalFooter } from './auth/PublicLegalFooter'
 import './Splash.css'
 
 export function Splash({ onNavigate }) {
@@ -25,6 +26,7 @@ export function Splash({ onNavigate }) {
         <div className="splash-actions"><Button type="button" ripple onClick={() => onNavigate?.('Signup')}>Create account <ArrowRight size={17} /></Button><button type="button" className="splash-login-link" onClick={() => onNavigate?.('Login')}>Already have an account? <span>Log in</span></button></div>
         <ul className="splash-checklist"><li><CheckCircle2 size={16} /> Organize every maintenance task</li><li><CheckCircle2 size={16} /> Give your team one source of truth</li><li><CheckCircle2 size={16} /> Start without a credit card</li></ul>
       </section>
+      <PublicLegalFooter onNavigate={onNavigate} compact />
     </main>
   )
 }

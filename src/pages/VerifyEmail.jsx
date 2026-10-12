@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button'
 import { supabase } from '../lib/supabase'
 import workbenchLogo from '../assets/workbench-logo.png'
 import { PublicMobileHeader } from './auth/PublicMobileHeader'
+import { PublicLegalFooter } from './auth/PublicLegalFooter'
 import './Login.css'
 import './VerifyEmail.css'
 
@@ -40,9 +41,10 @@ export function VerifyEmail({ onNavigate }) {
         ) : (
           <><div className="verify-icon"><MailCheck size={30} /></div><div className="verify-heading"><h1 id="verify-title">Check your email</h1><p>We sent a confirmation link to your email address. Open it to verify your account.</p></div><Button type="button" ripple onClick={() => window.location.reload()}>I've verified my email</Button><p className="verify-resend">Open the link from Supabase in this browser, then return here.</p><button type="button" className="verify-change-email" onClick={() => onNavigate?.('Signup')}>Use a different email</button></>
         )}
-        <p className="verify-legal">By creating an account, you agree to the current <button type="button" className="login-link">Terms of Service</button> and <button type="button" className="login-link">Privacy Policy</button>.</p>
+        <p className="verify-legal">By creating an account, you agree to the current <button type="button" className="login-link" onClick={() => onNavigate?.('Terms of Service')}>Terms of Service</button> and <button type="button" className="login-link" onClick={() => onNavigate?.('Privacy Policy')}>Privacy Policy</button>.</p>
         <div className="verify-footer"><button type="button" className="login-language">English <ChevronDown size={14} /></button><button type="button" className="login-support"><MessageCircle size={16} /> Get support</button></div>
       </section>
+      <PublicLegalFooter onNavigate={onNavigate} compact />
     </main>
   )
 }

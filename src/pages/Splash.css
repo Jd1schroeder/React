@@ -208,6 +208,9 @@
   align-items: center;
   gap: 9px;
 }
+.splash-page > .public-legal-footer {
+  grid-column: 1 / -1;
+}
 .splash-checklist svg {
   color: var(--success);
 }

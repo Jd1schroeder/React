@@ -515,3 +515,6 @@
   background: var(--surface-danger);
   box-shadow: var(--elevation-alert);
 }
+.login-page > .public-legal-footer {
+  grid-column: 1 / -1;
+}

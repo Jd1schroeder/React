@@ -9,6 +9,8 @@ const SignupPage = lazyNamed(() => import('../pages/Signup'), 'Signup')
 const VerifyEmailPage = lazyNamed(() => import('../pages/VerifyEmail'), 'VerifyEmail')
 const ForgotPasswordPage = lazyNamed(() => import('../pages/ForgotPassword'), 'ForgotPassword')
 const AcceptInvitePage = lazyNamed(() => import('../pages/AcceptInvite'), 'AcceptInvite')
+const TermsPage = lazyNamed(() => import('../pages/Terms'), 'Terms')
+const PrivacyPage = lazyNamed(() => import('../pages/Privacy'), 'Privacy')
 const SettingsPage = lazyNamed(() => import('../pages/SettingsPage'), 'SettingsPage')
 const DashboardPage = lazyNamed(() => import('../pages/Dashboard'), 'Dashboard')
 const MorePage = lazyNamed(() => import('../pages/MorePage'), 'MorePage')
@@ -30,6 +32,8 @@ export const pages = {
   'Verify Email': VerifyEmailPage,
   'Forgot Password': ForgotPasswordPage,
   'Accept Invite': AcceptInvitePage,
+  'Terms of Service': TermsPage,
+  'Privacy Policy': PrivacyPage,
   'Settings / General': SettingsPage,
   'Settings / Features': SettingsPage,
   'Settings / Subscription': SettingsPage,
@@ -85,6 +89,8 @@ export const publicRoutes = [
   ['/verify-email', 'Verify Email'],
   ['/forgot-password', 'Forgot Password'],
   ['/accept-invite', 'Accept Invite'],
+  ['/terms', 'Terms of Service'],
+  ['/privacy', 'Privacy Policy'],
 ]
 
 export const authenticatedRoutes = Object.entries(pagePaths)
