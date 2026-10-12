@@ -10,6 +10,7 @@ import {
   FileText,
   Gauge,
   Inbox,
+  LockKeyhole,
   MapPin,
   MonitorCog,
   Package,
@@ -192,6 +193,7 @@ export function FeaturesSettingsPage({ onNavigate }) {
           {featureItems.map((feature) => {
             const Icon = feature.icon;
             const isEnabled = enabledModules[feature.title] ?? true;
+            const isLocked = feature.actionPage !== "Settings / Features / Work Orders";
             const featureLabel = getFeatureLabel(visibleLabels, feature.labelKey);
             return (
               <article className="feature-settings-card" key={feature.title}>
@@ -202,9 +204,9 @@ export function FeaturesSettingsPage({ onNavigate }) {
                     {isOrganizationAdmin && <button type="button" className="feature-settings-edit-labels" onClick={() => openLabelModal(feature.labelKey)}><Pencil size={15} aria-hidden="true" />Edit Labels</button>}
                   </div>
                   <p>{typeof feature.description === "function" ? feature.description(visibleLabels) : feature.description}</p>
-                  {feature.action && <button type="button" className="feature-settings-action" onClick={() => feature.actionPage && onNavigate?.(feature.actionPage)}>{feature.action}<ChevronRight size={16} aria-hidden="true" /></button>}
+                  {feature.action && <button type="button" className={`feature-settings-action${isLocked ? " is-locked" : ""}`} onClick={() => !isLocked && feature.actionPage && onNavigate?.(feature.actionPage)} disabled={isLocked} aria-label={isLocked ? `${featureLabel} preferences unavailable` : feature.action}>{feature.action}{isLocked ? <LockKeyhole size={16} aria-hidden="true" /> : <ChevronRight size={16} aria-hidden="true" />}</button>}
                 </div>
-                {feature.moduleToggle && <FeatureModuleToggle title={feature.title} checked={isEnabled} onChange={() => toggleModule(feature.title)} />}
+                {feature.moduleToggle && <FeatureModuleToggle title={feature.title} checked={isEnabled} locked={isLocked} onChange={() => toggleModule(feature.title)} />}
               </article>
             );
           })}
@@ -215,11 +217,12 @@ export function FeaturesSettingsPage({ onNavigate }) {
   );
 }
 
-function FeatureModuleToggle({ title, checked, onChange }) {
+function FeatureModuleToggle({ title, checked, locked, onChange }) {
   return (
-    <div className="feature-module-control">
+    <div className={`feature-module-control${locked ? " is-locked" : ""}`}>
+      {locked && <LockKeyhole size={16} aria-hidden="true" />}
       <span>Feature Module: {checked ? "On" : "Off"}</span>
-      <button type="button" className={`feature-module-toggle${checked ? " is-on" : ""}`} role="switch" aria-checked={checked} aria-label={`${title} feature module ${checked ? "on" : "off"}`} onClick={onChange}>
+      <button type="button" className={`feature-module-toggle${checked ? " is-on" : ""}`} role="switch" aria-checked={checked} aria-label={`${title} feature module ${checked ? "on" : "off"}`} onClick={onChange} disabled={locked}>
         <span aria-hidden="true" />
       </button>
     </div>

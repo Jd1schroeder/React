@@ -108,6 +108,13 @@
   outline: 0;
 }
 
+.feature-settings-action.is-locked,
+.feature-settings-action.is-locked:hover,
+.feature-settings-action.is-locked:focus-visible {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
 .feature-module-control {
   display: flex;
   align-items: flex-start;
@@ -115,6 +122,11 @@
   color: var(--ink);
   font-size: var(--font-size-body-sm);
   white-space: nowrap;
+}
+
+.feature-module-control.is-locked,
+.feature-module-control.is-locked > svg {
+  color: var(--muted);
 }
 
 .feature-module-toggle {
@@ -150,6 +162,11 @@
 .feature-module-toggle:focus-visible {
   outline: 0;
   box-shadow: 0 0 0 var(--focus-border-width) var(--blue-focus-ring);
+}
+
+.feature-module-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .feature-label-modal-backdrop {
