@@ -20,8 +20,10 @@ import { Select } from "../../components/ui/Select";
 import { useWorkspace } from "../../components/layout/useWorkspace";
 import { listOrganizationMembers, updateOrganization, uploadOrganizationLogo } from "../../services/organizationService";
 import { SettingsLayout } from "./SettingsLayout";
+import { FeaturesSettingsPage } from "./FeaturesSettingsPage";
 import { ProfileAvatarPicker } from "./ProfilePreferencesPage";
 import { settings } from "./settingsConfig";
+import { getFeatureLabel } from "../../utils/featureLabels";
 
 export function GeneralSettingsPage({ pageName, onNavigate }) {
   const current = settings[pageName] ?? settings["Settings / General"];
@@ -39,6 +41,8 @@ export function GeneralSettingsPage({ pageName, onNavigate }) {
       <SettingsLayout pageName={pageName} onNavigate={onNavigate}>
         {pageName === "Settings / General"
           ? <GeneralSettingsContent />
+          : pageName === "Settings / Features"
+            ? <FeaturesSettingsPage />
           : <section className="settings-content" aria-labelledby="settings-content-title">
             <div className="settings-content-icon"><Icon size={22} /></div>
             <h2 id="settings-content-title">{current.title}</h2>
@@ -110,6 +114,7 @@ const timeZoneOptions = [
 function GeneralSettingsContent() {
   const workspace = useWorkspace();
   const organization = workspace.organization ?? {};
+  const featureLabels = organization.feature_labels;
   const [preferences, setPreferences] = useState({
     language: "en",
     currency: "usd",
@@ -157,14 +162,14 @@ function GeneralSettingsContent() {
         </div>
       </section>
 
-      <DataTileSection title="Export Data" tiles={exportTiles} locked />
-      <DataTileSection title="Import Data" tiles={importTiles} locked disabledLabel="Other items soon" />
+      <DataTileSection title="Export Data" tiles={exportTiles} featureLabels={featureLabels} locked />
+      <DataTileSection title="Import Data" tiles={importTiles} featureLabels={featureLabels} locked disabledLabel="Other items soon" />
 
       <section className="general-settings-card general-workstation-card" aria-labelledby="workstation-title">
-        <h2 id="workstation-title">Workstation Mode</h2>
+        <h2 id="workstation-title">{getFeatureLabel(featureLabels, "workstation")}</h2>
         <div className="general-workstation-row is-locked">
           <LockKeyhole size={30} aria-hidden="true" />
-          <div><strong>Enable Workstation Mode</strong><span>Allow this device to be used by multiple user accounts.</span></div>
+          <div><strong>Enable {getFeatureLabel(featureLabels, "workstation")}</strong><span>Allow this device to be used by multiple user accounts.</span></div>
           <Button disabled>Turn this Device into a Workstation</Button>
         </div>
       </section>
@@ -275,12 +280,12 @@ function PreferenceRow({ label, children }) {
   return <label className="general-preference-row"><span>{label}</span>{children}</label>;
 }
 
-function DataTileSection({ title, tiles, disabledLabel, locked = false }) {
+function DataTileSection({ title, tiles, featureLabels, disabledLabel, locked = false }) {
   return (
     <section className="general-settings-card general-data-card" aria-labelledby={`${title.toLowerCase().replaceAll(" ", "-")}-title`}>
       <h2 id={`${title.toLowerCase().replaceAll(" ", "-")}-title`}>{title}</h2>
       <div className="general-data-grid">
-        {tiles.map(({ label, icon: TileIcon }) => <button type="button" className={`general-data-tile${locked ? " is-locked" : ""}`} key={label} disabled={locked} aria-label={`${label} unavailable`}><span className="general-data-tile-icon">{locked ? <LockKeyhole size={21} aria-hidden="true" /> : <TileIcon size={22} aria-hidden="true" />}</span><span>{label}</span></button>)}
+        {tiles.map(({ label, labelKey, icon: TileIcon }) => { const displayLabel = labelKey ? getFeatureLabel(featureLabels, labelKey) : label; return <button type="button" className={`general-data-tile${locked ? " is-locked" : ""}`} key={label} disabled={locked} aria-label={`${displayLabel} unavailable`}><span className="general-data-tile-icon">{locked ? <LockKeyhole size={21} aria-hidden="true" /> : <TileIcon size={22} aria-hidden="true" />}</span><span>{displayLabel}</span></button>; })}
         {disabledLabel && <div className="general-data-tile is-disabled" aria-disabled="true"><Archive size={30} aria-hidden="true" /><span>{disabledLabel}</span></div>}
       </div>
     </section>
@@ -288,15 +293,15 @@ function DataTileSection({ title, tiles, disabledLabel, locked = false }) {
 }
 
 const exportTiles = [
-  { label: "Work Orders", icon: ClipboardList }, { label: "Assets", icon: Gauge }, { label: "Asset Status", icon: ShieldCheck },
-  { label: "Locations", icon: MapPin }, { label: "Parts List", icon: Wrench }, { label: "Parts Transactions", icon: Wrench },
-  { label: "Purchase Orders", icon: FileText }, { label: "Meters", icon: Timer }, { label: "Readings", icon: Gauge }, { label: "Vendors", icon: Package },
-  { label: "Requests", icon: FileDown }, { label: "Time & Cost Tracking", icon: Timer }, { label: "Labor Utilization", icon: Timer },
+  { label: "Work Orders", labelKey: "workOrder", icon: ClipboardList }, { label: "Assets", labelKey: "asset", icon: Gauge }, { label: "Asset Status", icon: ShieldCheck },
+  { label: "Locations", labelKey: "location", icon: MapPin }, { label: "Parts List", icon: Wrench }, { label: "Parts Transactions", icon: Wrench },
+  { label: "Purchase Orders", labelKey: "purchaseOrder", icon: FileText }, { label: "Meters", labelKey: "meter", icon: Timer }, { label: "Readings", icon: Gauge }, { label: "Vendors", labelKey: "vendor", icon: Package },
+  { label: "Requests", labelKey: "request", icon: FileDown }, { label: "Time & Cost Tracking", icon: Timer }, { label: "Labor Utilization", icon: Timer },
 ];
 
 const importTiles = [
-  { label: "Users", icon: UsersRound }, { label: "Locations", icon: MapPin }, { label: "Parts", icon: Wrench },
-  { label: "Assets", icon: Gauge }, { label: "Work Orders", icon: ClipboardList },
+  { label: "Users", icon: UsersRound }, { label: "Locations", labelKey: "location", icon: MapPin }, { label: "Parts", labelKey: "part", icon: Wrench },
+  { label: "Assets", labelKey: "asset", icon: Gauge }, { label: "Work Orders", labelKey: "workOrder", icon: ClipboardList },
 ];
 
 function BuildVersion() {

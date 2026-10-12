@@ -3,6 +3,7 @@ import { UserRowActions } from '../components/people/UserRowActions'
 import { UserLastVisitCell, UserNameCell } from '../components/people/UserTableCells'
 import { DataTable } from '../components/ui/DataTable'
 import { PanelLayout } from '../components/layout/PanelLayout'
+import { getFeatureLabel } from '../utils/featureLabels'
 import { getCurrentWorkspace } from '../services/workspaceService'
 import { revokeOrganizationInvitation } from '../services/invitationService'
 import { listOrganizationMembers, membershipRoles } from '../services/organizationService'
@@ -21,6 +22,7 @@ function userName(member) {
 export function UsersPage({ onNavigate }) {
   const [members, setMembers] = useState([])
   const [search, setSearch] = useState('')
+  const [featureLabels, setFeatureLabels] = useState({})
   const [dateFormat, setDateFormat] = useState('MM/DD/YYYY')
   const [timeZone, setTimeZone] = useState(undefined)
   const [weekStart, setWeekStart] = useState('Sunday')
@@ -40,6 +42,7 @@ export function UsersPage({ onNavigate }) {
   useEffect(() => {
     getCurrentWorkspace()
       .then((workspace) => {
+        setFeatureLabels(workspace.organization?.feature_labels ?? {})
         setDateFormat(workspace.preferences?.date_format ?? 'MM/DD/YYYY')
         setTimeZone(workspace.preferences?.timezone || undefined)
         setWeekStart(workspace.preferences?.week_start ?? 'Sunday')
@@ -64,8 +67,9 @@ export function UsersPage({ onNavigate }) {
     { key: 'quota', label: 'Work Quota', width: '17%', sortValue: () => '', render: () => '—' },
     { key: 'actions', label: '', width: '48px', sortable: false, render: (member) => <UserRowActions member={member} onNavigate={onNavigate} onRevoke={revokeInvitation} /> },
   ]
+  const teamLabel = getFeatureLabel(featureLabels, 'team')
 
-  return <PanelLayout title="Teams / Users" searchValue={search} onSearch={setSearch} searchPlaceholder="Search Users" actionLabel="Invite users" onAction={() => onNavigate('Settings / Invite Users')} showViewSelector={false} className="people-page users-page" bodyClassName="people-body" subnavigation={<PeopleTabs active="users" onNavigate={onNavigate} />}>
+  return <PanelLayout title={`${teamLabel} / Users`} searchValue={search} onSearch={setSearch} searchPlaceholder="Search Users" actionLabel="Invite users" onAction={() => onNavigate('Settings / Invite Users')} showViewSelector={false} className="people-page users-page" bodyClassName="people-body" subnavigation={<PeopleTabs active="users" onNavigate={onNavigate} />}>
     {!isLoading && <section className="people-table-card" aria-label="Users">
       {error && <p className="people-state people-error" role="alert">{error}</p>}
       {!error && <DataTable ariaLabel="Users" columns={userColumns} rows={filteredMembers} rowKey={(member) => `${member.organization_id}-${member.user_id ?? member.invitation_id}`} initialSortKey="name" emptyState="No users found." />}

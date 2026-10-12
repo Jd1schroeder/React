@@ -14,16 +14,18 @@ import { supabase } from "../../lib/supabase";
 import { setActiveOrganization } from "../../services/workspaceService";
 import { getUnreadWorkOrderCount } from "../../services/workOrderService";
 import { hasPermission } from "../../services/authorizationService";
+import { getFeatureLabel } from "../../utils/featureLabels";
 import { Avatar } from "../ui/Avatar";
 import { useWorkspace } from "./useWorkspace";
 
-function NavItem({ item, activePage, onNavigate, collapsed, nested = false }) {
+function NavItem({ item, activePage, onNavigate, collapsed, nested = false, featureLabels }) {
   const [expanded, setExpanded] = useState(() =>
     item.children?.some((child) => child.page === activePage) ?? false,
   );
   const Icon = item.icon;
   const hasChildren = item.children?.length > 0;
   const isActive = activePage === item.page;
+  const displayLabel = item.featureLabelKey ? getFeatureLabel(featureLabels, item.featureLabelKey) : item.label;
   return (
     <>
       <button
@@ -32,14 +34,14 @@ function NavItem({ item, activePage, onNavigate, collapsed, nested = false }) {
           if (hasChildren && !collapsed) setExpanded((value) => !value);
           else onNavigate(item.page);
         }}
-        title={collapsed ? item.label : undefined}
+        title={collapsed ? displayLabel : undefined}
       >
         {Icon && (
           <span className="nav-icon">
             <Icon size={18} strokeWidth={1.8} />
           </span>
         )}
-        <span className="nav-label-text">{item.label}</span>
+        <span className="nav-label-text">{displayLabel}</span>
         {Number(item.count) > 0 && <span className="nav-count">{item.count}</span>}
         {hasChildren && !collapsed && (
           <ChevronDown
@@ -59,6 +61,7 @@ function NavItem({ item, activePage, onNavigate, collapsed, nested = false }) {
                 onNavigate={onNavigate}
                 collapsed={false}
                 nested
+                featureLabels={featureLabels}
               />
             ))}
           </div>
@@ -68,7 +71,7 @@ function NavItem({ item, activePage, onNavigate, collapsed, nested = false }) {
   );
 }
 
-function NavGroup({ group, activePage, onNavigate, collapsed }) {
+function NavGroup({ group, activePage, onNavigate, collapsed, featureLabels }) {
   const [expanded, setExpanded] = useState(() =>
     group.label === "Work" ||
     group.items.some(
@@ -98,6 +101,7 @@ function NavGroup({ group, activePage, onNavigate, collapsed }) {
               activePage={activePage}
               onNavigate={onNavigate}
               collapsed={collapsed}
+              featureLabels={featureLabels}
             />
           ))}
         </div>
@@ -200,6 +204,7 @@ export function Sidebar({ activePage, onNavigate }) {
             activePage={activePage}
             onNavigate={onNavigate}
             collapsed={collapsed}
+            featureLabels={workspace.organization?.feature_labels}
           />
         ))}
       </nav>

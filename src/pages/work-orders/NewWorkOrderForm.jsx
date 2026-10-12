@@ -77,6 +77,7 @@ export function NewWorkOrderForm({
   dateFormat,
   mode = "create",
   initialWorkOrder = null,
+  workOrderLabel = "Work Order",
 }) {
   const existingAssignments = initialWorkOrder?.work_order_assignments ?? [];
   const existingAttachments = initialWorkOrder?.work_order_attachments ?? [];
@@ -210,12 +211,12 @@ export function NewWorkOrderForm({
       <header className="new-work-order-header">
         <div className="new-work-order-header-content">
           <button type="button" className="new-work-order-mobile-back" aria-label="Back" onClick={onCancel}><ArrowLeft size={25} aria-hidden="true" /><span className="new-work-order-mobile-back-label">Back</span></button>
-          <h2 id="new-work-order-title">{mode === "edit" ? "Edit Work Order" : "New Work Order"}</h2>
+          <h2 id="new-work-order-title">{mode === "edit" ? `Edit ${workOrderLabel}` : `New ${workOrderLabel}`}</h2>
           <Button
             type="submit"
             form={`new-work-order-form-${mode}`}
             className="new-work-order-mobile-submit"
-            aria-label={mode === "edit" ? "Save Work Order" : "Create Work Order"}
+            aria-label={mode === "edit" ? `Save ${workOrderLabel}` : `Create ${workOrderLabel}`}
             disabled={isSaving || !form.title.trim()}
           >
             {isSaving ? (mode === "edit" ? "Saving..." : "Creating...") : (mode === "edit" ? "Save" : "Create")}

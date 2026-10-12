@@ -3,6 +3,7 @@ import { useWorkspace } from './useWorkspace'
 import { getUnreadWorkOrderCount } from '../../services/workOrderService'
 import { MobileWorkOrderNavigationActions } from './MobileWorkOrderNavigationActions'
 import { useMobileWorkOrderNavigation } from './useMobileWorkOrderNavigation'
+import { getFeatureLabel } from '../../utils/featureLabels'
 import {
   Boxes,
   ChevronLeft,
@@ -17,8 +18,8 @@ import './MobileNavigation.css'
 
 const primaryDestinations = [
   { label: 'Overview', page: 'Dashboard', icon: Home },
-  { label: 'Work Orders', page: 'Work Orders', icon: ClipboardCheck },
-  { label: 'Assets', page: 'Assets', icon: Boxes },
+  { label: 'Work Orders', featureLabelKey: 'workOrder', page: 'Work Orders', icon: ClipboardCheck },
+  { label: 'Assets', featureLabelKey: 'asset', page: 'Assets', icon: Boxes },
   { label: 'Messages', page: 'Messages', icon: MessagesCircle },
 ]
 
@@ -132,7 +133,7 @@ export function MobileNavigation({ activePage, onNavigate }) {
       <ChevronLeft size={22} strokeWidth={2.4} />
     </button>
     <div className="mobile-primary-navigation-tabs" ref={navigationTabsRef}>
-      {primaryDestinations.map(({ label, page, icon: Icon }) => (
+      {primaryDestinations.map(({ label, featureLabelKey, page, icon: Icon }) => (
         <button
           key={page}
           type="button"
@@ -142,7 +143,7 @@ export function MobileNavigation({ activePage, onNavigate }) {
           onClick={() => navigateTo(page)}
         >
           <Icon size={21} strokeWidth={1.9} aria-hidden="true" />
-          <span>{label}</span>
+          <span>{featureLabelKey ? getFeatureLabel(workspace.organization?.feature_labels, featureLabelKey) : label}</span>
           {label === 'Work Orders' && unreadWorkOrderCount > 0 && <span className="mobile-navigation-badge" aria-hidden="true">{unreadWorkOrderCount > 99 ? '99+' : unreadWorkOrderCount}</span>}
         </button>
       ))}

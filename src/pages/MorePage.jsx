@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BellOff, Bot, Building2, ChevronRight, UserRoundPlus } from 'lucide-react'
 import { sidebarGroups } from '../components/layout/sidebarConfig'
 import { useWorkspace } from '../components/layout/useWorkspace'
+import { getFeatureLabel } from '../utils/featureLabels'
 import './MorePage.css'
 
 const featurePages = [
@@ -63,7 +64,7 @@ export function MorePage({ onNavigate }) {
           const color = featureColors[index % featureColors.length]
           return <button className="more-feature-card" key={item.page} type="button" onClick={() => onNavigate(item.page)}>
             <span className={`more-feature-icon is-${color}`}><Icon size={30} strokeWidth={2} aria-hidden="true" /></span>
-            <span className="more-feature-label">{item.label}</span>
+            <span className="more-feature-label">{item.featureLabelKey ? getFeatureLabel(workspace.organization?.feature_labels, item.featureLabelKey) : item.label}</span>
           </button>
         })}
       </div>
