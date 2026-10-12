@@ -9,6 +9,21 @@ import { WorkspaceContext } from "./WorkspaceContextValue";
 export function WorkspaceProvider({ children, onNavigate }) {
   const [state, setState] = useState({ status: "loading", workspace: null, error: null });
 
+  const patchOrganization = useCallback((organizationId, updates) => {
+    setState((current) => {
+      if (!current.workspace || current.workspace.organization?.id !== organizationId) return current;
+      const patch = (organization) => organization?.id === organizationId ? { ...organization, ...updates } : organization;
+      return {
+        ...current,
+        workspace: {
+          ...current.workspace,
+          organization: patch(current.workspace.organization),
+          organizations: (current.workspace.organizations ?? []).map(patch),
+        },
+      };
+    });
+  }, []);
+
   const loadWorkspace = useCallback(async () => {
     setState((current) => ({ ...current, status: "loading", error: null }));
     try {
@@ -129,7 +144,7 @@ export function WorkspaceProvider({ children, onNavigate }) {
     );
   }
 
-  return <WorkspaceContext.Provider value={{ ...state.workspace, refreshWorkspace: loadWorkspace }}>{children}</WorkspaceContext.Provider>;
+  return <WorkspaceContext.Provider value={{ ...state.workspace, patchOrganization, refreshWorkspace: loadWorkspace }}>{children}</WorkspaceContext.Provider>;
 }
 
 function WorkspaceAccessState({ icon: Icon, title, message, onSignOut }) {

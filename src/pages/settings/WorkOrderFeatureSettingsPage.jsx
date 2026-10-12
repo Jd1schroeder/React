@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { ArrowLeft, ChevronRight, Info, LockKeyhole } from "lucide-react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { AlertCircle, ArrowLeft, CheckCircle2, ChevronRight, Info, LockKeyhole, X } from "lucide-react";
 import { Select } from "../../components/ui/Select";
 import { useWorkspace } from "../../components/layout/useWorkspace";
 import { getNextWorkOrderNumber, updateOrganization, updateWorkOrderStartingNumber } from "../../services/organizationService";
@@ -28,6 +29,8 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
   const displayedSettings = settingsOrganizationId === organization.id ? settings : savedSettings;
   const [savingKey, setSavingKey] = useState("");
   const [saveError, setSaveError] = useState("");
+  const [toast, setToast] = useState(null);
+  const [isToastLeaving, setIsToastLeaving] = useState(false);
   const [isStartingIdModalOpen, setIsStartingIdModalOpen] = useState(false);
   const [isSavingStartingId, setIsSavingStartingId] = useState(false);
   const [isLoadingStartingId, setIsLoadingStartingId] = useState(false);
@@ -44,13 +47,33 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
     setSaveError("");
     try {
       await updateOrganization({ organizationId: organization.id, updates: { work_order_settings: next } });
-      await workspace.refreshWorkspace?.();
+      workspace.patchOrganization?.(organization.id, { work_order_settings: next });
+      setIsToastLeaving(false);
+      setToast({ message: "Setting changed!", tone: "success" });
     } catch (error) {
       setSettings(previous);
-      setSaveError(error.message || "Unable to save Work Order settings.");
+      const message = error.message || "Unable to save Work Order settings.";
+      setSaveError(message);
+      setIsToastLeaving(false);
+      setToast({ message, tone: "error" });
     } finally {
       setSavingKey("");
     }
+  };
+
+  useEffect(() => {
+    if (!toast) return undefined;
+    const leaveTimeout = window.setTimeout(() => setIsToastLeaving(true), 5000);
+    const removeTimeout = window.setTimeout(() => setToast(null), 5220);
+    return () => {
+      window.clearTimeout(leaveTimeout);
+      window.clearTimeout(removeTimeout);
+    };
+  }, [toast]);
+
+  const dismissToast = () => {
+    setIsToastLeaving(true);
+    window.setTimeout(() => setToast(null), 220);
   };
 
   const openStartingIdModal = async () => {
@@ -72,8 +95,8 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
     setIsSavingStartingId(true);
     setStartingIdError("");
     try {
-      await updateWorkOrderStartingNumber({ organizationId: organization.id, startingNumber: value });
-      await workspace.refreshWorkspace?.();
+      const savedStartingNumber = await updateWorkOrderStartingNumber({ organizationId: organization.id, startingNumber: value });
+      workspace.patchOrganization?.(organization.id, { work_order_start_number: savedStartingNumber });
       setIsStartingIdModalOpen(false);
     } catch (error) {
       setStartingIdError(error.message || `Unable to save the ${workOrderSingularLabel} starting ID.`);
@@ -84,6 +107,14 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
 
   return (
     <div className="settings-page work-order-feature-page">
+      {toast && createPortal(
+        <div className={`work-order-settings-toast is-${toast.tone}${isToastLeaving ? " is-leaving" : ""}`} role="status" aria-live="polite">
+          {toast.tone === "error" ? <AlertCircle size={18} aria-hidden="true" /> : <CheckCircle2 size={18} aria-hidden="true" />}
+          <span>{toast.message}</span>
+          <button type="button" onClick={dismissToast} aria-label="Dismiss notification"><X size={18} aria-hidden="true" /></button>
+        </div>,
+        document.body,
+      )}
       {isStartingIdModalOpen && <WorkOrderStartingIdModal workOrderLabel={workOrderSingularLabel} initialValue={startingIdValue} minimumValue={startingIdValue} error={startingIdError} isSaving={isSavingStartingId} onClose={() => { if (!isSavingStartingId) { setIsStartingIdModalOpen(false); setStartingIdError(""); } }} onSave={saveStartingId} />}
       <header className="settings-page-header">
         <div>
@@ -92,7 +123,7 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
           <p>Configure {workOrderLabel.toLowerCase()} preferences and behavior for this workspace.</p>
         </div>
       </header>
-      <SettingsLayout pageName="Settings / Features" onNavigate={onNavigate}>
+      <SettingsLayout pageName="Settings / Features" onNavigate={onNavigate} className="work-order-settings-layout">
         <div className="work-order-feature-content">
           <button type="button" className="work-order-feature-back" onClick={() => onNavigate("Settings / Features")}><ArrowLeft size={17} aria-hidden="true" /> Back to Features</button>
           {!isOrganizationAdmin && <p className="work-order-feature-readonly">Only organization administrators can change these settings.</p>}
@@ -155,7 +186,7 @@ function SettingsCard({ title, description, children }) {
 }
 
 function SettingToggle({ label, description, checked, onChange, disabled, locked = true, enterprise = false, saving }) {
-  return <div className={`work-order-setting-row${locked ? " is-locked" : ""}`}><div><div className="work-order-setting-label">{locked && <LockKeyhole size={15} aria-hidden="true" />}{label}</div>{description && <p>{description}</p>}</div><div className="work-order-setting-control">{enterprise && <span className="work-order-enterprise">Enterprise Only</span>}{locked && !enterprise && <LockKeyhole size={18} aria-hidden="true" />}<button type="button" className={`work-order-toggle${checked ? " is-on" : ""}`} role="switch" aria-checked={checked} aria-label={label} onClick={() => onChange(!checked)} disabled={disabled || locked}><span aria-hidden="true" /></button>{saving && <span className="work-order-saving" role="status">Saving</span>}</div></div>;
+  return <div className={`work-order-setting-row${locked ? " is-locked" : ""}`}><div><div className="work-order-setting-label">{locked && <LockKeyhole size={15} aria-hidden="true" />}{label}</div>{description && <p>{description}</p>}</div><div className="work-order-setting-control">{enterprise && <span className="work-order-enterprise">Enterprise Only</span>}{locked && !enterprise && <LockKeyhole size={18} aria-hidden="true" />}<button type="button" className={`work-order-toggle${checked ? " is-on" : ""}`} role="switch" aria-checked={checked} aria-label={label} onClick={() => onChange(!checked)} disabled={disabled || locked || saving}><span aria-hidden="true" /></button></div></div>;
 }
 
 function RadioSettingRow({ label, value, onChange, disabled }) {
