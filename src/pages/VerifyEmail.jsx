@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button'
 import { supabase } from '../lib/supabase'
 import workbenchLogo from '../assets/workbench-logo.png'
 import { PublicMobileHeader } from './auth/PublicMobileHeader'
+import './Login.css'
 import './VerifyEmail.css'
 
 export function VerifyEmail({ onNavigate }) {

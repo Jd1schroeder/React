@@ -139,7 +139,7 @@
   color: var(--blue);
   font-size: var(--font-size-body-sm);
 }
-@media (--wb-viewport-max-520) {
+@media (--wb-viewport-max-900) {
   .verify-page {
     display: block;
     padding: var(--spacing-5) var(--spacing-6) var(--spacing-7);
@@ -151,6 +151,7 @@
     display: none;
   }
   .verify-card {
+    width: min(100%, 470px);
     padding: 30px var(--spacing-6) var(--spacing-7);
   }
   .verify-code-fields {

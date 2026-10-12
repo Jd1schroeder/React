@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Button } from '../components/ui/Button'
 import workbenchLogo from '../assets/workbench-logo.png'
 import { PublicMobileHeader } from './auth/PublicMobileHeader'
+import './Login.css'
 import './ForgotPassword.css'
 
 export function ForgotPassword({ onNavigate }) {

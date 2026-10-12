@@ -3,7 +3,7 @@
   display: none;
 }
 
-@media (--wb-viewport-max-820) {
+@media (--wb-viewport-max-900) {
   .public-mobile-header {
     width: 100%;
     display: flex;

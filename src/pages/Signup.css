@@ -380,7 +380,7 @@
   margin-top: var(--spacing-6);
 }
 
-@media (--wb-viewport-max-820) {
+@media (--wb-viewport-max-900) {
   .signup-page {
     display: block;
     background: var(--surface);
@@ -413,7 +413,7 @@
   }
 
   .signup-card {
-    width: 100%;
+    width: min(100%, 590px);
     padding: 0;
     border: 0;
     border-radius: 0;

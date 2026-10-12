@@ -95,7 +95,7 @@
   font: inherit;
 }
 
-@media (--wb-viewport-max-820) {
+@media (--wb-viewport-max-900) {
   .accept-invite-page {
     display: block;
     padding: var(--spacing-5) var(--spacing-6) var(--spacing-7);
