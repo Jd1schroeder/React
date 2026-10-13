@@ -117,7 +117,7 @@ export function WorkOrderTrackingTypesPage({ onNavigate }) {
               <span>{type.name}</span>
               <div className="work-order-tracking-type-menu-wrap">
                 <button type="button" className="work-order-tracking-type-menu-button" onClick={() => setMenuTypeId(menuTypeId === type.id ? "" : type.id)} aria-label={`More options for ${type.name}`} aria-expanded={menuTypeId === type.id}><MoreVertical size={18} aria-hidden="true" /></button>
-                {menuTypeId === type.id && <><div className="work-order-tracking-type-menu" role="menu"><button type="button" role="menuitem" onClick={() => editType(type)}>Edit</button><button type="button" className="is-danger" role="menuitem" onClick={() => removeType(type)}>Delete</button></div><MobileActionSheet title={type.name} onClose={closeMobileMenu}><button type="button" onClick={() => editType(type)}>Edit</button><button type="button" className="is-danger" onClick={() => removeType(type)}>Delete</button></MobileActionSheet></>}
+                {menuTypeId === type.id && <><div className="work-order-tracking-type-menu" role="menu"><button type="button" role="menuitem" onClick={() => editType(type)}>Edit Cost Type</button><button type="button" className="is-danger" role="menuitem" onClick={() => removeType(type)}>Delete Cost Type</button></div><MobileActionSheet title={type.name} onClose={closeMobileMenu}><button type="button" onClick={() => editType(type)}>Edit Cost Type</button><button type="button" className="is-danger" onClick={() => removeType(type)}>Delete Cost Type</button></MobileActionSheet></>}
               </div>
             </div>
           ))}
