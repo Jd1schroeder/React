@@ -566,12 +566,9 @@ button.general-data-tile:focus-visible {
   }
 
   .settings-navigation {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 3px var(--spacing-3);
+    position: static;
+    display: block;
+    padding: var(--spacing-4) var(--spacing-3);
   }
 
   .settings-details {
@@ -580,17 +577,17 @@ button.general-data-tile:focus-visible {
   }
 
   .settings-nav-section {
-    display: contents;
+    display: grid;
+    gap: 3px;
   }
 
   .settings-nav-heading {
-    grid-column: 1 / -1;
+    margin: 5px 10px var(--spacing-3);
   }
 
   .settings-nav-divider {
-    grid-column: 1 / -1;
     width: auto;
-    margin: 10px 10px;
+    margin: var(--spacing-2) 10px;
   }
 
   .settings-content {
