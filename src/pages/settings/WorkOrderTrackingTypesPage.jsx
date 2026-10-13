@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, MoreVertical, Plus, Search, X } from "lucide-react";
 import { useWorkspace } from "../../components/layout/useWorkspace";
 import { MobileActionSheet } from "../../components/ui/MobileActionSheet";
@@ -15,10 +15,14 @@ export function WorkOrderTrackingTypesPage({ onNavigate }) {
   const [isSaving, setIsSaving] = useState(false);
   const [menuTypeId, setMenuTypeId] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isFormClosing, setIsFormClosing] = useState(false);
   const [deleteType, setDeleteType] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const formCloseTimerRef = useRef(null);
   const closeMobileMenu = useCallback(() => setMenuTypeId(""), []);
+
+  useEffect(() => () => window.clearTimeout(formCloseTimerRef.current), []);
 
   const reload = useCallback(async () => {
     if (!organizationId) return;
@@ -71,6 +75,7 @@ export function WorkOrderTrackingTypesPage({ onNavigate }) {
   const startNewType = () => {
     clearForm();
     setMenuTypeId("");
+    setIsFormClosing(false);
     setIsFormOpen(true);
   };
 
@@ -78,7 +83,18 @@ export function WorkOrderTrackingTypesPage({ onNavigate }) {
     setEditingId(type.id);
     setName(type.name);
     setMenuTypeId("");
+    setIsFormClosing(false);
     setIsFormOpen(true);
+  };
+
+  const closeForm = (force = false) => {
+    if (isFormClosing || (!force && isSaving)) return;
+    setIsFormClosing(true);
+    formCloseTimerRef.current = window.setTimeout(() => {
+      setIsFormOpen(false);
+      setIsFormClosing(false);
+      clearForm();
+    }, 180);
   };
 
   const removeType = (type) => {
@@ -124,7 +140,7 @@ export function WorkOrderTrackingTypesPage({ onNavigate }) {
           {!filteredTypes.length && <p className="work-order-tracking-types-empty">No cost types found.</p>}
         </section>
       </main>
-      {isFormOpen && <div className="work-order-time-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !isSaving) setIsFormOpen(false); }}><form className="work-order-time-modal work-order-tracking-type-editor" onSubmit={async (event) => { await save(event); setIsFormOpen(false); }} aria-labelledby="cost-type-editor-title"><div className="work-order-time-modal-header"><h3 id="cost-type-editor-title">{editingId ? "Edit Cost Type" : "Add Cost Type"}</h3><button type="button" onClick={() => { if (!isSaving) setIsFormOpen(false); }} aria-label="Close"><span aria-hidden="true">×</span></button></div><label>{editingId ? "Rename cost type" : "Cost type name"}<input autoFocus value={name} onChange={(event) => setName(event.target.value)} maxLength="100" /></label><div className="work-order-time-modal-actions"><button type="button" onClick={() => { setIsFormOpen(false); clearForm(); }}>Cancel</button><button type="submit" disabled={isSaving || !name.trim()}>{editingId ? "Save" : "Add type"}</button></div></form></div>}
+      {isFormOpen && <div className={`work-order-time-modal-backdrop${isFormClosing ? " is-closing" : ""}`} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeForm(); }}><form className={`work-order-time-modal work-order-tracking-type-editor${isFormClosing ? " is-closing" : ""}`} onSubmit={async (event) => { await save(event); closeForm(true); }} aria-labelledby="cost-type-editor-title"><div className="work-order-time-modal-header"><h3 id="cost-type-editor-title">{editingId ? "Edit Cost Type" : "Add Cost Type"}</h3><button type="button" onClick={() => closeForm()} aria-label="Close"><span aria-hidden="true">×</span></button></div><label>{editingId ? "Rename cost type" : "Cost type name"}<input autoFocus value={name} onChange={(event) => setName(event.target.value)} maxLength="100" /></label><div className="work-order-time-modal-actions"><button type="button" onClick={() => closeForm()}>Cancel</button><button type="submit" disabled={isSaving || !name.trim()}>{editingId ? "Save" : "Add type"}</button></div></form></div>}
       {deleteType && <div className="work-order-time-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !isDeleting) setDeleteType(null); }}><section className="work-order-delete-confirmation" role="alertdialog" aria-modal="true" aria-labelledby="delete-cost-type-title" aria-describedby="delete-cost-type-description"><div className="work-order-delete-confirmation-body"><h3 id="delete-cost-type-title">Delete Cost Type</h3><p id="delete-cost-type-description">Are you sure you want to delete “{deleteType.name}”?</p></div><div className="work-order-delete-confirmation-actions"><button type="button" onClick={() => setDeleteType(null)} disabled={isDeleting}>Cancel</button><button type="button" className="is-danger" onClick={() => void confirmDelete()} disabled={isDeleting}>{isDeleting ? "Deleting..." : "Delete"}</button></div></section></div>}
     </div>
   );
