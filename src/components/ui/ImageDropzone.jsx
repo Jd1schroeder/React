@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Camera, X } from "lucide-react";
-import { useMobileSheetDismiss } from "../layout/useMobileSheetDismiss";
+import { MobileActionSheet } from "./MobileActionSheet";
 import "./ImageDropzone.css";
 
 const defaultAccept = "image/*";
@@ -36,11 +36,9 @@ export function ImageDropzone({
   const inputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const sourcePickerTriggerRef = useRef(null);
-  const sourcePickerRef = useRef(null);
   const cameraActionRef = useRef(null);
   const [isSourcePickerOpen, setIsSourcePickerOpen] = useState(false);
   const closeSourcePicker = useCallback(() => setIsSourcePickerOpen(false), []);
-  const sheetDismiss = useMobileSheetDismiss(closeSourcePicker, sourcePickerRef);
   const [items, setItems] = useState(() => initialAttachments.map((attachment) => ({
     id: attachment.id,
     name: attachment.file_name,
@@ -239,19 +237,25 @@ export function ImageDropzone({
           aria-label="Take pictures"
         />}
       </div>
-      {sourcePicker && isSourcePickerOpen && createPortal(
-        <div className={`image-source-picker-backdrop mobile-sheet-backdrop ${sheetDismiss.backdropClassName}`} onMouseDown={(event) => { if (event.target === event.currentTarget) closeSourcePicker(); }}>
-          <section ref={sourcePickerRef} className={`image-source-picker mobile-edge-to-edge-sheet ${sheetDismiss.dragClassName}`} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby="image-source-picker-title">
-            <header className="image-source-picker-header mobile-sheet-drag-handle" {...sheetDismiss.dragHandleProps}>
-              <h2 id="image-source-picker-title">Select from</h2>
-            </header>
-            <button ref={cameraActionRef} type="button" onClick={() => chooseSource(cameraInputRef)}>Camera</button>
-            <button type="button" onClick={() => chooseSource(inputRef)}>My Photos</button>
-            <button type="button" onClick={closeSourcePicker}>Cancel</button>
-          </section>
-        </div>,
-        document.body,
-      )}
+      {sourcePicker && isSourcePickerOpen && <>
+        {createPortal(
+          <div className="image-source-picker-desktop-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) closeSourcePicker(); }}>
+            <section className="image-source-picker" role="dialog" aria-modal="true" aria-labelledby="image-source-picker-title">
+              <header className="image-source-picker-header">
+                <h2 id="image-source-picker-title">Select from</h2>
+              </header>
+              <button type="button" onClick={() => chooseSource(cameraInputRef)}>Camera</button>
+              <button type="button" onClick={() => chooseSource(inputRef)}>My Photos</button>
+              <button type="button" onClick={closeSourcePicker}>Cancel</button>
+            </section>
+          </div>,
+          document.body,
+        )}
+        <MobileActionSheet title="Select from" onClose={closeSourcePicker}>
+          <button ref={cameraActionRef} type="button" onClick={() => chooseSource(cameraInputRef)}>Camera</button>
+          <button type="button" onClick={() => chooseSource(inputRef)}>My Photos</button>
+        </MobileActionSheet>
+      </>}
     </section>
   );
 }

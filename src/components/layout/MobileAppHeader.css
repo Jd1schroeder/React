@@ -31,6 +31,11 @@
 
 .mobile-app-header-back { display: none; }
 
+.mobile-app-header-title {
+  font-size: var(--font-size-2xl-compact);
+  font-weight: var(--font-normal);
+}
+
 @media (--wb-viewport-max-840) {
   .mobile-app-header {
     position: relative;
@@ -51,8 +56,6 @@
     overflow: hidden;
     margin: 0;
     color: inherit;
-    font-size: clamp(17px, 5vw, 22px);
-    font-weight: var(--font-bold);
     line-height: 1.2;
     text-align: center;
     text-overflow: ellipsis;
@@ -67,8 +70,6 @@
   }
 
   .mobile-app-header.is-my-account .mobile-app-header-title {
-    font-size: var(--font-size-2xl-compact);
-    font-weight: var(--font-normal);
     text-align: left;
   }
 
@@ -132,8 +133,6 @@
     overflow: hidden;
     margin: 0;
     color: inherit;
-    font-size: var(--font-size-xl-compact);
-    font-weight: var(--font-bold);
     text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -159,8 +158,6 @@
   }
 
   .mobile-app-header.is-my-account .mobile-app-header-title {
-    font-size: var(--font-size-2xl-compact);
-    font-weight: var(--font-normal);
     text-align: left;
   }
 

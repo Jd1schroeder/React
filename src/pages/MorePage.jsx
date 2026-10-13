@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { BellOff, Bot, Building2, ChevronRight, UserRoundPlus } from 'lucide-react'
 import { sidebarGroups } from '../components/layout/sidebarConfig'
 import { useWorkspace } from '../components/layout/useWorkspace'
+import { MobileActionSheet } from '../components/ui/MobileActionSheet'
 import { getFeatureLabel } from '../utils/featureLabels'
 import { getFeatureModuleKeyForPage, isFeatureModuleEnabled } from '../utils/featureModules'
+import { organizationPages, settings } from './settings/settingsConfig'
 import './MorePage.css'
 
 const featurePages = [
@@ -27,15 +29,27 @@ const featureItems = featurePages
 const featureColors = ['blue', 'orange', 'cyan', 'pink', 'yellow', 'purple', 'green']
 
 export function MorePage({ onNavigate }) {
+  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false)
   const workspace = useWorkspace()
   const organizationName = workspace.organization?.name || 'Workspace'
   const featureModules = workspace.organization?.feature_modules
   const visibleFeatureItems = featureItems.filter((item) => isFeatureModuleEnabled(featureModules, getFeatureModuleKeyForPage(item.page)))
+  const openSettings = () => {
+    if (typeof window !== 'undefined' && window.matchMedia?.('(max-width: 840px)').matches) {
+      setIsSettingsMenuOpen(true)
+      return
+    }
+    onNavigate('Settings / General')
+  }
+  const selectSettingsPage = (page) => {
+    setIsSettingsMenuOpen(false)
+    onNavigate(page)
+  }
 
   return <main className="more-page" aria-labelledby="more-page-title">
     <h1 id="more-page-title" className="more-page-visually-hidden">More</h1>
 
-    <button className="more-workspace-card" type="button" onClick={() => onNavigate('Settings / General')}>
+    <button className="more-workspace-card" type="button" onClick={openSettings}>
       <span className="more-workspace-icon">
         {workspace.organization?.logo_url
           ? <img src={workspace.organization.logo_url} alt="" />
@@ -47,6 +61,10 @@ export function MorePage({ onNavigate }) {
       </span>
       <ChevronRight className="more-workspace-chevron" size={23} aria-hidden="true" />
     </button>
+
+    {isSettingsMenuOpen && <MobileActionSheet title="Organization Settings" onClose={() => setIsSettingsMenuOpen(false)}>
+      {organizationPages.map((page) => <button key={page} type="button" onClick={() => selectSettingsPage(page)}>{settings[page].title}</button>)}
+    </MobileActionSheet>}
 
     <div className="more-page-actions">
       <button className="more-page-action is-primary" type="button" onClick={() => onNavigate('Settings / Invite Users')}>

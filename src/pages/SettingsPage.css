@@ -598,3 +598,23 @@ button.general-data-tile:focus-visible {
     min-height: 48px;
   }
 }
+
+@media (--wb-viewport-max-840) {
+  .settings-page-header {
+    display: none;
+  }
+
+  .settings-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    max-width: none;
+  }
+
+  .settings-navigation {
+    display: none;
+  }
+
+  .settings-details {
+    grid-column: auto;
+  }
+}

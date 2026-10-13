@@ -72,6 +72,12 @@
   outline: 0;
 }
 
+@media (--wb-viewport-max-840) {
+  .work-order-feature-back {
+    display: none;
+  }
+}
+
 .work-order-feature-readonly,
 .work-order-feature-error {
   margin: 0;

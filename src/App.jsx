@@ -42,7 +42,11 @@ function PageRoute({ pageName, isPublic = false }) {
   const onNavigate = useCallback((target) => guardNavigation(() => navigate(target.startsWith('/') ? target : getPagePath(target))), [guardNavigation, navigate])
   const onNavigateBack = useCallback(() => guardNavigation(() => {
     if (Number.isInteger(window.history.state?.idx) && window.history.state.idx > 0) navigate(-1)
-    else navigate(getPagePath(['Settings / Edit Account', 'Settings / Linked Device', 'Settings / Notification Settings'].includes(pageName) ? 'Settings / Profile Preferences' : 'More'))
+    else navigate(getPagePath(['Settings / Edit Account', 'Settings / Linked Device', 'Settings / Notification Settings'].includes(pageName)
+      ? 'Settings / Profile Preferences'
+      : ['Settings / Features / Work Orders', 'Settings / Features / Work Order'].includes(pageName)
+        ? 'Settings / Features'
+        : 'More'))
   }), [guardNavigation, navigate, pageName])
   const onNavigateRecord = useCallback((type, id) => guardNavigation(() => navigate(getRecordPath(type, id))), [guardNavigation, navigate])
   const content = <RouteErrorBoundary><Page pageName={pageName} recordId={recordId} userId={userId} sessionId={sessionId} onNavigate={onNavigate} onNavigateRecord={onNavigateRecord} onMobileHeaderTitleChange={updateMobileHeaderTitle} onMobileHeaderBackChange={updateMobileHeaderBack} /></RouteErrorBoundary>

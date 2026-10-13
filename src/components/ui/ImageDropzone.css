@@ -58,7 +58,7 @@
   opacity: 0;
   pointer-events: none;
 }
-.image-source-picker-backdrop {
+.image-source-picker-desktop-backdrop {
   position: fixed;
   z-index: 2000;
   inset: 0;
@@ -103,13 +103,8 @@
   outline: var(--focus-border-width) solid var(--focus-border-color);
   outline-offset: calc(var(--focus-border-width) * -1);
 }
-@media (--wb-viewport-tablet-and-down) {
-  .image-source-picker-backdrop { align-items: flex-end; }
-  .image-source-picker {
-    border-bottom: 0;
-    border-radius: var(--radius-card) var(--radius-card) 0 0;
-    padding-bottom: calc(var(--spacing-5) + env(safe-area-inset-bottom));
-  }
+@media (--wb-viewport-max-840) {
+  .image-source-picker-desktop-backdrop { display: none; }
 }
 .image-dropzone-overlay {
   position: absolute;

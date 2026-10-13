@@ -45,6 +45,8 @@ Use Workbench primitives and conventions first. Extend shared components when th
 
 Before adding a responsive menu, sheet, drawer, or swipe-to-dismiss interaction, search the repository for the existing shared primitive and its canonical implementation. For Workbench mobile sheets, reuse `useMobileSheetDismiss` with `createPortal`, `mobile-sheet-backdrop`, `mobile-edge-to-edge-sheet`, and `mobile-sheet-drag-handle`; extract a shared component when the interaction is reused. Do not create feature-specific fixed-position sheets, drag handles, or dismissal logic when those primitives already exist. If a rendered result is reported as inconsistent with the app standard, compare the current DOM and classes with the canonical implementation before making another CSS override.
 
+For action menus, `src/components/ui/MobileActionSheet.jsx` is the canonical mobile menu. It must provide the shared drag handle, left-aligned regular title, vertically spaced text actions, and bottom Cancel action; do not add an X close button or a feature-specific action-sheet implementation. Content-heavy dialogs such as dashboard detail/create sheets may remain specialized when their structure is not an action menu.
+
 ## Reference analysis
 
 Separate observations into three layers before editing:
