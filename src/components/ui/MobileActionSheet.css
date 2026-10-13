@@ -1,0 +1,19 @@
+.mobile-action-sheet-backdrop,
+.mobile-action-sheet { display: none; }
+
+@media (--wb-viewport-max-840) {
+  .mobile-action-sheet-backdrop { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; padding: 0; background: rgb(18 28 38 / 48%); animation: mobile-action-sheet-backdrop-in 180ms ease-out both; }
+  .mobile-action-sheet { box-sizing: border-box; display: flex; width: min(100%, 640px); max-height: calc(100dvh - env(safe-area-inset-top)); flex-direction: column; padding: 10px 16px calc(14px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; color: var(--ink); background: var(--surface); box-shadow: var(--elevation-6); animation: mobile-action-sheet-slide-up 220ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .mobile-action-sheet-header { position: relative; display: flex; min-height: 58px; flex: none; align-items: center; justify-content: center; padding: 0 44px; }
+  .mobile-action-sheet-header h2 { margin: 0; font-size: var(--font-size-xl-plus); font-weight: var(--font-bold); line-height: 1.25; text-align: center; }
+  .mobile-action-sheet-close { position: absolute; top: 50%; right: 0; display: grid; width: 40px; height: 40px; place-items: center; padding: 0; border: 0; border-radius: var(--radius-circle); color: var(--icon-secondary); background: transparent; transform: translateY(-50%); cursor: pointer; }
+  .mobile-action-sheet-close:hover, .mobile-action-sheet-close:focus-visible { color: var(--ink); background: var(--surface-control-hover); outline: 0; }
+  .mobile-action-sheet-actions { display: grid; gap: var(--spacing-2); }
+  .mobile-action-sheet-actions button { min-height: 56px; padding: 0 var(--spacing-3); border: 0; border-radius: var(--radius-sm); color: var(--ink); background: transparent; font: inherit; font-size: var(--font-size-lg); text-align: left; cursor: pointer; }
+  .mobile-action-sheet-actions button:hover, .mobile-action-sheet-actions button:focus-visible { background: var(--surface-subtle); outline: 0; }
+  .mobile-action-sheet-actions button.is-danger { color: var(--danger); }
+  .mobile-action-sheet-actions button.is-danger:hover, .mobile-action-sheet-actions button.is-danger:focus-visible { background: var(--danger-soft); }
+}
+
+@keyframes mobile-action-sheet-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes mobile-action-sheet-slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }

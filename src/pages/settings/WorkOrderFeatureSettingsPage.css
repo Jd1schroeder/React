@@ -10,7 +10,7 @@
 .work-order-tracking-type-form label { display: grid; gap: var(--spacing-2); color: var(--ink); font-size: var(--font-size-sm); }
 .work-order-tracking-type-form input { min-height: 40px; padding: 0 var(--spacing-3); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); color: var(--ink); background: var(--surface); font: inherit; }
 .work-order-tracking-type-actions { display: inline-flex; align-items: center; gap: var(--spacing-3); }
-.work-order-tracking-types-page { box-sizing: border-box; width: min(100%, 1113px); min-height: 100%; margin-top: calc(-1 * var(--spacing-3)); padding: 0 0 var(--spacing-8); background: var(--surface-page); }
+.work-order-tracking-types-page { box-sizing: border-box; width: 100%; min-height: 100%; margin-top: calc(-1 * var(--spacing-3)); padding: 0 0 var(--spacing-8); background: var(--surface-page); }
 .work-order-tracking-types-page-header { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-6); width: 100%; min-height: 72px; margin: 0 0 var(--spacing-7); padding: var(--spacing-4) 0; }
 .work-order-tracking-types-page-header > button { display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
 .work-order-tracking-types-page-header > button:hover,
@@ -357,6 +357,10 @@
   .work-order-comment-header { font-size: var(--font-size-sm); }
 }
 
+@media (--wb-viewport-max-840) {
+  .work-order-tracking-types-page .work-order-tracking-type-menu { display: none; }
+}
+
 @media (--wb-viewport-tablet-and-down) {
   .work-order-tracking-types-page { width: 100%; margin-top: 0; padding: 0 var(--spacing-4) var(--spacing-8); background: var(--surface-subtle); }
   .work-order-tracking-types-page-header { display: block; min-height: 0; margin: 0; padding: var(--spacing-4) 0 0; }
@@ -426,32 +430,8 @@
 .work-order-tracking-types-page .work-order-tracking-type-menu-button { width: 32px; height: 32px; }
 .work-order-tracking-types-page .work-order-tracking-type-menu { top: 32px; }
 .work-order-tracking-types-page .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-.work-order-tracking-type-mobile-menu-backdrop,
-.work-order-tracking-type-mobile-menu { display: none; }
-
 @media (--wb-viewport-max-760) {
   .work-order-tracking-types-page-actions { width: 100%; margin-left: 0; }
   .work-order-tracking-types-search { flex: 1; width: auto; }
   .work-order-tracking-types-page-header { flex-wrap: wrap; }
 }
-
-@media (--wb-viewport-max-840) {
-  .work-order-tracking-types-page .work-order-tracking-type-menu { display: none; }
-  .work-order-tracking-type-mobile-menu-backdrop { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; padding: 0; background: rgb(18 28 38 / 48%); animation: work-order-tracking-type-mobile-backdrop-in 180ms ease-out both; }
-  .work-order-tracking-type-mobile-menu { box-sizing: border-box; display: flex; width: min(100%, 640px); max-height: calc(100dvh - env(safe-area-inset-top)); flex-direction: column; padding: 10px 16px calc(14px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; color: var(--ink); background: var(--surface); box-shadow: var(--elevation-6); animation: work-order-tracking-type-mobile-sheet-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both; }
-  .work-order-tracking-type-mobile-menu-header { position: relative; display: flex; min-height: 58px; flex: none; align-items: center; justify-content: center; padding: 0 44px; }
-  .work-order-tracking-type-mobile-menu-header h2 { margin: 0; font-size: var(--font-size-xl-plus); font-weight: var(--font-bold); line-height: 1.25; text-align: center; }
-  .work-order-tracking-type-mobile-menu-close { position: absolute; top: 50%; right: 0; display: grid; width: 40px; height: 40px; place-items: center; padding: 0; border: 0; border-radius: var(--radius-circle); color: var(--icon-secondary); background: transparent; transform: translateY(-50%); cursor: pointer; }
-  .work-order-tracking-type-mobile-menu-close:hover,
-  .work-order-tracking-type-mobile-menu-close:focus-visible { color: var(--ink); background: var(--surface-control-hover); outline: 0; }
-  .work-order-tracking-type-mobile-menu-actions { display: grid; gap: var(--spacing-2); }
-  .work-order-tracking-type-mobile-menu-actions button { min-height: 56px; padding: 0 var(--spacing-3); border: 0; border-radius: var(--radius-sm); color: var(--ink); background: transparent; font: inherit; font-size: var(--font-size-lg); text-align: left; cursor: pointer; }
-  .work-order-tracking-type-mobile-menu-actions button:hover,
-  .work-order-tracking-type-mobile-menu-actions button:focus-visible { background: var(--surface-subtle); outline: 0; }
-  .work-order-tracking-type-mobile-menu-actions button.is-danger { color: var(--danger); }
-  .work-order-tracking-type-mobile-menu-actions button.is-danger:hover,
-  .work-order-tracking-type-mobile-menu-actions button.is-danger:focus-visible { background: var(--danger-soft); }
-}
-
-@keyframes work-order-tracking-type-mobile-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes work-order-tracking-type-mobile-sheet-in { from { transform: translateY(100%); } to { transform: translateY(0); } }

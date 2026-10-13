@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, MoreVertical, Plus, Search, X } from "lucide-react";
 import { useWorkspace } from "../../components/layout/useWorkspace";
-import { useMobileSheetDismiss } from "../../components/layout/useMobileSheetDismiss";
+import { MobileActionSheet } from "../../components/ui/MobileActionSheet";
 import { createWorkOrderTrackingType, deleteWorkOrderTrackingType, listWorkOrderTrackingTypes, updateWorkOrderTrackingType } from "../../services/workOrderTimeService";
 import "./WorkOrderFeatureSettingsPage.css";
 
@@ -19,9 +18,7 @@ export function WorkOrderTrackingTypesPage({ onNavigate }) {
   const [deleteType, setDeleteType] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const mobileMenuRef = useRef(null);
   const closeMobileMenu = useCallback(() => setMenuTypeId(""), []);
-  const mobileSheetDismiss = useMobileSheetDismiss(closeMobileMenu, mobileMenuRef);
 
   const reload = useCallback(async () => {
     if (!organizationId) return;
@@ -120,7 +117,7 @@ export function WorkOrderTrackingTypesPage({ onNavigate }) {
               <span>{type.name}</span>
               <div className="work-order-tracking-type-menu-wrap">
                 <button type="button" className="work-order-tracking-type-menu-button" onClick={() => setMenuTypeId(menuTypeId === type.id ? "" : type.id)} aria-label={`More options for ${type.name}`} aria-expanded={menuTypeId === type.id}><MoreVertical size={18} aria-hidden="true" /></button>
-                {menuTypeId === type.id && <><div className="work-order-tracking-type-menu" role="menu"><button type="button" role="menuitem" onClick={() => editType(type)}>Edit</button><button type="button" className="is-danger" role="menuitem" onClick={() => removeType(type)}>Delete</button></div>{typeof document !== "undefined" && createPortal(<div className={`work-order-tracking-type-mobile-menu-backdrop mobile-sheet-backdrop ${mobileSheetDismiss.backdropClassName}`} onMouseDown={(event) => { if (event.target === event.currentTarget) closeMobileMenu(); }}><section ref={mobileMenuRef} className={`work-order-tracking-type-mobile-menu mobile-edge-to-edge-sheet ${mobileSheetDismiss.dragClassName}`} onTransitionEnd={mobileSheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby="tracking-type-mobile-menu-title"><header className="work-order-tracking-type-mobile-menu-header mobile-sheet-drag-handle" {...mobileSheetDismiss.dragHandleProps}><h2 id="tracking-type-mobile-menu-title">{type.name}</h2><button type="button" className="work-order-tracking-type-mobile-menu-close" onClick={closeMobileMenu} aria-label="Close"><X size={24} aria-hidden="true" /></button></header><div className="work-order-tracking-type-mobile-menu-actions"><button type="button" onClick={() => editType(type)}>Edit</button><button type="button" className="is-danger" onClick={() => removeType(type)}>Delete</button></div></section></div>, document.body)}</>}
+                {menuTypeId === type.id && <><div className="work-order-tracking-type-menu" role="menu"><button type="button" role="menuitem" onClick={() => editType(type)}>Edit</button><button type="button" className="is-danger" role="menuitem" onClick={() => removeType(type)}>Delete</button></div><MobileActionSheet title={type.name} onClose={closeMobileMenu}><button type="button" onClick={() => editType(type)}>Edit</button><button type="button" className="is-danger" onClick={() => removeType(type)}>Delete</button></MobileActionSheet></>}
               </div>
             </div>
           ))}

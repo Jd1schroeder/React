@@ -39,6 +39,10 @@ Use Workbench primitives and conventions first. Extend shared components when th
 - For reference detail pages, preserve the meaningful two-column summary/actions and activity/permissions regions, but render unavailable data as explicit empty states or disabled controls until Workbench services exist. Do not copy reference records into the scaffold.
 - Preserve the existing shell’s scroll ownership. Do not add nested page scrolling or fixed offsets merely to match a screenshot.
 
+### Reuse existing responsive interaction primitives
+
+Before adding a responsive menu, sheet, drawer, or swipe-to-dismiss interaction, search the repository for the existing shared primitive and its canonical implementation. For Workbench mobile sheets, reuse `useMobileSheetDismiss` with `createPortal`, `mobile-sheet-backdrop`, `mobile-edge-to-edge-sheet`, and `mobile-sheet-drag-handle`; extract a shared component when the interaction is reused. Do not create feature-specific fixed-position sheets, drag handles, or dismissal logic when those primitives already exist. If a rendered result is reported as inconsistent with the app standard, compare the current DOM and classes with the canonical implementation before making another CSS override.
+
 ## Reference analysis
 
 Separate observations into three layers before editing:
