@@ -225,9 +225,6 @@ function WorkOrderTemplateModuleCard({ label, workOrderLabel, checked, locked, s
         <div>
           <h2 id="work-order-template-module-title">{label}</h2>
           <p>Create {label} to standardize your {workOrderLabel}.</p>
-          <button type="button" className="work-order-template-preferences" disabled aria-label={`${label} preferences unavailable`}>
-            Set Preferences <LockKeyhole size={16} aria-hidden="true" />
-          </button>
         </div>
         <div className={`work-order-feature-module-control${locked ? " is-locked" : ""}`}>
           {locked && <LockKeyhole size={16} aria-hidden="true" />}

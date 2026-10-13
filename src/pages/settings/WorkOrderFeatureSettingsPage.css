@@ -83,21 +83,6 @@
   font-size: var(--font-size-body-sm);
 }
 
-.work-order-template-preferences {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  margin-top: var(--spacing-6);
-  padding: 0;
-  border: 0;
-  color: var(--muted);
-  background: transparent;
-  font: inherit;
-  font-size: var(--font-size-body-sm);
-  font-weight: var(--font-semibold);
-  cursor: not-allowed;
-}
-
 .work-order-feature-module-control {
   display: flex;
   align-items: center;
