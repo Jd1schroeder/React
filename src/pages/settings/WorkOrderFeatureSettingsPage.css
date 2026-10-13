@@ -2,6 +2,48 @@
   display: grid;
   gap: var(--spacing-5);
 }
+.work-order-tracking-types-page-content { display: grid; gap: var(--spacing-5); }
+.work-order-tracking-types-page-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-4); }
+.work-order-tracking-types-page-heading h3 { margin: 0; color: var(--ink); font-size: var(--font-size-md); font-weight: var(--font-medium); }
+.work-order-tracking-types-page-heading button { display: inline-flex; align-items: center; gap: var(--spacing-2); padding: 0; border: 0; color: var(--blue); background: transparent; font: inherit; font-weight: var(--font-semibold); cursor: pointer; }
+.work-order-tracking-type-form { display: grid; gap: var(--spacing-4); padding-top: var(--spacing-4); border-top: var(--border-width-normal) solid var(--line); }
+.work-order-tracking-type-form label { display: grid; gap: var(--spacing-2); color: var(--ink); font-size: var(--font-size-sm); }
+.work-order-tracking-type-form input { min-height: 40px; padding: 0 var(--spacing-3); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); color: var(--ink); background: var(--surface); font: inherit; }
+.work-order-tracking-type-actions { display: inline-flex; align-items: center; gap: var(--spacing-3); }
+.work-order-tracking-types-page { box-sizing: border-box; width: min(100%, 1113px); min-height: 100%; margin-top: calc(-1 * var(--spacing-3)); padding: 0 0 var(--spacing-8); background: var(--surface-page); }
+.work-order-tracking-types-page-header { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-6); width: 100%; min-height: 72px; margin: 0 0 var(--spacing-7); padding: var(--spacing-4) 0; }
+.work-order-tracking-types-page-header > button { display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
+.work-order-tracking-types-page-header > button:hover,
+.work-order-tracking-types-page-header > button:focus-visible { color: var(--ink); outline: 0; }
+.work-order-tracking-types-page-header h1 { margin: 0; color: var(--ink); font-size: var(--font-size-xl-compact); font-weight: var(--font-medium); line-height: 1.2; }
+.work-order-tracking-types-page-main { max-width: 1080px; margin: 0; }
+.work-order-tracking-types-card { padding: var(--spacing-6); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
+.work-order-tracking-types-card > h2 { margin: 0; color: var(--ink); font-size: var(--font-size-md); font-weight: var(--font-medium); }
+.work-order-tracking-types-card > p { margin: var(--spacing-3) 0 var(--spacing-6); color: var(--muted); font-size: var(--font-size-body-sm); }
+.work-order-tracking-type-group { display: grid; gap: var(--spacing-3); margin-top: var(--spacing-6); }
+.work-order-tracking-type-group-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-4); }
+.work-order-tracking-type-group-heading h3 { margin: 0; color: var(--ink); font-size: var(--font-size-md); font-weight: var(--font-normal); }
+.work-order-tracking-type-group-heading button,
+.work-order-tracking-type-empty-action { display: inline-flex; align-items: center; gap: var(--spacing-2); padding: 0; border: 0; color: var(--blue); background: transparent; font: inherit; font-size: var(--font-size-sm); font-weight: var(--font-semibold); cursor: pointer; }
+.work-order-tracking-type-box { display: grid; min-height: 64px; border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); }
+.work-order-tracking-type-box.has-types { min-height: 0; padding: 0 var(--spacing-4); }
+.work-order-tracking-type-empty-action { padding: var(--spacing-4); }
+.work-order-tracking-type-row { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 60px; border-bottom: var(--border-width-normal) solid var(--line); color: var(--ink); font-size: var(--font-size-md); }
+.work-order-tracking-type-row:last-child { border-bottom: 0; }
+.work-order-tracking-type-menu-wrap { position: relative; }
+.work-order-tracking-type-menu-button { display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
+.work-order-tracking-type-menu-button:hover,
+.work-order-tracking-type-menu-button:focus-visible { color: var(--ink); outline: 0; }
+.work-order-tracking-type-menu { position: absolute; top: 32px; right: 0; z-index: 2; display: grid; min-width: 100px; padding: var(--spacing-1) 0; border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); background: var(--surface); box-shadow: var(--shadow-md); }
+.work-order-tracking-type-menu button { padding: var(--spacing-2) var(--spacing-3); border: 0; color: var(--ink); background: transparent; text-align: left; font: inherit; cursor: pointer; }
+.work-order-tracking-type-menu button:hover,
+.work-order-tracking-type-menu button:focus-visible { background: var(--surface-subtle); outline: 0; }
+.work-order-tracking-type-menu button:disabled { color: var(--muted); cursor: default; }
+.work-order-tracking-type-menu button.is-danger { color: var(--danger); }
+.work-order-tracking-type-menu button.is-danger:hover,
+.work-order-tracking-type-menu button.is-danger:focus-visible { color: var(--danger); background: var(--surface-subtle); }
+.work-order-tracking-type-menu-backdrop { display: none; }
+.work-order-tracking-types-page .work-order-tracking-type-form { margin-top: var(--spacing-6); }
 
 .settings-page .work-order-settings-layout {
   width: 100%;
@@ -314,3 +356,102 @@
   .work-order-comment-row { grid-template-columns: minmax(0, 1fr) 210px; gap: var(--spacing-2); }
   .work-order-comment-header { font-size: var(--font-size-sm); }
 }
+
+@media (--wb-viewport-tablet-and-down) {
+  .work-order-tracking-types-page { width: 100%; margin-top: 0; padding: 0 var(--spacing-4) var(--spacing-8); background: var(--surface-subtle); }
+  .work-order-tracking-types-page-header { display: block; min-height: 0; margin: 0; padding: var(--spacing-4) 0 0; }
+  .work-order-tracking-types-page-header > button,
+  .work-order-tracking-types-page-header h1 { display: none; }
+  .work-order-tracking-types-page-actions { width: 100%; margin-left: 0; }
+  .work-order-tracking-types-search { flex: 1; width: auto; }
+  .work-order-tracking-types-page-main { max-width: none; }
+  .work-order-tracking-types-page-description { margin-top: var(--spacing-6); }
+}
+
+.work-order-time-modal-backdrop { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: var(--spacing-4); background: rgb(0 0 0 / 35%); }
+.work-order-time-modal { position: relative; display: grid; gap: var(--spacing-4); width: min(100%, 480px); max-height: min(90vh, 680px); overflow: auto; padding: var(--spacing-6); border: 0; border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-lg); }
+.work-order-time-modal-header { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-4); }
+.work-order-time-modal-header h3 { min-width: 0; }
+.work-order-time-modal-header button { display: grid; place-items: center; width: 32px; height: 32px; flex: none; padding: 0; border: 0; border-radius: var(--radius-sm); color: var(--muted); background: transparent; font: inherit; font-size: var(--font-size-xl-compact); line-height: 1; cursor: pointer; }
+.work-order-time-modal-header button:hover,
+.work-order-time-modal-header button:focus-visible { color: var(--ink); background: var(--surface-control-hover); outline: 0; }
+.work-order-time-modal-close { justify-self: end; width: 32px; height: 32px; padding: 0; border: 0; color: var(--text-secondary-muted); background: transparent; cursor: pointer; }
+.work-order-time-modal h3 { margin: 0; color: var(--ink); font-size: var(--font-size-xl-compact); }
+.work-order-time-modal p { margin: 0; color: var(--text-secondary-muted); }
+.work-order-time-modal label { display: grid; gap: var(--spacing-2); color: var(--ink); font-size: var(--font-size-sm); }
+.work-order-time-modal input { box-sizing: border-box; min-height: 40px; padding: 0 var(--spacing-3); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); color: var(--ink); background: var(--surface); font: inherit; }
+.work-order-time-modal input:focus { border-color: var(--focus-border-color); box-shadow: 0 0 0 calc(var(--focus-border-width) - 1px) var(--focus-border-color); outline: 0; }
+.work-order-time-modal-actions { display: flex; justify-content: flex-end; gap: var(--spacing-3); }
+.work-order-time-modal-actions button { min-height: 40px; padding: 0 var(--spacing-4); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); color: var(--ink); background: var(--surface); font: inherit; cursor: pointer; }
+.work-order-time-modal-actions button[type="submit"] { border-color: var(--blue); color: white; background: var(--blue); }
+.work-order-time-modal-actions button:disabled { opacity: .55; cursor: not-allowed; }
+.work-order-delete-confirmation { width: min(100%, 464px); overflow: hidden; border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-lg); }
+.work-order-delete-confirmation-body { display: grid; gap: var(--spacing-3); padding: var(--spacing-5); }
+.work-order-delete-confirmation h3 { margin: 0; color: var(--ink); font-size: var(--font-size-xl-compact); }
+.work-order-delete-confirmation p { margin: 0; color: var(--ink); font-size: var(--font-size-body-sm); }
+.work-order-delete-confirmation-actions { display: flex; justify-content: flex-end; gap: var(--spacing-3); padding: var(--spacing-4) var(--spacing-5); border-top: var(--border-width-normal) solid var(--line); }
+.work-order-delete-confirmation-actions button { min-height: 40px; padding: 0 var(--spacing-4); border: 0; border-radius: var(--radius-sm); color: var(--blue); background: transparent; font: inherit; font-weight: var(--font-semibold); cursor: pointer; }
+.work-order-delete-confirmation-actions button.is-danger { color: var(--white); background: var(--danger); }
+.work-order-delete-confirmation-actions button.is-danger:hover,
+.work-order-delete-confirmation-actions button.is-danger:focus-visible { background: var(--danger-strong); }
+.work-order-delete-confirmation-actions button:disabled { opacity: .55; cursor: not-allowed; }
+.work-order-tracking-type-list { display: grid; gap: var(--spacing-2); max-height: 260px; overflow: auto; }
+.work-order-tracking-type-row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-3); padding: var(--spacing-2) 0; border-bottom: var(--border-width-normal) solid var(--line); }
+.work-order-tracking-type-row small { display: block; color: var(--text-secondary-muted); font-size: var(--font-size-xs); }
+.work-order-tracking-type-row button { margin-left: var(--spacing-2); padding: 0; border: 0; color: var(--blue); background: transparent; cursor: pointer; }
+.work-order-time-error { margin: 0; color: var(--danger); font-size: var(--font-size-sm); }
+
+/* Custom cost type page rows follow the grouped settings layout. */
+.work-order-tracking-types-page .work-order-tracking-type-row { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 60px; padding: 0; border-bottom: var(--border-width-normal) solid var(--line); color: var(--ink); font-size: var(--font-size-md); }
+.work-order-tracking-types-page .work-order-tracking-type-row:last-child { border-bottom: 0; }
+.work-order-tracking-types-page .work-order-tracking-type-row button { margin-left: 0; }
+.work-order-tracking-types-page .work-order-tracking-type-menu-button { margin-left: 0; padding: 0; color: var(--muted); }
+.work-order-tracking-types-page-header { width: 100%; }
+.work-order-tracking-types-page-header h1 { flex: 0 0 auto; }
+.work-order-tracking-types-page-actions { display: flex; align-items: center; gap: var(--spacing-3); margin-left: auto; }
+.work-order-tracking-types-search { position: relative; display: flex; align-items: center; width: 400px; }
+.work-order-tracking-types-search svg { position: absolute; left: var(--spacing-3); color: var(--muted); pointer-events: none; }
+.work-order-tracking-types-search input { box-sizing: border-box; width: 100%; min-height: 40px; padding: 0 var(--spacing-8) 0 calc(var(--spacing-3) + 24px); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); color: var(--ink); background: var(--surface); font: inherit; }
+.work-order-tracking-types-search input:focus { border-color: var(--focus-border-color); box-shadow: 0 0 0 calc(var(--focus-border-width) - 1px) var(--focus-border-color); outline: 0; }
+.work-order-tracking-types-search-clear { position: absolute; top: 50%; right: var(--spacing-2); display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: var(--radius-circle); color: var(--icon-secondary); background: transparent; cursor: pointer; transform: translateY(-50%); }
+.work-order-tracking-types-search-clear:hover { color: var(--blue); background: var(--surface-control-hover); }
+.work-order-tracking-types-create { display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-2); min-height: 40px; padding: 0 var(--spacing-4); border: var(--border-width-normal) solid var(--blue); border-radius: var(--radius-sm); color: var(--white); background: var(--blue); font: inherit; font-weight: var(--font-semibold); white-space: nowrap; cursor: pointer; }
+.work-order-tracking-types-create:hover,
+.work-order-tracking-types-create:focus-visible { border-color: var(--blue-hover); background: var(--blue-hover); outline: 0; }
+.work-order-tracking-types-page-description { max-width: 720px; margin: var(--spacing-8) 0 var(--spacing-5); color: var(--ink); font-size: var(--font-size-body-sm); }
+.work-order-tracking-types-list-card { box-sizing: border-box; width: min(100%, 720px); max-width: 720px; margin-top: var(--spacing-4); padding: var(--spacing-6); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
+.work-order-tracking-type-flat-row { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 64px; margin: 0; border-bottom: var(--border-width-normal) solid var(--line); color: var(--ink); font-size: var(--font-size-md); }
+.work-order-tracking-type-flat-row:last-child { border-bottom: 0; }
+.work-order-tracking-types-empty { margin: 0; padding: var(--spacing-6); color: var(--muted); }
+.work-order-tracking-types-page .work-order-tracking-type-menu-button { width: 32px; height: 32px; }
+.work-order-tracking-types-page .work-order-tracking-type-menu { top: 32px; }
+.work-order-tracking-types-page .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.work-order-tracking-type-mobile-menu-backdrop,
+.work-order-tracking-type-mobile-menu { display: none; }
+
+@media (--wb-viewport-max-760) {
+  .work-order-tracking-types-page-actions { width: 100%; margin-left: 0; }
+  .work-order-tracking-types-search { flex: 1; width: auto; }
+  .work-order-tracking-types-page-header { flex-wrap: wrap; }
+}
+
+@media (--wb-viewport-max-840) {
+  .work-order-tracking-types-page .work-order-tracking-type-menu { display: none; }
+  .work-order-tracking-type-mobile-menu-backdrop { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; padding: 0; background: rgb(18 28 38 / 48%); animation: work-order-tracking-type-mobile-backdrop-in 180ms ease-out both; }
+  .work-order-tracking-type-mobile-menu { box-sizing: border-box; display: flex; width: min(100%, 640px); max-height: calc(100dvh - env(safe-area-inset-top)); flex-direction: column; padding: 10px 16px calc(14px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; color: var(--ink); background: var(--surface); box-shadow: var(--elevation-6); animation: work-order-tracking-type-mobile-sheet-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .work-order-tracking-type-mobile-menu-header { position: relative; display: flex; min-height: 58px; flex: none; align-items: center; justify-content: center; padding: 0 44px; }
+  .work-order-tracking-type-mobile-menu-header h2 { margin: 0; font-size: var(--font-size-xl-plus); font-weight: var(--font-bold); line-height: 1.25; text-align: center; }
+  .work-order-tracking-type-mobile-menu-close { position: absolute; top: 50%; right: 0; display: grid; width: 40px; height: 40px; place-items: center; padding: 0; border: 0; border-radius: var(--radius-circle); color: var(--icon-secondary); background: transparent; transform: translateY(-50%); cursor: pointer; }
+  .work-order-tracking-type-mobile-menu-close:hover,
+  .work-order-tracking-type-mobile-menu-close:focus-visible { color: var(--ink); background: var(--surface-control-hover); outline: 0; }
+  .work-order-tracking-type-mobile-menu-actions { display: grid; gap: var(--spacing-2); }
+  .work-order-tracking-type-mobile-menu-actions button { min-height: 56px; padding: 0 var(--spacing-3); border: 0; border-radius: var(--radius-sm); color: var(--ink); background: transparent; font: inherit; font-size: var(--font-size-lg); text-align: left; cursor: pointer; }
+  .work-order-tracking-type-mobile-menu-actions button:hover,
+  .work-order-tracking-type-mobile-menu-actions button:focus-visible { background: var(--surface-subtle); outline: 0; }
+  .work-order-tracking-type-mobile-menu-actions button.is-danger { color: var(--danger); }
+  .work-order-tracking-type-mobile-menu-actions button.is-danger:hover,
+  .work-order-tracking-type-mobile-menu-actions button.is-danger:focus-visible { background: var(--danger-soft); }
+}
+
+@keyframes work-order-tracking-type-mobile-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes work-order-tracking-type-mobile-sheet-in { from { transform: translateY(100%); } to { transform: translateY(0); } }

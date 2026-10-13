@@ -59,7 +59,14 @@ export function GeneralSettingsPage({ pageName, onNavigate }) {
 
 const preferenceOptions = {
   language: [{ value: "en", label: "English (Default)" }],
-  currency: [{ value: "usd", label: "USD (US Dollar)" }],
+  currency: [
+    { value: "USD", label: "USD (US Dollar)" },
+    { value: "CAD", label: "CAD (Canadian Dollar)" },
+    { value: "EUR", label: "EUR (Euro)" },
+    { value: "GBP", label: "GBP (British Pound)" },
+    { value: "AUD", label: "AUD (Australian Dollar)" },
+    { value: "JPY", label: "JPY (Japanese Yen)" },
+  ],
   dateFormat: [
     { value: "MM/DD/YYYY", label: "MM/DD/YYYY" },
     { value: "DD/MM/YYYY", label: "DD/MM/YYYY" },
@@ -117,13 +124,14 @@ function GeneralSettingsContent() {
   const featureLabels = organization.feature_labels;
   const [preferences, setPreferences] = useState({
     language: "en",
-    currency: "usd",
+    currency: organization.currency ?? "USD",
     dateFormat: workspace.preferences?.date_format ?? "MM/DD/YYYY",
     timeFormat: workspace.preferences?.time_format ?? "11:59 PM",
     timeZone: workspace.preferences?.timezone ?? organization.timezone ?? "America/Detroit",
   });
   const [memberCount, setMemberCount] = useState(null);
   const [isOrganizationModalOpen, setIsOrganizationModalOpen] = useState(false);
+  const [currencySaveError, setCurrencySaveError] = useState("");
 
   useEffect(() => {
     if (!organization.id) return undefined;
@@ -135,6 +143,17 @@ function GeneralSettingsContent() {
   }, [organization.id]);
 
   const updatePreference = (key, value) => setPreferences((current) => ({ ...current, [key]: value }));
+  const updateCurrency = async (value) => {
+    updatePreference("currency", value);
+    setCurrencySaveError("");
+    if (!organization.id) return;
+    try {
+      const updated = await updateOrganization({ organizationId: organization.id, updates: { currency: value } });
+      workspace.patchOrganization(organization.id, { currency: updated.currency });
+    } catch (error) {
+      setCurrencySaveError(error.message || "Unable to update the organization currency.");
+    }
+  };
   const memberLabel = memberCount === null ? "Members" : `${memberCount} Members`;
 
   return (
@@ -155,11 +174,12 @@ function GeneralSettingsContent() {
         <h2 id="preferences-title">Preferences</h2>
         <div className="general-preferences-grid">
           <PreferenceRow label="Organization Language"><Select ariaLabel="Organization Language" value={preferences.language} options={preferenceOptions.language} onChange={(value) => updatePreference("language", value)} /></PreferenceRow>
-          <PreferenceRow label="Currency"><Select ariaLabel="Currency" value={preferences.currency} options={preferenceOptions.currency} onChange={(value) => updatePreference("currency", value)} /></PreferenceRow>
+          <PreferenceRow label="Currency"><Select ariaLabel="Currency" value={preferences.currency} options={preferenceOptions.currency} onChange={updateCurrency} /></PreferenceRow>
           <PreferenceRow label="Date Format"><Select ariaLabel="Date Format" value={preferences.dateFormat} options={preferenceOptions.dateFormat} onChange={(value) => updatePreference("dateFormat", value)} /></PreferenceRow>
           <PreferenceRow label="Time Format"><Select ariaLabel="Time Format" value={preferences.timeFormat} options={preferenceOptions.timeFormat} onChange={(value) => updatePreference("timeFormat", value)} /></PreferenceRow>
           <PreferenceRow label="Time Zone"><Select ariaLabel="Time Zone" value={preferences.timeZone} options={timeZoneOptions} onChange={(value) => updatePreference("timeZone", value)} /></PreferenceRow>
         </div>
+        {currencySaveError && <p role="alert" className="settings-form-error">{currencySaveError}</p>}
       </section>
 
       <DataTileSection title="Export Data" tiles={exportTiles} featureLabels={featureLabels} locked />

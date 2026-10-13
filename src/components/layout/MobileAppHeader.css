@@ -100,6 +100,16 @@
   .mobile-app-header-account:focus-visible {
     outline-color: var(--white);
   }
+
+  .mobile-app-header.is-page-header {
+    grid-template-columns: minmax(0, 1fr);
+    padding-right: var(--spacing-4);
+    padding-left: var(--spacing-4);
+  }
+
+  .mobile-app-header.is-page-header .mobile-app-header-title {
+    text-align: center;
+  }
 }
 
 @media (--wb-viewport-tablet) {
@@ -160,5 +170,21 @@
 
   .mobile-app-header.is-my-account .mobile-app-header-back:focus-visible {
     outline-color: var(--white);
+  }
+
+  .mobile-app-header.is-page-header {
+    color: var(--white);
+    background: var(--blue);
+    border-bottom: 0;
+  }
+
+  .mobile-app-header.is-page-header .mobile-app-header-back {
+    top: 10px;
+    left: var(--spacing-3);
+    display: grid;
+  }
+
+  .mobile-app-header.is-page-header .mobile-app-header-title {
+    text-align: center;
   }
 }

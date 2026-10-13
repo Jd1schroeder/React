@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { WorkOrderDetail } from '../src/pages/work-orders/WorkOrderDetail'
 
@@ -206,7 +206,7 @@ describe('WorkOrderDetail authorization', () => {
     expect(onCopy).toHaveBeenCalledTimes(1)
   })
 
-  it('includes the remaining reference sections without claiming unsupported features', () => {
+  it('includes the remaining reference sections without claiming unsupported features', async () => {
     render(<WorkOrderDetail selected={{ ...selected, estimated_duration_minutes: 60 }} userId="user-a" grants={{
       'work_orders.view_comments': 'own',
     }} />)
@@ -218,7 +218,9 @@ describe('WorkOrderDetail authorization', () => {
     expect(screen.getByRole('heading', { name: 'Time & Cost Tracking' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Comments' })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /Add/ })).toHaveLength(3)
-    expect(screen.getAllByRole('button', { name: /Add/ }).every((button) => button.disabled)).toBe(true)
+    expect(within(screen.getByText('Parts').closest('.detail-cost-row')).getByRole('button', { name: /Add/ })).toBeDisabled()
+    await waitFor(() => expect(within(screen.getByText('Time').closest('.work-order-time-summary')).getByRole('button', { name: /Add/ })).not.toBeDisabled())
+    expect(within(screen.getByText('Other Costs').closest('.work-order-time-summary')).getByRole('button', { name: /Add/ })).not.toBeDisabled()
   })
 
   it('scrolls to comments inside the detail pane without scrolling the outer page', () => {

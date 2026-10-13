@@ -9,6 +9,7 @@ import { normalizeFeatureModules } from "../../utils/featureModules";
 import { normalizeWorkOrderSettings } from "../../utils/workOrderSettings";
 import { SettingsLayout } from "./SettingsLayout";
 import { WorkOrderStartingIdModal } from "./WorkOrderStartingIdModal";
+import { WorkOrderTrackingTypesModal } from "./WorkOrderTrackingTypesModal";
 import "./WorkOrderFeatureSettingsPage.css";
 
 function updateNestedSetting(current, path, value) {
@@ -43,11 +44,16 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
   const [isLoadingStartingId, setIsLoadingStartingId] = useState(false);
   const [startingIdValue, setStartingIdValue] = useState(organization.work_order_start_number ?? 1);
   const [startingIdError, setStartingIdError] = useState("");
+  const [trackingTypesKind, setTrackingTypesKind] = useState("");
 
   const updateSetting = async (path, value) => {
     if (!organization.id || !isOrganizationAdmin) return;
     const previous = displayedSettings;
-    const next = updateNestedSetting(previous, path, value);
+    let next = updateNestedSetting(previous, path, value);
+    if (value === true && path === "requireTimeTracking") next = { ...next, enableTimeTracking: true };
+    if (value === true && path === "requireCostTracking") next = { ...next, enableCostTracking: true };
+    if (value === false && path === "enableTimeTracking") next = { ...next, requireTimeTracking: false };
+    if (value === false && path === "enableCostTracking") next = { ...next, requireCostTracking: false };
     setSettings(next);
     setSettingsOrganizationId(organization.id);
     setSavingKey(path);
@@ -147,6 +153,7 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
         document.body,
       )}
       {isStartingIdModalOpen && <WorkOrderStartingIdModal workOrderLabel={workOrderSingularLabel} initialValue={startingIdValue} minimumValue={startingIdValue} error={startingIdError} isSaving={isSavingStartingId} onClose={() => { if (!isSavingStartingId) { setIsStartingIdModalOpen(false); setStartingIdError(""); } }} onSave={saveStartingId} />}
+      {trackingTypesKind && <WorkOrderTrackingTypesModal organizationId={organization.id} kind={trackingTypesKind} onClose={() => setTrackingTypesKind("")} />}
       <header className="settings-page-header">
         <div>
           <p className="eyebrow">Organization Settings</p>
@@ -176,19 +183,19 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
           <SettingsCard title="Preferences">
             <SettingToggle label="Filter by Fail or Flag" description={`Enable filtering ${workOrderLabel.toLowerCase()} list based on Failures or Flags.`} checked={displayedSettings.filterByFailOrFlag} onChange={(value) => updateSetting("filterByFailOrFlag", value)} saving={savingKey === "filterByFailOrFlag"} disabled={!isOrganizationAdmin} locked />
             <SettingToggle label="Assign Users and Teams on Mention" description={`Assign mentioned users and Teams to the ${workOrderSingularLabel.toLowerCase()} from a ${workOrderSingularLabel.toLowerCase()} comment.`} checked={displayedSettings.assignUsersTeamsOnMention} onChange={(value) => updateSetting("assignUsersTeamsOnMention", value)} saving={savingKey === "assignUsersTeamsOnMention"} disabled={!isOrganizationAdmin} locked={false} />
-            <SettingToggle label={`Show ${workOrderLabel} in To Do by start date only`} description={`Show ${workOrderLabel.toLowerCase()} in To Do view based on their start date only. When off ${workOrderLabel.toLowerCase()} that are nearly due or overdue will also appear.`} checked={displayedSettings.showToDoByStartDateOnly} onChange={(value) => updateSetting("showToDoByStartDateOnly", value)} saving={savingKey === "showToDoByStartDateOnly"} disabled={!isOrganizationAdmin} locked />
+            <SettingToggle label={`Only show ${workOrderLabel} in To Do on or after their start date`} description={`When enabled, ${workOrderLabel.toLowerCase()} appear in To Do only on or after their start date. When disabled, nearly due and late ${workOrderLabel.toLowerCase()} also appear.`} checked={displayedSettings.showToDoByStartDateOnly} onChange={(value) => updateSetting("showToDoByStartDateOnly", value)} saving={savingKey === "showToDoByStartDateOnly"} disabled={!isOrganizationAdmin} locked={false} />
             <ActionSetting label="Manage Work Orders Overdue Escalation Teams" description={`Select a Team to notify when ${workOrderLabel.toLowerCase()} are overdue.`} locked />
             <SettingToggle label="Use Smart Time Estimates" description={`Enable Smart Time Estimates to calculate ${workOrderSingularLabel.toLowerCase()} estimated time based on historical data.`} checked={displayedSettings.useSmartTimeEstimates} onChange={(value) => updateSetting("useSmartTimeEstimates", value)} saving={savingKey === "useSmartTimeEstimates"} disabled={!isOrganizationAdmin} locked enterprise />
             <ActionSetting label={`Next ${workOrderSingularLabel} ID`} description={`Modify the ${workOrderSingularLabel.toLowerCase()} starting ID for this Organization.`} locked={!isOrganizationAdmin || isLoadingStartingId} onClick={openStartingIdModal} />
           </SettingsCard>
 
           <SettingsCard title="Time & Cost Tracking">
-            <SettingToggle label="Enable cost tracking" description="" checked={displayedSettings.enableCostTracking} onChange={(value) => updateSetting("enableCostTracking", value)} saving={savingKey === "enableCostTracking"} disabled={!isOrganizationAdmin} locked />
-            <SettingToggle label="Require cost tracking" description={`Users must enter costs in ${workOrderLabel.toLowerCase()}.`} checked={displayedSettings.requireCostTracking} onChange={(value) => updateSetting("requireCostTracking", value)} saving={savingKey === "requireCostTracking"} disabled={!isOrganizationAdmin} locked />
-            <ActionSetting label="Manage custom cost types" locked />
-            <SettingToggle label="Enable time tracking" description="" checked={displayedSettings.enableTimeTracking} onChange={(value) => updateSetting("enableTimeTracking", value)} saving={savingKey === "enableTimeTracking"} disabled={!isOrganizationAdmin} locked />
-            <SettingToggle label="Require time tracking" description={`Users must enter time in ${workOrderLabel.toLowerCase()}.`} checked={displayedSettings.requireTimeTracking} onChange={(value) => updateSetting("requireTimeTracking", value)} saving={savingKey === "requireTimeTracking"} disabled={!isOrganizationAdmin} locked />
-            <ActionSetting label="Manage custom time types" locked />
+            <SettingToggle label="Enable cost tracking" description={`Show cost entries on ${workOrderLabel.toLowerCase()}.`} checked={displayedSettings.enableCostTracking} onChange={(value) => updateSetting("enableCostTracking", value)} saving={savingKey === "enableCostTracking"} disabled={!isOrganizationAdmin} locked={false} />
+            <SettingToggle label="Require cost tracking" description={`Users must enter costs in ${workOrderLabel.toLowerCase()} before completing them.`} checked={displayedSettings.requireCostTracking} onChange={(value) => updateSetting("requireCostTracking", value)} saving={savingKey === "requireCostTracking"} disabled={!isOrganizationAdmin} locked={false} />
+            <ActionSetting label="Manage custom cost types" locked={!isOrganizationAdmin} onClick={() => onNavigate("Settings / Features / Work Order Cost Types")} />
+            <SettingToggle label="Enable time tracking" description={`Show time entries and timer controls on ${workOrderLabel.toLowerCase()}.`} checked={displayedSettings.enableTimeTracking} onChange={(value) => updateSetting("enableTimeTracking", value)} saving={savingKey === "enableTimeTracking"} disabled={!isOrganizationAdmin} locked={false} />
+            <SettingToggle label="Require time tracking" description={`Users must enter time in ${workOrderLabel.toLowerCase()} before completing them.`} checked={displayedSettings.requireTimeTracking} onChange={(value) => updateSetting("requireTimeTracking", value)} saving={savingKey === "requireTimeTracking"} disabled={!isOrganizationAdmin} locked={false} />
+            <ActionSetting label="Manage custom time types" locked={!isOrganizationAdmin} onClick={() => setTrackingTypesKind("time")} />
             <SettingToggle label="Enable unit cost overrides for parts" description={`Overrides only apply to the ${workOrderSingularLabel.toLowerCase()} and don’t affect global unit cost.`} checked={displayedSettings.enableUnitCostOverrides} onChange={(value) => updateSetting("enableUnitCostOverrides", value)} saving={savingKey === "enableUnitCostOverrides"} disabled={!isOrganizationAdmin} />
             <SettingToggle label="Require parts" description={`Users must add parts to ${workOrderLabel.toLowerCase()}.`} checked={displayedSettings.requireParts} onChange={(value) => updateSetting("requireParts", value)} saving={savingKey === "requireParts"} disabled={!isOrganizationAdmin} locked />
           </SettingsCard>

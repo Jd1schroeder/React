@@ -27,6 +27,8 @@ import { canAccessRecord, hasPermission } from "../../services/authorizationServ
 import { getRecordPath } from "../../routes.js";
 import { WorkOrderPdfExportDialog } from "./WorkOrderPdfExportDialog";
 import { WorkOrderActivity } from "./WorkOrderActivity";
+import { WorkOrderTimeTracking } from "./WorkOrderTimeTracking";
+import { WorkOrderCostTracking } from "./WorkOrderCostTracking";
 import "./WorkOrderDetail.css";
 
 const statusOptions = [
@@ -145,6 +147,7 @@ export function WorkOrderDetail({
   teamIds = [],
   assigneeOptions = [],
   memberDirectory = [],
+  timeEntryMembers = [],
   mentionTargets = [],
   assignMentionsEnabled = false,
   dateFormat,
@@ -155,6 +158,11 @@ export function WorkOrderDetail({
   onDeleteComment,
   canDeleteAnyComments = false,
   onResolveWorkOrderLinks,
+  organizationId,
+  currency = "USD",
+  isOrganizationAdmin = false,
+  workOrderSettings = {},
+  onTimeTrackingChanged,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isChangingStatus, setIsChangingStatus] = useState(false);
@@ -517,14 +525,38 @@ export function WorkOrderDetail({
           </section>
           <section className="detail-cost-section" aria-labelledby="detail-cost-title">
             <h2 id="detail-cost-title">Time &amp; Cost Tracking</h2>
-            {["Parts", "Time", "Other Costs"].map((label) => (
+            {["Parts"].map((label) => (
               <div className="detail-cost-row" key={label}>
                 <span>{label}</span>
-                <button type="button" disabled title={`${label} tracking is not available yet.`}>
+                <button type="button" disabled={label === "Parts"} title={`${label} tracking is not available yet.`}>
                   Add <ChevronRight size={14} aria-hidden="true" />
                 </button>
               </div>
             ))}
+            <WorkOrderTimeTracking
+              organizationId={organizationId}
+              workOrderId={selected.id}
+              grants={grants}
+              record={record}
+              userId={userId}
+              currency={currency}
+              memberDirectory={memberDirectory}
+              timeEntryMembers={timeEntryMembers}
+              isOrganizationAdmin={isOrganizationAdmin}
+              enabled={workOrderSettings.enableTimeTracking}
+              onChanged={onTimeTrackingChanged}
+            />
+            <WorkOrderCostTracking
+              organizationId={organizationId}
+              workOrderId={selected.id}
+              grants={grants}
+              record={record}
+              userId={userId}
+              memberDirectory={memberDirectory}
+              timeEntryMembers={timeEntryMembers}
+              isOrganizationAdmin={isOrganizationAdmin}
+              enabled={workOrderSettings.enableCostTracking}
+            />
           </section>
           {canUseComments && (
             <WorkOrderActivity

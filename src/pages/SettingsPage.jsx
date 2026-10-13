@@ -6,6 +6,7 @@ import { ProfilePreferencesPage } from "./settings/ProfilePreferencesPage";
 import { RolesPage } from "./settings/RolesPage";
 import { TeammateTeamsPage } from "./settings/TeammateTeamsPage";
 import { WorkOrderFeatureSettingsPage } from "./settings/WorkOrderFeatureSettingsPage";
+import { WorkOrderTrackingTypesPage } from "./settings/WorkOrderTrackingTypesPage";
 import "./SettingsPage.css";
 
 export function SettingsPage({ pageName, sessionId, onNavigate, onMobileHeaderTitleChange, onMobileHeaderBackChange }) {
@@ -18,5 +19,6 @@ export function SettingsPage({ pageName, sessionId, onNavigate, onMobileHeaderTi
   if (pageName === "Settings / Linked Device") return <ProfilePreferencesPage pageName={pageName} sessionId={sessionId} onNavigate={onNavigate} />;
   if (pageName === "Settings / Notification Settings") return <NotificationSettingsPage onNavigate={onNavigate} onMobileHeaderTitleChange={onMobileHeaderTitleChange} onMobileHeaderBackChange={onMobileHeaderBackChange} />;
   if (["Settings / Features / Work Orders", "Settings / Features / Work Order"].includes(pageName)) return <WorkOrderFeatureSettingsPage onNavigate={onNavigate} />;
+  if (pageName === "Settings / Features / Work Order Cost Types") return <WorkOrderTrackingTypesPage onNavigate={onNavigate} />;
   return <GeneralSettingsPage pageName={pageName} onNavigate={onNavigate} />;
 }

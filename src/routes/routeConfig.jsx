@@ -38,6 +38,7 @@ export const pages = {
   'Settings / Features': SettingsPage,
   'Settings / Features / Work Orders': SettingsPage,
   'Settings / Features / Work Order': SettingsPage,
+  'Settings / Features / Work Order Cost Types': SettingsPage,
   'Settings / Subscription': SettingsPage,
   'Settings / Manage Teammates': SettingsPage,
   'Settings / Teammates / Teams': SettingsPage,

@@ -438,6 +438,79 @@ a.detail-assignee-link:hover {
   color: var(--text-disabled-muted);
   cursor: not-allowed;
 }
+.work-order-time-summary {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--spacing-3);
+  box-sizing: border-box;
+  height: 54px;
+  min-height: 54px;
+}
+.work-order-time-summary > span:first-child,
+.work-order-time-summary-value {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+.work-order-time-overview-link { display: inline-flex; align-items: center; gap: var(--spacing-2); justify-self: start; padding: 0; border: 0; color: var(--ink); background: transparent; font: inherit; cursor: pointer; }
+.work-order-time-summary-value {
+  color: var(--text-secondary-muted);
+  font-variant-numeric: tabular-nums;
+}
+.work-order-time-entry-list {
+  display: grid;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+}
+.work-order-time-entry {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: var(--spacing-3);
+  color: var(--text-secondary-muted);
+  font-size: var(--font-size-sm);
+}
+.work-order-time-entry strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.work-order-time-entry-actions { display: inline-flex; gap: var(--spacing-2); }
+.work-order-time-entry-actions button { padding: 0; border: 0; color: var(--blue); background: transparent; font: inherit; font-size: var(--font-size-sm); cursor: pointer; }
+.work-order-time-error { margin: var(--spacing-2) var(--spacing-4); color: var(--danger); font-size: var(--font-size-sm); }
+.work-order-time-overlay { display: none; }
+.work-order-time-modal-backdrop { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: var(--spacing-4); background: rgb(0 0 0 / 35%); }
+.work-order-time-modal { display: grid; gap: var(--spacing-4); width: min(100%, 480px); max-height: min(90vh, 680px); overflow: auto; padding: var(--spacing-6); border: 0; border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-lg); }
+.work-order-time-modal-close { justify-self: end; width: 32px; height: 32px; padding: 0; border: 0; color: var(--text-secondary-muted); background: transparent; cursor: pointer; }
+.work-order-time-modal h3 { margin: 0; color: var(--ink); font-size: var(--font-size-xl-compact); }
+.work-order-time-modal-header { display: flex; align-items: center; justify-content: space-between; margin: calc(var(--spacing-6) * -1) calc(var(--spacing-6) * -1) var(--spacing-2); padding: var(--spacing-3) var(--spacing-4); color: white; background: var(--blue); }
+.work-order-time-modal-header h3 { color: white; font-size: var(--font-size-md); }
+.work-order-time-modal-header button { border: 0; color: white; background: transparent; font-size: 24px; line-height: 1; cursor: pointer; }
+.work-order-time-modal label { display: grid; gap: var(--spacing-2); color: var(--ink); font-size: var(--font-size-sm); }
+.work-order-time-modal input, .work-order-time-modal select, .work-order-time-modal textarea { box-sizing: border-box; width: 100%; min-height: 40px; padding: 0 var(--spacing-3); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); color: var(--ink); background: var(--surface); font: inherit; }
+.work-order-time-modal input:focus, .work-order-time-modal select:focus, .work-order-time-modal textarea:focus { border-color: var(--focus-border-color); box-shadow: 0 0 0 calc(var(--focus-border-width) - 1px) var(--focus-border-color); outline: 0; }
+.work-order-time-modal textarea { width: 100%; min-height: 72px; padding-top: var(--spacing-2); line-height: var(--line-height-md-px); resize: vertical; }
+.work-order-currency-input { position: relative; display: block; }
+.work-order-currency-input > span { position: absolute; top: 50%; left: var(--spacing-3); z-index: 1; color: var(--ink); transform: translateY(-50%); pointer-events: none; }
+.work-order-currency-input input { padding-left: calc(var(--spacing-3) + 1em); }
+.work-order-time-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-3); }
+.work-order-time-modal-actions { display: flex; justify-content: flex-end; gap: var(--spacing-3); }
+.work-order-time-modal-actions button { min-height: 40px; padding: 0 var(--spacing-4); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); color: var(--ink); background: var(--surface); font: inherit; cursor: pointer; }
+.work-order-time-modal-actions button[type="submit"] { border-color: var(--blue); color: white; background: var(--blue); }
+.work-order-time-modal-actions button:disabled { opacity: .55; cursor: not-allowed; }
+.work-order-time-overview { min-height: 100%; background: var(--surface); }
+.work-order-time-overview-header { display: flex; align-items: center; gap: var(--spacing-3); min-height: 72px; padding: 0 var(--spacing-6); border-bottom: var(--border-width-normal) solid var(--line); }
+.work-order-time-overview-header h3 { flex: 1; margin: 0; color: var(--ink); font-size: var(--font-size-xl-compact); }
+.work-order-time-overview-header button { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 var(--spacing-4); border: var(--border-width-normal) solid var(--blue); border-radius: var(--radius-sm); color: var(--blue); background: var(--surface); font: inherit; cursor: pointer; }
+.work-order-time-overview-header button:first-child { width: 40px; padding: 0; border: 0; font-size: 30px; }
+.work-order-time-overview-summary { display: grid; grid-template-columns: 1fr 1fr; max-width: 780px; margin: var(--spacing-3) auto 0; border-bottom: var(--border-width-normal) solid var(--line); }
+.work-order-time-overview-summary > div { display: grid; justify-items: center; gap: var(--spacing-5); min-height: 132px; padding: var(--spacing-5); border-right: var(--border-width-normal) solid var(--line); }
+.work-order-time-overview-summary > div:last-child { border-right: 0; }
+.work-order-time-overview-summary strong { color: var(--ink); font-size: 36px; font-weight: var(--font-normal); font-variant-numeric: tabular-nums; }
+.work-order-time-overview-summary span { color: var(--text-secondary-muted); }
+.work-order-time-overview-summary button { padding: var(--spacing-2) var(--spacing-5); border: var(--border-width-normal) solid var(--blue); border-radius: var(--radius-sm); color: var(--blue); background: var(--surface); font: inherit; cursor: pointer; }
+.work-order-time-overview-content { max-width: 780px; margin: 0 auto; padding: var(--spacing-6); color: var(--ink); }
+.work-order-time-overview-content > p { margin: 0 0 var(--spacing-4); }
+.work-order-time-overview-content > button { min-height: 40px; padding: 0 var(--spacing-4); border: var(--border-width-normal) solid var(--blue); border-radius: var(--radius-sm); color: var(--blue); background: var(--surface); font: inherit; cursor: pointer; }
+.work-order-tracking-type-list { display: grid; gap: var(--spacing-2); max-height: 260px; overflow: auto; }
+.work-order-tracking-type-row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-3); padding: var(--spacing-2) 0; border-bottom: var(--border-width-normal) solid var(--line); }
+.work-order-tracking-type-row small { display: block; color: var(--text-secondary-muted); font-size: var(--font-size-xs); }
+.work-order-tracking-type-row button { margin-left: var(--spacing-2); padding: 0; border: 0; color: var(--blue); background: transparent; cursor: pointer; }
 .detail-comments-section {
   padding: var(--spacing-7) 0;
   scroll-margin-top: var(--spacing-4);
@@ -698,7 +771,8 @@ a.detail-assignee-link:hover {
     flex: 1 1 auto;
     padding: var(--spacing-4) var(--spacing-4) var(--spacing-7);
     scrollbar-gutter: stable both-edges;
-    scroll-padding-bottom: var(--spacing-7);
+    scroll-padding-bottom: 92px;
+    padding-bottom: 92px;
   }
 
   .detail-status-buttons {
@@ -754,4 +828,26 @@ a.detail-assignee-link:hover {
     padding-right: var(--spacing-1);
     padding-left: var(--spacing-1);
   }
+
+  .work-order-time-overlay {
+    position: sticky;
+    bottom: var(--spacing-3);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing-2);
+    min-height: 52px;
+    margin: var(--spacing-3) 0 0;
+    padding: var(--spacing-2);
+    border: var(--border-width-normal) solid var(--blue);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(8px);
+  }
+  .work-order-time-overlay-value { margin-right: auto; padding-left: var(--spacing-2); color: var(--ink); font-variant-numeric: tabular-nums; }
+  .work-order-time-overlay button { display: inline-flex; align-items: center; gap: var(--spacing-2); min-height: 40px; padding: 0 var(--spacing-3); border: 0; border-radius: var(--radius-sm); color: white; background: var(--blue); font: inherit; cursor: pointer; }
+  .work-order-time-overlay button + button { color: var(--blue); background: var(--surface-subtle); }
+  .work-order-time-overlay button:disabled { opacity: .6; cursor: not-allowed; }
 }
