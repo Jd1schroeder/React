@@ -424,7 +424,7 @@
 .work-order-tracking-types-create:focus-visible { border-color: var(--blue-hover); background: var(--blue-hover); outline: 0; }
 .work-order-tracking-types-page-description { max-width: 720px; margin: var(--spacing-8) 0 var(--spacing-5); color: var(--ink); font-size: var(--font-size-body-sm); }
 .work-order-tracking-types-list-card { box-sizing: border-box; width: min(100%, 720px); max-width: 720px; margin-top: var(--spacing-4); padding: var(--spacing-6); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
-.work-order-tracking-type-flat-row { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 64px; margin: 0; border-bottom: var(--border-width-normal) solid var(--line); color: var(--ink); font-size: var(--font-size-md); }
+.work-order-tracking-type-flat-row { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 50px; margin: 0; border-bottom: var(--border-width-normal) solid var(--line); color: var(--ink); font-size: var(--font-size-md); }
 .work-order-tracking-type-flat-row:last-child { border-bottom: 0; }
 .work-order-tracking-types-empty { margin: 0; padding: var(--spacing-6); color: var(--muted); }
 .work-order-tracking-types-page .work-order-tracking-type-menu-button { width: 32px; height: 32px; }
