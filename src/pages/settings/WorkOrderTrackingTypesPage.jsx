@@ -94,7 +94,7 @@ export function WorkOrderTrackingTypesPage({ onNavigate }) {
       setIsFormOpen(false);
       setIsFormClosing(false);
       clearForm();
-    }, 180);
+    }, 280);
   };
 
   const removeType = (type) => {
