@@ -391,6 +391,10 @@
 .work-order-time-modal-actions button { min-height: 40px; padding: 0 var(--spacing-4); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); color: var(--ink); background: var(--surface); font: inherit; cursor: pointer; }
 .work-order-time-modal-actions button[type="submit"] { border-color: var(--blue); color: white; background: var(--blue); }
 .work-order-time-modal-actions button:disabled { opacity: .55; cursor: not-allowed; }
+.work-order-tracking-type-editor { gap: 0; padding: 0; }
+.work-order-tracking-type-editor .work-order-time-modal-header { padding: var(--spacing-4); border-bottom: var(--border-width-normal) solid var(--line); }
+.work-order-tracking-type-editor > label { padding: var(--spacing-4); }
+.work-order-tracking-type-editor .work-order-time-modal-actions { padding: var(--spacing-4); border-top: var(--border-width-normal) solid var(--line); }
 @media (--wb-viewport-max-840) {
   .work-order-time-modal-backdrop { place-items: end center; padding: 0; }
   .work-order-time-modal { width: min(100%, 640px); max-height: calc(100dvh - env(safe-area-inset-top)); padding: var(--spacing-5) var(--spacing-4) calc(var(--spacing-5) + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; }
