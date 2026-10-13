@@ -3,6 +3,7 @@ import { useWorkspace } from './useWorkspace'
 import { getUnreadWorkOrderCount } from '../../services/workOrderService'
 import { MobileWorkOrderNavigationActions } from './MobileWorkOrderNavigationActions'
 import { useMobileWorkOrderNavigation } from './useMobileWorkOrderNavigation'
+import { MobileSettingsSheet } from '../ui/MobileSettingsSheet'
 import { getFeatureLabel } from '../../utils/featureLabels'
 import {
   Boxes,
@@ -32,11 +33,13 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const workspace = useWorkspace()
   const workOrderNavigation = useMobileWorkOrderNavigation()
   const [unreadWorkOrderBadge, setUnreadWorkOrderBadge] = useState(null)
+  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false)
   const [navigationOverflow, setNavigationOverflow] = useState({ previous: false, next: false })
   const organizationId = workspace.organization?.id
   const grants = workspace.authorization?.grants
   const canViewWorkOrders = Boolean(grants?.['work_orders.view'])
-  const isMoreCurrent = !primaryDestinations.some((item) => isPrimaryPage(item.page, activePage))
+  const isSettingsContext = activePage === 'More' || activePage.startsWith('Settings /')
+  const isMoreCurrent = !isSettingsContext && !primaryDestinations.some((item) => isPrimaryPage(item.page, activePage))
   const unreadWorkOrderCount = canViewWorkOrders && unreadWorkOrderBadge?.organizationId === organizationId
     ? unreadWorkOrderBadge.count
     : null
@@ -149,19 +152,20 @@ export function MobileNavigation({ activePage, onNavigate }) {
       ))}
       <button
         type="button"
-        className={`mobile-primary-navigation-item mobile-primary-navigation-more${isMoreCurrent ? ' is-active' : ''}`}
-        aria-label="More"
-        aria-current={isMoreCurrent ? 'page' : undefined}
-        onClick={() => navigateTo('More')}
+        className={`mobile-primary-navigation-item mobile-primary-navigation-more${isSettingsContext || isMoreCurrent ? ' is-active' : ''}`}
+        aria-label={isSettingsContext ? 'Settings' : 'More'}
+        aria-current={isSettingsContext || isMoreCurrent ? 'page' : undefined}
+        onClick={() => isSettingsContext ? setIsSettingsMenuOpen(true) : navigateTo('More')}
       >
-        <Menu size={21} strokeWidth={1.9} aria-hidden="true" />
-        <span>More</span>
+        {isSettingsContext ? <Settings size={21} strokeWidth={1.9} aria-hidden="true" /> : <Menu size={21} strokeWidth={1.9} aria-hidden="true" />}
+        <span>{isSettingsContext ? 'Settings' : 'More'}</span>
       </button>
     </div>
-    {['Dashboard', 'More'].includes(activePage) && <button className="mobile-navigation-account" type="button" onClick={() => onNavigate('Settings / Profile Preferences')} aria-label="Account">
+    {activePage === 'Dashboard' && <button className="mobile-navigation-account" type="button" onClick={() => onNavigate('Settings / Profile Preferences')} aria-label="Account">
       <Settings size={26} strokeWidth={1.8} aria-hidden="true" />
       <span>Account</span>
     </button>}
+    {isSettingsMenuOpen && <MobileSettingsSheet onClose={() => setIsSettingsMenuOpen(false)} onNavigate={onNavigate} />}
     <button className="mobile-navigation-scroll-forward" type="button" aria-label="Show more navigation options" onClick={scrollNavigationForward} hidden={!navigationOverflow.next}>
       <ChevronRight size={22} strokeWidth={2.4} aria-hidden="true" />
     </button>

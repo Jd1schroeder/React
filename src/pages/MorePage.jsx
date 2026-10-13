@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react'
 import { BellOff, Bot, Building2, ChevronRight, UserRoundPlus } from 'lucide-react'
 import { sidebarGroups } from '../components/layout/sidebarConfig'
 import { useWorkspace } from '../components/layout/useWorkspace'
-import { MobileActionSheet } from '../components/ui/MobileActionSheet'
+import { MobileSettingsSheet } from '../components/ui/MobileSettingsSheet'
 import { getFeatureLabel } from '../utils/featureLabels'
 import { getFeatureModuleKeyForPage, isFeatureModuleEnabled } from '../utils/featureModules'
-import { organizationPages, settings } from './settings/settingsConfig'
 import './MorePage.css'
 
 const featurePages = [
@@ -41,11 +40,6 @@ export function MorePage({ onNavigate }) {
     }
     onNavigate('Settings / General')
   }
-  const selectSettingsPage = (page) => {
-    setIsSettingsMenuOpen(false)
-    onNavigate(page)
-  }
-
   return <main className="more-page" aria-labelledby="more-page-title">
     <h1 id="more-page-title" className="more-page-visually-hidden">More</h1>
 
@@ -62,9 +56,7 @@ export function MorePage({ onNavigate }) {
       <ChevronRight className="more-workspace-chevron" size={23} aria-hidden="true" />
     </button>
 
-    {isSettingsMenuOpen && <MobileActionSheet title="Organization Settings" onClose={() => setIsSettingsMenuOpen(false)}>
-      {organizationPages.map((page) => <button key={page} type="button" onClick={() => selectSettingsPage(page)}>{settings[page].title}</button>)}
-    </MobileActionSheet>}
+    {isSettingsMenuOpen && <MobileSettingsSheet onClose={() => setIsSettingsMenuOpen(false)} onNavigate={onNavigate} />}
 
     <div className="more-page-actions">
       <button className="more-page-action is-primary" type="button" onClick={() => onNavigate('Settings / Invite Users')}>
