@@ -3,6 +3,14 @@ import { Button } from '../ui/Button'
 import { PanelViewSelector } from './PanelViewSelector'
 import './PanelLayout.css'
 
+export function HeaderSearch({ value = '', onChange, placeholder = 'Search', ariaLabel = placeholder, className = '' }) {
+  return <label className={`header-search ${className}`.trim()}>
+    <Search size={16} aria-hidden="true" />
+    <input value={value} onChange={(event) => onChange?.(event.target.value)} placeholder={placeholder} aria-label={ariaLabel} />
+    {value && <button type="button" className="clear-search" onClick={() => onChange?.('')} aria-label="Clear search"><X size={15} /></button>}
+  </label>
+}
+
 export function PanelLayout({
   title,
   activeView = 'panel',
@@ -35,11 +43,7 @@ export function PanelLayout({
         <div className="panel-view-header-actions">
           {showHeaderSearch && <div className={`header-search-controls${searchLeadingAction || searchTrailingAction ? ' has-search-actions' : ''}`}>
             {searchLeadingAction}
-            <label className="header-search">
-              <Search size={16} aria-hidden="true" />
-              <input value={searchValue} onChange={(event) => onSearch?.(event.target.value)} placeholder={searchPlaceholder ?? `Search ${title.toLowerCase()}`} aria-label={searchPlaceholder ?? `Search ${title.toLowerCase()}`} />
-              {searchValue && <button type="button" className="clear-search" onClick={() => onSearch?.('')} aria-label="Clear search"><X size={15} /></button>}
-            </label>
+            <HeaderSearch value={searchValue} onChange={onSearch} placeholder={searchPlaceholder ?? `Search ${title.toLowerCase()}`} ariaLabel={searchPlaceholder ?? `Search ${title.toLowerCase()}`} />
             {searchTrailingAction}
           </div>}
           {showAction && <Button onClick={onAction}><Plus size={15} /> {actionLabel}</Button>}
