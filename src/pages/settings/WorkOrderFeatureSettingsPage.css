@@ -427,9 +427,6 @@
 .work-order-tracking-types-page-header { width: 100%; }
 .work-order-tracking-types-page-header h1 { flex: 0 0 auto; }
 .work-order-tracking-types-page-actions { display: flex; align-items: center; gap: var(--spacing-3); margin-left: auto; }
-.work-order-tracking-types-create { display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-2); min-height: 40px; padding: 0 var(--spacing-4); border: var(--border-width-normal) solid var(--blue); border-radius: var(--radius-sm); color: var(--white); background: var(--blue); font: inherit; font-weight: var(--font-semibold); white-space: nowrap; cursor: pointer; }
-.work-order-tracking-types-create:hover,
-.work-order-tracking-types-create:focus-visible { border-color: var(--blue-hover); background: var(--blue-hover); outline: 0; }
 .work-order-tracking-types-page-description { box-sizing: border-box; width: 100%; margin: 16px 0 24px; color: var(--ink); font-size: var(--font-size-body-sm); }
 .work-order-tracking-types-list-card { box-sizing: border-box; width: min(100%, 720px); max-width: 720px; margin-top: var(--spacing-4); padding: var(--spacing-6); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
 .work-order-tracking-type-flat-row { position: relative; display: flex; align-items: center; justify-content: space-between; min-height: 50px; margin: 0; border-bottom: var(--border-width-normal) solid var(--line); color: var(--ink); font-size: var(--font-size-md); }

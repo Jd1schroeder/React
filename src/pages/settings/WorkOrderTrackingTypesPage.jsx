@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, MoreVertical, Plus, X } from "lucide-react";
 import { useWorkspace } from "../../components/layout/useWorkspace";
 import { HeaderSearch } from "../../components/layout/PanelLayout";
+import { Button } from "../../components/ui/Button";
 import { MobileActionSheet } from "../../components/ui/MobileActionSheet";
 import { createWorkOrderTrackingType, deleteWorkOrderTrackingType, listWorkOrderTrackingTypes, updateWorkOrderTrackingType } from "../../services/workOrderTimeService";
 import "./WorkOrderFeatureSettingsPage.css";
@@ -127,7 +128,7 @@ export function WorkOrderTrackingTypesPage({ onNavigate, kind = "cost" }) {
       <header className="work-order-tracking-types-page-header">
         <button type="button" onClick={() => onNavigate("Settings / Features / Work Orders")} aria-label="Back to Work Order feature settings"><ArrowLeft size={20} aria-hidden="true" /></button>
         <h1>{pageTitle}</h1>
-        <div className="work-order-tracking-types-page-actions"><HeaderSearch value={searchTerm} onChange={setSearchTerm} placeholder={`Search ${typeLabel} Types`} ariaLabel={`Search ${typeLabel} Types`} /><button type="button" className="work-order-tracking-types-create" onClick={startNewType}><Plus size={17} aria-hidden="true" />Create {typeLabel} Type</button></div>
+        <div className="work-order-tracking-types-page-actions"><HeaderSearch value={searchTerm} onChange={setSearchTerm} placeholder={`Search ${typeLabel} Types`} ariaLabel={`Search ${typeLabel} Types`} /><Button onClick={startNewType}><Plus size={15} /> {`Create ${typeLabel} Type`}</Button></div>
       </header>
       <main className="work-order-tracking-types-page-main">
         <p className="work-order-tracking-types-page-description">Manage types linked to your work order {typeLabelLower}s</p>
