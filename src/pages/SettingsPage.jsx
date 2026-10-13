@@ -19,6 +19,7 @@ export function SettingsPage({ pageName, sessionId, onNavigate, onMobileHeaderTi
   if (pageName === "Settings / Linked Device") return <ProfilePreferencesPage pageName={pageName} sessionId={sessionId} onNavigate={onNavigate} />;
   if (pageName === "Settings / Notification Settings") return <NotificationSettingsPage onNavigate={onNavigate} onMobileHeaderTitleChange={onMobileHeaderTitleChange} onMobileHeaderBackChange={onMobileHeaderBackChange} />;
   if (["Settings / Features / Work Orders", "Settings / Features / Work Order"].includes(pageName)) return <WorkOrderFeatureSettingsPage onNavigate={onNavigate} />;
-  if (pageName === "Settings / Features / Work Order Cost Types") return <WorkOrderTrackingTypesPage onNavigate={onNavigate} />;
+  if (pageName === "Settings / Features / Work Order Cost Types") return <WorkOrderTrackingTypesPage onNavigate={onNavigate} kind="cost" />;
+  if (pageName === "Settings / Features / Work Order Time Types") return <WorkOrderTrackingTypesPage onNavigate={onNavigate} kind="time" />;
   return <GeneralSettingsPage pageName={pageName} onNavigate={onNavigate} />;
 }
