@@ -42,12 +42,13 @@ where version in (
   '20261014190000',
   '20261014200000',
   '20261014210000',
-  '20261014220000'
+  '20261014220000',
+  '20261014230000'
 )
 order by version;
 ```
 
-The result must contain all twenty versions. The `20261014...` migrations are forward-only repairs, authorization extensions, completion-visibility changes, organization localization changes, access hardening, or configurable external comment identity requirements; do not edit or rerun earlier applied migrations.
+The result must contain all twenty-one versions. The `20261014...` migrations are forward-only repairs, authorization extensions, completion-visibility changes, organization localization changes, access hardening, configurable external comment identity requirements, or completion-permission repairs; do not edit or rerun earlier applied migrations.
 
 After applying the External Work Order migration, run `supabase/tests/external_work_orders.sql` in the same test database. It verifies that browser roles cannot query the share table directly and that only the intended anonymous and authenticated RPCs are executable.
 

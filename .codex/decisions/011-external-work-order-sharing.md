@@ -41,6 +41,7 @@ Workbench needs to share a single Work Order with an external contact without gr
 - `supabase/migrations/20261014200000_harden_external_work_order_access_defaults.sql`
 - `supabase/migrations/20261014210000_configure_external_comment_author_names.sql`
 - `supabase/migrations/20261014220000_require_external_commenter_email.sql`
+- `supabase/migrations/20261014230000_repair_external_completion_permission_check.sql`
 - `supabase/tests/external_work_orders.sql`
 - `src/pages/ExternalWorkOrderPage.jsx`
 - `src/pages/work-orders/ExternalWorkOrderShareDialog.jsx`
