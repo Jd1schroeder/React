@@ -71,7 +71,7 @@ function WorkOrderStatusMenu({ order, onStatusChange, canChangeStatus }) {
       setMenuPosition({ top, left, maxHeight: availableHeight });
     };
     updatePosition();
-    document.addEventListener("scroll", updatePosition, true);
+    document.addEventListener("scroll", updatePosition, { capture: true, passive: true });
     window.addEventListener("resize", updatePosition);
     return () => {
       document.removeEventListener("scroll", updatePosition, true);
@@ -354,7 +354,7 @@ export function WorkOrderList({
   useEffect(() => {
     if (!isReadAllTooltipVisible) return undefined;
     window.addEventListener("resize", measureReadAllTooltip);
-    window.addEventListener("scroll", measureReadAllTooltip, true);
+    window.addEventListener("scroll", measureReadAllTooltip, { capture: true, passive: true });
     return () => {
       window.removeEventListener("resize", measureReadAllTooltip);
       window.removeEventListener("scroll", measureReadAllTooltip, true);

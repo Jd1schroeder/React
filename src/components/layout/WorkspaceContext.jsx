@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Building2, LogOut, ShieldAlert } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { getCurrentWorkspace } from "../../services/workspaceService";
@@ -8,6 +8,7 @@ import { WorkspaceContext } from "./WorkspaceContextValue";
 
 export function WorkspaceProvider({ children, onNavigate }) {
   const [state, setState] = useState({ status: "loading", workspace: null, error: null });
+  const workspaceLoadRef = useRef(null);
 
   const patchOrganization = useCallback((organizationId, updates) => {
     setState((current) => {
@@ -24,29 +25,49 @@ export function WorkspaceProvider({ children, onNavigate }) {
     });
   }, []);
 
-  const loadWorkspace = useCallback(async () => {
-    setState((current) => ({ ...current, status: "loading", error: null }));
-    try {
-      const [workspace] = await Promise.all([
-        getCurrentWorkspace(),
-        registerCurrentSession().catch(() => null),
-      ]);
-      if (!workspace.user) {
-        setState({ status: "unauthenticated", workspace: null, error: null });
-        return;
+  const loadWorkspace = useCallback(() => {
+    if (workspaceLoadRef.current) return workspaceLoadRef.current;
+
+    const request = (async () => {
+      setState((current) => ({ ...current, status: "loading", error: null }));
+      try {
+        const [workspace] = await Promise.all([
+          getCurrentWorkspace(),
+          registerCurrentSession().catch(() => null),
+        ]);
+        if (!workspace.user) {
+          setState({ status: "unauthenticated", workspace: null, error: null });
+          return;
+        }
+        const status = workspace.authorization?.status === "error"
+          ? "error"
+          : workspace.accessStatus === "active" && workspace.authorization?.status === "ready"
+            ? "ready"
+            : workspace.accessStatus === "suspended"
+            ? "suspended"
+            : "no-organization";
+        setState({ status, workspace, error: null });
+      } catch (error) {
+        setState((current) => ({ ...current, status: "error", error }));
       }
-      const status = workspace.authorization?.status === "error"
-        ? "error"
-        : workspace.accessStatus === "active" && workspace.authorization?.status === "ready"
-          ? "ready"
-          : workspace.accessStatus === "suspended"
-          ? "suspended"
-          : "no-organization";
-      setState({ status, workspace, error: null });
-    } catch (error) {
-      setState((current) => ({ ...current, status: "error", error }));
-    }
+    })();
+
+    workspaceLoadRef.current = request;
+    request.then(
+      () => {
+        if (workspaceLoadRef.current === request) workspaceLoadRef.current = null;
+      },
+      () => {
+        if (workspaceLoadRef.current === request) workspaceLoadRef.current = null;
+      },
+    );
+    return request;
   }, []);
+
+  const contextValue = useMemo(
+    () => ({ ...state.workspace, patchOrganization, refreshWorkspace: loadWorkspace }),
+    [loadWorkspace, patchOrganization, state.workspace],
+  );
 
   useEffect(() => {
     loadWorkspace();
@@ -144,7 +165,7 @@ export function WorkspaceProvider({ children, onNavigate }) {
     );
   }
 
-  return <WorkspaceContext.Provider value={{ ...state.workspace, patchOrganization, refreshWorkspace: loadWorkspace }}>{children}</WorkspaceContext.Provider>;
+  return <WorkspaceContext.Provider value={contextValue}>{children}</WorkspaceContext.Provider>;
 }
 
 function WorkspaceAccessState({ icon: Icon, title, message, onSignOut }) {

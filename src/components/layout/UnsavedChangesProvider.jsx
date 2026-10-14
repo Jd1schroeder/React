@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useBlocker } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { UnsavedChangesContext } from "./UnsavedChangesContext";
@@ -67,7 +67,7 @@ export function UnsavedChangesProvider({ children }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [cancelNavigation, isPromptVisible]);
 
-  const value = { guardNavigation, setHasUnsavedChanges };
+  const value = useMemo(() => ({ guardNavigation, setHasUnsavedChanges }), [guardNavigation, setHasUnsavedChanges]);
 
   return (
     <UnsavedChangesContext.Provider value={value}>

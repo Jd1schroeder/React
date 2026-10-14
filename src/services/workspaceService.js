@@ -52,6 +52,9 @@ export async function getCurrentWorkspace(organizationId = window.localStorage.g
       return ""
     })
     : Promise.resolve("")
+  const signedOrganizationLogoUrlPromise = organization?.logo_url
+    ? getOrganizationLogoSignedUrl(organization.logo_url).catch(() => '')
+    : Promise.resolve('')
 
   let authorization = { status: 'error', roleId: organization?.roleId ?? null, grants: {} }
   let teamIds = []
@@ -73,10 +76,10 @@ export async function getCurrentWorkspace(organizationId = window.localStorage.g
     authorization = { status: 'ready', roleId: organization.roleId, grants: permissionMap(permissionRows ?? []) }
   }
 
-  const signedAvatarUrl = await signedAvatarUrlPromise
-  const signedOrganizationLogoUrl = organization?.logo_url
-    ? await getOrganizationLogoSignedUrl(organization.logo_url).catch(() => '')
-    : ''
+  const [signedAvatarUrl, signedOrganizationLogoUrl] = await Promise.all([
+    signedAvatarUrlPromise,
+    signedOrganizationLogoUrlPromise,
+  ])
   const profileWithAvatar = profile
     ? { ...profile, avatar_path: profile.avatar_url, avatar_url: signedAvatarUrl }
     : null

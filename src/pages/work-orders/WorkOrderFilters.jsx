@@ -112,7 +112,7 @@ export function WorkOrderFilters({
       setMenuPosition({ top, left, maxHeight: availableHeight })
     }
     updatePosition()
-    document.addEventListener('scroll', updatePosition, true)
+    document.addEventListener('scroll', updatePosition, { capture: true, passive: true })
     window.addEventListener('resize', updatePosition)
     return () => {
       document.removeEventListener('scroll', updatePosition, true)

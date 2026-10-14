@@ -1,6 +1,5 @@
-import { Component, Suspense, useCallback, useEffect, useState } from 'react'
+import { Component, lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useNavigate, useParams } from 'react-router-dom'
-import { AppLayout } from './components/layout/AppLayout'
 import { UnsavedChangesProvider } from './components/layout/UnsavedChangesProvider'
 import { useUnsavedChanges } from './components/layout/useUnsavedChanges'
 import { getPagePath, getRecordPath, pagePaths } from './routes.js'
@@ -9,6 +8,8 @@ import './styles/tokens.css'
 import './styles/breakpoints.css'
 import './styles/globals.css'
 import './App.css'
+
+const AppLayout = lazy(() => import('./components/layout/AppLayout').then((module) => ({ default: module.AppLayout })))
 
 function PageLoading() {
   return <div className="workspace-loading" aria-busy="true" aria-label="Loading page" />
