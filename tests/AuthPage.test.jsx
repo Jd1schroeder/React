@@ -61,4 +61,55 @@ describe('post-authentication navigation', () => {
 
     await waitFor(() => expect(onNavigate).toHaveBeenCalledWith('Accept Invite'))
   })
+
+  it('shows a recoverable error when password sign-in fails', async () => {
+    authMocks.signInWithPassword.mockRejectedValue(new Error('Invalid credentials'))
+    renderLogin()
+
+    await submitLogin()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Invalid credentials')
+  })
+
+  it('navigates after a successful passkey sign-in', async () => {
+    const onNavigate = renderLogin()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in with passkey' }))
+
+    await waitFor(() => expect(onNavigate).toHaveBeenCalledWith('Work Orders'))
+  })
+})
+
+describe('signup validation and confirmation', () => {
+  function renderSignup(onNavigate = vi.fn()) {
+    render(<AuthPage mode="signup" onNavigate={onNavigate} />)
+    return onNavigate
+  }
+
+  function fillSignupPasswords(password, confirmation = password) {
+    fireEvent.change(screen.getByPlaceholderText('Enter your organization name'), { target: { value: 'Acme Corp' } })
+    fireEvent.change(screen.getByPlaceholderText('Create a password'), { target: { value: password } })
+    fireEvent.change(screen.getByPlaceholderText('Re-enter your password'), { target: { value: confirmation } })
+    fireEvent.change(screen.getByPlaceholderText('Enter your work email'), { target: { value: 'josh@example.com' } })
+  }
+
+  it('rejects mismatched passwords before calling Supabase', async () => {
+    renderSignup()
+    fillSignupPasswords('one-password', 'different-password')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Passwords do not match.')
+    expect(authMocks.signUpWithOrganization).not.toHaveBeenCalled()
+  })
+
+  it('routes unconfirmed signup results to email verification', async () => {
+    authMocks.signUpWithOrganization.mockResolvedValue({ session: null })
+    const onNavigate = renderSignup()
+    fillSignupPasswords('example-password')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
+
+    await waitFor(() => expect(onNavigate).toHaveBeenCalledWith('Verify Email'))
+  })
 })

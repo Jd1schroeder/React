@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { NewWorkOrderForm } from '../src/pages/work-orders/NewWorkOrderForm'
 
@@ -147,8 +147,10 @@ describe('NewWorkOrderForm mobile controls', () => {
     render(<NewWorkOrderForm onCreate={vi.fn()} onCancel={vi.fn()} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Add or take pictures' }))
-    expect(screen.getByRole('dialog', { name: 'Select from' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Camera' }))
+    const mobileDialog = screen.getAllByRole('dialog', { name: 'Select from' })
+      .find((dialog) => dialog.classList.contains('mobile-action-sheet'))
+    expect(mobileDialog).toBeInTheDocument()
+    fireEvent.click(within(mobileDialog).getByRole('button', { name: 'Camera' }))
 
     await waitFor(() => expect(selectedCaptureModes).toEqual(['environment']))
     expect(screen.queryByRole('dialog', { name: 'Select from' })).not.toBeInTheDocument()
