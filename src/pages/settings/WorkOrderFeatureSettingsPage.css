@@ -63,10 +63,12 @@
 .work-order-external-security-note > div { display: flex; align-items: center; gap: var(--spacing-2); color: var(--ink); }
 .work-order-external-security-note > div svg { color: var(--blue); }
 .work-order-external-security-note p { margin: 0; color: var(--muted); font-size: var(--font-size-body-sm); }
-@media (--wb-viewport-max-640) {
-  .work-order-external-expiration-setting, .work-order-external-access-row, .work-order-external-identity-setting { align-items: stretch; flex-direction: column; }
-  .work-order-external-expiration-setting .select, .work-order-external-access-row .select { width: 100%; }
-  .work-order-external-access-row { justify-content: center; padding: var(--spacing-4); }
+@media (--wb-viewport-tablet-and-down) {
+  .work-order-external-expiration-setting, .work-order-external-access-row { align-items: center; flex-direction: row; }
+  .work-order-external-expiration-setting > div:first-child, .work-order-external-access-row > div:first-child { min-width: 0; flex: 1 1 auto; }
+  .work-order-external-expiration-setting .select { width: min(52%, 360px); flex: 0 0 min(52%, 360px); }
+  .work-order-external-access-row .select { width: min(48%, 210px); flex: 0 0 min(48%, 210px); }
+  .work-order-external-access-row { padding: var(--spacing-3) var(--spacing-4); }
 }
 .work-order-tracking-types-page .work-order-tracking-type-form { margin-top: var(--spacing-6); }
 

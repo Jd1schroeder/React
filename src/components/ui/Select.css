@@ -19,6 +19,27 @@
   text-align: left;
   outline: 0;
 }
+.select-native-control {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 var(--spacing-3);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+  font-size: var(--font-size-body-sm);
+}
+.select-native-control:focus-visible {
+  border: var(--focus-border-width) solid var(--focus-border-color);
+  outline: 0;
+}
+.select-native-control:disabled {
+  color: var(--text-disabled-control);
+  background: var(--surface-control-disabled);
+  cursor: not-allowed;
+}
 .select-trigger.has-value {
   color: var(--ink);
 }

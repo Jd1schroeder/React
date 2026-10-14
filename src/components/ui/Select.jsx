@@ -18,6 +18,16 @@ export function Select({ ariaLabel, className = '', disabled = false, icon: Trig
   const selectedOptions = normalizedOptions.filter((option) => selectedValues.includes(option.value))
   const [isOpen, setIsOpen] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(selectedIndex >= 0 ? selectedIndex : 0)
+  const [isTabletAndDown, setIsTabletAndDown] = useState(false)
+
+  useEffect(() => {
+    if (multiple || typeof window === 'undefined' || !window.matchMedia) return undefined
+    const mediaQuery = window.matchMedia('(max-width: 1199px)')
+    const updateViewport = () => setIsTabletAndDown(mediaQuery.matches)
+    updateViewport()
+    mediaQuery.addEventListener?.('change', updateViewport)
+    return () => mediaQuery.removeEventListener?.('change', updateViewport)
+  }, [multiple])
 
   useEffect(() => {
     if (!isOpen) return undefined
@@ -45,6 +55,11 @@ export function Select({ ariaLabel, className = '', disabled = false, icon: Trig
     triggerRef.current?.focus()
   }
 
+  const handleNativeChange = (event) => {
+    const option = normalizedOptions.find((candidate) => candidate.value === event.target.value)
+    onChange?.(event.target.value, option)
+  }
+
   const handleTriggerKeyDown = (event) => {
     if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
@@ -70,7 +85,13 @@ export function Select({ ariaLabel, className = '', disabled = false, icon: Trig
     }
   }
 
+  const useNativeSelect = !multiple && isTabletAndDown
+
   return <div ref={rootRef} className={`select ${className}`.trim()}>
+    {useNativeSelect ? <select className="select-native-control" aria-label={ariaLabel} name={name} value={value} onChange={handleNativeChange} disabled={disabled}>
+      {!selectedOption && <option value="" disabled>{placeholder}</option>}
+      {normalizedOptions.map((option) => <option key={option.value} value={option.value} disabled={option.disabled}>{option.label}</option>)}
+    </select> : <>
     <button ref={triggerRef} type="button" className={`select-trigger ${selectedOption ? 'has-value' : ''}${disabled ? ' is-disabled' : ''}`} aria-label={ariaLabel} aria-haspopup="listbox" aria-expanded={isOpen} aria-disabled={disabled || undefined} disabled={disabled} onClick={() => setIsOpen((open) => !open)} onKeyDown={handleTriggerKeyDown}>
       {TriggerIcon && <TriggerIcon className="select-trigger-icon" size={16} aria-hidden="true" />}
       {multiple && selectedOptions.length > 0 ? (
@@ -88,5 +109,6 @@ export function Select({ ariaLabel, className = '', disabled = false, icon: Trig
       })}
     </div>}
     {name && <input type="hidden" name={name} value={multiple ? selectedValues.join(',') : value} />}
+    </>}
   </div>
 }
