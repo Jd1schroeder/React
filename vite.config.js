@@ -23,11 +23,14 @@ function breakpointTokensPlugin() {
   }
 }
 
-function deploymentVersionPlugin() {
+function getDeploymentVersion() {
+  return globalThis.process?.env?.VERCEL_GIT_COMMIT_SHA ?? globalThis.process?.env?.GIT_COMMIT_SHA ?? new Date().toISOString()
+}
+
+function deploymentVersionPlugin(deploymentVersion) {
   return {
     name: 'deployment-version',
     generateBundle() {
-      const deploymentVersion = globalThis.process?.env?.VERCEL_GIT_COMMIT_SHA ?? globalThis.process?.env?.GIT_COMMIT_SHA ?? new Date().toISOString()
       const buildDate = new Date()
       const year = String(buildDate.getUTCFullYear()).slice(-2)
       const month = buildDate.getUTCMonth() + 1
@@ -51,9 +54,13 @@ function deploymentVersionPlugin() {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, fileURLToPath(new URL('.', import.meta.url)), '')
   const supabaseUrl = env.VITE_SUPABASE_URL
+  const deploymentVersion = getDeploymentVersion()
 
   return {
-    plugins: [react(), deploymentVersionPlugin()],
+    define: {
+      'import.meta.env.VITE_DEPLOYMENT_VERSION': JSON.stringify(deploymentVersion),
+    },
+    plugins: [react(), deploymentVersionPlugin(deploymentVersion)],
     server: {
       proxy: supabaseUrl
         ? {

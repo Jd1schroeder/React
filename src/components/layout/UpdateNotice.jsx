@@ -12,12 +12,12 @@ async function getDeploymentVersion() {
   return data.version
 }
 
-export function UpdateNotice() {
-  const [currentVersion, setCurrentVersion] = useState(null)
+export function UpdateNotice({ enabled = !import.meta.env.DEV, initialVersion = import.meta.env.VITE_DEPLOYMENT_VERSION ?? null }) {
+  const [currentVersion, setCurrentVersion] = useState(initialVersion)
   const [updateAvailable, setUpdateAvailable] = useState(false)
 
   useEffect(() => {
-    if (import.meta.env.DEV) return undefined
+    if (!enabled) return undefined
 
     let active = true
 
@@ -47,7 +47,7 @@ export function UpdateNotice() {
       window.clearInterval(intervalId)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [currentVersion])
+  }, [currentVersion, enabled])
 
   if (!updateAvailable) return null
 
