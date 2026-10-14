@@ -23,6 +23,18 @@ Related Decisions: [001 — Frontend platform and routing](../../decisions/001-f
 - When the user supplies reference markup, computed CSS, or a screenshot, load the [MaintainX UI reference Skill](../maintainx-ui-reference/SKILL.md); preserve literal element hierarchy when HTML is provided and distinguish external reference observations from established Workbench rules.
 - Keep page behavior aligned with current source and relevant domain/API/security Skills. UI visibility is not authorization; follow the [permissioned feature boundary Pattern](../../patterns/security/permissioned-feature-boundary.md) for protected actions.
 
+## Reusable component contract
+
+Use the canonical controls in `src/components/ui` before creating a parallel implementation. The current shared primitives include `Button`, `Select`, `DatePicker`, `DataTable`, `Avatar`, `ImageDropzone`, and `PriorityBadge`.
+
+- Search the shared component inventory before adding a control to a page or feature.
+- Extend a shared primitive when the interaction, accessibility, and visual contract are substantially the same.
+- Keep genuinely domain-specific components near their feature and give them domain-specific names.
+- Do not define page-local copies of canonical primitive names.
+- When a new reusable primitive is justified, add it under `src/components/ui`, give it a focused behavior test, and update the relevant Pattern if its contract becomes canonical.
+
+The architecture guardrail in `tests/architecture/reusable-component-boundaries.test.mjs` checks for duplicate definitions of canonical primitives outside the shared UI directory. It is intentionally not a ban on native HTML controls or page-specific components.
+
 ## Routing
 
 Load the [panel page and route Pattern](../../patterns/frontend/panel-page-and-route.md) when adding pages or record routes. Route paths are built in `src/routes.js`; lazy route registration is in `src/routes/routeConfig.jsx`.

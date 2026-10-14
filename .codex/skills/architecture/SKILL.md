@@ -26,6 +26,8 @@ Keep the application organized around these boundaries:
 
 Prefer extending an existing primitive over adding a parallel implementation. Keep route definitions in `src/routes/routeConfig.jsx` and reusable page configuration/data outside page components when multiple pages consume it.
 
+Reusable UI primitives have one source of truth under `src/components/ui`. Before adding a new control, search the shared component inventory and extend the existing primitive when its contract fits. Feature-specific components remain appropriate when their behavior is domain-specific; do not create page-local copies of canonical primitives such as `Button`, `Select`, `DatePicker`, `DataTable`, `Avatar`, `ImageDropzone`, or `PriorityBadge`. The architecture guardrail in `tests/architecture/reusable-component-boundaries.test.mjs` protects this boundary.
+
 Routing is implemented with `react-router-dom` in `src/App.jsx`, with the page registry and route definitions in `src/routes/routeConfig.jsx`; `src/routes.js` remains the canonical page-name-to-path map and URL builder. Preserve existing public, authenticated, settings, and record URLs when adding routes. Page modules are loaded with `React.lazy` so new route-level pages do not enlarge the initial bundle unnecessarily.
 Define each lazy page wrapper once in `src/routes/routeConfig.jsx` and reuse it for every route name that points to the same module. This preserves one component identity and avoids duplicating lazy loader declarations for settings, scaffold, or shared placeholder pages.
 
