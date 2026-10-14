@@ -99,7 +99,7 @@
   outline: 0;
 }
 
-@media (--wb-viewport-max-840) {
+@media (--wb-viewport-tablet-and-down) {
   .work-order-feature-back {
     display: none;
   }

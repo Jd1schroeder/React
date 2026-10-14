@@ -67,6 +67,15 @@ describe('mobile app header', () => {
     expect(onNavigateBack).toHaveBeenCalledOnce()
   })
 
+  it('shows an External Work Orders title with the shared settings back action', () => {
+    const onNavigateBack = vi.fn()
+    render(<MobileAppHeader activePage="Settings / Features / External Work Orders" onNavigateBack={onNavigateBack} />)
+
+    expect(screen.getByRole('heading', { name: 'External Work Orders' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    expect(onNavigateBack).toHaveBeenCalledOnce()
+  })
+
   it('allows notification subflows to set their category as the header title', () => {
     render(<MobileAppHeader activePage="Settings / Notification Settings" titleOverride="Work Orders" onNavigateBack={vi.fn()} />)
 

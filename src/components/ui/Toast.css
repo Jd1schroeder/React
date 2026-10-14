@@ -79,10 +79,11 @@
   }
 }
 
-@media (--wb-viewport-max-840) {
+@media (--wb-viewport-tablet-and-down) {
   .wb-toast-viewport {
     right: auto;
-    bottom: calc(var(--mobile-primary-navigation-height) + var(--spacing-3) + env(safe-area-inset-bottom));
+    top: calc(64px + var(--spacing-3) + env(safe-area-inset-top));
+    bottom: auto;
     left: 50%;
     align-items: stretch;
     width: min(600px, calc(100vw - var(--spacing-6)));
@@ -91,6 +92,12 @@
 
   .wb-toast {
     width: auto;
+  }
+}
+
+@media (--wb-viewport-max-840) {
+  .wb-toast-viewport {
+    top: calc(52px + var(--spacing-3) + env(safe-area-inset-top));
   }
 }
 

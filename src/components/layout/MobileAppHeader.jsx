@@ -7,6 +7,7 @@ const organizationSettingsTitles = {
   'Settings / Features': 'Features',
   'Settings / Features / Work Orders': 'Work Orders',
   'Settings / Features / Work Order': 'Work Orders',
+  'Settings / Features / External Work Orders': 'External Work Orders',
   'Settings / Subscription': 'Subscription',
   'Settings / Manage Teammates': 'Manage Teammates',
   'Settings / Teammates / Teams': 'Teams',

@@ -47,7 +47,9 @@ function PageRoute({ pageName, isPublic = false }) {
     else navigate(getPagePath(['Settings / Edit Account', 'Settings / Linked Device', 'Settings / Notification Settings'].includes(pageName)
       ? 'Settings / Profile Preferences'
       : ['Settings / Features / Work Orders', 'Settings / Features / Work Order'].includes(pageName)
-        ? 'Settings / Features'
+      ? 'Settings / Features'
+      : pageName === 'Settings / Features / External Work Orders'
+        ? 'Settings / Features / Work Orders'
         : 'Tools'))
   }), [guardNavigation, navigate, pageName])
   const onNavigateRecord = useCallback((type, id) => guardNavigation(() => navigate(getRecordPath(type, id))), [guardNavigation, navigate])
