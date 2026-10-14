@@ -222,7 +222,6 @@ function WorkOrderTemplateModuleCard({ label, workOrderLabel, checked, locked, s
         </div>
         <div className={`work-order-feature-module-control${locked ? " is-locked" : ""}`}>
           {locked && <LockKeyhole size={16} aria-hidden="true" />}
-          <span>Feature Module: {checked ? "On" : "Off"}</span>
           <button type="button" className={`work-order-feature-module-toggle${checked ? " is-on" : ""}`} role="switch" aria-checked={checked} aria-label={`${label} feature module ${checked ? "on" : "off"}`} onClick={onChange} disabled={locked || saving}>
             <span aria-hidden="true" />
           </button>
