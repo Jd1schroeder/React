@@ -10,6 +10,13 @@ describe('PWA manifest', () => {
     expect(manifest.id).toBe('/')
     expect(manifest.start_url).toBe('/login')
     expect(manifest.scope).toBe('/')
-    expect(manifest.background_color).toBe(manifest.theme_color)
+    expect(manifest.background_color).toBe('#ffffff')
+    expect(manifest.description).toContain('manage assets')
+    expect(manifest.prefer_related_applications).toBe(false)
+    expect(manifest.categories).toEqual(expect.arrayContaining(['business', 'productivity']))
+    expect(manifest.shortcuts).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: 'Work Orders', url: '/workorders' }),
+      expect.objectContaining({ name: 'New Work Order', url: '/workorders?create=1' }),
+    ]))
   })
 })

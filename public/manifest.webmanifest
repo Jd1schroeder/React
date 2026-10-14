@@ -1,12 +1,27 @@
 {
   "name": "Workbench · Facilities operations",
   "short_name": "Workbench",
+  "description": "Plan work, manage assets, and keep facility teams aligned.",
   "id": "/",
   "start_url": "/login",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#1887fc",
+  "categories": ["business", "productivity"],
+  "prefer_related_applications": false,
+  "background_color": "#ffffff",
   "theme_color": "#1887fc",
+  "shortcuts": [
+    {
+      "name": "Work Orders",
+      "short_name": "Work Orders",
+      "url": "/workorders"
+    },
+    {
+      "name": "New Work Order",
+      "short_name": "New Work Order",
+      "url": "/workorders?create=1"
+    }
+  ],
   "icons": [
     {
       "src": "/icon-192.png",
