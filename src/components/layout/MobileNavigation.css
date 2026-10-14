@@ -73,7 +73,7 @@
 
   .mobile-primary-navigation-item svg {
     flex: none;
-    color: var(--ink);
+    color: currentColor;
   }
 
   .mobile-navigation-badge {
