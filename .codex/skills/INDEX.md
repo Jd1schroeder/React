@@ -1,5 +1,7 @@
 # Skill Index
 
+The project-local [Supabase Skill](supabase/SKILL.md) applies to Supabase product, CLI, MCP, migration, Auth, RLS, Storage, and debugging work.
+
 Load only the Skills that match the current change. Start with the task area, then follow any linked Pattern or Decision; do not read the whole library by default.
 
 | Skill | Purpose and when to load | Related Patterns | Related Decisions |

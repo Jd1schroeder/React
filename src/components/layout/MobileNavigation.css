@@ -251,12 +251,12 @@
     box-shadow: var(--elevation-1);
   }
 
-  .mobile-primary-navigation-more {
+  .mobile-primary-navigation-tools {
     min-width: max-content;
     padding: 0 12px;
   }
 
-  .mobile-primary-navigation-more > span { display: inline; }
+  .mobile-primary-navigation-tools > span { display: inline; }
 
   .mobile-navigation-scroll-forward,
   .mobile-navigation-scroll-back {

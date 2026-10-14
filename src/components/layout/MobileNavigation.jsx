@@ -38,8 +38,8 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const organizationId = workspace.organization?.id
   const grants = workspace.authorization?.grants
   const canViewWorkOrders = Boolean(grants?.['work_orders.view'])
-  const isSettingsContext = activePage === 'More' || activePage.startsWith('Settings /')
-  const isMoreCurrent = !isSettingsContext && !primaryDestinations.some((item) => isPrimaryPage(item.page, activePage))
+  const isSettingsContext = activePage === 'Tools' || activePage.startsWith('Settings /')
+  const isToolsCurrent = !isSettingsContext && !primaryDestinations.some((item) => isPrimaryPage(item.page, activePage))
   const unreadWorkOrderCount = canViewWorkOrders && unreadWorkOrderBadge?.organizationId === organizationId
     ? unreadWorkOrderBadge.count
     : null
@@ -152,13 +152,13 @@ export function MobileNavigation({ activePage, onNavigate }) {
       ))}
       <button
         type="button"
-        className={`mobile-primary-navigation-item mobile-primary-navigation-more${isSettingsContext || isMoreCurrent ? ' is-active' : ''}`}
-        aria-label={isSettingsContext ? 'Settings' : 'More'}
-        aria-current={isSettingsContext || isMoreCurrent ? 'page' : undefined}
-        onClick={() => isSettingsContext ? setIsSettingsMenuOpen(true) : navigateTo('More')}
+        className={`mobile-primary-navigation-item mobile-primary-navigation-tools${isSettingsContext || isToolsCurrent ? ' is-active' : ''}`}
+        aria-label={isSettingsContext ? 'Settings' : 'Tools'}
+        aria-current={isSettingsContext || isToolsCurrent ? 'page' : undefined}
+        onClick={() => isSettingsContext ? setIsSettingsMenuOpen(true) : navigateTo('Tools')}
       >
         {isSettingsContext ? <Settings size={21} strokeWidth={1.9} aria-hidden="true" /> : <Menu size={21} strokeWidth={1.9} aria-hidden="true" />}
-        <span>{isSettingsContext ? 'Settings' : 'More'}</span>
+        <span>{isSettingsContext ? 'Settings' : 'Tools'}</span>
       </button>
     </div>
     {activePage === 'Dashboard' && <button className="mobile-navigation-account" type="button" onClick={() => onNavigate('Settings / Profile Preferences')} aria-label="Account">

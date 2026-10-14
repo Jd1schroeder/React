@@ -77,7 +77,7 @@ describe('mobile navigation', () => {
     expect(screen.getByRole('button', { name: 'Overview' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('button', { name: 'Assets' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Messages' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'More' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Tools' })).toBeInTheDocument()
     expect(await screen.findByRole('button', { name: 'Work Orders, 89 unread' })).toBeInTheDocument()
     expect(serviceMocks.getUnreadWorkOrderCount).toHaveBeenCalledWith({
       organizationId: 'organization-a',
@@ -85,19 +85,19 @@ describe('mobile navigation', () => {
     })
   })
 
-  it('navigates to the More page instead of opening a menu', () => {
+  it('navigates to the Tools page instead of opening a menu', () => {
     const onNavigate = vi.fn()
     render(<MobileNavigation activePage="Work Orders" onNavigate={onNavigate} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'More' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Tools' }))
 
-    expect(onNavigate).toHaveBeenCalledWith('More')
+    expect(onNavigate).toHaveBeenCalledWith('Tools')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('marks More active when a secondary page is active', () => {
+  it('marks Tools active when a secondary page is active', () => {
     render(<MobileNavigation activePage="Vendors" onNavigate={vi.fn()} />)
 
-    expect(screen.getByRole('button', { name: 'More' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('button', { name: 'Tools' })).toHaveAttribute('aria-current', 'page')
   })
 })

@@ -46,7 +46,7 @@ function PageRoute({ pageName, isPublic = false }) {
       ? 'Settings / Profile Preferences'
       : ['Settings / Features / Work Orders', 'Settings / Features / Work Order'].includes(pageName)
         ? 'Settings / Features'
-        : 'More'))
+        : 'Tools'))
   }), [guardNavigation, navigate, pageName])
   const onNavigateRecord = useCallback((type, id) => guardNavigation(() => navigate(getRecordPath(type, id))), [guardNavigation, navigate])
   const content = <RouteErrorBoundary><Page pageName={pageName} recordId={recordId} userId={userId} sessionId={sessionId} onNavigate={onNavigate} onNavigateRecord={onNavigateRecord} onMobileHeaderTitleChange={updateMobileHeaderTitle} onMobileHeaderBackChange={updateMobileHeaderBack} /></RouteErrorBoundary>

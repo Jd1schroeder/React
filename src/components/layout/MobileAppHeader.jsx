@@ -18,7 +18,7 @@ const organizationSettingsTitles = {
 export function MobileAppHeader({ activePage, titleOverride, onNavigate, onNavigateBack }) {
   const workspace = useWorkspace()
   const isAccountPage = ['Settings / Profile Preferences', 'Settings / Edit Account', 'Settings / Linked Device', 'Settings / Notification Settings'].includes(activePage)
-  const isMorePage = activePage === 'More'
+  const isToolsPage = activePage === 'Tools'
   const isDashboardPage = activePage === 'Dashboard'
   const isOrganizationSettingsPage = Boolean(organizationSettingsTitles[activePage])
   const isWorkOrderTrackingTypesPage = ['Settings / Features / Work Order Cost Types', 'Settings / Features / Work Order Time Types'].includes(activePage)
@@ -34,7 +34,7 @@ export function MobileAppHeader({ activePage, titleOverride, onNavigate, onNavig
         </button>
         <h1 className="mobile-app-header-title">{title}</h1>
       </> : <>
-        <p className="mobile-app-header-title">{isMorePage ? 'More' : isOrganizationSettingsPage ? title : workspace.organization?.name || 'Workbench'}</p>
+        <p className="mobile-app-header-title">{isToolsPage ? 'Tools' : isOrganizationSettingsPage ? title : workspace.organization?.name || 'Workbench'}</p>
         {isDashboardPage && <button type="button" className="mobile-app-header-account" onClick={() => onNavigate('Settings / Profile Preferences')}>
           <Settings size={26} strokeWidth={1.8} aria-hidden="true" />
           <span>Account</span>

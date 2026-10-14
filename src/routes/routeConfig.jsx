@@ -13,7 +13,7 @@ const TermsPage = lazyNamed(() => import('../pages/Terms'), 'Terms')
 const PrivacyPage = lazyNamed(() => import('../pages/Privacy'), 'Privacy')
 const SettingsPage = lazyNamed(() => import('../pages/SettingsPage'), 'SettingsPage')
 const DashboardPage = lazyNamed(() => import('../pages/Dashboard'), 'Dashboard')
-const MorePage = lazyNamed(() => import('../pages/MorePage'), 'MorePage')
+const ToolsPage = lazyNamed(() => import('../pages/ToolsPage'), 'ToolsPage')
 const WorkOrdersPage = lazyNamed(() => import('../pages/WorkOrders'), 'WorkOrders')
 const AssetsPage = lazyNamed(() => import('../pages/Assets'), 'Assets')
 const PreventiveMaintenancePage = lazyNamed(() => import('../pages/PreventiveMaintenance'), 'PreventiveMaintenance')
@@ -52,7 +52,7 @@ export const pages = {
   'Settings / Notification Settings': SettingsPage,
   'Settings / Invite Users': SettingsPage,
   Dashboard: DashboardPage,
-  More: MorePage,
+  Tools: ToolsPage,
   'Work Orders': WorkOrdersPage,
   Assets: AssetsPage,
   PreventiveMaintenance: PreventiveMaintenancePage,
