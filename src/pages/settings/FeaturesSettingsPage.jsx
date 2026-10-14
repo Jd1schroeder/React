@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import {
   BarChart3,
   Boxes,
   Bot,
   CalendarCog,
-  CheckCircle2,
   ChevronDown,
   ChevronRight,
   ChevronUp,
@@ -25,6 +23,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useWorkspace } from "../../components/layout/useWorkspace";
+import { useToast } from "../../components/ui/useToast";
 import { updateOrganization } from "../../services/organizationService";
 import { DEFAULT_FEATURE_LABELS, FEATURE_LABEL_SECTIONS, getFeatureLabel, normalizeFeatureLabels } from "../../utils/featureLabels";
 import { normalizeFeatureModules } from "../../utils/featureModules";
@@ -157,8 +156,7 @@ export function FeaturesSettingsPage({ onNavigate }) {
   const [modulesOrganizationId, setModulesOrganizationId] = useState(organizationId);
   const [savingModule, setSavingModule] = useState("");
   const [moduleSaveError, setModuleSaveError] = useState("");
-  const [moduleToast, setModuleToast] = useState(null);
-  const [isModuleToastLeaving, setIsModuleToastLeaving] = useState(false);
+  const { showToast } = useToast();
   const [customLabels, setCustomLabels] = useState(savedFeatureLabels);
   const [labelsOrganizationId, setLabelsOrganizationId] = useState(organizationId);
   const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
@@ -182,14 +180,12 @@ export function FeaturesSettingsPage({ onNavigate }) {
       workspace.patchOrganization?.(organizationId, { feature_modules: next });
       const feature = featureItems.find((item) => item.moduleKey === moduleKey);
       const label = feature?.labelKey ? getFeatureLabel(visibleLabels, feature.labelKey) : feature?.title || "Feature";
-      setIsModuleToastLeaving(false);
-      setModuleToast({ message: `${label} turned ${next[moduleKey] ? "on" : "off"}.` });
+      showToast(`${label} turned ${next[moduleKey] ? "on" : "off"}.`);
     } catch (error) {
       setEnabledModules(previous);
       const message = error.message || "Unable to update feature modules.";
       setModuleSaveError(message);
-      setIsModuleToastLeaving(false);
-      setModuleToast({ message, tone: "error" });
+      showToast(message, { tone: "error" });
     } finally {
       setSavingModule("");
     }
@@ -220,16 +216,6 @@ export function FeaturesSettingsPage({ onNavigate }) {
   };
 
   useEffect(() => {
-    if (!moduleToast) return undefined;
-    const leaveTimeout = window.setTimeout(() => setIsModuleToastLeaving(true), 5000);
-    const removeTimeout = window.setTimeout(() => setModuleToast(null), 5220);
-    return () => {
-      window.clearTimeout(leaveTimeout);
-      window.clearTimeout(removeTimeout);
-    };
-  }, [moduleToast]);
-
-  useEffect(() => {
     if (!isLabelModalOpen) return undefined;
     const handleKeyDown = (event) => {
       if (event.key === "Escape") closeLabelModal();
@@ -237,11 +223,6 @@ export function FeaturesSettingsPage({ onNavigate }) {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isLabelModalOpen]);
-
-  const dismissModuleToast = () => {
-    setIsModuleToastLeaving(true);
-    window.setTimeout(() => setModuleToast(null), 220);
-  };
 
   return (
     <>
@@ -272,14 +253,6 @@ export function FeaturesSettingsPage({ onNavigate }) {
           })}
         </div>
       </section>
-      {moduleToast && createPortal(
-        <div className={`feature-settings-toast${moduleToast.tone === "error" ? " is-error" : ""}${isModuleToastLeaving ? " is-leaving" : ""}`} role="status" aria-live="polite">
-          <CheckCircle2 size={18} aria-hidden="true" />
-          <span>{moduleToast.message}</span>
-          <button type="button" onClick={dismissModuleToast} aria-label="Dismiss notification"><X size={17} aria-hidden="true" /></button>
-        </div>,
-        document.body,
-      )}
       {isLabelModalOpen && <FeatureLabelsModal draft={labelDraft} savedLabels={visibleLabels} expandedLabel={expandedLabel} isSaving={isSavingLabels} error={labelSaveError} onChange={setLabelDraft} onExpand={setExpandedLabel} onClose={closeLabelModal} onSave={saveLabels} />}
     </>
   );

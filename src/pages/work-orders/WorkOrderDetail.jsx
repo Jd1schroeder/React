@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import {
   Boxes,
   CirclePause,
@@ -18,9 +17,9 @@ import {
   RefreshCw,
   ChevronDown,
   ChevronRight,
-  X,
 } from "lucide-react";
 import { Avatar } from "../../components/ui/Avatar";
+import { useToast } from "../../components/ui/useToast";
 import { PriorityBadge } from "../../components/ui/PriorityBadge";
 import { PanelRecordNotFound } from "../../components/layout/PanelView";
 import { canAccessRecord, hasPermission } from "../../services/authorizationService";
@@ -170,12 +169,11 @@ export function WorkOrderDetail({
   const [isDetailScrolled, setIsDetailScrolled] = useState(false);
   const [linkCopyStatus, setLinkCopyStatus] = useState("");
   const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
-  const [pdfExportNotice, setPdfExportNotice] = useState("");
+  const { showToast } = useToast();
   const menuRef = useRef(null);
   const moreActionsButtonRef = useRef(null);
   const detailScrollRef = useRef(null);
   const commentsRef = useRef(null);
-  const pdfExportTimerRef = useRef(null);
   const normalizedWorkOrderSettings = normalizeWorkOrderSettings(workOrderSettings);
   const scrollToComments = () => {
     const scroller = detailScrollRef.current;
@@ -210,11 +208,8 @@ export function WorkOrderDetail({
   }, [isMenuOpen]);
   const closePdfExportDialog = useCallback(() => setIsPdfExportOpen(false), []);
   const handlePdfExportComplete = useCallback((filename) => {
-    setPdfExportNotice(`PDF download started: ${filename}`);
-    window.clearTimeout(pdfExportTimerRef.current);
-    pdfExportTimerRef.current = window.setTimeout(() => setPdfExportNotice(""), 7000);
-  }, []);
-  useEffect(() => () => window.clearTimeout(pdfExportTimerRef.current), []);
+    showToast(`PDF download started: ${filename}`, { icon: FileDown });
+  }, [showToast]);
   if (isLoadingRecord)
     return (
       <section className="detail-pane" aria-busy="true">
@@ -301,8 +296,10 @@ export function WorkOrderDetail({
     try {
       await navigator.clipboard.writeText(workOrderUrl);
       setLinkCopyStatus("copied");
+      showToast("Work Order link copied.");
     } catch {
       setLinkCopyStatus("error");
+      showToast("Unable to copy Work Order link.", { tone: "error" });
     }
   };
   const headerAction = showMarkDoneAction ? (
@@ -356,7 +353,6 @@ export function WorkOrderDetail({
             >
               <Link size={17} aria-hidden="true" />
             </button>
-            {linkCopyStatus && <span className="detail-link-copy-feedback" role="status">{linkCopyStatus === "copied" ? "Work Order link copied." : "Unable to copy Work Order link."}</span>}
           </div>
           <div className="detail-meta">
             <CalendarDays size={14} /> Due by {selected.due}
@@ -599,14 +595,6 @@ export function WorkOrderDetail({
           dateFormat={dateFormat}
           timezone={timezone}
         />
-      )}
-      {pdfExportNotice && createPortal(
-        <div className="work-order-pdf-export-toast" role="status" aria-live="polite">
-          <FileDown size={18} aria-hidden="true" />
-          <span>{pdfExportNotice}</span>
-          <button type="button" onClick={() => setPdfExportNotice("")} aria-label="Dismiss PDF notification"><X size={17} aria-hidden="true" /></button>
-        </div>,
-        document.body,
       )}
     </section>
   );

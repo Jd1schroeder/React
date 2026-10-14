@@ -309,62 +309,6 @@
 
 .work-order-saving { color: var(--muted); font-size: var(--font-size-sm); }
 
-.work-order-settings-toast {
-  position: fixed;
-  z-index: 1200;
-  top: var(--spacing-5);
-  left: 50%;
-  display: flex;
-  width: max-content;
-  max-width: min(600px, calc(100vw - 32px));
-  min-height: 44px;
-  align-items: center;
-  gap: var(--spacing-3);
-  padding: var(--spacing-3) var(--spacing-4);
-  border-radius: var(--radius-control);
-  color: var(--white);
-  background: var(--status-success-strong);
-  box-shadow: var(--elevation-5);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  transform: translateX(-50%);
-  animation: work-order-settings-toast-drop-in 220ms ease-out;
-}
-
-@keyframes work-order-settings-toast-drop-in {
-  from { opacity: 0; transform: translate(-50%, -120%); }
-  to { opacity: 1; transform: translate(-50%, 0); }
-}
-
-@keyframes work-order-settings-toast-drop-out {
-  from { opacity: 1; transform: translate(-50%, 0); }
-  to { opacity: 0; transform: translate(-50%, -120%); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .work-order-settings-toast,
-  .work-order-settings-toast.is-leaving { animation: none; }
-}
-
-.work-order-settings-toast.is-error { background: var(--danger); }
-.work-order-settings-toast.is-leaving { animation: work-order-settings-toast-drop-out 220ms ease-in forwards; }
-.work-order-settings-toast > svg { flex: none; }
-.work-order-settings-toast > span { overflow-wrap: anywhere; }
-.work-order-settings-toast button {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  flex: none;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-sm);
-  color: inherit;
-  background: transparent;
-  cursor: pointer;
-}
-.work-order-settings-toast button:hover { background: var(--surface-toast-action-hover); }
-
 .work-order-comment-table { display: grid; gap: 0; }
 .work-order-comment-header,
 .work-order-comment-row { display: grid; grid-template-columns: minmax(0, 1fr) 390px; align-items: center; gap: var(--spacing-5); }

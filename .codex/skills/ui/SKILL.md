@@ -25,12 +25,13 @@ Related Decisions: [001 — Frontend platform and routing](../../decisions/001-f
 
 ## Reusable component contract
 
-Use the canonical controls in `src/components/ui` before creating a parallel implementation. The current shared primitives include `Button`, `Select`, `DatePicker`, `DataTable`, `Avatar`, `ImageDropzone`, and `PriorityBadge`.
+Use the canonical controls in `src/components/ui` before creating a parallel implementation. The current shared primitives include `Button`, `Select`, `DatePicker`, `DataTable`, `Avatar`, `ImageDropzone`, `PriorityBadge`, and the `ToastProvider`/`useToast` notification system.
 
 - Search the shared component inventory before adding a control to a page or feature.
 - Extend a shared primitive when the interaction, accessibility, and visual contract are substantially the same.
 - Keep genuinely domain-specific components near their feature and give them domain-specific names.
 - Do not define page-local copies of canonical primitive names.
+- Use `useToast` for transient success, error, and informational feedback. Mount one `ToastProvider` at the application root; do not create page-local toast state, timers, portals, or notification CSS.
 - When a new reusable primitive is justified, add it under `src/components/ui`, give it a focused behavior test, and update the relevant Pattern if its contract becomes canonical.
 
 The architecture guardrail in `tests/architecture/reusable-component-boundaries.test.mjs` checks for duplicate definitions of canonical primitives outside the shared UI directory. It is intentionally not a ban on native HTML controls or page-specific components.

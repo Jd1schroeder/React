@@ -11,62 +11,6 @@
   font-size: var(--font-size-body-sm);
 }
 
-.feature-settings-toast {
-  position: fixed;
-  z-index: 1200;
-  top: var(--spacing-5);
-  left: 50%;
-  display: flex;
-  width: max-content;
-  max-width: min(600px, calc(100vw - 32px));
-  min-height: 44px;
-  align-items: center;
-  gap: var(--spacing-3);
-  padding: var(--spacing-3) var(--spacing-4);
-  border-radius: var(--radius-control);
-  color: var(--white);
-  background: var(--status-success-strong);
-  box-shadow: var(--elevation-5);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  transform: translateX(-50%);
-  animation: feature-settings-toast-drop-in 220ms ease-out;
-}
-
-.feature-settings-toast.is-error { background: var(--danger); }
-.feature-settings-toast.is-leaving { animation: feature-settings-toast-drop-out 220ms ease-in forwards; }
-.feature-settings-toast > svg { flex: none; }
-.feature-settings-toast > span { overflow-wrap: anywhere; }
-.feature-settings-toast button {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  flex: none;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-sm);
-  color: inherit;
-  background: transparent;
-  cursor: pointer;
-}
-.feature-settings-toast button:hover { background: var(--surface-toast-action-hover); }
-
-@keyframes feature-settings-toast-drop-in {
-  from { opacity: 0; transform: translate(-50%, -120%); }
-  to { opacity: 1; transform: translate(-50%, 0); }
-}
-
-@keyframes feature-settings-toast-drop-out {
-  from { opacity: 1; transform: translate(-50%, 0); }
-  to { opacity: 0; transform: translate(-50%, -120%); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .feature-settings-toast,
-  .feature-settings-toast.is-leaving { animation: none; }
-}
-
 .features-settings-list {
   display: grid;
   gap: var(--spacing-6);

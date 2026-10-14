@@ -162,48 +162,6 @@
   color: var(--danger);
   font-size: var(--font-size-sm);
 }
-.work-order-read-toast {
-  position: fixed;
-  z-index: 1200;
-  top: var(--spacing-5);
-  left: 50%;
-  display: flex;
-  width: max-content;
-  max-width: min(600px, calc(100vw - 32px));
-  min-height: 44px;
-  align-items: center;
-  gap: var(--spacing-3);
-  padding: var(--spacing-3) var(--spacing-4);
-  border-radius: var(--radius-control);
-  color: var(--white);
-  background: var(--status-success-strong);
-  box-shadow: var(--elevation-5);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  transform: translateX(-50%);
-}
-.work-order-read-toast > svg {
-  flex: none;
-}
-.work-order-read-toast > span {
-  overflow-wrap: anywhere;
-}
-.work-order-read-toast button {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  flex: none;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-sm);
-  color: inherit;
-  background: transparent;
-  cursor: pointer;
-}
-.work-order-read-toast button:hover {
-  background: var(--surface-toast-action-hover);
-}
 @media (--wb-viewport-tablet-and-down) {
   .work-orders-page:not(.is-mobile-record-view) .panel-navigation {
     padding: var(--spacing-3) var(--spacing-4) var(--spacing-2);

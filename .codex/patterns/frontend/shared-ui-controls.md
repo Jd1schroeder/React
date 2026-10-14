@@ -20,11 +20,12 @@ Building a form, table, selection control, image input, avatar, or reusable menu
 - Keep focus treatment on the shared `--focus-border-width`/`--focus-border-color` tokens. For decorative/brand colors, centralize values in tokens; use the shared warning surface token for pale warning backgrounds.
 - Keep visual structure semantic and keyboard operable. Respect reduced-motion settings for nonessential animation.
 - Use Lucide icons from the installed icon set and size them in the component that owns the shared UI. Page-level loading uses a layout-stable `LoaderCircle` state.
+- Use the shared `ToastProvider` at the application root and call `useToast().showToast(message, options)` for transient feedback. The shared system owns viewport placement, responsive mobile positioning, auto-dismissal, dismissal controls, icons, and reduced-motion behavior.
 - For supplied reference HTML, preserve element hierarchy and element types; replace reference-specific names with Workbench names and retain the existing shared controls/tokens.
 
 ## Canonical implementations
 
-`src/components/ui/Select.jsx`, `DatePicker.jsx`, `DataTable.jsx`, `Avatar.jsx`, `ImageDropzone.jsx`, `PresetNumberInput.jsx`, `PriorityBadge.jsx`, `PriorityBadge.css`, and `src/styles/tokens.css`.
+`src/components/ui/Select.jsx`, `DatePicker.jsx`, `DataTable.jsx`, `Avatar.jsx`, `ImageDropzone.jsx`, `PresetNumberInput.jsx`, `PriorityBadge.jsx`, `Toast.jsx`, `Toast.css`, `useToast.js`, `PriorityBadge.css`, and `src/styles/tokens.css`.
 
 ## Related knowledge
 

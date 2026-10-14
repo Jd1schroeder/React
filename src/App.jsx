@@ -1,6 +1,7 @@
 import { Component, lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useNavigate, useParams } from 'react-router-dom'
 import { UnsavedChangesProvider } from './components/layout/UnsavedChangesProvider'
+import { ToastProvider } from './components/ui/Toast'
 import { useUnsavedChanges } from './components/layout/useUnsavedChanges'
 import { getPagePath, getRecordPath, pagePaths } from './routes.js'
 import { authenticatedRoutes, pages, publicRoutes, recordPageNames, recordRoutes } from './routes/routeConfig.jsx'
@@ -68,7 +69,7 @@ function LegacyHashRedirect() {
 }
 
 function AppRoot() {
-  return <UnsavedChangesProvider><Suspense fallback={<PageLoading />}><Outlet /></Suspense></UnsavedChangesProvider>
+  return <ToastProvider><UnsavedChangesProvider><Suspense fallback={<PageLoading />}><Outlet /></Suspense></UnsavedChangesProvider></ToastProvider>
 }
 
 const router = createBrowserRouter([

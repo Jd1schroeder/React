@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { CalendarDays, CheckCircle2, Filter, PanelLeft, UsersRound, X } from 'lucide-react'
+import { CalendarDays, Filter, PanelLeft, UsersRound, X } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import './WorkOrders.css'
 import './work-orders/NewWorkOrderForm.responsive.css'
 import { PanelLayout } from '../components/layout/PanelLayout'
 import { FloatingCreateButton } from '../components/ui/FloatingCreateButton'
+import { useToast } from '../components/ui/useToast'
 import { useUnsavedChanges } from '../components/layout/useUnsavedChanges'
 import { WorkOrderDetail } from './work-orders/WorkOrderDetail'
 import { WorkOrderList } from './work-orders/WorkOrderList'
@@ -83,6 +84,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   const location = useLocation()
   const navigate = useNavigate()
   const workspace = useWorkspace()
+  const { showToast } = useToast()
   const workOrderLabel = getFeatureLabel(workspace.organization?.feature_labels, 'workOrder')
   const workOrderSingularLabel = getFeatureLabel(workspace.organization?.feature_labels, 'workOrder', 'singular')
   const workOrderSettings = normalizeWorkOrderSettings(workspace.organization?.work_order_settings)
@@ -179,7 +181,6 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   const [error, setError] = useState('')
   const [readError, setReadError] = useState('')
   const [isReadAllConfirmOpen, setIsReadAllConfirmOpen] = useState(false)
-  const [readToast, setReadToast] = useState('')
   const [isSavingReadState, setIsSavingReadState] = useState(false)
   const [isCreating, setIsCreating] = useState(() => canCreateWorkOrders && new URLSearchParams(location.search).get('create') === '1')
   const [copySource, setCopySource] = useState(null)
@@ -448,7 +449,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
       })))
       const tabLabel = activeTab === 'Done' ? 'Done' : 'To Do'
       const matchingLabel = debouncedSearch.trim() || activeFilters.length ? 'matching ' : ''
-      setReadToast(`All ${matchingLabel}${tabLabel} Work Orders have been marked as read.`)
+      showToast(`All ${matchingLabel}${tabLabel} Work Orders have been marked as read.`)
       setRefreshVersion((version) => version + 1)
       return true
     } catch (readFailure) {
@@ -461,11 +462,6 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   const confirmReadAll = async () => {
     if (await readAll()) setIsReadAllConfirmOpen(false)
   }
-  useEffect(() => {
-    if (!readToast) return undefined
-    const timeout = window.setTimeout(() => setReadToast(''), 5000)
-    return () => window.clearTimeout(timeout)
-  }, [readToast])
   useEffect(() => {
     if (!isReadAllConfirmOpen) return undefined
     const handleKeyDown = (event) => {
@@ -934,6 +930,5 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
       <button type="button" className="work-order-read-confirm-cancel" onClick={() => setIsReadAllConfirmOpen(false)} disabled={isSavingReadState}>Cancel</button>
     </section>
   </div>, document.body)}
-  {readToast && createPortal(<div className="work-order-read-toast" role="status" aria-live="polite"><CheckCircle2 size={18} /><span>{readToast}</span><button type="button" onClick={() => setReadToast('')} aria-label="Dismiss notification"><X size={18} /></button></div>, document.body)}
   </>
 }

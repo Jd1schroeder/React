@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
-import { AlertCircle, ArrowLeft, CheckCircle2, ChevronRight, Info, LockKeyhole, X } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, ChevronRight, Info, LockKeyhole } from "lucide-react";
 import { Select } from "../../components/ui/Select";
+import { useToast } from "../../components/ui/useToast";
 import { useWorkspace } from "../../components/layout/useWorkspace";
 import { getNextWorkOrderNumber, updateOrganization, updateWorkOrderStartingNumber } from "../../services/organizationService";
 import { getFeatureLabel } from "../../utils/featureLabels";
@@ -36,8 +36,7 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
   const [savingKey, setSavingKey] = useState("");
   const [savingFeatureModule, setSavingFeatureModule] = useState("");
   const [saveError, setSaveError] = useState("");
-  const [toast, setToast] = useState(null);
-  const [isToastLeaving, setIsToastLeaving] = useState(false);
+  const { showToast } = useToast();
   const [isStartingIdModalOpen, setIsStartingIdModalOpen] = useState(false);
   const [isSavingStartingId, setIsSavingStartingId] = useState(false);
   const [isLoadingStartingId, setIsLoadingStartingId] = useState(false);
@@ -60,14 +59,12 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
     try {
       await updateOrganization({ organizationId: organization.id, updates: { work_order_settings: next } });
       workspace.patchOrganization?.(organization.id, { work_order_settings: next });
-      setIsToastLeaving(false);
-      setToast({ message: "Setting changed!", tone: "success" });
+      showToast("Setting changed!");
     } catch (error) {
       setSettings(previous);
       const message = error.message || "Unable to save Work Order settings.";
       setSaveError(message);
-      setIsToastLeaving(false);
-      setToast({ message, tone: "error" });
+      showToast(message, { tone: "error" });
     } finally {
       setSavingKey("");
     }
@@ -84,32 +81,15 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
     try {
       await updateOrganization({ organizationId: organization.id, updates: { feature_modules: next } });
       workspace.patchOrganization?.(organization.id, { feature_modules: next });
-      setIsToastLeaving(false);
-      setToast({ message: `${label} turned ${next[moduleKey] ? "on" : "off"}.`, tone: "success" });
+      showToast(`${label} turned ${next[moduleKey] ? "on" : "off"}.`);
     } catch (error) {
       setFeatureModules(previous);
       const message = error.message || "Unable to update feature modules.";
       setSaveError(message);
-      setIsToastLeaving(false);
-      setToast({ message, tone: "error" });
+      showToast(message, { tone: "error" });
     } finally {
       setSavingFeatureModule("");
     }
-  };
-
-  useEffect(() => {
-    if (!toast) return undefined;
-    const leaveTimeout = window.setTimeout(() => setIsToastLeaving(true), 5000);
-    const removeTimeout = window.setTimeout(() => setToast(null), 5220);
-    return () => {
-      window.clearTimeout(leaveTimeout);
-      window.clearTimeout(removeTimeout);
-    };
-  }, [toast]);
-
-  const dismissToast = () => {
-    setIsToastLeaving(true);
-    window.setTimeout(() => setToast(null), 220);
   };
 
   const openStartingIdModal = async () => {
@@ -143,14 +123,6 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
 
   return (
     <div className="settings-page work-order-feature-page">
-      {toast && createPortal(
-        <div className={`work-order-settings-toast is-${toast.tone}${isToastLeaving ? " is-leaving" : ""}`} role="status" aria-live="polite">
-          {toast.tone === "error" ? <AlertCircle size={18} aria-hidden="true" /> : <CheckCircle2 size={18} aria-hidden="true" />}
-          <span>{toast.message}</span>
-          <button type="button" onClick={dismissToast} aria-label="Dismiss notification"><X size={18} aria-hidden="true" /></button>
-        </div>,
-        document.body,
-      )}
       {isStartingIdModalOpen && <WorkOrderStartingIdModal workOrderLabel={workOrderSingularLabel} initialValue={startingIdValue} minimumValue={startingIdValue} error={startingIdError} isSaving={isSavingStartingId} onClose={() => { if (!isSavingStartingId) { setIsStartingIdModalOpen(false); setStartingIdError(""); } }} onSave={saveStartingId} />}
       <header className="settings-page-header">
         <div>

@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { ToastProvider } from '../src/components/ui/Toast'
 import { WorkOrderDetail } from '../src/pages/work-orders/WorkOrderDetail'
 
 const selected = {
@@ -31,21 +32,38 @@ afterEach(() => {
 
 describe('WorkOrderDetail authorization', () => {
   it('copies the current Work Order URL using the Link icon', async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined)
+    let resolveWriteText
+    const writeText = vi.fn(() => new Promise((resolve) => { resolveWriteText = resolve }))
     clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: { writeText },
     })
-    const { container } = render(<WorkOrderDetail selected={selected} grants={{}} />)
+    const { container } = render(<ToastProvider><WorkOrderDetail selected={selected} grants={{}} /></ToastProvider>)
     const copyButton = screen.getByRole('button', { name: 'Copy Work Order link' })
 
     expect(copyButton.querySelector('svg.lucide-link')).toBeInTheDocument()
     fireEvent.click(copyButton)
 
+    expect(screen.queryByText('Work Order link copied.')).not.toBeInTheDocument()
+    resolveWriteText()
     expect(await screen.findByRole('status')).toHaveTextContent('Work Order link copied.')
     expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/workorders/wo-1`)
     expect(container.querySelector('svg.lucide-link-2')).not.toBeInTheDocument()
+  })
+
+  it('shows an error toast when copying the Work Order URL fails', async () => {
+    const writeText = vi.fn().mockRejectedValue(new Error('Clipboard unavailable'))
+    clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    })
+    render(<ToastProvider><WorkOrderDetail selected={selected} grants={{}} /></ToastProvider>)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy Work Order link' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Unable to copy Work Order link.')
   })
 
   it('opens the PDF export dialog from the detail actions menu', () => {
