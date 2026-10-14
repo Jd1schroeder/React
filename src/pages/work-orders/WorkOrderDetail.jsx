@@ -29,6 +29,7 @@ import { WorkOrderPdfExportDialog } from "./WorkOrderPdfExportDialog";
 import { WorkOrderActivity } from "./WorkOrderActivity";
 import { WorkOrderTimeTracking } from "./WorkOrderTimeTracking";
 import { WorkOrderCostTracking } from "./WorkOrderCostTracking";
+import { normalizeWorkOrderSettings } from "../../utils/workOrderSettings";
 import "./WorkOrderDetail.css";
 
 const statusOptions = [
@@ -175,6 +176,7 @@ export function WorkOrderDetail({
   const detailScrollRef = useRef(null);
   const commentsRef = useRef(null);
   const pdfExportTimerRef = useRef(null);
+  const normalizedWorkOrderSettings = normalizeWorkOrderSettings(workOrderSettings);
   const scrollToComments = () => {
     const scroller = detailScrollRef.current;
     const commentsSection = commentsRef.current;
@@ -523,9 +525,9 @@ export function WorkOrderDetail({
               </div>
             </div>
           </section>
-          <section className="detail-cost-section" aria-labelledby="detail-cost-title">
+          {(normalizedWorkOrderSettings.enableCostTracking || normalizedWorkOrderSettings.enableTimeTracking || normalizedWorkOrderSettings.enableParts) && <section className="detail-cost-section" aria-labelledby="detail-cost-title">
             <h2 id="detail-cost-title">Time &amp; Cost Tracking</h2>
-            {["Parts"].map((label) => (
+            {normalizedWorkOrderSettings.enableParts && ["Parts"].map((label) => (
               <div className="detail-cost-row" key={label}>
                 <span>{label}</span>
                 <button type="button" disabled={label === "Parts"} title={`${label} tracking is not available yet.`}>
@@ -543,7 +545,7 @@ export function WorkOrderDetail({
               memberDirectory={memberDirectory}
               timeEntryMembers={timeEntryMembers}
               isOrganizationAdmin={isOrganizationAdmin}
-              enabled={workOrderSettings.enableTimeTracking}
+              enabled={normalizedWorkOrderSettings.enableTimeTracking}
               onChanged={onTimeTrackingChanged}
             />
             <WorkOrderCostTracking
@@ -552,12 +554,11 @@ export function WorkOrderDetail({
               grants={grants}
               record={record}
               userId={userId}
-              memberDirectory={memberDirectory}
               timeEntryMembers={timeEntryMembers}
               isOrganizationAdmin={isOrganizationAdmin}
-              enabled={workOrderSettings.enableCostTracking}
+              enabled={normalizedWorkOrderSettings.enableCostTracking}
             />
-          </section>
+          </section>}
           {canUseComments && (
             <WorkOrderActivity
               key={selected.id}

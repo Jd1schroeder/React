@@ -207,7 +207,7 @@ describe('WorkOrderDetail authorization', () => {
   })
 
   it('includes the remaining reference sections without claiming unsupported features', async () => {
-    render(<WorkOrderDetail selected={{ ...selected, estimated_duration_minutes: 60 }} userId="user-a" grants={{
+    render(<WorkOrderDetail selected={{ ...selected, estimated_duration_minutes: 60 }} userId="user-a" workOrderSettings={{ enableCostTracking: true, enableTimeTracking: true, enableParts: true }} grants={{
       'work_orders.view_comments': 'own',
     }} />)
 
@@ -221,6 +221,31 @@ describe('WorkOrderDetail authorization', () => {
     expect(within(screen.getByText('Parts').closest('.detail-cost-row')).getByRole('button', { name: /Add/ })).toBeDisabled()
     await waitFor(() => expect(within(screen.getByText('Time').closest('.work-order-time-summary')).getByRole('button', { name: /Add/ })).not.toBeDisabled())
     expect(within(screen.getByText('Other Costs').closest('.work-order-time-summary')).getByRole('button', { name: /Add/ })).not.toBeDisabled()
+  })
+
+  it.each([
+    ['cost', { enableCostTracking: true, enableTimeTracking: false, enableParts: false }, ['Other Costs'], ['Time', 'Parts']],
+    ['time', { enableCostTracking: false, enableTimeTracking: true, enableParts: false }, ['Time'], ['Other Costs', 'Parts']],
+    ['parts', { enableCostTracking: false, enableTimeTracking: false, enableParts: true }, ['Parts'], ['Time', 'Other Costs']],
+  ])('shows only the enabled %s tracking category', (_, settings, visibleLabels, hiddenLabels) => {
+    render(<WorkOrderDetail selected={selected} workOrderSettings={settings} grants={{}} />)
+
+    expect(screen.getByRole('heading', { name: 'Time & Cost Tracking' })).toBeInTheDocument()
+    visibleLabels.forEach((label) => expect(screen.getByText(label)).toBeInTheDocument())
+    hiddenLabels.forEach((label) => expect(screen.queryByText(label)).not.toBeInTheDocument())
+  })
+
+  it('hides the complete Time & Cost Tracking section when all categories are disabled', () => {
+    render(<WorkOrderDetail selected={selected} workOrderSettings={{
+      enableCostTracking: false,
+      enableTimeTracking: false,
+      enableParts: false,
+      requireCostTracking: true,
+      requireTimeTracking: true,
+      requireParts: true,
+    }} grants={{}} />)
+
+    expect(screen.queryByRole('heading', { name: 'Time & Cost Tracking' })).not.toBeInTheDocument()
   })
 
   it('scrolls to comments inside the detail pane without scrolling the outer page', () => {

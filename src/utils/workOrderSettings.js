@@ -9,6 +9,7 @@ export const DEFAULT_WORK_ORDER_SETTINGS = {
   requireCostTracking: false,
   enableTimeTracking: true,
   requireTimeTracking: false,
+  enableParts: false,
   enableUnitCostOverrides: false,
   requireParts: false,
   correctiveActionsOnFailures: "automatic",
@@ -19,7 +20,7 @@ export const DEFAULT_WORK_ORDER_SETTINGS = {
 };
 
 export function normalizeWorkOrderSettings(settings = {}) {
-  return {
+  const normalized = {
     ...DEFAULT_WORK_ORDER_SETTINGS,
     ...settings,
     commentRequirements: {
@@ -27,4 +28,11 @@ export function normalizeWorkOrderSettings(settings = {}) {
       ...(settings.commentRequirements ?? {}),
     },
   };
+  if (!normalized.enableCostTracking) normalized.requireCostTracking = false;
+  if (!normalized.enableTimeTracking) normalized.requireTimeTracking = false;
+  if (!normalized.enableParts) {
+    normalized.enableUnitCostOverrides = false;
+    normalized.requireParts = false;
+  }
+  return normalized;
 }

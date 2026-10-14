@@ -48,10 +48,11 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
     if (!organization.id || !isOrganizationAdmin) return;
     const previous = displayedSettings;
     let next = updateNestedSetting(previous, path, value);
+    if (path === "enableCostTracking" && value === false) next = { ...next, requireCostTracking: false };
+    if (path === "enableTimeTracking" && value === false) next = { ...next, requireTimeTracking: false };
+    if (path === "enableParts" && value === false) next = { ...next, enableUnitCostOverrides: false, requireParts: false };
     if (value === true && path === "requireTimeTracking") next = { ...next, enableTimeTracking: true };
     if (value === true && path === "requireCostTracking") next = { ...next, enableCostTracking: true };
-    if (value === false && path === "enableTimeTracking") next = { ...next, requireTimeTracking: false };
-    if (value === false && path === "enableCostTracking") next = { ...next, requireCostTracking: false };
     setSettings(next);
     setSettingsOrganizationId(organization.id);
     setSavingKey(path);
@@ -187,14 +188,30 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
           </SettingsCard>
 
           <SettingsCard title="Time & Cost Tracking">
-            <SettingToggle label="Enable cost tracking" description={`Show cost entries on ${workOrderLabel.toLowerCase()}.`} checked={displayedSettings.enableCostTracking} onChange={(value) => updateSetting("enableCostTracking", value)} saving={savingKey === "enableCostTracking"} disabled={!isOrganizationAdmin} locked={false} />
-            <SettingToggle label="Require cost tracking" description={`Users must enter costs in ${workOrderLabel.toLowerCase()} before completing them.`} checked={displayedSettings.requireCostTracking} onChange={(value) => updateSetting("requireCostTracking", value)} saving={savingKey === "requireCostTracking"} disabled={!isOrganizationAdmin} locked={false} />
-            <ActionSetting label="Manage custom cost types" locked={!isOrganizationAdmin} onClick={() => onNavigate("Settings / Features / Work Order Cost Types")} />
-            <SettingToggle label="Enable time tracking" description={`Show time entries and timer controls on ${workOrderLabel.toLowerCase()}.`} checked={displayedSettings.enableTimeTracking} onChange={(value) => updateSetting("enableTimeTracking", value)} saving={savingKey === "enableTimeTracking"} disabled={!isOrganizationAdmin} locked={false} />
-            <SettingToggle label="Require time tracking" description={`Users must enter time in ${workOrderLabel.toLowerCase()} before completing them.`} checked={displayedSettings.requireTimeTracking} onChange={(value) => updateSetting("requireTimeTracking", value)} saving={savingKey === "requireTimeTracking"} disabled={!isOrganizationAdmin} locked={false} />
-            <ActionSetting label="Manage custom time types" locked={!isOrganizationAdmin} onClick={() => onNavigate("Settings / Features / Work Order Time Types")} />
-            <SettingToggle label="Enable unit cost overrides for parts" description={`Overrides only apply to the ${workOrderSingularLabel.toLowerCase()} and don’t affect global unit cost.`} checked={displayedSettings.enableUnitCostOverrides} onChange={(value) => updateSetting("enableUnitCostOverrides", value)} saving={savingKey === "enableUnitCostOverrides"} disabled={!isOrganizationAdmin} />
-            <SettingToggle label="Require parts" description={`Users must add parts to ${workOrderLabel.toLowerCase()}.`} checked={displayedSettings.requireParts} onChange={(value) => updateSetting("requireParts", value)} saving={savingKey === "requireParts"} disabled={!isOrganizationAdmin} locked />
+            <div className="work-order-tracking-category" aria-labelledby="work-order-cost-category-title">
+              <h3 id="work-order-cost-category-title">Cost</h3>
+              <div className="work-order-tracking-category-body">
+                <SettingToggle label="Enable cost tracking" description={`Show cost entries on ${workOrderLabel.toLowerCase()}.`} checked={displayedSettings.enableCostTracking} onChange={(value) => updateSetting("enableCostTracking", value)} saving={savingKey === "enableCostTracking"} disabled={!isOrganizationAdmin} locked={false} />
+                <SettingToggle label="Require cost tracking" description={`Users must enter costs in ${workOrderLabel.toLowerCase()} before completing them.`} checked={displayedSettings.requireCostTracking} onChange={(value) => updateSetting("requireCostTracking", value)} saving={savingKey === "requireCostTracking"} disabled={!isOrganizationAdmin || !displayedSettings.enableCostTracking} locked={false} />
+                <ActionSetting label="Manage custom cost types" locked={!isOrganizationAdmin || !displayedSettings.enableCostTracking} onClick={() => onNavigate("Settings / Features / Work Order Cost Types")} />
+              </div>
+            </div>
+            <div className="work-order-tracking-category" aria-labelledby="work-order-time-category-title">
+              <h3 id="work-order-time-category-title">Time</h3>
+              <div className="work-order-tracking-category-body">
+                <SettingToggle label="Enable time tracking" description={`Show time entries and timer controls on ${workOrderLabel.toLowerCase()}.`} checked={displayedSettings.enableTimeTracking} onChange={(value) => updateSetting("enableTimeTracking", value)} saving={savingKey === "enableTimeTracking"} disabled={!isOrganizationAdmin} locked={false} />
+                <SettingToggle label="Require time tracking" description={`Users must enter time in ${workOrderLabel.toLowerCase()} before completing them.`} checked={displayedSettings.requireTimeTracking} onChange={(value) => updateSetting("requireTimeTracking", value)} saving={savingKey === "requireTimeTracking"} disabled={!isOrganizationAdmin || !displayedSettings.enableTimeTracking} locked={false} />
+                <ActionSetting label="Manage custom time types" locked={!isOrganizationAdmin || !displayedSettings.enableTimeTracking} onClick={() => onNavigate("Settings / Features / Work Order Time Types")} />
+              </div>
+            </div>
+            <div className="work-order-tracking-category" aria-labelledby="work-order-parts-category-title">
+              <h3 id="work-order-parts-category-title">Parts</h3>
+              <div className="work-order-tracking-category-body">
+                <SettingToggle label="Enable parts" description={`Show parts on ${workOrderLabel.toLowerCase()}.`} checked={displayedSettings.enableParts} onChange={(value) => updateSetting("enableParts", value)} saving={savingKey === "enableParts"} disabled={!isOrganizationAdmin} locked={false} />
+                <SettingToggle label="Require parts" description={`Users must add parts to ${workOrderLabel.toLowerCase()} before completing them. Parts tracking is not available yet.`} checked={displayedSettings.requireParts} onChange={(value) => updateSetting("requireParts", value)} saving={savingKey === "requireParts"} disabled={!isOrganizationAdmin || !displayedSettings.enableParts} locked />
+                <SettingToggle label="Enable unit cost overrides for parts" description={`Overrides only apply to the ${workOrderSingularLabel.toLowerCase()} and don’t affect global unit cost.`} checked={displayedSettings.enableUnitCostOverrides} onChange={(value) => updateSetting("enableUnitCostOverrides", value)} saving={savingKey === "enableUnitCostOverrides"} disabled={!isOrganizationAdmin || !displayedSettings.enableParts} />
+              </div>
+            </div>
           </SettingsCard>
 
           <SettingsCard title="Procedures">

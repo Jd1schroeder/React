@@ -114,6 +114,48 @@
   margin-top: var(--spacing-6);
 }
 
+.work-order-tracking-category {
+  display: grid;
+  overflow: hidden;
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.work-order-tracking-category + .work-order-tracking-category {
+  margin-top: var(--spacing-4);
+}
+
+.work-order-tracking-category > h3 {
+  margin: 0;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-bottom: var(--border-width-normal) solid var(--line);
+  color: var(--ink);
+  background: var(--surface-subtle);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-medium);
+}
+
+.work-order-tracking-category-body {
+  display: grid;
+}
+
+.work-order-tracking-category-body > .work-order-setting-row,
+.work-order-tracking-category-body > .work-order-action-setting {
+  min-height: 68px;
+  padding: var(--spacing-4);
+}
+
+.work-order-tracking-category-body > .work-order-setting-row:first-child,
+.work-order-tracking-category-body > .work-order-action-setting:first-child {
+  padding-top: var(--spacing-4);
+}
+
+.work-order-tracking-category-body > .work-order-setting-row:last-child,
+.work-order-tracking-category-body > .work-order-action-setting:last-child {
+  padding-bottom: var(--spacing-4);
+}
+
 .work-order-template-module-content {
   display: flex;
   align-items: flex-start;
