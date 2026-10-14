@@ -51,12 +51,32 @@ async function loadWorkOrderRelations(orders, { signAttachmentUrls = true } = {}
   return signAttachmentUrls ? signWorkOrderAttachmentUrls(ordersWithRelations) : ordersWithRelations
 }
 
-export async function signWorkOrderAttachmentUrls(orders) {
-  const storagePaths = orders.flatMap((order) => (order.work_order_attachments ?? []).map((attachment) => attachment.storage_path))
+export async function signWorkOrderAttachmentUrls(orders, { optimizeImages = false } = {}) {
+  const attachments = orders.flatMap((order) => order.work_order_attachments ?? [])
+  const storagePaths = attachments.map((attachment) => attachment.storage_path)
   if (!storagePaths.length) return orders
-  const { data: signedFiles, error: signedError } = await supabase.storage.from(attachmentBucket).createSignedUrls(storagePaths, 60 * 60)
-  if (signedError) throw signedError
-  const signedByPath = new Map((signedFiles ?? []).map((file) => [file.path, file.signedUrl]))
+
+  let signedByPath
+  if (optimizeImages) {
+    const imageAttachments = attachments.filter((attachment) => attachment.kind === 'image' || attachment.content_type?.startsWith('image/'))
+    const signedImages = await Promise.all(imageAttachments.map(async (attachment) => {
+      const { data, error } = await supabase.storage.from(attachmentBucket).createSignedUrl(attachment.storage_path, 60 * 60, {
+        transform: {
+          width: 488,
+          height: 650,
+          resize: 'cover',
+          quality: 75,
+        },
+      })
+      if (error) throw error
+      return [attachment.storage_path, data.signedUrl]
+    }))
+    signedByPath = new Map(signedImages)
+  } else {
+    const { data: signedFiles, error: signedError } = await supabase.storage.from(attachmentBucket).createSignedUrls(storagePaths, 60 * 60)
+    if (signedError) throw signedError
+    signedByPath = new Map((signedFiles ?? []).map((file) => [file.path, file.signedUrl]))
+  }
   return orders.map((order) => ({
     ...order,
     work_order_attachments: (order.work_order_attachments ?? []).map((attachment) => ({ ...attachment, signed_url: signedByPath.get(attachment.storage_path) ?? null })),
@@ -182,7 +202,7 @@ export async function listWorkOrderInboxPage({ organizationId, tab, group, searc
   return includeRelations ? loadWorkOrderRelations(workOrders, { signAttachmentUrls: false }) : workOrders
 }
 
-export async function getWorkOrderById({ organizationId, workOrderId, grants }) {
+export async function getWorkOrderById({ organizationId, workOrderId, grants, signAttachmentUrls = true }) {
   assertPermission(grants, 'work_orders.view')
   const { data, error } = await supabase
     .from('work_orders')
@@ -192,7 +212,7 @@ export async function getWorkOrderById({ organizationId, workOrderId, grants }) 
     .maybeSingle()
   if (error) throw error
   if (!data) return null
-  return (await loadWorkOrderRelations([data]))[0]
+  return (await loadWorkOrderRelations([data], { signAttachmentUrls }))[0]
 }
 
 export async function createWorkOrder({ organizationId, title, description, priority, dueDate, dueTime, startDate, estimatedDurationMinutes, workType = 'reactive', assignments = [], pictures = [], thumbnail = null, files = [], grants }) {

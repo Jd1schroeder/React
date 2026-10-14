@@ -202,6 +202,9 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   const isLoading = canViewWorkOrders && (loadState === 'loading' || !inboxPreferencesReady)
   const selectedId = recordId ?? localSelectedId
   const recordLookupKey = recordId && organizationId ? `${organizationId}:${recordId}` : null
+  const shouldLoadOrganizationDirectory = Boolean(
+    organizationId && (selectedId || isCreating || editingWorkOrderId || utilityPage === 'filters'),
+  )
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search)
     if (searchParams.get('create') !== '1') return
@@ -474,7 +477,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   useEffect(() => {
     if (!recordId || !canViewWorkOrders || !organizationId || workOrdersById[recordId] || recordLookupResult?.key === recordLookupKey) return undefined
     let active = true
-    getWorkOrderById({ organizationId, workOrderId: recordId, grants })
+    getWorkOrderById({ organizationId, workOrderId: recordId, grants, signAttachmentUrls: false })
       .then((order) => {
         if (!active) return
         if (!order) {
@@ -485,6 +488,20 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
         setWorkOrdersById((current) => ({ ...current, [order.id]: normalized }))
         setRecordLookupResult({ key: recordLookupKey, status: 'found' })
         void markViewed(normalized)
+        void signWorkOrderAttachmentUrls([normalized], { optimizeImages: true }).then(([signedOrder]) => {
+          if (!active || !signedOrder) return
+          setWorkOrdersById((current) => {
+            const currentOrder = current[order.id]
+            if (!currentOrder) return current
+            return {
+              ...current,
+              [order.id]: {
+                ...currentOrder,
+                work_order_attachments: signedOrder.work_order_attachments,
+              },
+            }
+          })
+        }).catch(() => {})
       })
       .catch((loadError) => {
         if (!active) return
@@ -552,7 +569,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     workOrderIds,
     grants,
   }), [grants, organizationId])
-  const hydrateGroupAttachments = (orders) => signWorkOrderAttachmentUrls(orders)
+  const hydrateGroupAttachments = (orders) => signWorkOrderAttachmentUrls(orders, { optimizeImages: true })
   const prepareWorkOrderForPdfExport = async (order) => {
     const [signedOrder] = await signWorkOrderAttachmentUrls([order])
     return signedOrder ?? order
@@ -587,7 +604,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     })
   }
   useEffect(() => {
-    if (!organizationId) return undefined
+    if (!shouldLoadOrganizationDirectory) return undefined
     let active = true
     Promise.all([
       listOrganizationMembers(organizationId),
@@ -656,7 +673,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
         }
       })
     return () => { active = false }
-  }, [assignScope, canAssignWorkOrders, organizationId, teamIds])
+  }, [assignScope, canAssignWorkOrders, organizationId, shouldLoadOrganizationDirectory, teamIds])
   const commitStatusChange = async (order, status, commentData = null) => {
     if (!organizationId || !order) return
     try {
