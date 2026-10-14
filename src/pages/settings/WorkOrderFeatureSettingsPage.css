@@ -384,7 +384,11 @@
 .work-order-time-modal-actions button[type="submit"] { border-color: var(--blue); color: white; background: var(--blue); }
 .work-order-time-modal-actions button:disabled { opacity: .55; cursor: not-allowed; }
 .work-order-tracking-type-editor { gap: 0; padding: 0; }
-.work-order-tracking-type-editor .work-order-time-modal-header { padding: var(--spacing-4); border-bottom: var(--border-width-normal) solid var(--line); }
+.work-order-tracking-type-editor .work-order-time-modal-header { margin: 0; padding: var(--spacing-4); border-bottom: var(--border-width-normal) solid var(--line); color: var(--ink); background: var(--surface); }
+.work-order-tracking-type-editor .work-order-time-modal-header h3 { color: var(--ink); font-size: var(--font-size-xl-compact); }
+.work-order-tracking-type-editor .work-order-time-modal-header button { color: var(--muted); background: transparent; }
+.work-order-tracking-type-editor .work-order-time-modal-header button:hover,
+.work-order-tracking-type-editor .work-order-time-modal-header button:focus-visible { color: var(--ink); background: var(--surface-control-hover); }
 .work-order-tracking-type-editor > label { padding: var(--spacing-4); }
 .work-order-tracking-type-editor .work-order-time-modal-actions { padding: var(--spacing-4); border-top: var(--border-width-normal) solid var(--line); }
 @media (--wb-viewport-max-840) {
