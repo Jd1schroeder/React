@@ -123,9 +123,9 @@
     flex: 0 0 auto;
     place-items: center;
     padding: 4px 92px;
-    border-bottom: 1px solid var(--line);
-    color: var(--ink);
-    background: var(--surface);
+    border-bottom: 0;
+    color: var(--white);
+    background: var(--blue);
   }
 
   .mobile-app-header-title {
