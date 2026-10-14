@@ -9,11 +9,7 @@ import { Brand } from './auth/Brand'
 import { PhoneField, TeamSizeDropdown } from './auth/AuthControls'
 import { PublicMobileHeader } from './auth/PublicMobileHeader'
 import { PublicLegalFooter } from './auth/PublicLegalFooter'
-
-function getPostAuthenticationPage() {
-  if (window.sessionStorage.getItem('workbench.pendingInviteToken')) return 'Accept Invite'
-  return window.innerWidth <= 840 ? 'Dashboard' : 'Work Orders'
-}
+import { getPostAuthenticationPage } from './auth/authNavigation'
 
 export function AuthPage({ mode = 'login', onNavigate }) {
   const isSignup = mode === 'signup'
