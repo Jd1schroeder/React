@@ -1,7 +1,8 @@
 {
   "name": "Workbench · Facilities operations",
   "short_name": "Workbench",
-  "start_url": "/",
+  "id": "/",
+  "start_url": "/login",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0b1f4a",
