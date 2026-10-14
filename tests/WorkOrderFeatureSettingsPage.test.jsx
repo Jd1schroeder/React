@@ -148,4 +148,24 @@ describe('Work Order feature settings', () => {
       },
     }))
   })
+
+  it('enables external sharing and exposes its access settings only when enabled', async () => {
+    const onNavigate = vi.fn()
+    render(<WorkOrderFeatureSettingsPage onNavigate={onNavigate} />)
+
+    const externalToggle = screen.getByRole('switch', { name: 'Share Work Order Externally' })
+    expect(externalToggle).toHaveAttribute('aria-checked', 'false')
+    expect(screen.queryByRole('button', { name: 'Customize External Work Order access and permissions' })).not.toBeInTheDocument()
+
+    fireEvent.click(externalToggle)
+
+    await waitFor(() => expect(mocks.updateOrganization).toHaveBeenCalledWith({
+      organizationId: 'org-1',
+      updates: { work_order_settings: expect.objectContaining({ externalWorkOrders: true }) },
+    }))
+    expect(screen.getByRole('button', { name: 'Customize External Work Order access and permissions' })).toBeEnabled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Customize External Work Order access and permissions' }))
+    expect(onNavigate).toHaveBeenCalledWith('Settings / Features / External Work Orders')
+  })
 })

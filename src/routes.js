@@ -13,6 +13,7 @@ export const pagePaths = {
   'Settings / Features / Work Order': '/settings/features/workOrder',
   'Settings / Features / Work Order Cost Types': '/settings/features/workOrderCostTypes',
   'Settings / Features / Work Order Time Types': '/settings/features/workOrderTimeTypes',
+  'Settings / Features / External Work Orders': '/settings/features/externalWorkOrders',
   'Settings / Subscription': '/settings/subscription',
   'Settings / Manage Teammates': '/settings/teammates/users',
   'Settings / Teammates / Teams': '/settings/teammates/teams',
@@ -62,4 +63,8 @@ export function getPagePath(page) {
 
 export function getRecordPath(type, id) {
   return `/${type}/${encodeURIComponent(id)}`;
+}
+
+export function getExternalWorkOrderPath(token) {
+  return `/external/work-orders/${encodeURIComponent(token)}`;
 }

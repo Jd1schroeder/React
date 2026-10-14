@@ -7,6 +7,7 @@ import { RolesPage } from "./settings/RolesPage";
 import { TeammateTeamsPage } from "./settings/TeammateTeamsPage";
 import { WorkOrderFeatureSettingsPage } from "./settings/WorkOrderFeatureSettingsPage";
 import { WorkOrderTrackingTypesPage } from "./settings/WorkOrderTrackingTypesPage";
+import { ExternalWorkOrderAccessPage } from "./settings/ExternalWorkOrderAccessPage";
 import "./SettingsPage.css";
 
 export function SettingsPage({ pageName, sessionId, onNavigate, onMobileHeaderTitleChange, onMobileHeaderBackChange }) {
@@ -21,5 +22,6 @@ export function SettingsPage({ pageName, sessionId, onNavigate, onMobileHeaderTi
   if (["Settings / Features / Work Orders", "Settings / Features / Work Order"].includes(pageName)) return <WorkOrderFeatureSettingsPage onNavigate={onNavigate} />;
   if (pageName === "Settings / Features / Work Order Cost Types") return <WorkOrderTrackingTypesPage onNavigate={onNavigate} kind="cost" />;
   if (pageName === "Settings / Features / Work Order Time Types") return <WorkOrderTrackingTypesPage onNavigate={onNavigate} kind="time" />;
+  if (pageName === "Settings / Features / External Work Orders") return <ExternalWorkOrderAccessPage onNavigate={onNavigate} />;
   return <GeneralSettingsPage pageName={pageName} onNavigate={onNavigate} />;
 }

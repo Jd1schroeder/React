@@ -138,7 +138,8 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
           {saveError && <p className="work-order-feature-error" role="alert">{saveError}</p>}
 
           <SettingsCard title={`External ${workOrderLabel}`}>
-            <SettingToggle label={`Share ${workOrderSingularLabel} Externally`} description={`Share an external link to ${workOrderLabel.toLowerCase()} with your Vendor contacts. Control what they can see and do with each ${workOrderSingularLabel.toLowerCase()}.`} checked={displayedSettings.externalWorkOrders} onChange={(value) => updateSetting("externalWorkOrders", value)} saving={savingKey === "externalWorkOrders"} disabled={!isOrganizationAdmin} locked />
+            <SettingToggle label={`Share ${workOrderSingularLabel} Externally`} description={`Share an external link to ${workOrderLabel.toLowerCase()} with your Vendor contacts. Control what they can see and do with each ${workOrderSingularLabel.toLowerCase()}.`} checked={displayedSettings.externalWorkOrders} onChange={(value) => updateSetting("externalWorkOrders", value)} saving={savingKey === "externalWorkOrders"} disabled={!isOrganizationAdmin} locked={false} />
+            {displayedSettings.externalWorkOrders && <ActionSetting label="Customize External Work Order access and permissions" description="Choose when shared links expire and which Work Order fields external contacts can see or interact with." locked={!isOrganizationAdmin} onClick={() => onNavigate("Settings / Features / External Work Orders")} />}
           </SettingsCard>
 
           <WorkOrderTemplateModuleCard label={workOrderTemplateLabel} workOrderLabel={workOrderLabel} checked={displayedFeatureModules.workOrderTemplate} locked={!isOrganizationAdmin} saving={savingFeatureModule === "workOrderTemplate"} onChange={() => toggleFeatureModule("workOrderTemplate", workOrderTemplateLabel)} />

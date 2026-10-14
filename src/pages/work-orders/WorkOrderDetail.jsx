@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Boxes,
   CirclePause,
+  CircleCheck,
   CalendarDays,
   Check,
   ChevronLeft,
@@ -17,6 +18,7 @@ import {
   RefreshCw,
   ChevronDown,
   ChevronRight,
+  Share2,
 } from "lucide-react";
 import { Avatar } from "../../components/ui/Avatar";
 import { useToast } from "../../components/ui/useToast";
@@ -29,6 +31,8 @@ import { WorkOrderActivity } from "./WorkOrderActivity";
 import { WorkOrderTimeTracking } from "./WorkOrderTimeTracking";
 import { WorkOrderCostTracking } from "./WorkOrderCostTracking";
 import { normalizeWorkOrderSettings } from "../../utils/workOrderSettings";
+import { getExternalWorkOrderPath } from "../../routes.js";
+import { ExternalWorkOrderShareDialog } from "./ExternalWorkOrderShareDialog";
 import "./WorkOrderDetail.css";
 
 const statusOptions = [
@@ -131,6 +135,16 @@ function DetailMetadata({ icon: Icon, children }) {
   return <div className="detail-metadata-item">{Icon && <Icon size={16} aria-hidden="true" />}<span>{children}</span></div>;
 }
 
+function formatExternalCompletion(value, timezone) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    ...(timezone ? { timeZone: timezone } : {}),
+  }).format(date);
+}
+
 export function WorkOrderDetail({
   selected,
   isLoadingRecord = false,
@@ -163,12 +177,24 @@ export function WorkOrderDetail({
   isOrganizationAdmin = false,
   workOrderSettings = {},
   onTimeTrackingChanged,
+  externalSharingEnabled = false,
+  canShareExternally = false,
+  onGetExternalShare,
+  onCreateExternalShare,
+  onDisableExternalShare,
+  onResetExternalShare,
+  onSaveExternalShareContacts,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isChangingStatus, setIsChangingStatus] = useState(false);
   const [isDetailScrolled, setIsDetailScrolled] = useState(false);
   const [linkCopyStatus, setLinkCopyStatus] = useState("");
   const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
+  const [isExternalShareOpen, setIsExternalShareOpen] = useState(false);
+  const [externalShare, setExternalShare] = useState(null);
+  const [isLoadingExternalShare, setIsLoadingExternalShare] = useState(false);
+  const [isSavingExternalShare, setIsSavingExternalShare] = useState(false);
+  const [externalShareError, setExternalShareError] = useState("");
   const { showToast } = useToast();
   const menuRef = useRef(null);
   const moreActionsButtonRef = useRef(null);
@@ -260,7 +286,7 @@ export function WorkOrderDetail({
     record,
   );
   const canUseComments = canViewComments || canPostComments;
-  const canUseMoreActions = canEditDetails || canChangeStatus || canCancelSkip || canUseComments || onToggleRead || canCreateWorkOrder;
+  const canUseMoreActions = canEditDetails || canChangeStatus || canCancelSkip || canUseComments || onToggleRead || canCreateWorkOrder || (externalSharingEnabled && canShareExternally);
   const assigneeOptionsByValue = new Map(assigneeOptions.map((option) => [option.value, option]));
   const identitiesById = new Map(memberDirectory.map((member) => [member.id, member]));
   const assignmentTargets = (selected.work_order_assignments ?? [])
@@ -301,6 +327,65 @@ export function WorkOrderDetail({
       setLinkCopyStatus("error");
       showToast("Unable to copy Work Order link.", { tone: "error" });
     }
+  };
+  const openExternalShare = async () => {
+    if (!canShareExternally || !onGetExternalShare) return;
+    setExternalShareError("");
+    setIsExternalShareOpen(true);
+    setIsLoadingExternalShare(true);
+    try {
+      setExternalShare(await onGetExternalShare(selected.id));
+    } catch (error) {
+      setExternalShareError(error.message || "Unable to load external sharing settings.");
+    } finally {
+      setIsLoadingExternalShare(false);
+    }
+  };
+  const saveExternalShare = async (action) => {
+    setIsSavingExternalShare(true);
+    setExternalShareError("");
+    try {
+      const nextShare = await action(selected.id);
+      setExternalShare((currentShare) => ({ ...nextShare, contacts: nextShare?.contacts ?? currentShare?.contacts ?? [] }));
+      if (nextShare?.token) {
+        try {
+          await navigator.clipboard.writeText(new URL(getExternalWorkOrderPath(nextShare.token), window.location.origin).href);
+          showToast("External Work Order link copied.");
+        } catch {
+          showToast("External Work Order link created, but copying failed.", { tone: "error" });
+        }
+      }
+    } catch (error) {
+      setExternalShareError(error.message || "Unable to update external sharing.");
+    } finally {
+      setIsSavingExternalShare(false);
+    }
+  };
+  const saveExternalShareContacts = async (contacts) => {
+    if (!onSaveExternalShareContacts) return;
+    setIsSavingExternalShare(true);
+    setExternalShareError("");
+    try {
+      const savedContacts = await onSaveExternalShareContacts(selected.id, contacts);
+      setExternalShare((currentShare) => ({ ...currentShare, contacts: savedContacts }));
+      showToast("Vendor contacts saved.");
+    } catch (error) {
+      setExternalShareError(error.message || "Unable to save vendor contacts.");
+    } finally {
+      setIsSavingExternalShare(false);
+    }
+  };
+  const copyExternalShare = async () => {
+    if (externalShare?.token) {
+      try {
+        await navigator.clipboard.writeText(new URL(getExternalWorkOrderPath(externalShare.token), window.location.origin).href);
+        showToast("External Work Order link copied.");
+      } catch {
+        showToast("External Work Order link could not be copied.", { tone: "error" });
+      }
+      return;
+    }
+    await saveExternalShare(onCreateExternalShare);
   };
   const headerAction = showMarkDoneAction ? (
     <button
@@ -378,6 +463,9 @@ export function WorkOrderDetail({
                 <button type="button" role="menuitem" disabled={!canEditDetails || !onEdit} onClick={() => { onEdit?.(); setIsMenuOpen(false); }}>
                   <span>Edit</span>
                 </button>
+                {externalSharingEnabled && canShareExternally && <button type="button" role="menuitem" onClick={() => { setIsMenuOpen(false); void openExternalShare(); }}>
+                  <span><Share2 size={15} aria-hidden="true" />Share externally</span>
+                </button>}
                 <button type="button" role="menuitem" disabled={isSavingReadState || !onToggleRead} onClick={async () => { await onToggleRead(selected); setIsMenuOpen(false); }}>
                   <span>Mark as {selected.is_read ? "unread" : "read"}</span>
                 </button>
@@ -436,6 +524,15 @@ export function WorkOrderDetail({
             </div>
           </div>
         </div>
+        {selected.external_finished_at && selected.status !== "Completed" && (
+          <div className="detail-external-completion-notice" role="status" aria-live="polite">
+            <CircleCheck size={20} aria-hidden="true" />
+            <div>
+              <strong>External completion requested</strong>
+              <p>{selected.external_finished_by_name || "An external contact"} marked this Work Order finished on {formatExternalCompletion(selected.external_finished_at, timezone)}. Review the work and update the internal status when appropriate.</p>
+            </div>
+          </div>
+        )}
         <div className="detail-work-order-facts">
           <div className={`detail-facts-grid${hasPriority ? "" : " detail-facts-grid--without-priority"}`}>
             <div className="detail-fact">
@@ -596,6 +693,7 @@ export function WorkOrderDetail({
           timezone={timezone}
         />
       )}
+      {isExternalShareOpen && <ExternalWorkOrderShareDialog key={externalShare?.shareId ?? "external-share-loading"} title={selected.title} share={externalShare} expiration={normalizedWorkOrderSettings.externalWorkOrderLinkExpiration} isLoading={isLoadingExternalShare} isSaving={isSavingExternalShare} error={externalShareError} onClose={() => { if (!isSavingExternalShare) setIsExternalShareOpen(false); }} onEnable={() => { void saveExternalShare(onCreateExternalShare); }} onDisable={() => { void saveExternalShare(onDisableExternalShare); }} onReset={() => { void saveExternalShare(onResetExternalShare); }} onCopy={() => { void copyExternalShare(); }} onSaveContacts={(contacts) => { void saveExternalShareContacts(contacts); }} />}
     </section>
   );
 }

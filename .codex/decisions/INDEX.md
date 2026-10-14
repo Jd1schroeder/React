@@ -14,3 +14,4 @@ Decision records explain why significant Workbench architecture exists. Read onl
 | 008 | [Work Order creation and persistence](008-work-order-creation-and-persistence.md) | Assignments, files, numbering, transaction boundary |
 | 009 | [Work Order Inbox paging and review state](009-work-order-inbox-query-and-review-state.md) | Server counts/pages, unread state/order, user preferences |
 | 010 | [Institutional memory architecture](010-institutional-memory-architecture.md) | AGENTS, Skills, Patterns, Decisions, knowledge promotion |
+| 011 | [External Work Order sharing](011-external-work-order-sharing.md) | Anonymous links, scoped RPCs, expiration, revocation |

@@ -66,6 +66,45 @@ describe('WorkOrderDetail authorization', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('Unable to copy Work Order link.')
   })
 
+  it('shows an internal review notice when an external contact requests completion', () => {
+    render(<ToastProvider><WorkOrderDetail selected={{ ...selected, external_finished_at: '2026-10-14T18:00:00.000Z', external_finished_by_name: 'Vendor Contact' }} grants={{}} /></ToastProvider>)
+
+    expect(screen.getByRole('status')).toHaveTextContent('External completion requested')
+    expect(screen.getByRole('status')).toHaveTextContent('Vendor Contact marked this Work Order finished')
+    expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument()
+  })
+
+  it('creates and copies an external link without rotating it on repeated copies', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
+    const onGetExternalShare = vi.fn().mockResolvedValue({ enabled: false, shareId: null })
+    const onCreateExternalShare = vi.fn().mockResolvedValue({ enabled: true, token: 'a'.repeat(64), shareId: 'share-1' })
+    const onSaveExternalShareContacts = vi.fn().mockResolvedValue([{ displayName: 'Vendor Contact', vendorName: 'Acme Services', email: 'vendor@example.com' }])
+
+    render(<ToastProvider><WorkOrderDetail selected={selected} grants={{}} externalSharingEnabled canShareExternally onGetExternalShare={onGetExternalShare} onCreateExternalShare={onCreateExternalShare} onDisableExternalShare={vi.fn()} onResetExternalShare={vi.fn()} onSaveExternalShareContacts={onSaveExternalShareContacts} /></ToastProvider>)
+
+    fireEvent.click(screen.getByRole('button', { name: 'More work order actions' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Share externally' }))
+    expect(await screen.findByRole('dialog', { name: 'Share "Replace filter"' })).toBeInTheDocument()
+    expect(screen.getByRole('note')).toHaveTextContent('External access is limited to this Work Order.')
+    expect(screen.getByRole('button', { name: 'About external links' })).toHaveAttribute('aria-describedby', 'external-work-order-share-help-text')
+
+    fireEvent.click(screen.getByRole('switch', { name: 'Enable External Link' }))
+    await waitFor(() => expect(onCreateExternalShare).toHaveBeenCalledWith('wo-1'))
+    expect(await screen.findByRole('button', { name: 'Copy External Link' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copy External Link' }))
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(2))
+    expect(onCreateExternalShare).toHaveBeenCalledTimes(1)
+
+    fireEvent.change(screen.getByPlaceholderText('Company name'), { target: { value: 'Acme Services' } })
+    fireEvent.change(screen.getByPlaceholderText('vendor@example.com'), { target: { value: 'vendor@example.com' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add contact' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save vendor contacts' }))
+    await waitFor(() => expect(onSaveExternalShareContacts).toHaveBeenCalledWith('wo-1', [{ displayName: '', vendorName: 'Acme Services', email: 'vendor@example.com' }]))
+  })
+
   it('opens the PDF export dialog from the detail actions menu', () => {
     render(<WorkOrderDetail selected={selected} grants={{}} onToggleRead={vi.fn()} />)
 

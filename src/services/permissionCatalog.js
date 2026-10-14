@@ -32,6 +32,7 @@ export const permissionCatalog = [
   permission('Work Orders', 'work_orders.view_comments', 'View comments on work orders', 'Read work-order comments.', ['assigned', 'team', 'any']),
   permission('Work Orders', 'work_orders.post_comments', 'Post comments on work orders', 'Post work-order comments.', ['assigned', 'team', 'any']),
   permission('Work Orders', 'work_orders.share_comments', 'Share comments with customers and requesters', 'Share work-order comments externally.', ['assigned', 'team', 'any']),
+  permission('Work Orders', 'work_orders.share_externally', 'Share work orders externally', 'Create and manage external Work Order links.', actionOnly, { actionOnly: true }),
   permission('Work Orders', 'work_orders.view_parts', 'View parts on work orders', 'See parts attached to work orders.', ['assigned', 'team', 'any']),
   permission('Work Orders', 'work_orders.change_part_status', 'Change part status', 'Change the status of parts attached to work orders.', ['assigned', 'team', 'any']),
   permission('Work Orders', 'work_orders.part_status_assigned', 'Set part status to Assigned', 'Set attached parts to Assigned.', ['assigned', 'team', 'any']),

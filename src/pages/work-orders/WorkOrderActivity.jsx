@@ -170,6 +170,9 @@ function describeActivity(item, dateFormat, identitiesById, assigneeOptionsByVal
   if (item.event_type === 'status_changed') {
     return `Changed status from ${item.details?.from ?? 'unknown'} to ${item.details?.to ?? 'unknown'}.`
   }
+  if (item.event_type === 'external_completion_requested') {
+    return `External contact ${item.details?.externalName || 'marked the Work Order'} requested completion.`
+  }
   if (item.event_type === 'work_order_time_added') {
     const duration = Number(item.details?.duration_seconds ?? 0)
     return `Added ${Math.floor(duration / 3600)}h ${Math.floor((duration % 3600) / 60)}m of time.`
@@ -279,7 +282,9 @@ function ActivityItem({
   const [actionNotice, setActionNotice] = useState('')
   const actorId = item.kind === 'comment' ? item.author_id : item.actor_id
   const actor = identitiesById.get(actorId)
-  const actorName = actor?.name || (actorId ? 'Former member' : 'System')
+  const actorName = item.kind === 'comment' && item.external_author_name
+    ? item.external_author_name
+    : actor?.name || (actorId ? 'Former member' : 'System')
   const actorProfilePath = actorId ? getRecordPath('users/profile', actorId) : null
   const deletedBy = identitiesById.get(item.deleted_by)
   const isLiveComment = item.kind === 'comment' && !item.deleted_at

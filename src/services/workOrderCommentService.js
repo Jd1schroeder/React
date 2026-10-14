@@ -33,7 +33,7 @@ export async function listWorkOrderActivity({ organizationId, workOrderId, grant
     ),
     applyActivityCursor(
       supabase.from('work_order_comments')
-        .select('id, work_order_id, author_id, body, created_at, edited_at, deleted_at, deleted_by')
+        .select('id, work_order_id, author_id, body, external_author_name, external_author_email, created_at, edited_at, deleted_at, deleted_by')
         .eq('organization_id', organizationId)
         .eq('work_order_id', workOrderId)
         .order('created_at', { ascending: false })

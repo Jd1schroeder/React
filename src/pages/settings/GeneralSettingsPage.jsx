@@ -125,9 +125,9 @@ function GeneralSettingsContent() {
   const [preferences, setPreferences] = useState({
     language: "en",
     currency: organization.currency ?? "USD",
-    dateFormat: workspace.preferences?.date_format ?? "MM/DD/YYYY",
-    timeFormat: workspace.preferences?.time_format ?? "11:59 PM",
-    timeZone: workspace.preferences?.timezone ?? organization.timezone ?? "America/Detroit",
+    dateFormat: organization.date_format ?? "MM/DD/YYYY",
+    timeFormat: organization.time_format ?? "11:59 PM",
+    timeZone: organization.timezone ?? "America/Detroit",
   });
   const [memberCount, setMemberCount] = useState(null);
   const [isOrganizationModalOpen, setIsOrganizationModalOpen] = useState(false);
@@ -143,6 +143,19 @@ function GeneralSettingsContent() {
   }, [organization.id]);
 
   const updatePreference = (key, value) => setPreferences((current) => ({ ...current, [key]: value }));
+  const updateOrganizationPreference = async (key, value) => {
+    const previous = preferences[key];
+    updatePreference(key, value);
+    if (!organization.id) return;
+    const fieldMap = { dateFormat: "date_format", timeFormat: "time_format", timeZone: "timezone" };
+    try {
+      const updated = await updateOrganization({ organizationId: organization.id, updates: { [fieldMap[key]]: value } });
+      workspace.patchOrganization(organization.id, { [fieldMap[key]]: updated[fieldMap[key]] });
+    } catch (error) {
+      updatePreference(key, previous);
+      setCurrencySaveError(error.message || "Unable to update organization preferences.");
+    }
+  };
   const updateCurrency = async (value) => {
     updatePreference("currency", value);
     setCurrencySaveError("");
@@ -175,9 +188,9 @@ function GeneralSettingsContent() {
         <div className="general-preferences-grid">
           <PreferenceRow label="Organization Language"><Select ariaLabel="Organization Language" value={preferences.language} options={preferenceOptions.language} onChange={(value) => updatePreference("language", value)} /></PreferenceRow>
           <PreferenceRow label="Currency"><Select ariaLabel="Currency" value={preferences.currency} options={preferenceOptions.currency} onChange={updateCurrency} /></PreferenceRow>
-          <PreferenceRow label="Date Format"><Select ariaLabel="Date Format" value={preferences.dateFormat} options={preferenceOptions.dateFormat} onChange={(value) => updatePreference("dateFormat", value)} /></PreferenceRow>
-          <PreferenceRow label="Time Format"><Select ariaLabel="Time Format" value={preferences.timeFormat} options={preferenceOptions.timeFormat} onChange={(value) => updatePreference("timeFormat", value)} /></PreferenceRow>
-          <PreferenceRow label="Time Zone"><Select ariaLabel="Time Zone" value={preferences.timeZone} options={timeZoneOptions} onChange={(value) => updatePreference("timeZone", value)} /></PreferenceRow>
+          <PreferenceRow label="Date Format"><Select ariaLabel="Date Format" value={preferences.dateFormat} options={preferenceOptions.dateFormat} onChange={(value) => void updateOrganizationPreference("dateFormat", value)} /></PreferenceRow>
+          <PreferenceRow label="Time Format"><Select ariaLabel="Time Format" value={preferences.timeFormat} options={preferenceOptions.timeFormat} onChange={(value) => void updateOrganizationPreference("timeFormat", value)} /></PreferenceRow>
+          <PreferenceRow label="Time Zone"><Select ariaLabel="Time Zone" value={preferences.timeZone} options={timeZoneOptions} onChange={(value) => void updateOrganizationPreference("timeZone", value)} /></PreferenceRow>
         </div>
         {currencySaveError && <p role="alert" className="settings-form-error">{currencySaveError}</p>}
       </section>

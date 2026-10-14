@@ -682,6 +682,22 @@
   text-wrap: nowrap;
   white-space: nowrap;
 }
+.work-order-external-completion-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  max-width: 100%;
+  margin-top: var(--spacing-1);
+  color: var(--blue-hover);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-semibold);
+  line-height: var(--line-height-sm-px);
+}
+.work-order-external-completion-indicator span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .work-order-item-tags {
   display: flex;
   flex: 0 0 auto;

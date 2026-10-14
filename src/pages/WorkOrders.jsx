@@ -30,6 +30,7 @@ import { buildWorkOrderCalendarMarkers, getWorkOrderCalendarRange } from './work
 import { RequiredStatusCommentModal } from './work-orders/RequiredStatusCommentModal'
 import { normalizeWorkOrderSettings } from '../utils/workOrderSettings'
 import { buildWorkOrderMentionTargets } from '../utils/workOrderMentions'
+import { createExternalWorkOrderShare, disableExternalWorkOrderShare, getExternalWorkOrderShare, listExternalWorkOrderShareContacts, resetExternalWorkOrderShare, setExternalWorkOrderShareContacts } from '../services/externalWorkOrderService'
 
 function dateKeyForTimezone(timezone) {
   const parts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' })
@@ -403,6 +404,9 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     })
   }, [activeFilters, calendarOrders, debouncedSearch])
   const selected = workOrdersById[selectedId]
+  const canShareExternally = workOrderSettings.externalWorkOrders
+    && hasPermission(grants, 'work_orders.share_externally')
+    && !['Completed', 'Cancelled', 'Skipped'].includes(selected?.status)
   const markViewed = useCallback(async (order) => {
     if (!order || (workOrdersById[order.id]?.is_read ?? order.is_read) || pendingReadIds.current.has(order.id)) return
     pendingReadIds.current.add(order.id)
@@ -706,6 +710,17 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
       // The entry operation already succeeded; leave the detail state intact if a refresh is unavailable.
     }
   }, [grants, organizationId, selected, workspace.preferences])
+  const getExternalShare = useCallback(async (workOrderId) => {
+    const [share, contacts] = await Promise.all([
+      getExternalWorkOrderShare(workOrderId),
+      listExternalWorkOrderShareContacts(workOrderId),
+    ])
+    return { ...share, contacts }
+  }, [])
+  const createExternalShare = useCallback((workOrderId) => createExternalWorkOrderShare(workOrderId), [])
+  const disableExternalShare = useCallback((workOrderId) => disableExternalWorkOrderShare(workOrderId), [])
+  const resetExternalShare = useCallback((workOrderId) => resetExternalWorkOrderShare(workOrderId), [])
+  const saveExternalShareContacts = useCallback((workOrderId, contacts) => setExternalWorkOrderShareContacts(workOrderId, contacts), [])
   const submitRequiredStatusComment = async ({ body, files }) => {
     if (!pendingStatusChange) return
     setIsSavingStatusComment(true)
@@ -871,7 +886,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     ? <NewWorkOrderForm initialWorkOrder={copySource} workOrderLabel={workOrderSingularLabel} onCancel={() => { setIsCreating(false); setCopySource(null) }} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} />
     : isEditingSelected
       ? <NewWorkOrderForm mode="edit" initialWorkOrder={selected} workOrderLabel={workOrderSingularLabel} onCancel={() => guardNavigation(() => { setHasUnsavedChanges(false); setEditingWorkOrderId(null) })} onDirtyChange={setHasUnsavedChanges} onUpdate={handleUpdate} isSaving={isSavingEdit} error={editError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} />
-      : <WorkOrderDetail selected={selected} isLoadingRecord={isLoadingSelectedRecord} missingRecord={missingRecord} onBack={() => { setLocalSelectedId(undefined); onNavigate?.('Work Orders') }} onEdit={() => selected && handleEdit(selected)} onCopy={() => selected && handleCopy(selected)} onStatusChange={changeStatus} onPreparePdfExport={prepareWorkOrderForPdfExport} assigneeOptions={assigneeOptions} memberDirectory={memberDirectory} timeEntryMembers={timeEntryMembers} mentionTargets={mentionTargets} assignMentionsEnabled={Boolean(workOrderSettings.assignUsersTeamsOnMention)} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} dateFormat={workspace.preferences?.date_format} timezone={workspace.preferences?.timezone} onLoadActivity={loadWorkOrderActivity} onPostComment={postWorkOrderComment} onUpdateComment={editWorkOrderComment} onDeleteComment={removeWorkOrderComment} canDeleteAnyComments={canDeleteAnyWorkOrderComment} onResolveWorkOrderLinks={resolveWorkOrderLinks} organizationId={organizationId} currency={currency} isOrganizationAdmin={canManageOrganizationWorkOrderFilters} workOrderSettings={workOrderSettings} onTimeTrackingChanged={refreshSelectedWorkOrder} />
+      : <WorkOrderDetail selected={selected} isLoadingRecord={isLoadingSelectedRecord} missingRecord={missingRecord} onBack={() => { setLocalSelectedId(undefined); onNavigate?.('Work Orders') }} onEdit={() => selected && handleEdit(selected)} onCopy={() => selected && handleCopy(selected)} onStatusChange={changeStatus} onPreparePdfExport={prepareWorkOrderForPdfExport} assigneeOptions={assigneeOptions} memberDirectory={memberDirectory} timeEntryMembers={timeEntryMembers} mentionTargets={mentionTargets} assignMentionsEnabled={Boolean(workOrderSettings.assignUsersTeamsOnMention)} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} dateFormat={workspace.preferences?.date_format} timezone={workspace.preferences?.timezone} onLoadActivity={loadWorkOrderActivity} onPostComment={postWorkOrderComment} onUpdateComment={editWorkOrderComment} onDeleteComment={removeWorkOrderComment} canDeleteAnyComments={canDeleteAnyWorkOrderComment} onResolveWorkOrderLinks={resolveWorkOrderLinks} organizationId={organizationId} currency={currency} isOrganizationAdmin={canManageOrganizationWorkOrderFilters} workOrderSettings={workOrderSettings} onTimeTrackingChanged={refreshSelectedWorkOrder} externalSharingEnabled={Boolean(workOrderSettings.externalWorkOrders)} canShareExternally={canShareExternally} onGetExternalShare={getExternalShare} onCreateExternalShare={createExternalShare} onDisableExternalShare={disableExternalShare} onResetExternalShare={resetExternalShare} onSaveExternalShareContacts={saveExternalShareContacts} />
 
   return <>
   {utilityPage === 'filters' && canViewWorkOrders && !isMobileRecordView ? <WorkOrderFilterPage

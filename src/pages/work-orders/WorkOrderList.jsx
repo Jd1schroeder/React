@@ -262,6 +262,12 @@ export function WorkOrderListItem({
             #{order.work_order_number}
           </div>
         </div>
+        {order.external_finished_at && (
+          <div className="work-order-external-completion-indicator" role="status">
+            <CircleCheck size={13} aria-hidden="true" />
+            <span>External completion requested</span>
+          </div>
+        )}
         <div className="work-order-item-sub-row work-order-item-status-row">
           <WorkOrderStatusMenu
             order={order}

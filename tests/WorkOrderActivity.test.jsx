@@ -121,6 +121,48 @@ describe('WorkOrderActivity', () => {
     expect(linkedOrder).toHaveTextContent('Done')
   })
 
+  it('describes an external completion request as a reviewable internal event', async () => {
+    const onLoadActivity = vi.fn().mockResolvedValue({
+      items: [{
+        id: 'external-completion-1',
+        kind: 'activity',
+        actor_id: null,
+        event_type: 'external_completion_requested',
+        details: { externalName: 'Vendor Contact' },
+        created_at: '2026-10-14T18:00:00.000Z',
+      }],
+        hasMore: false,
+        nextCursor: null,
+      })
+
+    render(<WorkOrderActivity order={{ id: 'wo-1' }} canViewComments onLoadActivity={onLoadActivity} />)
+
+    expect(await screen.findByText('External contact Vendor Contact requested completion.')).toBeInTheDocument()
+  })
+
+  it('shows the captured name for an external comment instead of System', async () => {
+    const onLoadActivity = vi.fn().mockResolvedValue({
+      items: [{
+        id: 'external-comment-1',
+        kind: 'comment',
+        author_id: null,
+        external_author_name: 'Johnny',
+        external_author_email: 'johnny@example.com',
+        body: 'This is just a test comment',
+        created_at: '2026-10-14T20:16:52.000Z',
+        attachments: [],
+      }],
+      hasMore: false,
+      nextCursor: null,
+    })
+
+    render(<WorkOrderActivity order={{ id: 'wo-1' }} canViewComments onLoadActivity={onLoadActivity} />)
+
+    expect(await screen.findByText('Johnny')).toBeInTheDocument()
+    expect(screen.queryByText('System')).not.toBeInTheDocument()
+    expect(screen.getByText('This is just a test comment')).toBeInTheDocument()
+  })
+
   it('posts comment text and selected files, then refreshes the feed', async () => {
     const onLoadActivity = vi.fn().mockResolvedValue({ items: [], hasMore: false, nextCursor: null })
     const onPostComment = vi.fn().mockResolvedValue({ id: 'new-comment' })

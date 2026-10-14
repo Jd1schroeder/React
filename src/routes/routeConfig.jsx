@@ -9,6 +9,7 @@ const SignupPage = lazyNamed(() => import('../pages/Signup'), 'Signup')
 const VerifyEmailPage = lazyNamed(() => import('../pages/VerifyEmail'), 'VerifyEmail')
 const ForgotPasswordPage = lazyNamed(() => import('../pages/ForgotPassword'), 'ForgotPassword')
 const AcceptInvitePage = lazyNamed(() => import('../pages/AcceptInvite'), 'AcceptInvite')
+const ExternalWorkOrderPage = lazyNamed(() => import('../pages/ExternalWorkOrderPage'), 'ExternalWorkOrderPage')
 const TermsPage = lazyNamed(() => import('../pages/Terms'), 'Terms')
 const PrivacyPage = lazyNamed(() => import('../pages/Privacy'), 'Privacy')
 const SettingsPage = lazyNamed(() => import('../pages/SettingsPage'), 'SettingsPage')
@@ -32,6 +33,7 @@ export const pages = {
   'Verify Email': VerifyEmailPage,
   'Forgot Password': ForgotPasswordPage,
   'Accept Invite': AcceptInvitePage,
+  'External Work Order': ExternalWorkOrderPage,
   'Terms of Service': TermsPage,
   'Privacy Policy': PrivacyPage,
   'Settings / General': SettingsPage,
@@ -40,6 +42,7 @@ export const pages = {
   'Settings / Features / Work Order': SettingsPage,
   'Settings / Features / Work Order Cost Types': SettingsPage,
   'Settings / Features / Work Order Time Types': SettingsPage,
+  'Settings / Features / External Work Orders': SettingsPage,
   'Settings / Subscription': SettingsPage,
   'Settings / Manage Teammates': SettingsPage,
   'Settings / Teammates / Teams': SettingsPage,
@@ -93,6 +96,7 @@ export const publicRoutes = [
   ['/verify-email', 'Verify Email'],
   ['/forgot-password', 'Forgot Password'],
   ['/accept-invite', 'Accept Invite'],
+  ['/external/work-orders/:shareToken', 'External Work Order'],
   ['/terms', 'Terms of Service'],
   ['/privacy', 'Privacy Policy'],
 ]

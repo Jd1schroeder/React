@@ -8,6 +8,7 @@ describe('route configuration', () => {
       ['/login', 'Login'],
       ['/signup', 'Signup'],
       ['/accept-invite', 'Accept Invite'],
+      ['/external/work-orders/:shareToken', 'External Work Order'],
     ]))
     expect(authenticatedRoutes).toEqual(expect.arrayContaining([
       expect.objectContaining({ page: 'Work Orders' }),

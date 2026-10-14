@@ -1,0 +1,53 @@
+.external-work-order-shell { min-height: 100dvh; color: var(--ink); background: var(--surface-page); }
+.external-work-order-brand { display: flex; align-items: center; gap: var(--spacing-3); min-height: 64px; padding: 0 max(var(--spacing-5), calc((100vw - 920px) / 2)); border-bottom: var(--border-width-normal) solid var(--line); color: var(--ink); background: var(--surface); font-size: var(--font-size-lg); font-weight: var(--font-semibold); }
+.external-work-order-brand-mark { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: var(--radius-sm); color: white; background: var(--blue); }
+.external-work-order-brand-label { color: var(--muted); font-size: var(--font-size-body-sm); font-weight: var(--font-normal); }
+.external-work-order-page { display: grid; gap: var(--spacing-5); width: min(100% - (var(--spacing-5) * 2), 920px); margin: 0 auto; padding: var(--spacing-8) 0 var(--spacing-6); }
+.external-work-order-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--spacing-5); }
+.external-work-order-eyebrow { margin: 0 0 var(--spacing-2); color: var(--muted); font-size: var(--font-size-sm); font-weight: var(--font-semibold); text-transform: uppercase; letter-spacing: .08em; }
+.external-work-order-header h1 { margin: 0; color: var(--ink); font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; }
+.external-work-order-number { margin: var(--spacing-2) 0 0; color: var(--muted); font-size: var(--font-size-body-sm); }
+.external-work-order-status { display: inline-flex; align-items: center; min-height: 32px; padding: 0 var(--spacing-3); border-radius: 999px; color: var(--blue); background: var(--blue-soft); font-size: var(--font-size-body-sm); font-weight: var(--font-semibold); white-space: nowrap; }
+.external-work-order-status--on-hold { color: var(--warning); background: var(--warning-soft); }
+.external-work-order-status--completed { color: var(--success); background: var(--success-soft); }
+.external-work-order-card { display: grid; gap: var(--spacing-5); padding: var(--spacing-6); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-sm); }
+.external-work-order-card-heading { display: flex; align-items: center; gap: var(--spacing-3); color: var(--blue); }
+.external-work-order-card-heading h2 { margin: 0; color: var(--ink); font-size: var(--font-size-xl-compact); }
+.external-work-order-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-4); }
+.external-work-order-fact { display: grid; gap: var(--spacing-1); padding: var(--spacing-3); border-radius: var(--radius-sm); background: var(--surface-subtle); }
+.external-work-order-fact span, .external-work-order-comment time { color: var(--muted); font-size: var(--font-size-sm); }
+.external-work-order-fact strong { color: var(--ink); font-size: var(--font-size-body-md); }
+.external-work-order-description { display: grid; gap: var(--spacing-2); padding-top: var(--spacing-4); border-top: var(--border-width-normal) solid var(--line); }
+.external-work-order-description h3 { margin: 0; color: var(--ink); font-size: var(--font-size-md); }
+.external-work-order-description p, .external-work-order-completion p { margin: 0; color: var(--muted); line-height: 1.6; white-space: pre-wrap; }
+.external-work-order-attachments, .external-work-order-comments { display: grid; gap: var(--spacing-3); margin: 0; padding: 0; list-style: none; }
+.external-work-order-attachments li { display: flex; align-items: center; gap: var(--spacing-2); padding: var(--spacing-3); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); color: var(--ink); }
+.external-work-order-completion { grid-template-columns: minmax(0, 1fr) minmax(260px, 340px); align-items: start; }
+.external-work-order-completion-form, .external-work-order-comment-form { display: grid; gap: var(--spacing-2); }
+.external-work-order-completion-form label, .external-work-order-comment-form label { color: var(--ink); font-size: var(--font-size-sm); font-weight: var(--font-semibold); }
+.external-work-order-comment-form label span { color: var(--muted); font-weight: var(--font-normal); }
+.external-work-order-completion-form input, .external-work-order-comment-form input, .external-work-order-comment-form textarea { box-sizing: border-box; width: 100%; padding: var(--spacing-3); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); color: var(--ink); background: var(--surface); font: inherit; }
+.external-work-order-comment-form textarea { resize: vertical; }
+.external-work-order-completion-form button, .external-work-order-comment-form button, .external-work-order-state button { display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-2); min-height: 40px; padding: 0 var(--spacing-4); border: 0; border-radius: var(--radius-sm); color: white; background: var(--blue); font: inherit; font-weight: var(--font-semibold); cursor: pointer; }
+.external-work-order-completion-form button:disabled, .external-work-order-comment-form button:disabled { opacity: .55; cursor: not-allowed; }
+.external-work-order-comments { padding-bottom: var(--spacing-4); border-bottom: var(--border-width-normal) solid var(--line); }
+.external-work-order-comment { padding: var(--spacing-3) 0; border-bottom: var(--border-width-normal) solid var(--line); }
+.external-work-order-comment:last-child { border-bottom: 0; }
+.external-work-order-comment > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-3); }
+.external-work-order-comment strong { color: var(--ink); }
+.external-work-order-comment p { margin: var(--spacing-2) 0 0; color: var(--ink); white-space: pre-wrap; }
+.external-work-order-empty { margin: 0; color: var(--muted); }
+.external-work-order-finished { padding: var(--spacing-3); border-radius: var(--radius-sm); color: var(--success); background: var(--success-soft); }
+.external-work-order-error { margin: 0; padding: var(--spacing-3) var(--spacing-4); border-radius: var(--radius-sm); color: var(--danger); background: var(--danger-soft); }
+.external-work-order-state { display: grid; justify-items: center; gap: var(--spacing-3); max-width: 520px; margin: 0 auto; padding: 15vh var(--spacing-5); text-align: center; }
+.external-work-order-state > svg { color: var(--blue); }
+.external-work-order-state h1 { margin: 0; color: var(--ink); font-size: var(--font-size-xl-compact); }
+.external-work-order-state p { margin: 0; color: var(--muted); line-height: 1.6; }
+.external-work-order-footer { display: flex; align-items: center; justify-content: center; gap: var(--spacing-2); padding: var(--spacing-5); color: var(--muted); font-size: var(--font-size-sm); text-align: center; }
+@media (--wb-viewport-max-640) {
+  .external-work-order-brand { padding: 0 var(--spacing-4); }
+  .external-work-order-page { width: min(100% - (var(--spacing-4) * 2), 920px); padding-top: var(--spacing-6); }
+  .external-work-order-header { display: grid; }
+  .external-work-order-facts, .external-work-order-completion { grid-template-columns: 1fr; }
+  .external-work-order-card { padding: var(--spacing-4); }
+}

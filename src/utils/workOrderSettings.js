@@ -1,5 +1,20 @@
 export const DEFAULT_WORK_ORDER_SETTINGS = {
   externalWorkOrders: false,
+  externalWorkOrderLinkExpiration: "work_order_closed",
+  externalWorkOrderAccess: {
+    description: "view",
+    due_date: "view",
+    priority: "view",
+    asset: "view",
+    location: "view",
+    custom_fields: "view",
+    procedure: "interact",
+    comments: "comment",
+    attachments: "view",
+    showInternalCommentAuthors: false,
+    requireCommenterName: true,
+    requireCommenterEmail: false,
+  },
   commentRequirements: { onHold: "mandatory", skipped: "mandatory", canceled: "mandatory" },
   filterByFailOrFlag: true,
   assignUsersTeamsOnMention: true,
@@ -23,6 +38,10 @@ export function normalizeWorkOrderSettings(settings = {}) {
   const normalized = {
     ...DEFAULT_WORK_ORDER_SETTINGS,
     ...settings,
+    externalWorkOrderAccess: {
+      ...DEFAULT_WORK_ORDER_SETTINGS.externalWorkOrderAccess,
+      ...(settings.externalWorkOrderAccess ?? {}),
+    },
     commentRequirements: {
       ...DEFAULT_WORK_ORDER_SETTINGS.commentRequirements,
       ...(settings.commentRequirements ?? {}),
