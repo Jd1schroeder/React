@@ -228,24 +228,42 @@
 
 .profile-info-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--spacing-7);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-5);
   margin-top: var(--spacing-5);
 }
 
-.profile-info-grid div {
+.profile-info-item {
   display: grid;
-  gap: 7px;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--spacing-3);
   min-width: 0;
 }
 
-.profile-info-grid span,
+.profile-info-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-circle);
+  color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.profile-info-copy {
+  display: grid;
+  min-width: 0;
+  gap: var(--spacing-1);
+}
+
+.profile-info-copy span,
 .profile-preference-list label {
   color: var(--muted);
   font-size: var(--font-size-sm);
 }
 
-.profile-info-grid strong {
+.profile-info-copy strong {
   min-height: 20px;
   color: var(--ink);
   font-size: var(--font-size-md);
@@ -771,23 +789,24 @@
     text-align: left;
   }
 
-  .profile-info-grid div {
-    grid-template-columns: 24px minmax(0, 1fr);
+  .profile-info-item {
+    grid-template-columns: 32px minmax(0, 1fr);
     align-items: center;
     gap: var(--spacing-3);
     min-height: 64px;
     border-top: var(--border-width-normal) solid var(--line);
   }
 
-  .profile-info-grid div:last-child {
+  .profile-info-item:last-child {
     min-height: 44px;
   }
 
-  .profile-info-grid div > svg {
+  .profile-info-icon {
     color: var(--icon-secondary);
+    background: var(--surface-subtle);
   }
 
-  .profile-info-grid strong {
+  .profile-info-copy strong {
     font-size: var(--font-size-lg);
     font-weight: var(--font-normal);
   }
