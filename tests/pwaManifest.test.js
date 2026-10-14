@@ -10,5 +10,6 @@ describe('PWA manifest', () => {
     expect(manifest.id).toBe('/')
     expect(manifest.start_url).toBe('/login')
     expect(manifest.scope).toBe('/')
+    expect(manifest.background_color).toBe(manifest.theme_color)
   })
 })
