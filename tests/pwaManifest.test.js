@@ -11,7 +11,7 @@ describe('PWA manifest', () => {
     expect(manifest.start_url).toBe('/login')
     expect(manifest.scope).toBe('/')
     expect(manifest.background_color).toBe('#ffffff')
-    expect(manifest.theme_color).toBe('#ffffff')
+    expect(manifest.theme_color).toBe('#1887fc')
     expect(manifest.description).toContain('manage assets')
     expect(manifest.prefer_related_applications).toBe(false)
     expect(manifest.categories).toEqual(expect.arrayContaining(['business', 'productivity']))
