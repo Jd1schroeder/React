@@ -410,7 +410,6 @@
 
   .mobile-primary-navigation { order: 0; }
   .mobile-app-header { order: 1; }
-  .mobile-app-header:not(.is-my-account) { display: none; }
 
   .main-shell {
     order: 2;
@@ -430,4 +429,8 @@
     min-height: 100%;
     padding: var(--spacing-5) var(--spacing-6);
   }
+}
+
+@media (--wb-viewport-tablet-wide) {
+  .mobile-app-header:not(.is-my-account) { display: none; }
 }
