@@ -201,7 +201,7 @@ begin
 
   if position('external_finished_at' in lower(pg_get_functiondef(to_regprocedure('public.mark_external_work_order_finished(text,text)')))) = 0
     or position('external_finished_by_name' in lower(pg_get_functiondef(to_regprocedure('public.mark_external_work_order_finished(text,text)')))) = 0
-    or position('status =' in lower(pg_get_functiondef(to_regprocedure('public.mark_external_work_order_finished(text,text)')))) > 0 then
+    or position('set status =' in lower(pg_get_functiondef(to_regprocedure('public.mark_external_work_order_finished(text,text)')))) > 0 then
     raise exception 'External completion must record a request without changing internal Work Order status';
   end if;
 
