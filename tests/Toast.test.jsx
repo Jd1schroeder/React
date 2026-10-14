@@ -42,6 +42,36 @@ describe('Toast system', () => {
     expect(screen.queryByText('Saved successfully.')).not.toBeInTheDocument()
   })
 
+  it('dismisses a notification when swiped left or right', () => {
+    render(<ToastProvider><ToastTrigger /></ToastProvider>)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show success' }))
+    const rightSwipeToast = screen.getByText('Saved successfully.').closest('.wb-toast')
+    fireEvent.touchStart(rightSwipeToast, { touches: [{ clientX: 100, clientY: 20 }] })
+    fireEvent.touchMove(rightSwipeToast, { touches: [{ clientX: 190, clientY: 20 }] })
+    fireEvent.touchEnd(rightSwipeToast, { touches: [], changedTouches: [{ clientX: 190, clientY: 20 }] })
+    expect(screen.queryByText('Saved successfully.')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show error' }))
+    const leftSwipeToast = screen.getByText('Unable to save.').closest('.wb-toast')
+    fireEvent.touchStart(leftSwipeToast, { touches: [{ clientX: 190, clientY: 20 }] })
+    fireEvent.touchMove(leftSwipeToast, { touches: [{ clientX: 100, clientY: 20 }] })
+    fireEvent.touchEnd(leftSwipeToast, { touches: [], changedTouches: [{ clientX: 100, clientY: 20 }] })
+    expect(screen.queryByText('Unable to save.')).not.toBeInTheDocument()
+  })
+
+  it('does not dismiss a notification on a vertical swipe', () => {
+    render(<ToastProvider><ToastTrigger /></ToastProvider>)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show success' }))
+    const toast = screen.getByText('Saved successfully.').closest('.wb-toast')
+    fireEvent.touchStart(toast, { touches: [{ clientX: 100, clientY: 20 }] })
+    fireEvent.touchMove(toast, { touches: [{ clientX: 105, clientY: 110 }] })
+    fireEvent.touchEnd(toast, { touches: [], changedTouches: [{ clientX: 105, clientY: 110 }] })
+
+    expect(screen.getByText('Saved successfully.')).toBeInTheDocument()
+  })
+
   it('applies the error tone and supports custom icons', () => {
     render(<ToastProvider><ToastTrigger /></ToastProvider>)
 

@@ -27,6 +27,13 @@
   font-size: var(--font-size-body-sm);
   animation: wb-toast-enter 180ms ease-out both;
   pointer-events: auto;
+  touch-action: pan-y;
+}
+
+.wb-toast.is-swiping {
+  animation: none;
+  transition: none;
+  user-select: none;
 }
 
 .wb-toast.is-error {

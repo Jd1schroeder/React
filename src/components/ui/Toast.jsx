@@ -10,23 +10,83 @@ const defaultIcons = {
   info: Info,
 }
 
+const toastSwipeThreshold = 72
+
+function ToastItem({ toast, onDismiss }) {
+  const touchStartRef = useRef(null)
+  const swipeOffsetRef = useRef(0)
+  const [isSwiping, setIsSwiping] = useState(false)
+  const [swipeOffset, setSwipeOffset] = useState(0)
+  const Icon = toast.icon ?? defaultIcons[toast.tone] ?? defaultIcons.info
+
+  const resetSwipe = () => {
+    touchStartRef.current = null
+    swipeOffsetRef.current = 0
+    setIsSwiping(false)
+    setSwipeOffset(0)
+  }
+
+  const handleTouchStart = (event) => {
+    const touch = event.touches[0]
+    if (!touch) return
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY }
+    swipeOffsetRef.current = 0
+    setIsSwiping(true)
+  }
+
+  const handleTouchMove = (event) => {
+    const start = touchStartRef.current
+    const touch = event.touches[0]
+    if (!start || !touch) return
+    const deltaX = touch.clientX - start.x
+    const deltaY = touch.clientY - start.y
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      resetSwipe()
+      return
+    }
+    swipeOffsetRef.current = deltaX
+    setSwipeOffset(deltaX)
+  }
+
+  const handleTouchEnd = (event) => {
+    const start = touchStartRef.current
+    const touch = event.changedTouches[0]
+    if (!start || !touch) {
+      resetSwipe()
+      return
+    }
+    const deltaX = touch.clientX - start.x
+    if (Math.abs(deltaX) >= toastSwipeThreshold && Math.abs(swipeOffsetRef.current) >= toastSwipeThreshold) {
+      onDismiss(toast.id)
+      return
+    }
+    resetSwipe()
+  }
+
+  return <div
+    className={`wb-toast is-${toast.tone}${isSwiping ? ' is-swiping' : ''}`}
+    role="status"
+    aria-live="polite"
+    style={swipeOffset ? { transform: `translateX(${swipeOffset}px)` } : undefined}
+    onTouchStart={handleTouchStart}
+    onTouchMove={handleTouchMove}
+    onTouchEnd={handleTouchEnd}
+    onTouchCancel={resetSwipe}
+  >
+    {createElement(Icon, { size: 18, 'aria-hidden': true })}
+    <span>{toast.message}</span>
+    <button type="button" onClick={() => onDismiss(toast.id)} aria-label="Dismiss notification">
+      <X size={17} aria-hidden="true" />
+    </button>
+  </div>
+}
+
 function ToastViewport({ toasts, onDismiss }) {
   if (typeof document === 'undefined') return null
 
   return createPortal(
     <div className="wb-toast-viewport" aria-label="Notifications">
-      {toasts.map((toast) => {
-        const Icon = toast.icon ?? defaultIcons[toast.tone] ?? defaultIcons.info
-        return (
-          <div key={toast.id} className={`wb-toast is-${toast.tone}`} role="status" aria-live="polite">
-            {createElement(Icon, { size: 18, 'aria-hidden': true })}
-            <span>{toast.message}</span>
-            <button type="button" onClick={() => onDismiss(toast.id)} aria-label="Dismiss notification">
-              <X size={17} aria-hidden="true" />
-            </button>
-          </div>
-        )
-      })}
+      {toasts.map((toast) => <ToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />)}
     </div>,
     document.body,
   )
