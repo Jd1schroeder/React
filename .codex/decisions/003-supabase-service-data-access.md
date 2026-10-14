@@ -17,6 +17,7 @@ Use the browser-safe Supabase client in `src/lib/supabase.js`, configured only w
 ## Consequences
 
 - Vite receives only public browser configuration; service-role keys remain server-side.
+- Local Vite development routes the browser client through a same-origin `/supabase` proxy to avoid browser/device-emulation preflight failures; production uses the direct hosted Supabase URL.
 - Services accept explicit organization/record context and return feature-shaped values; database RLS remains authoritative.
 - Unimplemented scaffold workflows show explicit empty/loading/error states rather than fabricated records.
 

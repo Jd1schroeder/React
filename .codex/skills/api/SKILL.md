@@ -11,7 +11,11 @@ Related Decisions: [003](../../decisions/003-supabase-service-data-access.md), [
 
 Supabase is configured through `src/lib/supabase.js` using `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. Authentication calls belong in `src/services/authService.js`; do not place Supabase calls directly into presentational components. Signup metadata is consumed by the Auth organization-provisioning trigger (`supabase/migrations/20260917000000_create_organizations.sql`), with built-in role seeding maintained by forward migration `20260928130000_provision_system_roles_for_new_organizations.sql`.
 
+Local Vite development intentionally uses a same-origin `/supabase` proxy. In development, `src/lib/supabase.js` points the browser client at the current Vite origin, while `vite.config.js` rewrites `/supabase/*` to `VITE_SUPABASE_URL`, forwards the Supabase origin upstream, and allows local certificate interception. This avoids browser/device-emulation CORS preflight failures; production continues to use the direct hosted Supabase URL. Restart the Vite server after changing `vite.config.js` or `.env.local`.
+
 For Vercel deployments, configure both `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` as public Config variables for every required environment, then create a fresh deployment because Vite injects `VITE_*` values at build time. Do not store these browser-exposed values as immutable Secrets if the deployment workflow needs to update them. Never expose a Supabase service-role key in a `VITE_*` variable or in the browser.
+
+If the Work Order Data API is inaccessible after schema or privilege changes, `supabase/repair_work_order_api_access.sql` is the operator repair script for the SQL Editor. Run it as an owner/admin, then verify RLS and the authenticated role's effective access; it is intentionally not a migration and must not be treated as a substitute for row-level authorization.
 
 The current workspace service returns the authenticated user together with `profile`, `preferences`, all active organizations, and the selected organization. Profile edits should update `profiles` through a service. Email changes use Supabase Auth; application phone contact data belongs in `profiles.phone` because an email-authenticated user is not automatically a verified phone-authenticated user.
 
