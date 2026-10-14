@@ -9,7 +9,7 @@
   "categories": ["business", "productivity"],
   "prefer_related_applications": false,
   "background_color": "#ffffff",
-  "theme_color": "#1887fc",
+  "theme_color": "#ffffff",
   "shortcuts": [
     {
       "name": "Work Orders",
