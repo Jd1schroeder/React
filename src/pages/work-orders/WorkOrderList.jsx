@@ -397,7 +397,7 @@ export function WorkOrderList({
     (option) => option.id === sortId,
   );
 
-  const loadGroup = (group, reset = false) => {
+  const loadGroup = (group, reset = false, { autoSelectFirst = false } = {}) => {
     const generation = queryGeneration.current;
     const offset = reset ? 0 : (groupPages[group]?.orders.length ?? 0);
     const requestKey = `${generation}:${group}:${offset}`;
@@ -427,7 +427,9 @@ export function WorkOrderList({
               : [...(current[group]?.orders ?? []), ...orders],
           },
         }));
-        onOrdersLoaded(orders);
+        onOrdersLoaded(orders, {
+          selectFirst: autoSelectFirst && !isFilteredResultsView,
+        });
         if (onHydrateAttachments) {
           void onHydrateAttachments(orders)
             .then((hydratedOrders) => {
@@ -497,8 +499,15 @@ export function WorkOrderList({
     setGroupPages({});
     setGroupErrors({});
     setGroupLoading({});
+    const firstExpandedGroupId = isFilteredResultsView
+      ? null
+      : groups.find((group) => expandedGroups[group.id])?.id;
     for (const group of groups) {
-      if (isFilteredResultsView || expandedGroups[group.id]) loadGroup(group.id, true);
+      if (isFilteredResultsView || expandedGroups[group.id]) {
+        void loadGroup(group.id, true, {
+          autoSelectFirst: group.id === firstExpandedGroupId,
+        });
+      }
     }
     // Changing filters/sort/records invalidates the page cursor and reloads open groups.
     // eslint-disable-next-line react-hooks/exhaustive-deps

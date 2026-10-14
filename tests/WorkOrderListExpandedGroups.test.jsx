@@ -98,6 +98,32 @@ describe('Work Order Inbox expanded-group storage', () => {
     expect(window.localStorage.getItem(key)).toBeNull()
   })
 
+  it('selects the first order when the first saved group loads on page entry', async () => {
+    const key = getWorkOrderInboxExpandedGroupsKey(createListProps())
+    writeWorkOrderInboxExpandedGroups(key, 'To Do', { 'assigned-to-me': true })
+    const firstOrder = {
+      id: 'work-order-1',
+      title: 'First work order',
+      requester: 'Requester',
+      work_order_number: 1,
+      status: 'open',
+      priority: 'medium',
+      work_order_attachments: [],
+    }
+    const props = createListProps({
+      onLoadGroupPage: vi.fn().mockResolvedValue([firstOrder]),
+    })
+
+    render(<WorkOrderList {...props} />)
+
+    await waitFor(() => {
+      expect(props.onOrdersLoaded).toHaveBeenCalledWith(
+        [firstOrder],
+        { selectFirst: true },
+      )
+    })
+  })
+
   it('shows filtered Work Orders in one expanded Search results group with a clear action', async () => {
     const onClearFilters = vi.fn()
     const props = createListProps({
