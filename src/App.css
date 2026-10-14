@@ -361,7 +361,7 @@
     flex-direction: column;
   }
 
-  .sidebar {
+  .app-shell > .sidebar {
     display: none;
   }
 
@@ -404,7 +404,7 @@
     flex-direction: column;
   }
 
-  .sidebar {
+  .app-shell > .sidebar {
     display: none;
   }
 

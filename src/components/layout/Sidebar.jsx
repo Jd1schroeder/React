@@ -158,11 +158,9 @@ export function Sidebar({ activePage, onNavigate }) {
     };
     refreshCount();
     window.addEventListener("workbench:unread-work-order-count-invalidated", refreshCount);
-    window.addEventListener("focus", refreshCount);
     return () => {
       active = false;
       window.removeEventListener("workbench:unread-work-order-count-invalidated", refreshCount);
-      window.removeEventListener("focus", refreshCount);
     };
   }, [canViewWorkOrders, organizationId, workspace.authorization?.grants, workspace.user?.id]);
 

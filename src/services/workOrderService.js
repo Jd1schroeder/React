@@ -5,6 +5,7 @@ import { normalizeWorkOrderFilters } from '../utils/workOrderFilters'
 
 const workOrderFields = 'id, work_order_number, organization_id, title, description, status, priority, procedure_progress, due_at, due_date, due_time, start_date, estimated_duration_minutes, work_type, requester_id, assigned_to, team_id, created_by, created_at, updated_at, updated_by'
 const attachmentBucket = 'work-order-attachments'
+const unreadWorkOrderCountRequests = new Map()
 
 function notifyUnreadWorkOrderCountInvalidated() {
   if (typeof window !== 'undefined') {
@@ -112,11 +113,28 @@ export async function listWorkOrderCalendarDay({ organizationId, date, grants })
 
 export async function getUnreadWorkOrderCount({ organizationId, grants }) {
   assertPermission(grants, 'work_orders.view')
-  const { data, error } = await supabase.rpc('get_unread_work_order_count', {
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+  if (sessionError) throw sessionError
+  if (!sessionData.session) return null
+
+  const existingRequest = unreadWorkOrderCountRequests.get(organizationId)
+  if (existingRequest) return existingRequest
+
+  const request = supabase.rpc('get_unread_work_order_count', {
     target_organization_id: organizationId,
+  }).then(({ data, error }) => {
+    if (error) throw error
+    return Number(data ?? 0)
   })
-  if (error) throw error
-  return Number(data ?? 0)
+
+  unreadWorkOrderCountRequests.set(organizationId, request)
+  try {
+    return await request
+  } finally {
+    if (unreadWorkOrderCountRequests.get(organizationId) === request) {
+      unreadWorkOrderCountRequests.delete(organizationId)
+    }
+  }
 }
 
 export async function markWorkOrderRead({ workOrderId, grants }) {

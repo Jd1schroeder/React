@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react'
 import { readFileSync } from 'node:fs'
-import { defineConfig } from 'vite'
+import { fileURLToPath } from 'node:url'
+import { defineConfig, loadEnv } from 'vite'
 
 function breakpointTokensPlugin() {
   return {
@@ -47,11 +48,33 @@ function deploymentVersionPlugin() {
   }
 }
 
-export default defineConfig({
-  plugins: [react(), deploymentVersionPlugin()],
-  css: {
-    postcss: {
-      plugins: [breakpointTokensPlugin()],
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, fileURLToPath(new URL('.', import.meta.url)), '')
+  const supabaseUrl = env.VITE_SUPABASE_URL
+
+  return {
+    plugins: [react(), deploymentVersionPlugin()],
+    server: {
+      proxy: supabaseUrl
+        ? {
+            '/supabase': {
+              target: supabaseUrl,
+              changeOrigin: true,
+              headers: {
+                origin: supabaseUrl,
+              },
+              // Local development may use a corporate/intercepting certificate.
+              secure: false,
+              ws: true,
+              rewrite: (path) => path.replace(/^\/supabase/, ''),
+            },
+          }
+        : {},
     },
-  },
+    css: {
+      postcss: {
+        plugins: [breakpointTokensPlugin()],
+      },
+    },
+  }
 })
