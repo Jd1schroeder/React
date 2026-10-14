@@ -124,6 +124,30 @@ describe('Work Order Inbox expanded-group storage', () => {
     })
   })
 
+  it('shows an empty-state message when an expanded group has no orders', async () => {
+    const key = getWorkOrderInboxExpandedGroupsKey(createListProps())
+    writeWorkOrderInboxExpandedGroups(key, 'To Do', { 'assigned-to-me': true })
+    const props = createListProps({
+      onLoadGroupPage: vi.fn().mockResolvedValue([]),
+    })
+
+    render(<WorkOrderList {...props} />)
+
+    await waitFor(() => expect(screen.getByText('No work orders in this group.')).toBeInTheDocument())
+  })
+
+  it('shows an error-state message when an expanded group fails to load', async () => {
+    const key = getWorkOrderInboxExpandedGroupsKey(createListProps())
+    writeWorkOrderInboxExpandedGroups(key, 'To Do', { 'assigned-to-me': true })
+    const props = createListProps({
+      onLoadGroupPage: vi.fn().mockRejectedValue(new Error('Unable to load Work Orders.')),
+    })
+
+    render(<WorkOrderList {...props} />)
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Unable to load Work Orders.'))
+  })
+
   it('shows filtered Work Orders in one expanded Search results group with a clear action', async () => {
     const onClearFilters = vi.fn()
     const props = createListProps({

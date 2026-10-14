@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
@@ -27,6 +27,18 @@ vi.mock("../src/components/layout/PanelLayout", () => ({
   PanelLayout: ({ children }) => <main>{children}</main>,
 }));
 
+vi.mock("../src/pages/work-orders/WorkOrderDetail", () => ({
+  WorkOrderDetail: ({ selected, isLoadingRecord, missingRecord }) => (
+    isLoadingRecord ? (
+      <section data-testid="work-order-detail" role="status">Loading Work Order...</section>
+    ) : (
+      <section data-testid="work-order-detail">
+        {missingRecord ? <><img src="/workbench-404-clean.png" alt="Workbench 404 illustration" />Work Order not found</> : selected?.title ?? "No Work Order selected"}
+      </section>
+    )
+  ),
+}));
+
 vi.mock("../src/components/layout/useUnsavedChanges", () => ({
   useUnsavedChanges: () => ({
     guardNavigation: (callback) => callback(),
@@ -36,7 +48,7 @@ vi.mock("../src/components/layout/useUnsavedChanges", () => ({
 
 vi.mock("../src/pages/work-orders/WorkOrderList", () => ({
   WorkOrderFilters: () => null,
-  WorkOrderList: ({ activeTab, filters }) => <section aria-label="Work Order list"><span data-testid="active-work-order-tab">{activeTab}</span><span data-testid="active-work-order-filters">{JSON.stringify(filters)}</span></section>,
+  WorkOrderList: ({ activeTab, filters, onOrdersLoaded }) => <section aria-label="Work Order list"><span data-testid="active-work-order-tab">{activeTab}</span><span data-testid="active-work-order-filters">{JSON.stringify(filters)}</span><button type="button" onClick={() => onOrdersLoaded([{ id: "wo-1", title: "First Work Order", work_order_attachments: [] }], { selectFirst: true })}>Load first work order</button></section>,
 }));
 
 vi.mock("../src/services/workOrderService", () => ({
@@ -85,6 +97,14 @@ function renderCompletedDashboardFilter() {
 }
 
 describe("Work Orders deep-link refresh", () => {
+  it("renders the first loaded Work Order in the detail pane when the list selects it", async () => {
+    render(<MemoryRouter initialEntries={["/workorders"]}><WorkOrders /></MemoryRouter>);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Load first work order" }));
+
+    await waitFor(() => expect(screen.getByTestId("work-order-detail")).toHaveTextContent("First Work Order"));
+  });
+
   it("keeps the detail pane loading until lookup confirms a missing record", async () => {
     let resolveLookup;
     serviceMocks.getWorkOrderById.mockReturnValue(new Promise((resolve) => { resolveLookup = resolve; }));
