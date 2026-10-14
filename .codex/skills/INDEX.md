@@ -1,5 +1,7 @@
 # Skill Index
 
+The project-local [Vercel React Best Practices Skill](vercel-react-best-practices/SKILL.md) applies to React performance, refactoring, rendering, data fetching, and bundle optimization work.
+
 The project-local [Supabase Skill](supabase/SKILL.md) applies to Supabase product, CLI, MCP, migration, Auth, RLS, Storage, and debugging work.
 
 Load only the Skills that match the current change. Start with the task area, then follow any linked Pattern or Decision; do not read the whole library by default.
