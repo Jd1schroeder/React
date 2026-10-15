@@ -11,6 +11,7 @@ export const pagePaths = {
   'Settings / Features': '/settings/features',
   'Settings / Features / Work Orders': '/settings/features/workOrders',
   'Settings / Features / Work Order': '/settings/features/workOrder',
+  'Settings / Features / Work Order Fields': '/settings/features/workOrderFields',
   'Settings / Features / Work Order Cost Types': '/settings/features/workOrderCostTypes',
   'Settings / Features / Work Order Time Types': '/settings/features/workOrderTimeTypes',
   'Settings / Features / External Work Orders': '/settings/features/externalWorkOrders',

@@ -4,7 +4,7 @@ import { WORK_ORDER_ATTACHMENT_MAX_BYTES, getSafeAttachmentExtension } from '../
 import { normalizeWorkOrderFilters } from '../utils/workOrderFilters'
 import { getWorkOrderScheduleRequirementError } from '../utils/workOrderSettings'
 
-const workOrderFields = 'id, work_order_number, organization_id, title, description, status, priority, procedure_progress, due_at, due_date, due_time, start_date, estimated_duration_minutes, work_type, requester_id, assigned_to, team_id, created_by, created_at, updated_at, updated_by'
+const workOrderFields = 'id, work_order_number, organization_id, title, description, status, priority, procedure_progress, due_at, due_date, due_time, start_date, estimated_duration_minutes, work_type, requester_id, assigned_to, team_id, created_by, created_at, updated_at, updated_by, custom_field_values'
 const attachmentBucket = 'work-order-attachments'
 const unreadWorkOrderCountRequests = new Map()
 
@@ -216,7 +216,7 @@ export async function getWorkOrderById({ organizationId, workOrderId, grants, si
   return (await loadWorkOrderRelations([data], { signAttachmentUrls }))[0]
 }
 
-export async function createWorkOrder({ organizationId, title, description, priority, dueDate, dueTime, startDate, estimatedDurationMinutes, workType = 'reactive', assignments = [], pictures = [], thumbnail = null, files = [], requiredSchedule = 'none', grants }) {
+export async function createWorkOrder({ organizationId, title, description, priority, dueDate, dueTime, startDate, estimatedDurationMinutes, workType = 'reactive', assignments = [], customFieldValues = {}, pictures = [], thumbnail = null, files = [], requiredSchedule = 'none', grants }) {
   assertPermission(grants, 'work_orders.create')
   if (assignments.length) assertPermission(grants, 'work_orders.assign')
   if (!title?.trim()) throw new Error('A Work Order title is required.')
@@ -275,6 +275,7 @@ export async function createWorkOrder({ organizationId, title, description, prio
       target_work_type: workType,
       target_assignments: assignments.map(({ userId, teamId }) => ({ user_id: userId ?? null, team_id: teamId ?? null })),
       target_attachments: attachmentRecords,
+      target_custom_field_values: customFieldValues,
     })
     if (error) throw error
     createdWorkOrder = {
@@ -303,7 +304,7 @@ export async function createWorkOrder({ organizationId, title, description, prio
   return createdWorkOrder
 }
 
-export async function updateWorkOrderDetails({ organizationId, workOrderId, title, description, priority, dueDate, dueTime, startDate, estimatedDurationMinutes, workType = 'reactive', assignments = null, pictures = [], files = [], retainedAttachmentIds = [], thumbnailAttachmentId = null, thumbnail = null, requiredSchedule = 'none', grants, record }) {
+export async function updateWorkOrderDetails({ organizationId, workOrderId, title, description, priority, dueDate, dueTime, startDate, estimatedDurationMinutes, workType = 'reactive', customFieldValues = {}, assignments = null, pictures = [], files = [], retainedAttachmentIds = [], thumbnailAttachmentId = null, thumbnail = null, requiredSchedule = 'none', grants, record }) {
   assertPermission(grants, 'work_orders.edit', record)
   if (assignments !== null) assertPermission(grants, 'work_orders.assign')
   if (!title?.trim()) throw new Error('A Work Order title is required.')
@@ -376,6 +377,15 @@ export async function updateWorkOrderDetails({ organizationId, workOrderId, titl
     })
     if (error) throw error
     updatedWorkOrder = data
+    const { data: customFieldUpdatedWorkOrder, error: customFieldError } = await supabase
+      .from('work_orders')
+      .update({ custom_field_values: customFieldValues })
+      .eq('organization_id', organizationId)
+      .eq('id', workOrderId)
+      .select(workOrderFields)
+      .single()
+    if (customFieldError) throw customFieldError
+    updatedWorkOrder = customFieldUpdatedWorkOrder
   } catch (error) {
     if (uploadedObjects.length) await supabase.storage.from(attachmentBucket).remove(uploadedObjects).catch(() => {})
     throw error

@@ -321,6 +321,11 @@
   letter-spacing: var(--letter-spacing-normal);
   line-height: var(--line-height-lg-px);
 }
+
+.new-work-order-custom-fields { display: grid; gap: var(--spacing-4); width: 100%; }
+.new-work-order-custom-fields h3 { margin: 0; }
+.new-work-order-custom-fields-list { display: grid; gap: var(--spacing-4); }
+.new-work-order-custom-fields .new-work-order-field { width: 100%; }
 .new-work-order-field > span em {
   color: var(--muted);
   font-style: normal;

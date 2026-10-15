@@ -179,4 +179,28 @@ describe('NewWorkOrderForm schedule requirements', () => {
 
     expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ dueDate: '2026-10-16', startDate: '2026-10-10' }))
   })
+
+  it('renders configured custom fields and blocks missing required values', () => {
+    const onCreate = vi.fn()
+    render(<NewWorkOrderForm
+      customFields={[
+        { id: 'permit', name: 'Permit number', type: 'text', required: true },
+        { id: 'status', name: 'Inspection status', type: 'single_select', options: ['Pass', 'Fail'], required: false },
+      ]}
+      onCreate={onCreate}
+      onCancel={vi.fn()}
+    />)
+
+    fireEvent.change(screen.getByPlaceholderText('What needs to be done? (Required)'), { target: { value: 'Inspect pump' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    expect(onCreate).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert')).toHaveTextContent('Permit number is required')
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Permit number *' }), { target: { value: 'P-100' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Inspection status' }))
+    fireEvent.click(screen.getByRole('option', { name: 'Pass' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+    expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ customFieldValues: { permit: 'P-100', status: 'Pass' } }))
+  })
 })

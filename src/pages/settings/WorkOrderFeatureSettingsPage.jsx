@@ -195,7 +195,7 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
           </SettingsCard>
 
           <SettingsCard title={`Customize ${workOrderSingularLabel} Form`}>
-            <ActionSetting label={`${workOrderSingularLabel} fields`} description="Set required or optional fields and manage custom fields." locked />
+            <ActionSetting label={`${workOrderSingularLabel} fields`} description="Set required or optional fields and manage custom fields." locked={!isOrganizationAdmin} onClick={() => onNavigate("Settings / Features / Work Order Fields")} />
           </SettingsCard>
 
           <SettingsCard title="Resource Planning">

@@ -46,7 +46,7 @@ function PageRoute({ pageName, isPublic = false }) {
     if (Number.isInteger(window.history.state?.idx) && window.history.state.idx > 0) navigate(-1)
     else navigate(getPagePath(['Settings / Edit Account', 'Settings / Linked Device', 'Settings / Notification Settings'].includes(pageName)
       ? 'Settings / Profile Preferences'
-      : ['Settings / Features / Work Orders', 'Settings / Features / Work Order'].includes(pageName)
+      : ['Settings / Features / Work Orders', 'Settings / Features / Work Order', 'Settings / Features / Work Order Fields'].includes(pageName)
       ? 'Settings / Features'
       : pageName === 'Settings / Features / External Work Orders'
         ? 'Settings / Features / Work Orders'

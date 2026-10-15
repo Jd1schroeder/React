@@ -40,6 +40,7 @@ export const pages = {
   'Settings / Features': SettingsPage,
   'Settings / Features / Work Orders': SettingsPage,
   'Settings / Features / Work Order': SettingsPage,
+  'Settings / Features / Work Order Fields': SettingsPage,
   'Settings / Features / Work Order Cost Types': SettingsPage,
   'Settings / Features / Work Order Time Types': SettingsPage,
   'Settings / Features / External Work Orders': SettingsPage,

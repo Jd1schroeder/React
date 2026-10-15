@@ -66,6 +66,26 @@ function DateField({ label, value, onChange, dateFormat, timeValue = "", onTimeC
   );
 }
 
+function CustomFieldsSection({ fields = [], values, onChange }) {
+  if (!fields.length) return null;
+  return <section className="new-work-order-custom-fields" aria-labelledby="new-work-order-custom-fields-title">
+    <h3 id="new-work-order-custom-fields-title">Custom Fields</h3>
+    <div className="new-work-order-custom-fields-list">
+      {fields.map((field) => {
+        const value = values[field.id] ?? "";
+        const label = `${field.name || "Custom field"}${field.required ? " *" : ""}`;
+        const update = (nextValue) => onChange(field.id, nextValue);
+        if (field.type === "long_text") return <FormField key={field.id} label={label}><textarea value={value} onChange={(event) => update(event.target.value)} rows="3" /></FormField>;
+        if (field.type === "number") return <FormField key={field.id} label={label}><input type="number" value={value} onChange={(event) => update(event.target.value)} /></FormField>;
+        if (field.type === "date") return <FormField key={field.id} label={label}><input type="date" value={value} onChange={(event) => update(event.target.value)} /></FormField>;
+        if (field.type === "datetime") return <FormField key={field.id} label={label}><input type="datetime-local" value={value} onChange={(event) => update(event.target.value)} /></FormField>;
+        if (field.type === "single_select") return <SearchSelect key={field.id} label={label} placeholder="Select an option" value={value} onChange={update} options={(field.options ?? []).map((option) => ({ value: option, label: option }))} />;
+        return <FormField key={field.id} label={label}><input type={field.type === "link" ? "url" : "text"} value={value} onChange={(event) => update(event.target.value)} /></FormField>;
+      })}
+    </div>
+  </section>;
+}
+
 export function NewWorkOrderForm({
   onCancel,
   onCreate,
@@ -77,6 +97,7 @@ export function NewWorkOrderForm({
   canAssign = true,
   dateFormat,
   requiredSchedule = "none",
+  customFields = [],
   mode = "create",
   initialWorkOrder = null,
   workOrderLabel = "Work Order",
@@ -122,6 +143,7 @@ export function NewWorkOrderForm({
     parts: "",
     categories: "",
     vendors: "",
+    customFieldValues: initialWorkOrder?.custom_field_values ?? {},
     hours: String(Math.floor(durationMinutes / 60)),
     minutes: String(durationMinutes % 60),
   }));
@@ -134,6 +156,7 @@ export function NewWorkOrderForm({
   const [files, setFiles] = useState([]);
   const [fileError, setFileError] = useState("");
   const [scheduleError, setScheduleError] = useState("");
+  const [customFieldError, setCustomFieldError] = useState("");
   const getFileKey = (file) => `${file.name}-${file.size}-${file.lastModified}`;
   const [initialSnapshot] = useState(() => JSON.stringify({
       form,
@@ -186,6 +209,10 @@ export function NewWorkOrderForm({
     });
     setScheduleError(nextScheduleError);
     if (nextScheduleError) return;
+    const missingField = customFields.find((field) => field.required && !String(form.customFieldValues[field.id] ?? "").trim());
+    const nextCustomFieldError = missingField ? `${missingField.name || "A custom field"} is required.` : "";
+    setCustomFieldError(nextCustomFieldError);
+    if (nextCustomFieldError) return;
     const durationMinutes = (Number(form.hours) || 0) * 60 + (Number(form.minutes) || 0);
     const values = {
       title: form.title,
@@ -200,6 +227,7 @@ export function NewWorkOrderForm({
       startDate: form.startDate || null,
       estimatedDurationMinutes: durationMinutes || null,
       workType: form.workType,
+      customFieldValues: form.customFieldValues,
       pictures,
       thumbnail,
       retainedAttachmentIds: mode === "edit"
@@ -271,6 +299,7 @@ export function NewWorkOrderForm({
               <textarea value={form.description} onChange={(event) => update("description", event.target.value)} placeholder="Add a description" rows="4" />
             </FormField>
           </FormRow>
+          <FormRow><CustomFieldsSection fields={customFields} values={form.customFieldValues} onChange={(fieldId, value) => { setCustomFieldError(""); update("customFieldValues", { ...form.customFieldValues, [fieldId]: value }); }} /></FormRow>
           <section className="new-work-order-suborders">
             <h3>Sub-Work Orders <span className="new-work-order-suborders-count">(0)</span></h3>
             <p>
@@ -309,6 +338,7 @@ export function NewWorkOrderForm({
           <FormRow><DateField key={form.dueDate ? "due-date-selected" : "due-date-empty"} label="Due Date" dateFormat={dateFormat} value={form.dueDate} onChange={(value) => { update("dueDate", value); setScheduleError(""); if (!value) update("dueTime", ""); }} timeValue={form.dueTime} onTimeChange={(value) => update("dueTime", value)} /></FormRow>
           <FormRow><DateField label="Start Date" dateFormat={dateFormat} value={form.startDate} onChange={(value) => { update("startDate", value); setScheduleError(""); }} /></FormRow>
           {scheduleError && <FormRow><p className="new-work-order-error" role="alert">{scheduleError}</p></FormRow>}
+          {customFieldError && <FormRow><p className="new-work-order-error" role="alert">{customFieldError}</p></FormRow>}
           <FormRow className="new-work-order-recurrence-row">
             <div className="new-work-order-two-column new-work-order-recurrence-fields">
               <FormField label="Recurrence">

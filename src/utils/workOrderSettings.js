@@ -1,4 +1,9 @@
 export const DEFAULT_WORK_ORDER_SETTINGS = {
+  workOrderFields: {
+    defaultFields: {},
+    customFields: [],
+    assigneeMode: "assignee",
+  },
   externalWorkOrders: false,
   externalWorkOrderLinkExpiration: "work_order_closed",
   externalWorkOrderAccess: {
@@ -70,6 +75,18 @@ export function normalizeWorkOrderSettings(settings = {}) {
     commentRequirements: {
       ...DEFAULT_WORK_ORDER_SETTINGS.commentRequirements,
       ...(settings.commentRequirements ?? {}),
+    },
+    workOrderFields: {
+      ...DEFAULT_WORK_ORDER_SETTINGS.workOrderFields,
+      ...(settings.workOrderFields ?? {}),
+      defaultFields: {
+        ...DEFAULT_WORK_ORDER_SETTINGS.workOrderFields.defaultFields,
+        ...(settings.workOrderFields?.defaultFields ?? {}),
+      },
+      customFields: Array.isArray(settings.workOrderFields?.customFields)
+        ? settings.workOrderFields.customFields
+        : DEFAULT_WORK_ORDER_SETTINGS.workOrderFields.customFields,
+      assigneeMode: settings.workOrderFields?.assigneeMode === "team" ? "team" : "assignee",
     },
   };
   normalized.requiredSchedule = normalizeWorkOrderScheduleRequirement(normalized.requiredSchedule);

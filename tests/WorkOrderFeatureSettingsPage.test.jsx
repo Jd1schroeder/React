@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { WorkOrderFeatureSettingsPage } from '../src/pages/settings/WorkOrderFeatureSettingsPage'
+import { WorkOrderFieldsPage } from '../src/pages/settings/WorkOrderFieldsPage'
 
 const mocks = vi.hoisted(() => ({
   updateOrganization: vi.fn(),
@@ -179,5 +180,72 @@ describe('Work Order feature settings', () => {
       organizationId: 'org-1',
       updates: { work_order_settings: expect.objectContaining({ requiredSchedule: 'both' }) },
     }))
+  })
+
+  it('opens Work Order fields from the form customization card', () => {
+    const onNavigate = vi.fn()
+    render(<WorkOrderFeatureSettingsPage onNavigate={onNavigate} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Work Order fields' }))
+
+    expect(onNavigate).toHaveBeenCalledWith('Settings / Features / Work Order Fields')
+  })
+
+  it('renders default and custom field tabs and persists field changes', async () => {
+    render(<WorkOrderFieldsPage onNavigate={vi.fn()} />)
+
+    expect(screen.getByRole('tab', { name: 'Default Fields' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByText('Asset')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Asset field setting' }))
+    fireEvent.click(screen.getByRole('option', { name: 'Optional' }))
+
+    await waitFor(() => expect(mocks.updateOrganization).toHaveBeenCalledWith({
+      organizationId: 'org-1',
+      updates: { work_order_settings: expect.objectContaining({ workOrderFields: expect.objectContaining({ defaultFields: expect.objectContaining({ asset: 'optional' }) }) }) },
+    }))
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Custom Fields' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Add Another Custom Field' }))
+
+    expect(await screen.findByRole('textbox', { name: 'Custom field 1 name' })).toBeInTheDocument()
+    expect(mocks.updateOrganization).toHaveBeenCalledWith(expect.objectContaining({
+      updates: { work_order_settings: expect.objectContaining({ workOrderFields: expect.objectContaining({ customFields: expect.arrayContaining([expect.objectContaining({ type: 'text' })]) }) }) },
+    }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Custom field 1 type' }))
+    expect(screen.getByRole('option', { name: 'Single Select' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('option', { name: 'Single Select' }))
+    const optionInput = await screen.findByRole('textbox', { name: 'Add option to custom field 1' })
+    fireEvent.change(optionInput, { target: { value: 'Safety' } })
+    fireEvent.keyDown(optionInput, { key: 'Enter' })
+    await waitFor(() => expect(mocks.updateOrganization).toHaveBeenCalledWith(expect.objectContaining({
+      updates: { work_order_settings: expect.objectContaining({ workOrderFields: expect.objectContaining({ customFields: expect.arrayContaining([expect.objectContaining({ type: 'single_select', options: ['Safety'] })]) }) }) },
+    })))
+
+    expect(screen.getByRole('button', { name: 'Delete custom field 1' })).toBeEnabled()
+  })
+
+  it('reorders custom fields from the grip handle and persists the new order', async () => {
+    mocks.workspace.organization.work_order_settings = {
+      workOrderFields: {
+        customFields: [
+          { id: 'one', name: 'First field', type: 'text', options: [], required: false, copyOnRepeat: true, includeOnRequest: false, includeOnRequestPortal: false },
+          { id: 'two', name: 'Second field', type: 'text', options: [], required: false, copyOnRepeat: true, includeOnRequest: false, includeOnRequestPortal: false },
+        ],
+      },
+    }
+    render(<WorkOrderFieldsPage onNavigate={vi.fn()} />)
+    fireEvent.click(screen.getByRole('tab', { name: 'Custom Fields' }))
+
+    const firstHandle = screen.getByRole('button', { name: 'Reorder custom field 1' })
+    const secondCard = screen.getByRole('textbox', { name: 'Custom field 2 name' }).closest('article')
+    fireEvent.dragStart(firstHandle)
+    fireEvent.dragOver(secondCard, { clientY: 100 })
+    fireEvent.drop(secondCard)
+
+    await waitFor(() => expect(mocks.updateOrganization).toHaveBeenCalledWith(expect.objectContaining({
+      updates: { work_order_settings: expect.objectContaining({ workOrderFields: expect.objectContaining({ customFields: [expect.objectContaining({ id: 'two' }), expect.objectContaining({ id: 'one' })] }) }) },
+    })))
   })
 })
