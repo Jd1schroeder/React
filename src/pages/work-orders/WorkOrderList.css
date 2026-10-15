@@ -740,6 +740,11 @@
 .work-order-status-static.is-responsive-static { display: none; }
 
 @media (--wb-viewport-tablet-and-down) {
+  .work-order-item.selected {
+    border-left-color: transparent;
+    background: var(--surface);
+  }
+
   .work-order-sort-row {
     display: none;
   }
