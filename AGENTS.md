@@ -9,6 +9,7 @@ This file defines how an AI coding agent works in this repository. It is an oper
 - Make changes only within the user's requested scope. Do not infer authority for unrelated product changes or external side effects.
 - Preserve existing worktree changes unless their ownership and relevance are clear. Never discard user data or unrelated edits to make a task easier.
 - When the user supplies exact structure, CSS, or interaction requirements, follow them precisely unless they conflict with a higher-priority safety or accessibility requirement; explain any necessary deviation.
+- Do not change Chrome DevTools viewport emulation, device emulation, zoom, or other browser display settings during inspection; inspect the existing runtime viewport as-is.
 
 ## 2. Instruction and truth order
 
