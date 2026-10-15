@@ -262,6 +262,68 @@ describe('WorkOrderActivity', () => {
     expect(screen.getByText('Changed future field from “Before” to “After”.')).toBeInTheDocument()
   })
 
+  it('renders assignment mentions in blue and hides the duplicate mention-only comment', async () => {
+    const mentionTargets = [{
+      type: 'user',
+      id: 'member-1',
+      label: 'Jordan Lee',
+      mention: 'Jordan',
+      aliases: ['Jordan'],
+    }]
+    const openQuote = String.fromCharCode(0x201c)
+    const closeQuote = String.fromCharCode(0x201d)
+    renderActivity({
+      mentionTargets,
+      onLoadActivity: vi.fn().mockResolvedValue({
+        items: [
+          {
+            id: 'assignment-mention-activity',
+            kind: 'activity',
+            actor_id: 'member-1',
+            event_type: 'work_order_updated',
+            details: { changes: [{ field: 'assignment', from: { user_id: null, team_id: null }, to: { user_id: 'member-1', team_id: null } }] },
+            created_at: '2026-10-14T20:16:55.000Z',
+          },
+          {
+            id: 'assignment-mention-comment',
+            kind: 'comment',
+            author_id: 'member-1',
+            body: '@Jordan',
+            created_at: '2026-10-14T20:16:52.000Z',
+            attachments: [],
+          },
+        ],
+        hasMore: false,
+        nextCursor: null,
+      }),
+    })
+
+    const description = await screen.findByText((_, element) => element.textContent === `Changed assignment from ${openQuote}No assignment${closeQuote} to ${openQuote}@Jordan${closeQuote}.`, { selector: 'p' })
+    expect(description).toBeInTheDocument()
+    expect(within(description).getByText('@Jordan')).toHaveClass('work-order-mention')
+    expect(within(screen.getByRole('list', { name: 'Work Order comments and activity' })).getAllByRole('listitem')).toHaveLength(1)
+  })
+
+  it('renders resolvable mentions in authored comments in blue', async () => {
+    renderActivity({
+      mentionTargets: [{ type: 'user', id: 'member-1', label: 'Jordan Lee', mention: 'Jordan', aliases: ['Jordan'] }],
+      onLoadActivity: vi.fn().mockResolvedValue({
+        items: [{
+          id: 'comment-mention',
+          kind: 'comment',
+          author_id: 'member-1',
+          body: 'Please review this with @Jordan',
+          created_at: '2026-10-14T20:16:52.000Z',
+          attachments: [],
+        }],
+        hasMore: false,
+        nextCursor: null,
+      }),
+    })
+
+    expect(await screen.findByText('@Jordan')).toHaveClass('work-order-mention')
+  })
+
   it('shows the composer without exposing the activity feed when the user can post but not view', () => {
     renderActivity({ canViewComments: false, onLoadActivity: undefined })
 

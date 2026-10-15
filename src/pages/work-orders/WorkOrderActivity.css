@@ -451,6 +451,10 @@
   overflow-wrap: break-word;
   white-space: pre-wrap;
 }
+.work-order-mention {
+  color: var(--blue);
+  font-weight: var(--font-semibold, 600);
+}
 .work-order-comment-link-row {
   display: flex;
   align-items: center;

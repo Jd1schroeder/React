@@ -64,6 +64,77 @@ function assignmentName(value, identitiesById, assigneeOptionsByValue) {
   return 'No assignment'
 }
 
+function normalizeMentionToken(value) {
+  return String(value ?? '').toLocaleLowerCase().replace(/[^a-z0-9]/gu, '')
+}
+
+function findMentionTarget(value, mentionTargets = []) {
+  const targetKey = value?.user_id
+    ? `user:${value.user_id}`
+    : value?.team_id
+      ? `team:${value.team_id}`
+      : null
+  if (!targetKey) return null
+  return mentionTargets.find((target) => `${target.type}:${target.id}` === targetKey) ?? null
+}
+
+function MentionText({ text, mentionTargets = [] }) {
+  const mentionPattern = /(^|[\s(])(@[a-z0-9][a-z0-9._-]*)/giu
+  const parts = []
+  let cursor = 0
+  for (const match of String(text ?? '').matchAll(mentionPattern)) {
+    const prefix = match[1] ?? ''
+    const token = match[2]
+    const tokenStart = match.index + prefix.length
+    if (tokenStart > cursor) parts.push(text.slice(cursor, tokenStart))
+    const target = mentionTargets.find((candidate) => (candidate.aliases ?? []).some((alias) => normalizeMentionToken(alias) === normalizeMentionToken(token.slice(1))))
+    parts.push(target
+      ? <span key={`mention-${tokenStart}`} className="work-order-mention">{token}</span>
+      : token)
+    cursor = tokenStart + token.length
+  }
+  if (cursor < String(text ?? '').length) parts.push(String(text ?? '').slice(cursor))
+  return parts
+}
+
+function mentionOnlyTargetKeys(body, mentionTargets = []) {
+  const normalizedBody = String(body ?? '').trim()
+  if (!/^@[a-z0-9][a-z0-9._-]*(?:\s+@[a-z0-9][a-z0-9._-]*)*$/iu.test(normalizedBody)) return []
+  const targets = [...normalizedBody.matchAll(/@[a-z0-9][a-z0-9._-]*/giu)]
+    .map((match) => mentionTargets.find((target) => (target.aliases ?? []).some((alias) => normalizeMentionToken(alias) === normalizeMentionToken(match[0].slice(1)))))
+  return targets.some((target) => !target) ? [] : targets.map((target) => `${target.type}:${target.id}`)
+}
+
+function isAssignmentMentionComment(item, items, mentionTargets) {
+  if (item.kind !== 'comment' || item.deleted_at || item.attachments?.length) return false
+  const targetKeys = mentionOnlyTargetKeys(item.body, mentionTargets)
+  if (!targetKeys.length) return false
+  const targetKeySet = new Set(targetKeys)
+  const commentTime = new Date(item.created_at).getTime()
+  const matchingActivities = items.filter((candidate) => {
+    if (candidate.kind !== 'activity' || candidate.actor_id !== item.author_id || !Number.isFinite(commentTime)) return false
+    const activityTime = new Date(candidate.created_at).getTime()
+    if (!Number.isFinite(activityTime) || Math.abs(activityTime - commentTime) > 10000) return false
+    return (candidate.details?.changes ?? []).some((change) => {
+      if (change.field !== 'assignment') return false
+      const targetKey = change.to?.user_id
+        ? `user:${change.to.user_id}`
+        : change.to?.team_id
+          ? `team:${change.to.team_id}`
+          : null
+      return targetKey && targetKeySet.has(targetKey)
+    })
+  })
+  return targetKeys.every((targetKey) => matchingActivities.some((candidate) => (candidate.details?.changes ?? []).some((change) => {
+    const changeTargetKey = change.to?.user_id
+      ? `user:${change.to.user_id}`
+      : change.to?.team_id
+        ? `team:${change.to.team_id}`
+        : null
+    return change.field === 'assignment' && changeTargetKey === targetKey
+  })))
+}
+
 function attachmentChangeDescription(change) {
   const before = Array.isArray(change.from) ? change.from : []
   const after = Array.isArray(change.to) ? change.to : []
@@ -83,7 +154,7 @@ function attachmentChangeDescription(change) {
   return messages.join(' ') || 'Updated Work Order attachments.'
 }
 
-function changeDescription(change, dateFormat, identitiesById, assigneeOptionsByValue) {
+function changeDescription(change, dateFormat, identitiesById, assigneeOptionsByValue, mentionTargets) {
   const labels = {
     title: 'title',
     description: 'description',
@@ -129,7 +200,8 @@ function changeDescription(change, dateFormat, identitiesById, assigneeOptionsBy
     return `Changed requester from “${before}” to “${after}”.`
   }
   if (change.field === 'assignment') {
-    return `Changed assignment from “${assignmentName(change.from, identitiesById, assigneeOptionsByValue)}” to “${assignmentName(change.to, identitiesById, assigneeOptionsByValue)}”.`
+    const target = findMentionTarget(change.to, mentionTargets)
+    return <>{`Changed assignment from “${assignmentName(change.from, identitiesById, assigneeOptionsByValue)}” to “`}{target ? <span className="work-order-mention">@{target.mention}</span> : assignmentName(change.to, identitiesById, assigneeOptionsByValue)}”.</>
   }
   if (change.field === 'attachments') return attachmentChangeDescription(change)
   return `Changed ${label} from “${formatAuditValue(change.from)}” to “${formatAuditValue(change.to)}”.`
@@ -166,7 +238,7 @@ function DescriptionChange({ change }) {
   )
 }
 
-function describeActivity(item, dateFormat, identitiesById, assigneeOptionsByValue) {
+function describeActivity(item, dateFormat, identitiesById, assigneeOptionsByValue, mentionTargets) {
   if (item.event_type === 'work_order_created') return 'Created the Work Order.'
   if (item.event_type === 'status_changed') {
     const status = item.details?.to ?? 'unknown'
@@ -190,15 +262,15 @@ function describeActivity(item, dateFormat, identitiesById, assigneeOptionsByVal
   if (item.event_type === 'work_order_cost_updated') return `Updated cost to $${Number(item.details?.to_amount ?? 0).toFixed(2)}.`
   if (item.event_type === 'work_order_cost_deleted') return `Removed a $${Number(item.details?.amount ?? 0).toFixed(2)} cost.`
   if (item.event_type === 'work_order_updated') {
-    return (item.details?.changes ?? []).map((change) => changeDescription(change, dateFormat, identitiesById, assigneeOptionsByValue)).join(' ')
+    return (item.details?.changes ?? []).map((change) => changeDescription(change, dateFormat, identitiesById, assigneeOptionsByValue, mentionTargets)).join(' ')
   }
   return 'Updated work order.'
 }
 
-function ActivityDescription({ item, dateFormat, identitiesById, assigneeOptionsByValue }) {
+function ActivityDescription({ item, dateFormat, identitiesById, assigneeOptionsByValue, mentionTargets }) {
   const changes = item.event_type === 'work_order_updated' ? item.details?.changes : null
   if (!Array.isArray(changes) || changes.length === 0) {
-    return <p className="work-order-activity-description">{describeActivity(item, dateFormat, identitiesById, assigneeOptionsByValue)}</p>
+    return <p className="work-order-activity-description">{describeActivity(item, dateFormat, identitiesById, assigneeOptionsByValue, mentionTargets)}</p>
   }
 
   return (
@@ -206,7 +278,7 @@ function ActivityDescription({ item, dateFormat, identitiesById, assigneeOptions
       {changes.map((change, index) => change.field === 'description'
         && (Object.hasOwn(change, 'from') || Object.hasOwn(change, 'to'))
         ? <DescriptionChange key={`${change.field}-${index}`} change={change} />
-        : <p key={`${change.field}-${index}`} className="work-order-activity-description">{changeDescription(change, dateFormat, identitiesById, assigneeOptionsByValue)}</p>)}
+        : <p key={`${change.field}-${index}`} className="work-order-activity-description">{changeDescription(change, dateFormat, identitiesById, assigneeOptionsByValue, mentionTargets)}</p>)}
     </div>
   )
 }
@@ -231,12 +303,12 @@ function WorkOrderLinkRow({ workOrderId, preview }) {
   )
 }
 
-function CommentBody({ body, linkPreviews }) {
+function CommentBody({ body, linkPreviews, mentionTargets }) {
   return (
     <div className="work-order-comment-body">
       {extractWorkbenchWorkOrderLinks(body).map((segment, index) => segment.type === 'work-order-link'
         ? <WorkOrderLinkRow key={`${segment.workOrderId}-${index}`} workOrderId={segment.workOrderId} preview={linkPreviews[segment.workOrderId]} />
-        : <span key={`text-${index}`}>{segment.text}</span>)}
+        : <span key={`text-${index}`}><MentionText text={segment.text} mentionTargets={mentionTargets} /></span>)}
     </div>
   )
 }
@@ -268,6 +340,7 @@ function ActivityItem({
   item,
   identitiesById,
   assigneeOptionsByValue,
+  mentionTargets,
   dateFormat,
   timezone,
   linkPreviews,
@@ -400,7 +473,7 @@ function ActivityItem({
                         </div>
                       </form>
                     : <>
-                        {item.body && <CommentBody body={item.body} linkPreviews={linkPreviews} />}
+                        {item.body && <CommentBody body={item.body} linkPreviews={linkPreviews} mentionTargets={mentionTargets} />}
                         <CommentAttachments attachments={item.attachments} />
                       </>}
                 {isConfirmingDelete && !item.deleted_at && (
@@ -415,7 +488,7 @@ function ActivityItem({
               </>
             ) : (
               <div className="work-order-activity-content-inner">
-                <ActivityDescription item={item} dateFormat={dateFormat} identitiesById={identitiesById} assigneeOptionsByValue={assigneeOptionsByValue} />
+                <ActivityDescription item={item} dateFormat={dateFormat} identitiesById={identitiesById} assigneeOptionsByValue={assigneeOptionsByValue} mentionTargets={mentionTargets} />
               </div>
             )}
           </div>
@@ -534,6 +607,7 @@ export function WorkOrderActivity({
 
   const identitiesById = useMemo(() => new Map(memberDirectory.map((member) => [member.id, member])), [memberDirectory])
   const assigneeOptionsByValue = useMemo(() => new Map(assigneeOptions.map((option) => [option.value, option])), [assigneeOptions])
+  const visibleItems = useMemo(() => items.filter((item) => !isAssignmentMentionComment(item, items, mentionTargets)), [items, mentionTargets])
   const mentionSuggestions = useMemo(() => assignMentionsEnabled
     ? getWorkOrderMentionSuggestions(commentBody, mentionCursor ?? commentBody.length, mentionTargets)
     : { activeMention: null, suggestions: [] }, [assignMentionsEnabled, commentBody, mentionCursor, mentionTargets])
@@ -712,15 +786,16 @@ export function WorkOrderActivity({
       )}
       {loadError && <p className="work-order-activity-error" role="alert">{loadError}</p>}
       {isLoading && <p className="work-order-activity-loading" role="status">Loading comments and activity…</p>}
-      {!isLoading && canViewComments && items.length === 0 && !loadError && <p className="work-order-activity-empty">No comments or activity yet.</p>}
-      {canViewComments && items.length > 0 && (
+      {!isLoading && canViewComments && visibleItems.length === 0 && !loadError && <p className="work-order-activity-empty">No comments or activity yet.</p>}
+      {canViewComments && visibleItems.length > 0 && (
         <ul className="work-order-activity-list" aria-label="Work Order comments and activity">
-          {items.map((item) => (
+          {visibleItems.map((item) => (
             <ActivityItem
               key={`${item.kind}:${item.id}`}
               item={item}
               identitiesById={identitiesById}
               assigneeOptionsByValue={assigneeOptionsByValue}
+              mentionTargets={mentionTargets}
               dateFormat={dateFormat}
               timezone={timezone}
               linkPreviews={linkPreviews}
