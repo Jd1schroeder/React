@@ -127,6 +127,30 @@ describe('mobile Overview dashboard', () => {
     expect(activityRow).toHaveTextContent('“Replaced the filter.”')
   })
 
+  it('uses the named external comment author in Recent Activity', async () => {
+    dashboardMocks.getDashboardOverview.mockResolvedValueOnce({
+      canViewWorkOrders: true,
+      metrics: { highPriorityCount: 0, overdueCount: 0, dueTodayCount: 0, completedCount: 0 },
+      groups: [],
+      recentActivity: [{
+        id: 'comment-external-1',
+        kind: 'comment',
+        actor_id: null,
+        actorLabel: 'Johnny',
+        event_type: 'comment_created',
+        body: 'This is just a test comment.',
+        created_at: '2026-10-08T17:07:00.000Z',
+        workOrder: { id: 'work-order-1', work_order_number: 2, title: 'Image test' },
+      }],
+      activityAvailable: true,
+    })
+    renderDashboard()
+
+    const activityRow = (await screen.findByRole('link', { name: '#2 Image test' })).closest('.dashboard-activity-row')
+    expect(activityRow.querySelector('strong')).toHaveTextContent('Johnny')
+    expect(activityRow.querySelector('.dashboard-activity-avatar')).toHaveTextContent('J')
+  })
+
   it('renders logged Work Order time with its duration in Recent Activity', async () => {
     dashboardMocks.getDashboardOverview.mockResolvedValueOnce({
       canViewWorkOrders: true,

@@ -160,7 +160,8 @@ describe('getDashboardRecentActivityPage', () => {
     const comment = {
       id: 'comment-1',
       work_order_id: workOrder.id,
-      author_id: 'user-2',
+      author_id: null,
+      external_author_name: '  Johnny ',
       body: 'Replaced the filter.',
       created_at: '2026-10-08T17:01:00.000Z',
     }
@@ -180,7 +181,8 @@ describe('getDashboardRecentActivityPage', () => {
     expect(page.items[0]).toMatchObject({
       id: 'comment-1',
       kind: 'comment',
-      actor_id: 'user-2',
+      actor_id: null,
+      actorLabel: 'Johnny',
       event_type: 'comment_created',
       body: 'Replaced the filter.',
       workOrder,

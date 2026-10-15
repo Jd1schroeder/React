@@ -16,6 +16,12 @@ function compareRecentActivityItems(first, second) {
   return second.id.localeCompare(first.id)
 }
 
+function recentActivityActorLabel(event, userId) {
+  if (event.actor_id && event.actor_id === userId) return 'You'
+  if (event.kind === 'comment' && event.external_author_name?.trim()) return event.external_author_name.trim()
+  return 'A teammate'
+}
+
 async function countWorkOrders(organizationId, configureQuery) {
   const query = supabase.from('work_orders')
     .select('id', { count: 'exact', head: true })
@@ -77,7 +83,7 @@ export async function getDashboardRecentActivityPage({ organizationId, userId, g
     return [{
       ...event,
       workOrder,
-      actorLabel: event.actor_id && event.actor_id === userId ? 'You' : 'A teammate',
+      actorLabel: recentActivityActorLabel(event, userId),
     }]
   })
   const lastEvent = pageEvents.at(-1)

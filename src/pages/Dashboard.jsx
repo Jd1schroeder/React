@@ -92,6 +92,10 @@ function getCommentPreview(event) {
   return ` “${preview.length > 140 ? `${preview.slice(0, 137)}…` : preview}”`
 }
 
+function activityActorInitial(actorName) {
+  return actorName?.trim()?.charAt(0).toUpperCase() || 'A'
+}
+
 const dashboardMetricDefinitions = {
   'high-priority': {
     key: 'high-priority',
@@ -501,7 +505,7 @@ function ActivityRow({ event, timeZone, currentUserId, currentUserProfile, curre
       <span className={`dashboard-activity-avatar${isCurrentUser ? ' is-you' : ''}`} aria-hidden="true">
         {isCurrentUser
           ? <Avatar className="dashboard-activity-avatar-image" src={currentUserProfile?.avatar_url} firstName={currentUserProfile?.first_name || currentUserFirstName} lastName={currentUserProfile?.last_name || currentUserLastName} name={currentUserName} alt="" />
-          : 'T'}
+          : activityActorInitial(actorName)}
       </span>
       <p>
         <strong>{actorName}</strong> {getActivityPhrase(event)}{' '}
