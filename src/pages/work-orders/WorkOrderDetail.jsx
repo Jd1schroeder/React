@@ -806,7 +806,7 @@ export function WorkOrderDetail({
         )}
         <div className="detail-overview-card">
           <div className="detail-work-order-facts">
-            <div className={`detail-facts-grid${hasPriority ? "" : " detail-facts-grid--without-priority"}`}>
+            <div className={`detail-facts-grid${hasPriority ? "" : " detail-facts-grid--without-priority"}${selected.request_id ? "" : " detail-facts-grid--without-request-id"}`}>
             <div className="detail-fact detail-fact--due-date">
               <div className="detail-section-header"><h2>Due Date</h2></div>
               <div className={`detail-fact-value${isOverdue ? " detail-fact-value--overdue" : ""}`}>
@@ -826,10 +826,12 @@ export function WorkOrderDetail({
               <div className="detail-section-header"><h2>Work Order ID</h2></div>
               <div className="detail-fact-value">{selected.work_order_number ? `#${selected.work_order_number}` : "Not available"}</div>
             </div>
-            <div className="detail-fact detail-fact--request-id">
-              <div className="detail-section-header"><h2>Request ID</h2></div>
-              <div className="detail-fact-value">{selected.request_id ? `#${selected.request_id}` : "Not available"}</div>
-            </div>
+            {selected.request_id && (
+              <div className="detail-fact detail-fact--request-id">
+                <div className="detail-section-header"><h2>Request ID</h2></div>
+                <div className="detail-fact-value">#{selected.request_id}</div>
+              </div>
+            )}
             </div>
           </div>
           <div className="detail-assignee-section">
