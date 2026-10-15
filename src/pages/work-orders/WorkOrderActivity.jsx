@@ -167,12 +167,15 @@ function DescriptionChange({ change }) {
 }
 
 function describeActivity(item, dateFormat, identitiesById, assigneeOptionsByValue) {
-  if (item.event_type === 'work_order_created') return 'Created work order.'
+  if (item.event_type === 'work_order_created') return 'Created the Work Order.'
   if (item.event_type === 'status_changed') {
-    return `Changed status from ${item.details?.from ?? 'unknown'} to ${item.details?.to ?? 'unknown'}.`
+    const status = item.details?.to ?? 'unknown'
+    return status === 'Completed' ? 'Completed the Work Order.' : `Changed status to "${status}".`
   }
   if (item.event_type === 'external_completion_requested') {
-    return `External contact ${item.details?.externalName || 'marked the Work Order'} requested completion.`
+    return item.details?.externalName
+      ? `Requested completion from ${item.details.externalName}.`
+      : 'Requested completion from an external contact.'
   }
   if (item.event_type === 'work_order_time_added') {
     const duration = Number(item.details?.duration_seconds ?? 0)
@@ -180,14 +183,12 @@ function describeActivity(item, dateFormat, identitiesById, assigneeOptionsByVal
   }
   if (item.event_type === 'work_order_time_updated') {
     const duration = Number(item.details?.to_seconds ?? 0)
-    return duration > 0
-      ? `Logged ${formatCompactDuration(duration)} of work.`
-      : `Updated time from ${item.details?.from_seconds ?? 0}s to ${duration}s.`
+    return `Updated logged time to ${formatCompactDuration(duration)}.`
   }
-  if (item.event_type === 'work_order_time_deleted') return 'Deleted a time entry.'
-  if (item.event_type === 'work_order_cost_added') return `Added a cost of $${Number(item.details?.amount ?? 0).toFixed(2)}.`
-  if (item.event_type === 'work_order_cost_updated') return `Updated cost from $${Number(item.details?.from_amount ?? 0).toFixed(2)} to $${Number(item.details?.to_amount ?? 0).toFixed(2)}.`
-  if (item.event_type === 'work_order_cost_deleted') return `Deleted a cost of $${Number(item.details?.amount ?? 0).toFixed(2)}.`
+  if (item.event_type === 'work_order_time_deleted') return `Removed ${formatCompactDuration(item.details?.duration_seconds)} of logged work.`
+  if (item.event_type === 'work_order_cost_added') return `Added a $${Number(item.details?.amount ?? 0).toFixed(2)} cost.`
+  if (item.event_type === 'work_order_cost_updated') return `Updated cost to $${Number(item.details?.to_amount ?? 0).toFixed(2)}.`
+  if (item.event_type === 'work_order_cost_deleted') return `Removed a $${Number(item.details?.amount ?? 0).toFixed(2)} cost.`
   if (item.event_type === 'work_order_updated') {
     return (item.details?.changes ?? []).map((change) => changeDescription(change, dateFormat, identitiesById, assigneeOptionsByValue)).join(' ')
   }

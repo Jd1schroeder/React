@@ -105,7 +105,7 @@ describe('WorkOrderActivity', () => {
     })
 
     expect(await screen.findByText('Please review')).toBeInTheDocument()
-    expect(screen.getByText('Changed status from Open to In Progress.')).toBeInTheDocument()
+    expect(screen.getByText('Changed status to "In Progress".')).toBeInTheDocument()
     expect(screen.getByText('Changed the description from “Before the repair” to “After the repair”.')).toBeInTheDocument()
     expect(screen.getAllByText('Jordan Lee')).toHaveLength(3)
     const activityList = screen.getByRole('list', { name: 'Work Order comments and activity' })
@@ -137,7 +137,7 @@ describe('WorkOrderActivity', () => {
 
     render(<WorkOrderActivity order={{ id: 'wo-1' }} canViewComments onLoadActivity={onLoadActivity} />)
 
-    expect(await screen.findByText('External contact Vendor Contact requested completion.')).toBeInTheDocument()
+    expect(await screen.findByText('Requested completion from Vendor Contact.')).toBeInTheDocument()
   })
 
   it('describes logged timer time as work performed', async () => {
@@ -156,7 +156,7 @@ describe('WorkOrderActivity', () => {
       }),
     })
 
-    expect(await screen.findByText('Logged 9s of work.')).toBeInTheDocument()
+    expect(await screen.findByText('Updated logged time to 9s.')).toBeInTheDocument()
   })
 
   it('shows the captured name for an external comment instead of System', async () => {

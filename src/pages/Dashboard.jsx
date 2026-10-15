@@ -73,12 +73,15 @@ function getActivityPhrase(event) {
   }
   if (event.event_type === 'work_order_time_updated') {
     const duration = Number(event.details?.to_seconds ?? 0)
-    return duration > 0 ? `logged ${formatCompactDuration(duration)} of work on` : 'updated time on'
+    return `updated logged time to ${formatCompactDuration(duration)} on`
   }
-  if (event.event_type === 'work_order_time_deleted') return `deleted ${formatCompactDuration(event.details?.duration_seconds)} of work from`
+  if (event.event_type === 'work_order_time_deleted') return `removed ${formatCompactDuration(event.details?.duration_seconds)} of logged work from`
+  if (event.event_type === 'work_order_cost_added') return `added a $${Number(event.details?.amount ?? 0).toFixed(2)} cost to`
+  if (event.event_type === 'work_order_cost_updated') return `updated cost to $${Number(event.details?.to_amount ?? 0).toFixed(2)} on`
+  if (event.event_type === 'work_order_cost_deleted') return `removed a $${Number(event.details?.amount ?? 0).toFixed(2)} cost from`
   if (event.event_type === 'work_order_created') return 'created'
   if (event.event_type === 'status_changed') {
-    return event.details?.to === 'Completed' ? 'completed' : `changed the status to ${event.details?.to ?? 'updated'}`
+    return event.details?.to === 'Completed' ? 'completed' : `changed status to "${event.details?.to ?? 'updated'}"`
   }
   return 'updated'
 }
