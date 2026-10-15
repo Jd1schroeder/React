@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import {
   AlignLeft, ArrowLeft, Boxes, CalendarClock, CalendarDays, CircleDot, Flag,
   GripVertical, Hash, Link2, List, MapPin, Paperclip, Plus, Repeat2, Tags, Trash2, Type, X, UserRound, Wrench,
@@ -56,6 +57,7 @@ export function WorkOrderFieldsPage({ onNavigate }) {
   const [settings, setSettings] = useState(savedSettings);
   const [organizationId, setOrganizationId] = useState(organization.id);
   const [activeTab, setActiveTab] = useState("default");
+  const [pendingDeleteIndex, setPendingDeleteIndex] = useState(null);
   const [error, setError] = useState("");
   const { showToast } = useToast();
   const displayedSettings = organizationId === organization.id ? settings : savedSettings;
@@ -107,7 +109,13 @@ export function WorkOrderFieldsPage({ onNavigate }) {
     }
     return saveFields({ ...displayedSettings.workOrderFields, customFields: customFields.map((currentField, fieldIndex) => fieldIndex === index ? { ...currentField, ...updates } : currentField) }, message);
   };
-  const removeCustomField = (index) => saveFields({ ...displayedSettings.workOrderFields, customFields: customFields.filter((_, fieldIndex) => fieldIndex !== index) }, "Custom field deleted.");
+  const requestRemoveCustomField = (index) => setPendingDeleteIndex(index);
+  const confirmRemoveCustomField = async () => {
+    if (pendingDeleteIndex === null) return;
+    const index = pendingDeleteIndex;
+    setPendingDeleteIndex(null);
+    await saveFields({ ...displayedSettings.workOrderFields, customFields: customFields.filter((_, fieldIndex) => fieldIndex !== index) }, "Custom field deleted.");
+  };
   const reorderCustomFields = (fromIndex, insertionIndex) => {
     if (fromIndex < 0 || insertionIndex < 0 || insertionIndex === fromIndex || insertionIndex === fromIndex + 1) return;
     const nextFields = [...customFields];
@@ -130,9 +138,10 @@ export function WorkOrderFieldsPage({ onNavigate }) {
             <button type="button" role="tab" aria-selected={activeTab === "default"} className={activeTab === "default" ? "is-active" : ""} onClick={() => setActiveTab("default")}>Default Fields</button>
             <button type="button" role="tab" aria-selected={activeTab === "custom"} className={activeTab === "custom" ? "is-active" : ""} onClick={() => setActiveTab("custom")}>Custom Fields</button>
           </div>
-          {activeTab === "default" ? <DefaultFields fields={defaultFields} assigneeMode={displayedSettings.workOrderFields.assigneeMode} onChange={updateDefaultField} onAssigneeModeChange={(value) => saveFields({ ...displayedSettings.workOrderFields, assigneeMode: value }, "Assignment requirement updated.")} disabled={!isAdmin} /> : <CustomFields fields={customFields} onChange={updateCustomField} onRemove={removeCustomField} onReorder={reorderCustomFields} onAdd={addCustomField} disabled={!isAdmin} />}
+          {activeTab === "default" ? <DefaultFields fields={defaultFields} assigneeMode={displayedSettings.workOrderFields.assigneeMode} onChange={updateDefaultField} onAssigneeModeChange={(value) => saveFields({ ...displayedSettings.workOrderFields, assigneeMode: value }, "Assignment requirement updated.")} disabled={!isAdmin} /> : <CustomFields fields={customFields} onChange={updateCustomField} onRemove={requestRemoveCustomField} onReorder={reorderCustomFields} onAdd={addCustomField} disabled={!isAdmin} />}
         </main>
       </SettingsLayout>
+      {pendingDeleteIndex !== null && createPortal(<div className="work-order-custom-field-delete-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setPendingDeleteIndex(null); }}><section className="work-order-custom-field-delete-modal" role="alertdialog" aria-modal="true" aria-label="Remove custom field confirmation" aria-describedby="delete-custom-field-description"><button type="button" className="work-order-custom-field-delete-close" aria-label="Close confirmation" onClick={() => setPendingDeleteIndex(null)}><X size={18} aria-hidden="true" /></button><p id="delete-custom-field-description">Are you sure you want to remove this custom field?</p><button type="button" className="work-order-custom-field-delete-confirm" onClick={() => void confirmRemoveCustomField()}>Confirm</button><button type="button" className="work-order-custom-field-delete-cancel" onClick={() => setPendingDeleteIndex(null)}>Cancel</button></section></div>, document.body)}
     </div>
   );
 }

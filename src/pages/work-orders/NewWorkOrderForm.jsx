@@ -68,22 +68,19 @@ function DateField({ label, value, onChange, dateFormat, timeValue = "", onTimeC
 
 function CustomFieldsSection({ fields = [], values, onChange }) {
   if (!fields.length) return null;
-  return <section className="new-work-order-custom-fields" aria-labelledby="new-work-order-custom-fields-title">
-    <h3 id="new-work-order-custom-fields-title">Custom Fields</h3>
-    <div className="new-work-order-custom-fields-list">
-      {fields.map((field) => {
-        const value = values[field.id] ?? "";
-        const label = `${field.name || "Custom field"}${field.required ? " *" : ""}`;
-        const update = (nextValue) => onChange(field.id, nextValue);
-        if (field.type === "long_text") return <FormField key={field.id} label={label}><textarea value={value} onChange={(event) => update(event.target.value)} rows="3" /></FormField>;
-        if (field.type === "number") return <FormField key={field.id} label={label}><input type="number" value={value} onChange={(event) => update(event.target.value)} /></FormField>;
-        if (field.type === "date") return <FormField key={field.id} label={label}><input type="date" value={value} onChange={(event) => update(event.target.value)} /></FormField>;
-        if (field.type === "datetime") return <FormField key={field.id} label={label}><input type="datetime-local" value={value} onChange={(event) => update(event.target.value)} /></FormField>;
-        if (field.type === "single_select") return <SearchSelect key={field.id} label={label} placeholder="Select an option" value={value} onChange={update} options={(field.options ?? []).map((option) => ({ value: option, label: option }))} />;
-        return <FormField key={field.id} label={label}><input type={field.type === "link" ? "url" : "text"} value={value} onChange={(event) => update(event.target.value)} /></FormField>;
-      })}
-    </div>
-  </section>;
+  return fields.map((field) => {
+    const value = values[field.id] ?? "";
+    const label = `${field.name || "Custom field"}${field.required ? " *" : ""}`;
+    const update = (nextValue) => onChange(field.id, nextValue);
+    let input;
+    if (field.type === "long_text") input = <textarea value={value} onChange={(event) => update(event.target.value)} rows="3" />;
+    else if (field.type === "number") input = <input type="number" value={value} onChange={(event) => update(event.target.value)} />;
+    else if (field.type === "date") input = <input type="date" value={value} onChange={(event) => update(event.target.value)} />;
+    else if (field.type === "datetime") input = <input type="datetime-local" value={value} onChange={(event) => update(event.target.value)} />;
+    else if (field.type === "single_select") input = <Select className="new-work-order-selector" ariaLabel={label} placeholder="Select an option" value={value} onChange={update} options={(field.options ?? []).map((option) => ({ value: option, label: option }))} />;
+    else input = <input type="text" inputMode={field.type === "link" ? "url" : undefined} value={value} onChange={(event) => update(event.target.value)} />;
+    return <FormRow key={field.id}><FormField label={label}>{input}</FormField></FormRow>;
+  });
 }
 
 export function NewWorkOrderForm({
@@ -299,7 +296,6 @@ export function NewWorkOrderForm({
               <textarea value={form.description} onChange={(event) => update("description", event.target.value)} placeholder="Add a description" rows="4" />
             </FormField>
           </FormRow>
-          <FormRow><CustomFieldsSection fields={customFields} values={form.customFieldValues} onChange={(fieldId, value) => { setCustomFieldError(""); update("customFieldValues", { ...form.customFieldValues, [fieldId]: value }); }} /></FormRow>
           <section className="new-work-order-suborders">
             <h3>Sub-Work Orders <span className="new-work-order-suborders-count">(0)</span></h3>
             <p>
@@ -335,6 +331,7 @@ export function NewWorkOrderForm({
               </div>
             </fieldset>
           </FormRow>
+          <CustomFieldsSection fields={customFields} values={form.customFieldValues} onChange={(fieldId, value) => { setCustomFieldError(""); setForm((current) => ({ ...current, customFieldValues: { ...current.customFieldValues, [fieldId]: value } })); }} />
           <FormRow><DateField key={form.dueDate ? "due-date-selected" : "due-date-empty"} label="Due Date" dateFormat={dateFormat} value={form.dueDate} onChange={(value) => { update("dueDate", value); setScheduleError(""); if (!value) update("dueTime", ""); }} timeValue={form.dueTime} onTimeChange={(value) => update("dueTime", value)} /></FormRow>
           <FormRow><DateField label="Start Date" dateFormat={dateFormat} value={form.startDate} onChange={(value) => { update("startDate", value); setScheduleError(""); }} /></FormRow>
           {scheduleError && <FormRow><p className="new-work-order-error" role="alert">{scheduleError}</p></FormRow>}

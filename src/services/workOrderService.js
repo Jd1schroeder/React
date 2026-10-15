@@ -262,7 +262,7 @@ export async function createWorkOrder({ organizationId, title, description, prio
       })
     }
 
-    const { data, error } = await supabase.rpc('create_work_order_with_assignments', {
+    const { data, error } = await supabase.rpc('create_work_order_with_custom_fields', {
       target_work_order_id: workOrderId,
       target_organization_id: organizationId,
       target_title: title.trim(),

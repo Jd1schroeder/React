@@ -475,7 +475,12 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isReadAllConfirmOpen, isSavingReadState])
   useEffect(() => {
-    if (!recordId || !canViewWorkOrders || !organizationId || workOrdersById[recordId] || recordLookupResult?.key === recordLookupKey) return undefined
+    const selectedRecord = recordId ? workOrdersById[recordId] : null
+    const configuredCustomFields = workOrderSettings.workOrderFields.customFields
+    const customFieldValues = selectedRecord?.custom_field_values
+    const needsCustomFieldHydration = configuredCustomFields.length > 0
+      && (!customFieldValues || Object.keys(customFieldValues).length === 0)
+    if (!recordId || !canViewWorkOrders || !organizationId || (selectedRecord && !needsCustomFieldHydration) || recordLookupResult?.key === recordLookupKey) return undefined
     let active = true
     getWorkOrderById({ organizationId, workOrderId: recordId, grants, signAttachmentUrls: false })
       .then((order) => {
@@ -509,7 +514,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
         setError(loadError.message || 'Unable to load this Work Order.')
       })
     return () => { active = false }
-  }, [canViewWorkOrders, grants, markViewed, organizationId, recordId, recordLookupKey, recordLookupResult?.key, workOrdersById, workspace.preferences])
+  }, [canViewWorkOrders, grants, markViewed, organizationId, recordId, recordLookupKey, recordLookupResult?.key, workOrderSettings.workOrderFields.customFields, workOrdersById, workspace.preferences])
   const loadGroupPage = async ({ tab, group, sort, unreadFirst, offset, filters, pageSize: requestedPageSize }) => {
     const orders = await listWorkOrderInboxPage({ organizationId, tab, group, search: debouncedSearch, sort, unreadFirst, offset, pageSize: requestedPageSize, filters, grants })
     return orders.map((order) => normalizeWorkOrder(order, workspace.preferences))

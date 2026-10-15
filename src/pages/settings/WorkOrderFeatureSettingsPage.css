@@ -40,6 +40,15 @@
 .work-order-custom-field-drag:disabled, .work-order-custom-field-remove:disabled { cursor: not-allowed; }
 .work-order-custom-field-remove { cursor: pointer; }
 .work-order-custom-field-remove:hover, .work-order-custom-field-remove:focus-visible { color: var(--danger); outline: 0; }
+.work-order-custom-field-delete-backdrop { position: fixed; z-index: 1100; inset: 0; display: grid; place-items: center; padding: var(--spacing-6); background: var(--overlay-modal); }
+.work-order-custom-field-delete-modal { position: relative; display: flex; width: min(100%, 500px); flex-direction: column; align-items: center; padding: var(--spacing-12) var(--spacing-8) var(--spacing-6); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); background: var(--surface); box-shadow: var(--elevation-5); text-align: center; }
+.work-order-custom-field-delete-modal p { margin: 0 0 var(--spacing-6); color: var(--ink); font-size: var(--font-size-md); }
+.work-order-custom-field-delete-close { position: absolute; top: var(--spacing-3); right: var(--spacing-3); display: grid; width: 32px; height: 32px; place-items: center; padding: 0; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
+.work-order-custom-field-delete-close:hover, .work-order-custom-field-delete-close:focus-visible { color: var(--ink); outline: 0; }
+.work-order-custom-field-delete-confirm { width: min(100%, 320px); min-height: 42px; border: 0; border-radius: var(--radius-button); color: var(--white); background: var(--blue); font: inherit; font-weight: var(--font-semibold); cursor: pointer; }
+.work-order-custom-field-delete-confirm:hover { background: var(--blue-hover); }
+.work-order-custom-field-delete-cancel { margin-top: var(--spacing-4); padding: var(--spacing-1) var(--spacing-3); border: 0; color: var(--blue); background: transparent; font: inherit; font-weight: var(--font-semibold); cursor: pointer; }
+.work-order-custom-field-delete-cancel:hover, .work-order-custom-field-delete-cancel:focus-visible { color: var(--blue-hover); text-decoration: underline; outline: 0; }
 .work-order-custom-field-body { display: grid; gap: var(--spacing-3); min-width: 0; }
 .work-order-custom-field-heading { display: grid; grid-template-columns: minmax(0, 1fr) 296px; gap: var(--spacing-6); align-items: center; }
 .work-order-custom-field-heading input { min-height: 40px; border: 0; border-bottom: var(--border-width-normal) solid var(--line); color: var(--ink); background: transparent; font: inherit; }

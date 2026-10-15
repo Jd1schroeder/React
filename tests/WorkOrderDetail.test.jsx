@@ -32,6 +32,26 @@ afterEach(() => {
 })
 
 describe('WorkOrderDetail authorization', () => {
+  it('shows configured custom field values above Time & Cost Tracking', () => {
+    render(<ToastProvider><WorkOrderDetail
+      selected={{ ...selected, custom_field_values: { permit: 'P-100', reference: 'www.google.com' } }}
+      workOrderSettings={{ workOrderFields: { customFields: [
+        { id: 'permit', name: 'Permit number', type: 'text' },
+        { id: 'reference', name: 'Reference link', type: 'link' },
+        { id: 'empty', name: 'Empty field', type: 'text' },
+      ] } }}
+      grants={{}}
+    /></ToastProvider>)
+
+    expect(screen.getByRole('heading', { name: 'Permit number' })).toBeInTheDocument()
+    expect(screen.getByText('P-100')).toBeInTheDocument()
+    const link = screen.getByRole('link', { name: 'www.google.com' })
+    expect(link).toHaveAttribute('href', 'https://www.google.com')
+    expect(screen.queryByRole('heading', { name: 'Empty field' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Time & Cost Tracking' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Permit number' }).compareDocumentPosition(screen.getByRole('heading', { name: 'Time & Cost Tracking' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
   it('copies the current Work Order URL using the Link icon', async () => {
     let resolveWriteText
     const writeText = vi.fn(() => new Promise((resolve) => { resolveWriteText = resolve }))

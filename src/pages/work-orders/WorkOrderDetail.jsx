@@ -322,6 +322,13 @@ function DetailMetadata({ icon: Icon, children }) {
   return <div className="detail-metadata-item">{Icon && <Icon size={16} aria-hidden="true" />}<span>{children}</span><ChevronRight className="detail-mobile-row-chevron" size={20} aria-hidden="true" /></div>;
 }
 
+function CustomFieldDetailValue({ field, value }) {
+  const displayValue = field.type === "datetime" ? String(value).replace("T", " ") : String(value);
+  if (field.type !== "link") return displayValue;
+  const href = /^https?:\/\//i.test(displayValue) ? displayValue : `https://${displayValue}`;
+  return <a className="detail-custom-field-link" href={href} target="_blank" rel="noreferrer">{displayValue}</a>;
+}
+
 function formatExternalCompletion(value, timezone) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -390,6 +397,10 @@ export function WorkOrderDetail({
   const detailScrollRef = useRef(null);
   const commentsRef = useRef(null);
   const normalizedWorkOrderSettings = normalizeWorkOrderSettings(workOrderSettings);
+  const customFieldValues = selected?.custom_field_values ?? {};
+  const displayedCustomFields = normalizedWorkOrderSettings.workOrderFields.customFields
+    .map((field) => ({ field, value: customFieldValues[field.id] ?? customFieldValues[field.name] }))
+    .filter(({ value }) => value !== null && value !== undefined && String(value).trim() !== "");
   useEffect(() => {
     window.dispatchEvent(new CustomEvent("workbench:work-order-mobile-section", {
       detail: { workOrderId: selected?.id, section: activeMobileSection },
@@ -883,6 +894,14 @@ export function WorkOrderDetail({
               </div>
             </div>
           </section>
+          {displayedCustomFields.length > 0 && <section className="detail-custom-fields-section" aria-label="Additional Work Order details">
+            <div className="detail-custom-fields-grid">
+              {displayedCustomFields.map(({ field, value }) => <div className="detail-attribute" key={field.id ?? field.name}>
+                <div className="detail-section-header"><h2>{field.name || "Custom field"}</h2></div>
+                <DetailMetadata><CustomFieldDetailValue field={field} value={value} /></DetailMetadata>
+              </div>)}
+            </div>
+          </section>}
           {(normalizedWorkOrderSettings.enableCostTracking || normalizedWorkOrderSettings.enableTimeTracking || normalizedWorkOrderSettings.enableParts) && <section className="detail-cost-section" aria-labelledby="detail-cost-title">
             <h2 id="detail-cost-title">Time &amp; Cost Tracking</h2>
             {normalizedWorkOrderSettings.enableParts && ["Parts"].map((label) => (

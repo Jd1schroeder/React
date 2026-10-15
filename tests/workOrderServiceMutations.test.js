@@ -55,7 +55,7 @@ describe('Work Order creation service boundary', () => {
     expect(result).toEqual(expect.objectContaining({ id: 'wo-1', title: 'Inspect pump' }))
     expect(mocks.assertPermission).toHaveBeenNthCalledWith(1, { 'work_orders.create': 'any', 'work_orders.assign': 'any' }, 'work_orders.create')
     expect(mocks.assertPermission).toHaveBeenNthCalledWith(2, { 'work_orders.create': 'any', 'work_orders.assign': 'any' }, 'work_orders.assign')
-    expect(mocks.rpc).toHaveBeenCalledWith('create_work_order_with_assignments', expect.objectContaining({
+    expect(mocks.rpc).toHaveBeenCalledWith('create_work_order_with_custom_fields', expect.objectContaining({
       target_organization_id: 'org-1',
       target_title: 'Inspect pump',
       target_description: 'Check the motor.',

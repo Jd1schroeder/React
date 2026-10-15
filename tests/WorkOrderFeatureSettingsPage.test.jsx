@@ -248,4 +248,28 @@ describe('Work Order feature settings', () => {
       updates: { work_order_settings: expect.objectContaining({ workOrderFields: expect.objectContaining({ customFields: [expect.objectContaining({ id: 'two' }), expect.objectContaining({ id: 'one' })] }) }) },
     })))
   })
+
+  it('confirms before deleting a custom field', async () => {
+    mocks.workspace.organization.work_order_settings = {
+      workOrderFields: {
+        customFields: [
+          { id: 'one', name: 'First field', type: 'text', options: [], required: false, copyOnRepeat: true, includeOnRequest: false, includeOnRequestPortal: false },
+        ],
+      },
+    }
+    render(<WorkOrderFieldsPage onNavigate={vi.fn()} />)
+    fireEvent.click(screen.getByRole('tab', { name: 'Custom Fields' }))
+    vi.clearAllMocks()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete custom field 1' }))
+
+    expect(screen.getByRole('alertdialog', { name: 'Remove custom field confirmation' })).toBeInTheDocument()
+    expect(mocks.updateOrganization).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm' }))
+
+    await waitFor(() => expect(mocks.updateOrganization).toHaveBeenCalledWith(expect.objectContaining({
+      updates: { work_order_settings: expect.objectContaining({ workOrderFields: expect.objectContaining({ customFields: [] }) }) },
+    })))
+  })
 })
