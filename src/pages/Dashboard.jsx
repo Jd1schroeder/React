@@ -35,6 +35,7 @@ import { hasPermission } from '../services/authorizationService'
 import { getDashboardMetricWorkOrders, getDashboardOverview, getDashboardRecentActivityPage, getDashboardWorkOrderGroupPage } from '../services/dashboardService'
 import { getRecordPath } from '../routes'
 import { PriorityBadge } from '../components/ui/PriorityBadge'
+import { formatCompactDuration } from '../utils/workOrderTimeFormatting'
 import { workOrderStatusOptions } from './work-orders/workOrderStatusOptions'
 import './Dashboard.css'
 
@@ -64,19 +65,17 @@ function formatActivityTime(value, timeZone) {
   return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone }).format(new Date(value))
 }
 
-function formatActivityDuration(totalSeconds) {
-  const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0))
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  const remainder = seconds % 60
-  return [hours ? `${hours}h` : null, `${minutes}m`, `${remainder}s`].filter(Boolean).join(' ')
-}
-
 function getActivityPhrase(event) {
   if (event.kind === 'comment') return event.deleted_at ? 'deleted a comment on' : 'commented on'
-  if (event.event_type === 'work_order_time_added') return `logged ${formatActivityDuration(event.details?.duration_seconds)} on`
-  if (event.event_type === 'work_order_time_updated') return `updated time to ${formatActivityDuration(event.details?.to_seconds)} on`
-  if (event.event_type === 'work_order_time_deleted') return `deleted ${formatActivityDuration(event.details?.duration_seconds)} from`
+  if (event.event_type === 'work_order_time_added') {
+    const duration = Number(event.details?.duration_seconds ?? 0)
+    return duration > 0 ? `logged ${formatCompactDuration(duration)} of work on` : 'started a work timer on'
+  }
+  if (event.event_type === 'work_order_time_updated') {
+    const duration = Number(event.details?.to_seconds ?? 0)
+    return duration > 0 ? `logged ${formatCompactDuration(duration)} of work on` : 'updated time on'
+  }
+  if (event.event_type === 'work_order_time_deleted') return `deleted ${formatCompactDuration(event.details?.duration_seconds)} of work from`
   if (event.event_type === 'work_order_created') return 'created'
   if (event.event_type === 'status_changed') {
     return event.details?.to === 'Completed' ? 'completed' : `changed the status to ${event.details?.to ?? 'updated'}`

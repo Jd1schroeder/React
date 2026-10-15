@@ -140,6 +140,25 @@ describe('WorkOrderActivity', () => {
     expect(await screen.findByText('External contact Vendor Contact requested completion.')).toBeInTheDocument()
   })
 
+  it('describes logged timer time as work performed', async () => {
+    renderActivity({
+      onLoadActivity: vi.fn().mockResolvedValue({
+        items: [{
+          id: 'activity-time-1',
+          kind: 'activity',
+          actor_id: 'member-1',
+          event_type: 'work_order_time_updated',
+          details: { from_seconds: 4, to_seconds: 9 },
+          created_at: '2026-10-14T22:00:00.000Z',
+        }],
+        hasMore: false,
+        nextCursor: null,
+      }),
+    })
+
+    expect(await screen.findByText('Logged 9s of work.')).toBeInTheDocument()
+  })
+
   it('shows the captured name for an external comment instead of System', async () => {
     const onLoadActivity = vi.fn().mockResolvedValue({
       items: [{

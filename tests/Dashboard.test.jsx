@@ -147,7 +147,7 @@ describe('mobile Overview dashboard', () => {
     renderDashboard()
 
     const activityRow = (await screen.findByRole('link', { name: '#2 Image test' })).closest('.dashboard-activity-row')
-    expect(activityRow).toHaveTextContent('updated time to 0m 7s on')
+    expect(activityRow).toHaveTextContent('logged 7s of work on')
   })
 
   it('loads and appends the next Recent Activity page on demand', async () => {

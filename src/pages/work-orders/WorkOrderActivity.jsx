@@ -9,6 +9,7 @@ import { formatCalendarDateForUser, formatDateForUser } from '../../utils/dateFo
 import { WORK_ORDER_ATTACHMENT_MAX_BYTES } from '../../utils/workOrderAttachments'
 import { extractWorkbenchWorkOrderLinks } from '../../utils/workOrderLinks'
 import { getWorkOrderMentionSuggestions, resolveWorkOrderMentionTargets } from '../../utils/workOrderMentions'
+import { formatCompactDuration } from '../../utils/workOrderTimeFormatting'
 import './WorkOrderActivity.css'
 
 const maxCommentAttachments = 20
@@ -175,10 +176,13 @@ function describeActivity(item, dateFormat, identitiesById, assigneeOptionsByVal
   }
   if (item.event_type === 'work_order_time_added') {
     const duration = Number(item.details?.duration_seconds ?? 0)
-    return `Added ${Math.floor(duration / 3600)}h ${Math.floor((duration % 3600) / 60)}m of time.`
+    return duration > 0 ? `Logged ${formatCompactDuration(duration)} of work.` : 'Started work timer.'
   }
   if (item.event_type === 'work_order_time_updated') {
-    return `Updated time from ${item.details?.from_seconds ?? 0}s to ${item.details?.to_seconds ?? 0}s.`
+    const duration = Number(item.details?.to_seconds ?? 0)
+    return duration > 0
+      ? `Logged ${formatCompactDuration(duration)} of work.`
+      : `Updated time from ${item.details?.from_seconds ?? 0}s to ${duration}s.`
   }
   if (item.event_type === 'work_order_time_deleted') return 'Deleted a time entry.'
   if (item.event_type === 'work_order_cost_added') return `Added a cost of $${Number(item.details?.amount ?? 0).toFixed(2)}.`
