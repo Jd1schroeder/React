@@ -297,6 +297,7 @@ export function WorkOrderList({
   onLoadGroupPage,
   onHydrateAttachments,
   refreshVersion,
+  selectFirstAfterRefresh = false,
   onStatusChange,
   canChangeStatusForOrder,
   onReadAll,
@@ -378,7 +379,7 @@ export function WorkOrderList({
   const groups = isFilteredResultsView
     ? [{ id: activeTab === "Done" ? "completed" : "all-open", label: "Search results" }]
     : activeTab === "Done"
-      ? [{ id: "completed", label: "Completed work orders" }]
+      ? [{ id: "completed", label: "Done work orders" }]
       : [
           { id: "assigned-to-me", label: "Assigned to Me" },
           { id: "assigned-to-my-teams", label: "Assigned to My Teams" },
@@ -507,17 +508,17 @@ export function WorkOrderList({
     setGroupLoading({});
     const firstExpandedGroupId = isFilteredResultsView
       ? null
-      : groups.find((group) => expandedGroups[group.id])?.id;
+      : groups.find((group) => expandedGroups[group.id] && (groupCounts[group.id] ?? 0) > 0)?.id;
     for (const group of groups) {
       if (isFilteredResultsView || expandedGroups[group.id]) {
         void loadGroup(group.id, true, {
-          autoSelectFirst: group.id === firstExpandedGroupId,
+          autoSelectFirst: group.id === firstExpandedGroupId && (selectFirstAfterRefresh || !selected),
         });
       }
     }
     // Changing filters/sort/records invalidates the page cursor and reloads open groups.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, filters, search, sortId, unreadFirst, pageSize, refreshVersion]);
+  }, [activeTab, filters, search, sortId, unreadFirst, pageSize, refreshVersion, selectFirstAfterRefresh, groupCounts]);
 
   useEffect(() => {
     if (!sortMenuOpen) return undefined;

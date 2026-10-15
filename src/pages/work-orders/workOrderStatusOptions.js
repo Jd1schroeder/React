@@ -1,4 +1,4 @@
-import { Check, CirclePause, LockKeyhole, RotateCw } from "lucide-react";
+import { Check, CirclePause, CircleX, LockKeyhole, RotateCw, SkipForward } from "lucide-react";
 
 export const workOrderStatusOptions = [
   { value: "Open", label: "Open", icon: LockKeyhole, tone: "open" },
@@ -10,4 +10,6 @@ export const workOrderStatusOptions = [
     tone: "in-progress",
   },
   { value: "Completed", label: "Done", icon: Check, tone: "completed" },
+  { value: "Skipped", label: "Skipped", icon: SkipForward, tone: "skipped" },
+  { value: "Cancelled", label: "Cancelled", icon: CircleX, tone: "cancelled" },
 ];

@@ -144,6 +144,19 @@ function isAssignmentMentionComment(item, items, mentionTargets) {
   })))
 }
 
+function getPairedStatusChange(item, items) {
+  if (item.kind !== 'comment' || item.deleted_at || !item.body || !item.author_id) return null
+  const commentTime = new Date(item.created_at).getTime()
+  if (!Number.isFinite(commentTime)) return null
+  return items.find((candidate) => {
+    if (candidate.kind !== 'activity' || candidate.event_type !== 'status_changed' || candidate.actor_id !== item.author_id) return false
+    const status = candidate.details?.to
+    if (!['Skipped', 'Cancelled'].includes(status)) return false
+    const activityTime = new Date(candidate.created_at).getTime()
+    return Number.isFinite(activityTime) && activityTime >= commentTime && activityTime - commentTime <= 10000
+  }) ?? null
+}
+
 function attachmentChangeDescription(change) {
   const before = Array.isArray(change.from) ? change.from : []
   const after = Array.isArray(change.to) ? change.to : []
@@ -253,6 +266,7 @@ function describeActivity(item, dateFormat, identitiesById, assigneeOptionsByVal
     const status = item.details?.to ?? 'unknown'
     return status === 'Completed' ? 'Completed the Work Order.' : `Changed status to "${status}".`
   }
+  if (item.event_type === 'work_order_deleted') return 'Deleted the Work Order.'
   if (item.event_type === 'external_completion_requested') {
     return item.details?.externalName
       ? `Requested completion from ${item.details.externalName}.`
@@ -312,12 +326,16 @@ function WorkOrderLinkRow({ workOrderId, preview }) {
   )
 }
 
-function CommentBody({ body, linkPreviews, mentionTargets }) {
+function CommentBody({ body, linkPreviews, mentionTargets, statusReason = '' }) {
+  const normalizedBody = String(body ?? '').trim()
+  const punctuation = statusReason && normalizedBody && !/[.!?]$/.test(normalizedBody) ? '.' : ''
   return (
-    <div className="work-order-comment-body">
+    <div className={`work-order-comment-body${statusReason ? ' is-status-reason' : ''}`}>
+      {statusReason && <span className="work-order-comment-status-prefix">{statusReason} for </span>}
       {extractWorkbenchWorkOrderLinks(body).map((segment, index) => segment.type === 'work-order-link'
         ? <WorkOrderLinkRow key={`${segment.workOrderId}-${index}`} workOrderId={segment.workOrderId} preview={linkPreviews[segment.workOrderId]} />
         : <span key={`text-${index}`}><MentionText text={segment.text} mentionTargets={mentionTargets} /></span>)}
+      {punctuation}
     </div>
   )
 }
@@ -359,6 +377,7 @@ function ActivityItem({
   canDeleteAnyComments,
   onUpdateComment,
   onDeleteComment,
+  pairedStatusChange,
 }) {
   const [isEditing, setIsEditing] = useState(false)
   const [isTimeVisible, setIsTimeVisible] = useState(false)
@@ -547,7 +566,7 @@ function ActivityItem({
                         </div>
                       </form>
                     : <>
-                        {item.body && <CommentBody body={item.body} linkPreviews={linkPreviews} mentionTargets={mentionTargets} />}
+                        {item.body && <CommentBody body={item.body} linkPreviews={linkPreviews} mentionTargets={mentionTargets} statusReason={pairedStatusChange?.details?.to ?? ''} />}
                         <CommentAttachments attachments={item.attachments} />
                       </>}
                 {isConfirmingDelete && !item.deleted_at && (
@@ -697,7 +716,11 @@ export function WorkOrderActivity({
 
   const identitiesById = useMemo(() => new Map(memberDirectory.map((member) => [member.id, member])), [memberDirectory])
   const assigneeOptionsByValue = useMemo(() => new Map(assigneeOptions.map((option) => [option.value, option])), [assigneeOptions])
-  const visibleItems = useMemo(() => items.filter((item) => !isAssignmentMentionComment(item, items, mentionTargets)), [items, mentionTargets])
+  const pairedStatusChanges = useMemo(() => new Map(items
+    .filter((item) => item.kind === 'comment')
+    .map((item) => [getPairedStatusChange(item, items)?.id, getPairedStatusChange(item, items)])
+    .filter(([id, activity]) => id && activity)), [items])
+  const visibleItems = useMemo(() => items.filter((item) => !isAssignmentMentionComment(item, items, mentionTargets) && !(item.kind === 'activity' && pairedStatusChanges.has(item.id))), [items, mentionTargets, pairedStatusChanges])
   const mentionSuggestions = useMemo(() => assignMentionsEnabled
     ? getWorkOrderMentionSuggestions(commentBody, mentionCursor ?? commentBody.length, mentionTargets)
     : { activeMention: null, suggestions: [] }, [assignMentionsEnabled, commentBody, mentionCursor, mentionTargets])
@@ -910,6 +933,7 @@ export function WorkOrderActivity({
                 canDeleteAnyComments={canDeleteAnyComments}
                 onUpdateComment={onUpdateComment ? editComment : undefined}
                 onDeleteComment={onDeleteComment ? deleteComment : undefined}
+                pairedStatusChange={item.kind === 'comment' ? getPairedStatusChange(item, items) : null}
               />
             ))}
             {hasMore && (

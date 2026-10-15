@@ -456,6 +456,12 @@
   overflow-wrap: break-word;
   white-space: pre-wrap;
 }
+.work-order-comment-body.is-status-reason {
+  display: block;
+}
+.work-order-comment-status-prefix {
+  font-weight: var(--font-semibold, 600);
+}
 .work-order-mention {
   color: var(--blue);
   font-weight: var(--font-semibold, 600);

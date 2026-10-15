@@ -4,7 +4,7 @@ import { WORK_ORDER_ATTACHMENT_MAX_BYTES, getSafeAttachmentExtension } from '../
 import { normalizeWorkOrderFilters } from '../utils/workOrderFilters'
 import { getWorkOrderScheduleRequirementError } from '../utils/workOrderSettings'
 
-const workOrderFields = 'id, work_order_number, organization_id, title, description, status, priority, procedure_progress, due_at, due_date, due_time, start_date, estimated_duration_minutes, work_type, requester_id, assigned_to, team_id, created_by, created_at, updated_at, updated_by, custom_field_values, recurrence_rule, recurrence_series_id, recurrence_sequence'
+const workOrderFields = 'id, work_order_number, organization_id, title, description, status, priority, procedure_progress, due_at, due_date, due_time, start_date, estimated_duration_minutes, work_type, requester_id, assigned_to, team_id, created_by, created_at, updated_at, updated_by, custom_field_values, recurrence_rule, recurrence_series_id, recurrence_sequence, deleted_at, deleted_by'
 const attachmentBucket = 'work-order-attachments'
 const unreadWorkOrderCountRequests = new Map()
 
@@ -214,6 +214,49 @@ export async function getWorkOrderById({ organizationId, workOrderId, grants, si
   if (error) throw error
   if (!data) return null
   return (await loadWorkOrderRelations([data], { signAttachmentUrls }))[0]
+}
+
+export async function getMostRecentWorkOrderInChain({ organizationId, workOrder, grants }) {
+  assertPermission(grants, 'work_orders.view')
+  if (!workOrder?.recurrence_series_id) return workOrder
+  const selectMostRecent = (activeOnly) => {
+    let query = supabase
+      .from('work_orders')
+      .select(workOrderFields)
+      .eq('organization_id', organizationId)
+      .eq('recurrence_series_id', workOrder.recurrence_series_id)
+      .order('recurrence_sequence', { ascending: false })
+      .limit(1)
+    if (activeOnly) query = query.in('status', ['Open', 'On Hold', 'In Progress'])
+    return query.maybeSingle()
+  }
+  const { data: activeOrder, error: activeError } = await selectMostRecent(true)
+  if (activeError) throw activeError
+  if (activeOrder) return (await loadWorkOrderRelations([activeOrder], { signAttachmentUrls: false }))[0]
+  const { data: latestOrder, error: latestError } = await selectMostRecent(false)
+  if (latestError) throw latestError
+  if (!latestOrder) return workOrder
+  return (await loadWorkOrderRelations([latestOrder], { signAttachmentUrls: false }))[0]
+}
+
+export async function stopWorkOrderRecurrence({ organizationId, workOrderId, grants, record }) {
+  assertPermission(grants, 'work_orders.edit', record)
+  const { data, error } = await supabase.rpc('stop_work_order_recurrence', {
+    target_work_order_id: workOrderId,
+    target_organization_id: organizationId,
+  })
+  if (error) throw error
+  return data ?? 0
+}
+
+export async function deleteWorkOrder({ organizationId, workOrderId, grants, record }) {
+  assertPermission(grants, 'work_orders.delete', record)
+  const { data, error } = await supabase.rpc('soft_delete_work_order', {
+    target_organization_id: organizationId,
+    target_work_order_id: workOrderId,
+  })
+  if (error) throw error
+  return data
 }
 
 export async function createWorkOrder({ organizationId, title, description, priority, dueDate, dueTime, startDate, estimatedDurationMinutes, workType = 'reactive', recurrenceRule = null, assignments = [], customFieldValues = {}, pictures = [], thumbnail = null, files = [], requiredSchedule = 'none', grants }) {

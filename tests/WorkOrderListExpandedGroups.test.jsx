@@ -124,6 +124,25 @@ describe('Work Order Inbox expanded-group storage', () => {
     })
   })
 
+  it('selects the first remaining order after a refresh requests replacement selection', async () => {
+    const key = getWorkOrderInboxExpandedGroupsKey(createListProps())
+    writeWorkOrderInboxExpandedGroups(key, 'To Do', { 'assigned-to-me': true })
+    const nextOrder = { id: 'work-order-2', title: 'Next work order', work_order_attachments: [] }
+    const props = createListProps({
+      selectFirstAfterRefresh: true,
+      onLoadGroupPage: vi.fn().mockResolvedValue([nextOrder]),
+    })
+
+    render(<WorkOrderList {...props} />)
+
+    await waitFor(() => {
+      expect(props.onOrdersLoaded).toHaveBeenCalledWith(
+        [nextOrder],
+        { selectFirst: true },
+      )
+    })
+  })
+
   it('shows an empty-state message when an expanded group has no orders', async () => {
     const key = getWorkOrderInboxExpandedGroupsKey(createListProps())
     writeWorkOrderInboxExpandedGroups(key, 'To Do', { 'assigned-to-me': true })

@@ -384,6 +384,63 @@ describe('WorkOrderDetail authorization', () => {
     expect(onCopy).toHaveBeenCalledTimes(1)
   })
 
+  it('shows recurrence chain actions for repeating Work Orders', async () => {
+    const onGoToMostRecentInChain = vi.fn().mockResolvedValue(undefined)
+    const onStopRepeating = vi.fn().mockResolvedValue(undefined)
+    const recurring = {
+      ...selected,
+      recurrence_rule: { frequency: 'yearly', interval: 1 },
+      recurrence_series_id: 'series-1',
+      recurrence_sequence: 2,
+    }
+    render(<WorkOrderDetail
+      selected={recurring}
+      userId="user-a"
+      grants={{ 'work_orders.edit': 'own', 'work_orders.cancel_skip': 'own' }}
+      onGoToMostRecentInChain={onGoToMostRecentInChain}
+      onStopRepeating={onStopRepeating}
+    />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'More work order actions' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Go to Most Recent in Chain' }))
+    await waitFor(() => expect(onGoToMostRecentInChain).toHaveBeenCalledWith(recurring))
+
+    fireEvent.click(screen.getByRole('button', { name: 'More work order actions' }))
+    expect(screen.getByRole('menuitem', { name: 'Skip Work Order' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Cancel Work Order' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Stop Repeating' }))
+    await waitFor(() => expect(onStopRepeating).toHaveBeenCalledWith(recurring))
+  })
+
+  it('shows Cancel instead of Skip for non-recurring Work Orders', () => {
+    render(<WorkOrderDetail selected={selected} userId="user-a" grants={{ 'work_orders.cancel_skip': 'own' }} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'More work order actions' }))
+    expect(screen.getByRole('menuitem', { name: 'Cancel Work Order' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Skip Work Order' })).not.toBeInTheDocument()
+  })
+
+  it('hides Skip and Cancel for terminal Work Orders', () => {
+    render(<WorkOrderDetail selected={{ ...selected, status: 'Skipped' }} userId="user-a" grants={{ 'work_orders.cancel_skip': 'own' }} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'More work order actions' }))
+    expect(screen.queryByRole('menuitem', { name: 'Skip Work Order' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Cancel Work Order' })).not.toBeInTheDocument()
+  })
+
+  it('uses the app confirmation dialog before deleting a Work Order', async () => {
+    const onDelete = vi.fn().mockResolvedValue(undefined)
+    render(<WorkOrderDetail selected={{ ...selected, status: 'Completed' }} userId="user-a" grants={{ 'work_orders.delete': 'own' }} onDelete={onDelete} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'More work order actions' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }))
+    expect(screen.getByRole('alertdialog', { name: 'Delete Work Order?' })).toBeInTheDocument()
+    expect(onDelete).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    await waitFor(() => expect(onDelete).toHaveBeenCalledWith(expect.objectContaining({ id: selected.id })))
+  })
+
   it('includes the remaining reference sections without claiming unsupported features', async () => {
     render(<WorkOrderDetail selected={{ ...selected, estimated_duration_minutes: 60 }} userId="user-a" workOrderSettings={{ enableCostTracking: true, enableTimeTracking: true, enableParts: true }} grants={{
       'work_orders.view_comments': 'own',

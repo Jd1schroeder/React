@@ -41,6 +41,8 @@ describe('WorkOrderFilters', () => {
       ['On Hold', 'lucide-circle-pause', 'on-hold'],
       ['In Progress', 'lucide-rotate-cw', 'in-progress'],
       ['Done', 'lucide-check', 'completed'],
+      ['Skipped', 'lucide-skip-forward', 'skipped'],
+      ['Cancelled', 'lucide-circle-x', 'cancelled'],
     ]
     expectedStatusIcons.forEach(([label, iconClass, tone]) => {
       const option = within(dialog).getByLabelText(label).closest('label')

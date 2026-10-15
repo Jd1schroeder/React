@@ -38,6 +38,19 @@
   color: var(--text-disabled-muted) !important;
   cursor: not-allowed;
 }
+.work-order-detail-menu button.is-danger:not(:disabled) {
+  color: var(--danger) !important;
+}
+.work-order-delete-confirmation-backdrop { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; box-sizing: border-box; padding: var(--spacing-4); background: rgb(0 0 0 / 35%); }
+.work-order-delete-confirmation-modal { width: min(100%, 464px); overflow: hidden; border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-lg); }
+.work-order-delete-confirmation-body { display: grid; gap: var(--spacing-3); padding: var(--spacing-5); }
+.work-order-delete-confirmation-body h3 { margin: 0; color: var(--ink); font-size: var(--font-size-xl-compact); }
+.work-order-delete-confirmation-body p { margin: 0; color: var(--ink); font-size: var(--font-size-body-sm); line-height: var(--line-height-loose); }
+.work-order-delete-confirmation-actions { display: flex; justify-content: flex-end; gap: var(--spacing-3); padding: var(--spacing-4) var(--spacing-5); border-top: var(--border-width-normal) solid var(--line); }
+.work-order-delete-confirmation-actions button { min-height: 40px; padding: 0 var(--spacing-4); border: 0; border-radius: var(--radius-sm); color: var(--blue); background: transparent; font: inherit; font-weight: var(--font-semibold); cursor: pointer; }
+.work-order-delete-confirmation-actions button.is-danger { color: var(--white); background: var(--danger); }
+.work-order-delete-confirmation-actions button.is-danger:hover, .work-order-delete-confirmation-actions button.is-danger:focus-visible { background: var(--danger-strong); }
+.work-order-delete-confirmation-actions button:disabled { opacity: .55; cursor: not-allowed; }
 .work-order-detail-menu button.is-unavailable {
   justify-content: space-between;
   color: var(--text-disabled-muted) !important;
@@ -259,6 +272,14 @@
 .detail-status-button.completed.is-active {
   border-color: var(--status-completed);
   background: var(--status-completed);
+}
+.detail-status-button.skipped.is-active {
+  border-color: var(--status-muted);
+  background: var(--status-muted);
+}
+.detail-status-button.cancelled.is-active {
+  border-color: var(--danger);
+  background: var(--danger);
 }
 .detail-status-button:disabled:not(.is-active) {
   color: var(--text-disabled-control);

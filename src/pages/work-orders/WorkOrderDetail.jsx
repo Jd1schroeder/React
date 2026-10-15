@@ -3,6 +3,8 @@ import {
   Boxes,
   CirclePause,
   CircleCheck,
+  CircleMinus,
+  CircleX,
   CalendarDays,
   Check,
   ChevronLeft,
@@ -44,6 +46,10 @@ const statusOptions = [
   { value: "In Progress", label: "In Progress", icon: RefreshCw },
   { value: "Completed", label: "Done", className: "completed", icon: Check },
 ];
+const terminalStatusOptions = {
+  Skipped: { value: "Skipped", label: "Skipped", className: "skipped", icon: CircleMinus },
+  Cancelled: { value: "Cancelled", label: "Cancelled", className: "cancelled", icon: CircleX },
+};
 
 function isMobileActionSheetViewport() {
   if (typeof window === "undefined") return false;
@@ -346,6 +352,9 @@ export function WorkOrderDetail({
   onBack,
   onEdit,
   onCopy,
+  onDelete,
+  onGoToMostRecentInChain,
+  onStopRepeating,
   onPreparePdfExport,
   onStatusChange,
   onToggleRead,
@@ -390,9 +399,20 @@ export function WorkOrderDetail({
   const [externalShare, setExternalShare] = useState(null);
   const [isLoadingExternalShare, setIsLoadingExternalShare] = useState(false);
   const [isSavingExternalShare, setIsSavingExternalShare] = useState(false);
+  const [isSavingChainAction, setIsSavingChainAction] = useState(false);
+  const [isDeletingWorkOrder, setIsDeletingWorkOrder] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [externalShareError, setExternalShareError] = useState("");
   const { showToast } = useToast();
   const menuRef = useRef(null);
+  useEffect(() => {
+    if (!isDeleteConfirmOpen) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && !isDeletingWorkOrder) setIsDeleteConfirmOpen(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isDeleteConfirmOpen, isDeletingWorkOrder]);
   const moreActionsButtonRef = useRef(null);
   const detailScrollRef = useRef(null);
   const commentsRef = useRef(null);
@@ -485,6 +505,12 @@ export function WorkOrderDetail({
   };
   const canEditDetails = canAccessRecord(grants, "work_orders.edit", record);
   const canCreateWorkOrder = hasPermission(grants, "work_orders.create");
+  const isRecurring = Boolean(selected.recurrence_rule?.frequency);
+  const isTerminal = ["Completed", "Skipped", "Cancelled"].includes(selected.status);
+  const canDelete = canAccessRecord(grants, "work_orders.delete", record);
+  const canDeleteWorkOrder = canDelete && Boolean(onDelete) && (!isRecurring || isTerminal);
+  const canGoToMostRecentInChain = isRecurring && Boolean(onGoToMostRecentInChain);
+  const canStopRepeating = isRecurring && canEditDetails && Boolean(onStopRepeating);
   const canChangeStatus = canAccessRecord(
     grants,
     "work_orders.change_status",
@@ -506,7 +532,7 @@ export function WorkOrderDetail({
     record,
   );
   const canUseComments = canViewComments || canPostComments;
-  const canUseMoreActions = canEditDetails || canChangeStatus || canCancelSkip || canUseComments || onToggleRead || canCreateWorkOrder || (externalSharingEnabled && canShareExternally);
+  const canUseMoreActions = canEditDetails || canChangeStatus || canCancelSkip || canUseComments || onToggleRead || canCreateWorkOrder || canGoToMostRecentInChain || canStopRepeating || canDelete || (externalSharingEnabled && canShareExternally);
   const assigneeOptionsByValue = new Map(assigneeOptions.map((option) => [option.value, option]));
   const identitiesById = new Map(memberDirectory.map((member) => [member.id, member]));
   const assignmentTargets = (selected.work_order_assignments ?? [])
@@ -534,6 +560,47 @@ export function WorkOrderDetail({
       // The Work Orders page owns and displays mutation errors.
     } finally {
       setIsChangingStatus(false);
+    }
+  };
+  const handleGoToMostRecentInChain = async () => {
+    if (!canGoToMostRecentInChain || isSavingChainAction) return;
+    setIsSavingChainAction(true);
+    setIsMenuOpen(false);
+    try {
+      await onGoToMostRecentInChain(selected);
+    } catch {
+      // The Work Orders page owns and displays chain action errors.
+    } finally {
+      setIsSavingChainAction(false);
+    }
+  };
+  const handleStopRepeating = async () => {
+    if (!canStopRepeating || isSavingChainAction) return;
+    setIsSavingChainAction(true);
+    setIsMenuOpen(false);
+    try {
+      await onStopRepeating(selected);
+    } catch {
+      // The Work Orders page owns and displays chain action errors.
+    } finally {
+      setIsSavingChainAction(false);
+    }
+  };
+  const handleDeleteWorkOrder = async () => {
+    if (!canDeleteWorkOrder || isDeletingWorkOrder) return;
+    setIsDeleteConfirmOpen(true);
+    setIsMenuOpen(false);
+  };
+  const confirmDeleteWorkOrder = async () => {
+    if (!canDeleteWorkOrder || isDeletingWorkOrder) return;
+    setIsDeletingWorkOrder(true);
+    try {
+      await onDelete(selected);
+      setIsDeleteConfirmOpen(false);
+    } catch {
+      // The Work Orders page owns and displays delete errors.
+    } finally {
+      setIsDeletingWorkOrder(false);
     }
   };
   const showMarkDoneAction = isDetailScrolled && canChangeStatus && selected.status !== "Completed";
@@ -694,36 +761,53 @@ export function WorkOrderDetail({
                 <button type="button" role="menuitem" disabled={isSavingReadState || !onToggleRead} onClick={async () => { await onToggleRead(selected); setIsMenuOpen(false); }}>
                   <span>Mark as {selected.is_read ? "unread" : "read"}</span>
                 </button>
+                {isRecurring && <button type="button" role="menuitem" disabled={isSavingChainAction || !canGoToMostRecentInChain} onClick={() => { void handleGoToMostRecentInChain(); }}>
+                  <span>Go to Most Recent in Chain</span>{!canGoToMostRecentInChain && <LockKeyhole size={14} aria-hidden="true" />}
+                </button>}
+                {isRecurring && <button className={!canStopRepeating ? "is-unavailable" : ""} type="button" role="menuitem" disabled={isSavingChainAction || !canStopRepeating} onClick={() => { void handleStopRepeating(); }}>
+                  <span>Stop Repeating</span>{!canStopRepeating && <LockKeyhole size={14} aria-hidden="true" />}
+                </button>}
                 <button className={!canCreateWorkOrder || !onCopy ? "is-unavailable" : ""} type="button" role="menuitem" disabled={!canCreateWorkOrder || !onCopy} onClick={() => { onCopy?.(); setIsMenuOpen(false); }}>
                   <span>Copy to New Work Order</span>{(!canCreateWorkOrder || !onCopy) && <LockKeyhole size={14} aria-hidden="true" />}
                 </button>
                 <button type="button" role="menuitem" onClick={() => { setIsPdfExportOpen(true); setIsMenuOpen(false); }}>
                   <span>Export to PDF</span>
                 </button>
-                {canCancelSkip ? <>
-                  <button type="button" role="menuitem" disabled={isChangingStatus || selected.status === "Skipped"} onClick={() => { setIsMenuOpen(false); void handleStatusChange("Skipped"); }}>
-                    <span>Skip Work Order</span>
-                  </button>
-                  <button type="button" role="menuitem" disabled={isChangingStatus || selected.status === "Cancelled"} onClick={() => { setIsMenuOpen(false); void handleStatusChange("Cancelled"); }}>
-                    <span>Cancel Work Order</span>
-                  </button>
-                </> : <button className="is-unavailable" type="button" role="menuitem" disabled title="Canceling and skipping Work Orders are not available for your role.">
-                  <span>Cancel Work Order</span><LockKeyhole size={14} aria-hidden="true" />
-                </button>}
+                {!isTerminal && (canCancelSkip ? (isRecurring ? <button type="button" role="menuitem" disabled={isChangingStatus} onClick={() => { setIsMenuOpen(false); void handleStatusChange("Skipped"); }}>
+                  <span>Skip Work Order</span>
+                </button> : <button type="button" role="menuitem" disabled={isChangingStatus} onClick={() => { setIsMenuOpen(false); void handleStatusChange("Cancelled"); }}>
+                  <span>Cancel Work Order</span>
+                </button>) : <button className="is-unavailable" type="button" role="menuitem" disabled title="Canceling and skipping Work Orders are not available for your role.">
+                  <span>{isRecurring ? "Skip Work Order" : "Cancel Work Order"}</span><LockKeyhole size={14} aria-hidden="true" />
+                </button>)}
                 {[
                   ["Save as Work Order Template", "Work Order templates are not available yet."],
                   ["Email to Vendors", "Emailing vendors is not available yet."],
-                  ["Delete", "Deleting Work Orders is not available yet."],
                 ].map(([label, unavailableMessage]) => (
                   <button className="is-unavailable" type="button" role="menuitem" key={label} disabled title={unavailableMessage}>
                     <span>{label}</span><LockKeyhole size={14} aria-hidden="true" />
                   </button>
                 ))}
+                <button className={!canDeleteWorkOrder ? "is-unavailable" : "is-danger"} type="button" role="menuitem" disabled={!canDeleteWorkOrder || isDeletingWorkOrder} title={!canDeleteWorkOrder && isRecurring && !isTerminal ? "Skip or stop repeating this Work Order before deleting it." : undefined} onClick={() => { void handleDeleteWorkOrder(); }}>
+                  <span>{isDeletingWorkOrder ? "Deleting…" : "Delete"}</span>{!canDeleteWorkOrder && <LockKeyhole size={14} aria-hidden="true" />}
+                </button>
               </div>}
             </div>
           )}
         </div>
       </header>
+      {isDeleteConfirmOpen && <div className="work-order-delete-confirmation-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !isDeletingWorkOrder) setIsDeleteConfirmOpen(false); }}>
+        <section className="work-order-delete-confirmation-modal" role="alertdialog" aria-modal="true" aria-labelledby="delete-work-order-title" aria-describedby="delete-work-order-description" onMouseDown={(event) => event.stopPropagation()}>
+          <div className="work-order-delete-confirmation-body">
+            <h3 id="delete-work-order-title">Delete Work Order?</h3>
+            <p id="delete-work-order-description">“{selected.title}” will be removed from normal Work Order views but can be restored by an administrator.</p>
+          </div>
+          <div className="work-order-delete-confirmation-actions">
+            <button type="button" onClick={() => setIsDeleteConfirmOpen(false)} disabled={isDeletingWorkOrder}>Cancel</button>
+            <button type="button" className="is-danger" onClick={() => { void confirmDeleteWorkOrder(); }} disabled={isDeletingWorkOrder}>{isDeletingWorkOrder ? "Deleting…" : "Delete"}</button>
+          </div>
+        </section>
+      </div>}
       {isMenuOpen && isMobileMenuViewport && <MobileActionSheet title="Work Order actions" variant="menu" onClose={() => setIsMenuOpen(false)}>
         <button type="button" disabled={!canEditDetails || !onEdit} onClick={() => { onEdit?.(); setIsMenuOpen(false); }}>
           Edit
@@ -734,31 +818,36 @@ export function WorkOrderDetail({
         <button type="button" disabled={isSavingReadState || !onToggleRead} onClick={async () => { await onToggleRead(selected); setIsMenuOpen(false); }}>
           Mark as {selected.is_read ? "unread" : "read"}
         </button>
+        {isRecurring && <button type="button" disabled={isSavingChainAction || !canGoToMostRecentInChain} onClick={() => { void handleGoToMostRecentInChain(); }}>
+          <span>Go to Most Recent in Chain</span>{!canGoToMostRecentInChain && <LockKeyhole size={14} aria-hidden="true" />}
+        </button>}
+        {isRecurring && <button type="button" className={!canStopRepeating ? "is-unavailable" : ""} disabled={isSavingChainAction || !canStopRepeating} onClick={() => { void handleStopRepeating(); }}>
+          <span>Stop Repeating</span>{!canStopRepeating && <LockKeyhole size={14} aria-hidden="true" />}
+        </button>}
         <button type="button" className={!canCreateWorkOrder || !onCopy ? "is-unavailable" : ""} disabled={!canCreateWorkOrder || !onCopy} onClick={() => { onCopy?.(); setIsMenuOpen(false); }}>
           <span>Copy to New Work Order</span>{(!canCreateWorkOrder || !onCopy) && <LockKeyhole size={14} aria-hidden="true" />}
         </button>
         <button type="button" onClick={() => { setIsPdfExportOpen(true); setIsMenuOpen(false); }}>
           Export to PDF
         </button>
-        {canCancelSkip ? <>
-          <button type="button" disabled={isChangingStatus || selected.status === "Skipped"} onClick={() => { setIsMenuOpen(false); void handleStatusChange("Skipped"); }}>
-            Skip Work Order
-          </button>
-          <button type="button" disabled={isChangingStatus || selected.status === "Cancelled"} onClick={() => { setIsMenuOpen(false); void handleStatusChange("Cancelled"); }}>
-            Cancel Work Order
-          </button>
-        </> : <button type="button" className="is-unavailable" disabled title="Canceling and skipping Work Orders are not available for your role.">
-          <span>Cancel Work Order</span><LockKeyhole size={14} aria-hidden="true" />
-        </button>}
+        {!isTerminal && (canCancelSkip ? (isRecurring ? <button type="button" disabled={isChangingStatus} onClick={() => { setIsMenuOpen(false); void handleStatusChange("Skipped"); }}>
+          Skip Work Order
+        </button> : <button type="button" disabled={isChangingStatus} onClick={() => { setIsMenuOpen(false); void handleStatusChange("Cancelled"); }}>
+          Cancel Work Order
+        </button>) : <button type="button" className="is-unavailable" disabled title="Canceling and skipping Work Orders are not available for your role.">
+          <span>{isRecurring ? "Skip Work Order" : "Cancel Work Order"}</span><LockKeyhole size={14} aria-hidden="true" />
+        </button>)}
         {[
           ["Save as Work Order Template", "Work Order templates are not available yet."],
           ["Email to Vendors", "Emailing vendors is not available yet."],
-          ["Delete", "Deleting Work Orders is not available yet."],
         ].map(([label, unavailableMessage]) => (
           <button type="button" className="is-unavailable" key={label} disabled title={unavailableMessage}>
             <span>{label}</span><LockKeyhole size={14} aria-hidden="true" />
           </button>
         ))}
+        <button type="button" className={!canDeleteWorkOrder ? "is-unavailable" : "is-danger"} disabled={!canDeleteWorkOrder || isDeletingWorkOrder} onClick={() => { void handleDeleteWorkOrder(); }}>
+          <span>{isDeletingWorkOrder ? "Deleting…" : "Delete"}</span>{!canDeleteWorkOrder && <LockKeyhole size={14} aria-hidden="true" />}
+        </button>
       </MobileActionSheet>}
       <div className="detail-mobile-record-header">
         <div className="detail-mobile-record-title"><h1>{selected.title}</h1></div>
@@ -777,7 +866,7 @@ export function WorkOrderDetail({
             <div className="detail-status-row">
               <div>
                 <div className="detail-status-buttons" role="group" aria-label="Work Order status">
-                {statusOptions.map(({ value, label, className, icon: Icon }) => (
+                {[...statusOptions, ...(terminalStatusOptions[selected.status] ? [terminalStatusOptions[selected.status]] : [])].map(({ value, label, className, icon: Icon }) => (
                   <button
                       className={`detail-status-button${className ? ` ${className}` : ""}${selected.status === value ? " is-active" : ""}`}
                       type="button"

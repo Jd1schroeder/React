@@ -517,6 +517,8 @@
 .work-order-filter-status-icon.on-hold { color: var(--warning); }
 .work-order-filter-status-icon.in-progress { color: var(--status-info); }
 .work-order-filter-status-icon.completed { color: var(--success); }
+.work-order-filter-status-icon.skipped { color: var(--status-muted); }
+.work-order-filter-status-icon.cancelled { color: var(--danger); }
 .work-order-filter-option-row {
   box-sizing: border-box;
   display: flex;

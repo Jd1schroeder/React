@@ -843,6 +843,14 @@
 .work-order-status-option.completed {
   color: var(--success);
 }
+.work-order-status-trigger.skipped,
+.work-order-status-option.skipped {
+  color: var(--status-muted);
+}
+.work-order-status-trigger.cancelled,
+.work-order-status-option.cancelled {
+  color: var(--danger);
+}
 .work-order-status-menu {
   position: fixed;
   z-index: 1200;
@@ -887,6 +895,12 @@
 }
 .work-order-status-option.completed {
   color: var(--success);
+}
+.work-order-status-option.skipped {
+  color: var(--status-muted);
+}
+.work-order-status-option.cancelled {
+  color: var(--danger);
 }
 .work-order-status-option .status-option-selected-icon {
   color: var(--blue);

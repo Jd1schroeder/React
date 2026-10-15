@@ -19,7 +19,7 @@ import { listOrganizationMembers, listOrganizationTeamMemberships, listOrganizat
 import { useWorkspace } from '../components/layout/useWorkspace'
 import { getFeatureLabel } from '../utils/featureLabels'
 import { usePersistedFilterSelection } from '../hooks/usePersistedFilterSelection'
-import { createWorkOrder, getWorkOrderById, listWorkOrderCalendarDates, listWorkOrderCalendarDay, listWorkOrderInboxCounts, listWorkOrderInboxPage, markWorkOrderInboxRead, markWorkOrderRead, markWorkOrderUnread, signWorkOrderAttachmentUrls, updateWorkOrderDetails, updateWorkOrderExecution } from '../services/workOrderService'
+import { createWorkOrder, deleteWorkOrder, getMostRecentWorkOrderInChain, getWorkOrderById, listWorkOrderCalendarDates, listWorkOrderCalendarDay, listWorkOrderInboxCounts, listWorkOrderInboxPage, markWorkOrderInboxRead, markWorkOrderRead, markWorkOrderUnread, signWorkOrderAttachmentUrls, stopWorkOrderRecurrence, updateWorkOrderDetails, updateWorkOrderExecution } from '../services/workOrderService'
 import { NewWorkOrderForm } from './work-orders/NewWorkOrderForm'
 import { formatCalendarDateForUser, formatDateForUser } from '../utils/dateFormatting'
 import { getWorkOrderInboxPreferences, saveWorkOrderInboxPreferences } from '../services/workOrderInboxPreferenceService'
@@ -171,6 +171,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   const [recordLookupResult, setRecordLookupResult] = useState(null)
   const [groupCounts, setGroupCounts] = useState({})
   const [refreshVersion, setRefreshVersion] = useState(0)
+  const [selectFirstAfterRefresh, setSelectFirstAfterRefresh] = useState(false)
   const [localSelectedId, setLocalSelectedId] = useState()
   const [search, setSearch] = useState('')
   const [utilityPage, setUtilityPage] = useState(null)
@@ -450,7 +451,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
       await markWorkOrderInboxRead({ organizationId, tab: activeTab, search: debouncedSearch, filters: activeFilters, customFields: workOrderSettings.workOrderFields.customFields, grants })
       const normalizedSearch = debouncedSearch.trim().toLowerCase()
       setWorkOrdersById((current) => Object.fromEntries(Object.entries(current).map(([id, order]) => {
-        const inTab = activeTab === 'Done' ? order.status === 'Completed' : order.status !== 'Completed'
+        const inTab = activeTab === 'Done' ? ['Completed', 'Skipped', 'Cancelled'].includes(order.status) : !['Completed', 'Skipped', 'Cancelled'].includes(order.status)
         const matchesSearch = !normalizedSearch || `${order.title} ${order.id} ${order.work_order_number}`.toLowerCase().includes(normalizedSearch)
         return [id, inTab && matchesSearch && matchesWorkOrderFilters(order, activeFilters, workOrderSettings.workOrderFields.customFields) ? { ...order, is_read: true } : order]
       })))
@@ -718,6 +719,52 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
       // The entry operation already succeeded; leave the detail state intact if a refresh is unavailable.
     }
   }, [grants, organizationId, selected, workspace.preferences])
+  const goToMostRecentWorkOrderInChain = useCallback(async (order) => {
+    try {
+      const mostRecent = await getMostRecentWorkOrderInChain({ organizationId, workOrder: order, grants })
+      if (!mostRecent || mostRecent.id === order.id) {
+        showToast('This is already the most recent Work Order in this chain.')
+        return
+      }
+      setWorkOrdersById((current) => ({ ...current, [mostRecent.id]: mostRecent }))
+      setLocalSelectedId(mostRecent.id)
+      onNavigateRecord?.('workorders', mostRecent.id)
+      void markViewed(mostRecent)
+    } catch (chainError) {
+      setError(chainError.message || 'Unable to load the most recent Work Order in this chain.')
+      throw chainError
+    }
+  }, [grants, markViewed, onNavigateRecord, organizationId, showToast])
+  const stopRepeatingWorkOrder = useCallback(async (order) => {
+    try {
+      await stopWorkOrderRecurrence({ organizationId, workOrderId: order.id, grants, record: workOrderAccessContext(order, userId, teamIds) })
+      const updated = await getWorkOrderById({ organizationId, workOrderId: order.id, grants, signAttachmentUrls: false })
+      if (updated) setWorkOrdersById((current) => ({ ...current, [updated.id]: normalizeWorkOrder(updated, workspace.preferences) }))
+      setRefreshVersion((version) => version + 1)
+      showToast('Work Order recurrence stopped.')
+    } catch (stopError) {
+      setError(stopError.message || 'Unable to stop Work Order recurrence.')
+      throw stopError
+    }
+  }, [grants, organizationId, showToast, teamIds, userId, workspace.preferences])
+  const deleteSelectedWorkOrder = useCallback(async (order) => {
+    try {
+      await deleteWorkOrder({ organizationId, workOrderId: order.id, grants, record: workOrderAccessContext(order, userId, teamIds) })
+      setWorkOrdersById((current) => {
+        const next = { ...current }
+        delete next[order.id]
+        return next
+      })
+      setSelectFirstAfterRefresh(true)
+      setRefreshVersion((version) => version + 1)
+      setLocalSelectedId(undefined)
+      onNavigate?.('Work Orders')
+      showToast('Work Order deleted.')
+    } catch (deleteError) {
+      setError(deleteError.message || 'Unable to delete this Work Order.')
+      throw deleteError
+    }
+  }, [grants, onNavigate, organizationId, showToast, teamIds, userId])
   const getExternalShare = useCallback(async (workOrderId) => {
     const [share, contacts] = await Promise.all([
       getExternalWorkOrderShare(workOrderId),
@@ -895,7 +942,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     ? <NewWorkOrderForm initialWorkOrder={copySource} workOrderLabel={workOrderSingularLabel} onCancel={() => { setIsCreating(false); setCopySource(null) }} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} requiredSchedule={workOrderSettings.requiredSchedule} customFields={workOrderSettings.workOrderFields.customFields} />
     : isEditingSelected
       ? <NewWorkOrderForm mode="edit" initialWorkOrder={selected} workOrderLabel={workOrderSingularLabel} onCancel={() => guardNavigation(() => { setHasUnsavedChanges(false); setEditingWorkOrderId(null) })} onDirtyChange={setHasUnsavedChanges} onUpdate={handleUpdate} isSaving={isSavingEdit} error={editError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} requiredSchedule={workOrderSettings.requiredSchedule} customFields={workOrderSettings.workOrderFields.customFields} />
-      : <WorkOrderDetail selected={selected} isLoadingRecord={isLoadingSelectedRecord} missingRecord={missingRecord} onBack={() => { setLocalSelectedId(undefined); onNavigate?.('Work Orders') }} onEdit={() => selected && handleEdit(selected)} onCopy={() => selected && handleCopy(selected)} onStatusChange={changeStatus} onPreparePdfExport={prepareWorkOrderForPdfExport} assigneeOptions={assigneeOptions} memberDirectory={memberDirectory} timeEntryMembers={timeEntryMembers} mentionTargets={mentionTargets} assignMentionsEnabled={Boolean(workOrderSettings.assignUsersTeamsOnMention)} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} dateFormat={workspace.preferences?.date_format} timezone={workspace.preferences?.timezone} onLoadActivity={loadWorkOrderActivity} onPostComment={postWorkOrderComment} onUpdateComment={editWorkOrderComment} onDeleteComment={removeWorkOrderComment} canDeleteAnyComments={canDeleteAnyWorkOrderComment} onResolveWorkOrderLinks={resolveWorkOrderLinks} organizationId={organizationId} currency={currency} isOrganizationAdmin={canManageOrganizationWorkOrderFilters} workOrderSettings={workOrderSettings} onTimeTrackingChanged={refreshSelectedWorkOrder} externalSharingEnabled={Boolean(workOrderSettings.externalWorkOrders)} canShareExternally={canShareExternally} onGetExternalShare={getExternalShare} onCreateExternalShare={createExternalShare} onDisableExternalShare={disableExternalShare} onResetExternalShare={resetExternalShare} onSaveExternalShareContacts={saveExternalShareContacts} />
+      : <WorkOrderDetail selected={selected} isLoadingRecord={isLoadingSelectedRecord} missingRecord={missingRecord} onBack={() => { setLocalSelectedId(undefined); onNavigate?.('Work Orders') }} onEdit={() => selected && handleEdit(selected)} onCopy={() => selected && handleCopy(selected)} onGoToMostRecentInChain={goToMostRecentWorkOrderInChain} onStopRepeating={stopRepeatingWorkOrder} onDelete={deleteSelectedWorkOrder} onStatusChange={changeStatus} onPreparePdfExport={prepareWorkOrderForPdfExport} assigneeOptions={assigneeOptions} memberDirectory={memberDirectory} timeEntryMembers={timeEntryMembers} mentionTargets={mentionTargets} assignMentionsEnabled={Boolean(workOrderSettings.assignUsersTeamsOnMention)} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} dateFormat={workspace.preferences?.date_format} timezone={workspace.preferences?.timezone} onLoadActivity={loadWorkOrderActivity} onPostComment={postWorkOrderComment} onUpdateComment={editWorkOrderComment} onDeleteComment={removeWorkOrderComment} canDeleteAnyComments={canDeleteAnyWorkOrderComment} onResolveWorkOrderLinks={resolveWorkOrderLinks} organizationId={organizationId} currency={currency} isOrganizationAdmin={canManageOrganizationWorkOrderFilters} workOrderSettings={workOrderSettings} onTimeTrackingChanged={refreshSelectedWorkOrder} externalSharingEnabled={Boolean(workOrderSettings.externalWorkOrders)} canShareExternally={canShareExternally} onGetExternalShare={getExternalShare} onCreateExternalShare={createExternalShare} onDisableExternalShare={disableExternalShare} onResetExternalShare={resetExternalShare} onSaveExternalShareContacts={saveExternalShareContacts} />
 
   return <>
   {utilityPage === 'filters' && canViewWorkOrders && !isMobileRecordView ? <WorkOrderFilterPage
@@ -940,7 +987,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
       <WorkOrderCalendar view={calendarView} selectedDate={calendarDate} onViewChange={setCalendarView} onDateChange={setCalendarDate} markers={visibleCalendarMarkers} />
       <WorkOrderCalendarResults orders={calendarVisibleOrders} loading={calendarLoading} error={calendarError} selected={selected} readStatusById={workOrdersById} onSelect={selectOrder} onStatusChange={changeStatus} canChangeStatusForOrder={canChangeStatusForOrder} />
     </> : <>
-      <WorkOrderList userId={userId} organizationId={organizationId} activeTab={activeTab} setActiveTab={changeInboxTab} search={debouncedSearch} filters={activeFilters} groupCounts={groupCounts} readStatusById={workOrdersById} selected={selected} onOrdersLoaded={storeOrders} onLoadGroupPage={loadGroupPage} onHydrateAttachments={hydrateGroupAttachments} refreshVersion={refreshVersion} onSelect={selectOrder} onStatusChange={changeStatus} onReadAll={() => { setReadError(''); setIsReadAllConfirmOpen(true) }} onClearFilters={() => changeInboxFilters([])} isReadAllSaving={isSavingReadState || search !== debouncedSearch} canChangeStatusForOrder={canChangeStatusForOrder} sortId={sortId} onSortChange={changeInboxSort} unreadFirst={unreadFirst} onUnreadFirstChange={changeUnreadFirst} pageSize={pageSize} />
+      <WorkOrderList userId={userId} organizationId={organizationId} activeTab={activeTab} setActiveTab={changeInboxTab} search={debouncedSearch} filters={activeFilters} groupCounts={groupCounts} readStatusById={workOrdersById} selected={selected} onOrdersLoaded={(orders, options) => { storeOrders(orders, options); if (options?.selectFirst) setSelectFirstAfterRefresh(false) }} onLoadGroupPage={loadGroupPage} onHydrateAttachments={hydrateGroupAttachments} refreshVersion={refreshVersion} selectFirstAfterRefresh={selectFirstAfterRefresh} onSelect={selectOrder} onStatusChange={changeStatus} onReadAll={() => { setReadError(''); setIsReadAllConfirmOpen(true) }} onClearFilters={() => changeInboxFilters([])} isReadAllSaving={isSavingReadState || search !== debouncedSearch} canChangeStatusForOrder={canChangeStatusForOrder} sortId={sortId} onSortChange={changeInboxSort} unreadFirst={unreadFirst} onUnreadFirstChange={changeUnreadFirst} pageSize={pageSize} />
       {workOrderRecordView}
     </>}</>}
   </PanelLayout>}
