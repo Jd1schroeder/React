@@ -933,7 +933,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     onUpdateSavedFilter={updateSavedWorkOrderFilter}
     onDeleteSavedFilter={deleteSavedWorkOrderFilter}
   /> : null}>
-    {isLoading && <div className="work-orders-loading">Loading Work Orders...</div>}
+    {isLoading && <div className="work-orders-loading" aria-busy="true"><span className="work-orders-loading-spinner" aria-hidden="true" />Loading Work Orders...</div>}
     {!isLoading && error && <div className="work-orders-loading" role="alert">{error}</div>}
     {!isLoading && !error && !canViewWorkOrders && <div className="work-orders-loading" role="status">You do not have permission to view Work Orders.</div>}
     {!isLoading && !error && canViewWorkOrders && <>{readError && <div className="work-orders-loading" role="alert">{readError}</div>}{inboxPreferenceError && <div className="work-orders-loading" role="alert">{inboxPreferenceError}</div>}{calendarView !== 'all' ? isMobileRecordView ? workOrderRecordView : <>

@@ -19,6 +19,36 @@ import { getFeatureModuleKeyForPage, isFeatureModuleEnabled } from "../../utils/
 import { Avatar } from "../ui/Avatar";
 import { useWorkspace } from "./useWorkspace";
 
+const SIDEBAR_PREFERENCES_KEY = "workbench.sidebar.preferences.v1";
+
+function readSidebarPreferences() {
+  if (typeof window === "undefined") return {};
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(SIDEBAR_PREFERENCES_KEY) || "{}");
+    return stored && typeof stored === "object" ? stored : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeSidebarPreferences(preferences) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(SIDEBAR_PREFERENCES_KEY, JSON.stringify(preferences));
+  } catch {
+    // Sidebar preferences are optional; navigation should still work when storage is unavailable.
+  }
+}
+
+function defaultExpandedGroups(activePage) {
+  return Object.fromEntries(sidebarGroups.map((group) => [
+    group.label,
+    group.label === "Work" || group.items.some(
+      (item) => item.page === activePage || item.children?.some((child) => child.page === activePage),
+    ),
+  ]));
+}
+
 function NavItem({ item, activePage, onNavigate, collapsed, nested = false, featureLabels }) {
   const [expanded, setExpanded] = useState(() =>
     item.children?.some((child) => child.page === activePage) ?? false,
@@ -72,21 +102,13 @@ function NavItem({ item, activePage, onNavigate, collapsed, nested = false, feat
   );
 }
 
-function NavGroup({ group, activePage, onNavigate, collapsed, featureLabels }) {
-  const [expanded, setExpanded] = useState(() =>
-    group.label === "Work" ||
-    group.items.some(
-      (item) =>
-        item.page === activePage ||
-        item.children?.some((child) => child.page === activePage),
-    ),
-  );
+function NavGroup({ group, activePage, onNavigate, collapsed, featureLabels, expanded, onToggle }) {
   return (
     <section className="sidebar-group">
       {!collapsed && (
         <button
           className="group-heading"
-          onClick={() => setExpanded((value) => !value)}
+          onClick={onToggle}
           aria-expanded={expanded}
         >
           <p>{group.label}</p>
@@ -112,7 +134,9 @@ function NavGroup({ group, activePage, onNavigate, collapsed, featureLabels }) {
 }
 
 export function Sidebar({ activePage, onNavigate }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const storedSidebarPreferences = readSidebarPreferences();
+  const [collapsed, setCollapsed] = useState(() => storedSidebarPreferences.collapsed === true);
+  const [expandedGroups, setExpandedGroups] = useState(() => storedSidebarPreferences.expandedGroups ?? defaultExpandedGroups(activePage));
   const [unreadWorkOrderBadge, setUnreadWorkOrderBadge] = useState({ organizationId: null, count: null });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
@@ -145,6 +169,10 @@ export function Sidebar({ activePage, onNavigate }) {
   const hasMultipleOrganizations = workspace.organizations?.length > 1;
   const canViewWorkOrders = workspace.authorization?.status === "ready" && hasPermission(workspace.authorization.grants, "work_orders.view");
   const unreadWorkOrderCount = unreadWorkOrderBadge.organizationId === organizationId ? unreadWorkOrderBadge.count : null;
+
+  useEffect(() => {
+    writeSidebarPreferences({ collapsed, expandedGroups });
+  }, [collapsed, expandedGroups]);
 
   useEffect(() => {
     if (!organizationId || !workspace.user?.id || !canViewWorkOrders) return undefined;
@@ -207,6 +235,8 @@ export function Sidebar({ activePage, onNavigate }) {
             onNavigate={onNavigate}
             collapsed={collapsed}
             featureLabels={workspace.organization?.feature_labels}
+            expanded={expandedGroups[group.label] ?? false}
+            onToggle={() => setExpandedGroups((current) => ({ ...current, [group.label]: !(current[group.label] ?? false) }))}
           />
         ))}
       </nav>
