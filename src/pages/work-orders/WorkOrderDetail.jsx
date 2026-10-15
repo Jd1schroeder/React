@@ -208,9 +208,10 @@ function WorkOrderDescription({ order }) {
           </div>
         </div>
       </div>
-      <div className="detail-attachments-row">
-        {pictures.length > 0 && (
-          <div className="detail-attachment-gallery">
+      {(pictures.length > 0 || files.length > 0) && (
+        <div className="detail-attachments-row">
+          {pictures.length > 0 && (
+            <div className="detail-attachment-gallery">
             <div
               className="detail-attachment-carousel"
               onTouchStart={handlePictureTouchStart}
@@ -294,19 +295,16 @@ function WorkOrderDescription({ order }) {
                 </button>
               </div>
             )}
-          </div>
-        )}
-        {files.length > 0 ? (
-          <div className="attachment-row">
-            <Paperclip size={15} aria-hidden="true" />
-            <span>{files.map((file) => file.file_name).filter(Boolean).join(", ")}</span>
-          </div>
-        ) : pictures.length === 0 ? (
-          <div className="attachment-row">
-            <Paperclip size={15} aria-hidden="true" /> No attachments yet
-          </div>
-        ) : null}
-      </div>
+            </div>
+          )}
+          {files.length > 0 && (
+            <div className="attachment-row">
+              <Paperclip size={15} aria-hidden="true" />
+              <span>{files.map((file) => file.file_name).filter(Boolean).join(", ")}</span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -880,7 +878,7 @@ export function WorkOrderDetail({
               <div className="detail-cost-row" key={label}>
                 <span>{label}</span>
                 <button type="button" disabled={label === "Parts"} title={`${label} tracking is not available yet.`}>
-                  Add <ChevronRight size={14} aria-hidden="true" />
+                  Add <ChevronRight size={20} aria-hidden="true" />
                 </button>
               </div>
             ))}

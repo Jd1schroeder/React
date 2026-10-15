@@ -475,13 +475,18 @@ export function WorkOrderTimeTracking({ organizationId, workOrderId, grants, rec
       <div className="detail-cost-row work-order-time-summary">
         <span className="work-order-time-overview-link"><Timer size={16} aria-hidden="true" /> Time</span>
         <div className="work-order-time-summary-actions">
-          <button type="button" className="work-order-time-overview-value-link" onClick={() => setIsOverviewOpen(true)} aria-label="View time overview">
-            <span className="work-order-time-summary-value">{isLoading ? "Loading..." : totalSeconds > 0 ? formatCompactDuration(totalSeconds) : ""}</span>
-            <ChevronRight className="work-order-time-overview-chevron" size={20} aria-hidden="true" />
-          </button>
-          <button type="button" className="work-order-time-add" onClick={() => setIsAddOpen(true)} disabled={isSaving || isLoading}>
-            Add <Plus className="work-order-time-add-icon" size={14} aria-hidden="true" /><ChevronRight className="work-order-time-add-chevron" size={20} aria-hidden="true" />
-          </button>
+          {isLoading ? (
+            <span className="work-order-time-summary-value">Loading...</span>
+          ) : totalSeconds > 0 ? (
+            <button type="button" className="work-order-time-overview-value-link" onClick={() => setIsOverviewOpen(true)} aria-label="View time overview">
+              <span className="work-order-time-summary-value">{formatCompactDuration(totalSeconds)}</span>
+              <ChevronRight className="work-order-time-overview-chevron" size={20} aria-hidden="true" />
+            </button>
+          ) : (
+            <button type="button" className="work-order-time-add" onClick={() => setIsAddOpen(true)} disabled={isSaving}>
+              Add <ChevronRight className="work-order-time-add-chevron" size={20} aria-hidden="true" />
+            </button>
+          )}
         </div>
       </div>
       {totalSeconds > 0 && <div className="work-order-time-cost-row"><span>Time Cost:</span><strong>{formatCurrency(totalCost, currency)}</strong></div>}

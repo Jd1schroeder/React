@@ -466,7 +466,7 @@ a.detail-assignee-link:hover {
 .work-order-time-overview-value-link { display: inline-flex; align-items: center; gap: var(--spacing-2); padding: 0; border: 0; color: var(--blue); background: transparent; font: inherit; cursor: pointer; }
 .work-order-time-add { display: inline-flex; align-items: center; gap: var(--spacing-1); padding: var(--spacing-2); border: 0; color: var(--blue); background: transparent; font: inherit; cursor: pointer; }
 .work-order-time-add:disabled { color: var(--text-disabled-muted); cursor: not-allowed; }
-.work-order-time-add-chevron { display: none; }
+.work-order-time-add-chevron { display: block; }
 .work-order-time-overview-chevron { display: none; }
 .work-order-time-summary-value {
   color: var(--blue);
@@ -1420,14 +1420,18 @@ a.detail-assignee-link:hover {
     color: var(--blue);
   }
 
-  .work-order-time-overview-link > svg,
-  .work-order-time-add,
-  .work-order-time-add-icon {
+  .work-order-time-overview-link > svg {
     display: none;
   }
 
   .work-order-time-overview-value-link { font-weight: var(--font-semibold); }
   .work-order-time-overview-chevron { display: block; color: var(--blue); }
+
+  .work-order-time-add {
+    padding: 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-semibold);
+  }
 
   .work-order-time-tracking > .work-order-time-entry-list { display: none; }
 
