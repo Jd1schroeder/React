@@ -117,6 +117,7 @@ function makeQueryBuilder(data, calls) {
 describe('getDashboardRecentActivityPage', () => {
   it('fetches an initial page of eight events and uses the ninth to signal continuation', async () => {
     const activityCalls = []
+    const commentCalls = []
     const orderCalls = []
     const events = Array.from({ length: 9 }, (_, index) => ({
       id: `activity-${index + 1}`,
@@ -126,9 +127,11 @@ describe('getDashboardRecentActivityPage', () => {
       details: {},
       created_at: new Date(Date.UTC(2026, 9, 8, 17, 0 - index)).toISOString(),
     }))
-    serviceMocks.supabaseFrom.mockImplementation((table) => table === 'work_order_activity'
-      ? makeQueryBuilder(events, activityCalls)
-      : makeQueryBuilder(events.slice(0, 8).map((event) => ({ id: event.work_order_id, title: `Order ${event.id}`, work_order_number: event.id })), orderCalls))
+    serviceMocks.supabaseFrom.mockImplementation((table) => {
+      if (table === 'work_order_activity') return makeQueryBuilder(events, activityCalls)
+      if (table === 'work_order_comments') return makeQueryBuilder([], commentCalls)
+      return makeQueryBuilder(events.slice(0, 8).map((event) => ({ id: event.work_order_id, title: `Order ${event.id}`, work_order_number: event.id })), orderCalls)
+    })
 
     const page = await getDashboardRecentActivityPage({
       organizationId: 'organization-1',
@@ -140,7 +143,49 @@ describe('getDashboardRecentActivityPage', () => {
     expect(page.hasMore).toBe(true)
     expect(page.nextCursor).toEqual({ created_at: events[7].created_at, id: events[7].id })
     expect(activityCalls).toContainEqual(['limit', 9])
+    expect(commentCalls).toContainEqual(['limit', 9])
     expect(orderCalls).toContainEqual(['in', 'id', events.slice(0, 8).map((event) => event.work_order_id)])
+  })
+
+  it('merges comments with Work Order activity in descending order', async () => {
+    const workOrder = { id: 'work-order-1', title: 'Image test', work_order_number: 2 }
+    const activity = {
+      id: 'activity-1',
+      work_order_id: workOrder.id,
+      actor_id: 'user-1',
+      event_type: 'status_changed',
+      details: { to: 'Completed' },
+      created_at: '2026-10-08T17:00:00.000Z',
+    }
+    const comment = {
+      id: 'comment-1',
+      work_order_id: workOrder.id,
+      author_id: 'user-2',
+      body: 'Replaced the filter.',
+      created_at: '2026-10-08T17:01:00.000Z',
+    }
+    serviceMocks.supabaseFrom.mockImplementation((table) => {
+      if (table === 'work_order_activity') return makeQueryBuilder([activity], [])
+      if (table === 'work_order_comments') return makeQueryBuilder([comment], [])
+      return makeQueryBuilder([workOrder], [])
+    })
+
+    const page = await getDashboardRecentActivityPage({
+      organizationId: 'organization-1',
+      userId: 'user-1',
+      grants: { 'work_orders.view_comments': 'any' },
+    })
+
+    expect(page.items).toHaveLength(2)
+    expect(page.items[0]).toMatchObject({
+      id: 'comment-1',
+      kind: 'comment',
+      actor_id: 'user-2',
+      event_type: 'comment_created',
+      body: 'Replaced the filter.',
+      workOrder,
+    })
+    expect(page.items[1]).toMatchObject({ id: 'activity-1', kind: 'activity', workOrder })
   })
 
   it('continues from a stable timestamp-and-id cursor', async () => {

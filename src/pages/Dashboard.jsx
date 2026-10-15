@@ -64,12 +64,30 @@ function formatActivityTime(value, timeZone) {
   return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone }).format(new Date(value))
 }
 
+function formatActivityDuration(totalSeconds) {
+  const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0))
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const remainder = seconds % 60
+  return [hours ? `${hours}h` : null, `${minutes}m`, `${remainder}s`].filter(Boolean).join(' ')
+}
+
 function getActivityPhrase(event) {
+  if (event.kind === 'comment') return event.deleted_at ? 'deleted a comment on' : 'commented on'
+  if (event.event_type === 'work_order_time_added') return `logged ${formatActivityDuration(event.details?.duration_seconds)} on`
+  if (event.event_type === 'work_order_time_updated') return `updated time to ${formatActivityDuration(event.details?.to_seconds)} on`
+  if (event.event_type === 'work_order_time_deleted') return `deleted ${formatActivityDuration(event.details?.duration_seconds)} from`
   if (event.event_type === 'work_order_created') return 'created'
   if (event.event_type === 'status_changed') {
     return event.details?.to === 'Completed' ? 'completed' : `changed the status to ${event.details?.to ?? 'updated'}`
   }
   return 'updated'
+}
+
+function getCommentPreview(event) {
+  if (event.kind !== 'comment' || event.deleted_at || !event.body?.trim()) return ''
+  const preview = event.body.trim().replace(/\s+/g, ' ')
+  return ` “${preview.length > 140 ? `${preview.slice(0, 137)}…` : preview}”`
 }
 
 const dashboardMetricDefinitions = {
@@ -475,6 +493,7 @@ function ActivityRow({ event, timeZone, currentUserId, currentUserProfile, curre
   const order = event.workOrder
   const isCurrentUser = Boolean(currentUserId && event.actor_id === currentUserId)
   const actorName = isCurrentUser ? currentUserName : event.actorLabel
+  const commentPreview = getCommentPreview(event)
   return (
     <li className="dashboard-activity-row">
       <span className={`dashboard-activity-avatar${isCurrentUser ? ' is-you' : ''}`} aria-hidden="true">
@@ -484,7 +503,7 @@ function ActivityRow({ event, timeZone, currentUserId, currentUserProfile, curre
       </span>
       <p>
         <strong>{actorName}</strong> {getActivityPhrase(event)}{' '}
-        <Link to={getRecordPath('workorders', order.id)}>#{order.work_order_number} {order.title}</Link>.
+        <Link to={getRecordPath('workorders', order.id)}>#{order.work_order_number} {order.title}</Link>{commentPreview}.
         <time dateTime={event.created_at}>{formatActivityTime(event.created_at, timeZone)}</time>
       </p>
     </li>

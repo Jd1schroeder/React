@@ -5,6 +5,17 @@ import { listWorkOrderInboxCounts, listWorkOrderInboxPage } from './workOrderSer
 const recentActivityPageSize = 8
 const dashboardWorkOrderGroupIds = new Set(['assigned-to-me', 'assigned-to-my-teams'])
 
+function applyRecentActivityCursor(query, before) {
+  if (!before?.created_at || !before?.id) return query
+  return query.or(`created_at.lt.${before.created_at},and(created_at.eq.${before.created_at},id.lt.${before.id})`)
+}
+
+function compareRecentActivityItems(first, second) {
+  const timeDifference = new Date(second.created_at).getTime() - new Date(first.created_at).getTime()
+  if (timeDifference !== 0) return timeDifference
+  return second.id.localeCompare(first.id)
+}
+
 async function countWorkOrders(organizationId, configureQuery) {
   const query = supabase.from('work_orders')
     .select('id', { count: 'exact', head: true })
@@ -17,17 +28,38 @@ async function countWorkOrders(organizationId, configureQuery) {
 export async function getDashboardRecentActivityPage({ organizationId, userId, grants, before = null }) {
   if (!organizationId) throw new Error('Choose a workspace to view recent activity.')
   assertPermission(grants, 'work_orders.view_comments')
-  let activityQuery = supabase.from('work_order_activity')
-    .select('id, work_order_id, actor_id, event_type, details, created_at')
-    .eq('organization_id', organizationId)
-    .order('created_at', { ascending: false })
-    .order('id', { ascending: false })
-  if (before?.created_at && before?.id) {
-    activityQuery = activityQuery.or(`created_at.lt.${before.created_at},and(created_at.eq.${before.created_at},id.lt.${before.id})`)
-  }
-  const { data: fetchedEvents, error } = await activityQuery.limit(recentActivityPageSize + 1)
-  if (error) throw error
-  const events = fetchedEvents ?? []
+  const [activityResult, commentsResult] = await Promise.all([
+    applyRecentActivityCursor(
+      supabase.from('work_order_activity')
+        .select('id, work_order_id, actor_id, event_type, details, created_at')
+        .eq('organization_id', organizationId)
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
+        .limit(recentActivityPageSize + 1),
+      before,
+    ),
+    applyRecentActivityCursor(
+      supabase.from('work_order_comments')
+        .select('id, work_order_id, author_id, body, external_author_name, external_author_email, created_at, edited_at, deleted_at, deleted_by')
+        .eq('organization_id', organizationId)
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
+        .limit(recentActivityPageSize + 1),
+      before,
+    ),
+  ])
+  if (activityResult.error) throw activityResult.error
+  if (commentsResult.error) throw commentsResult.error
+
+  const events = [
+    ...(activityResult.data ?? []).map((event) => ({ ...event, kind: 'activity' })),
+    ...(commentsResult.data ?? []).map((comment) => ({
+      ...comment,
+      actor_id: comment.author_id,
+      event_type: 'comment_created',
+      kind: 'comment',
+    })),
+  ].sort(compareRecentActivityItems)
   const pageEvents = events.slice(0, recentActivityPageSize)
   if (!pageEvents.length) return { items: [], hasMore: false, nextCursor: null }
 

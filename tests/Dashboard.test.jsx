@@ -103,6 +103,53 @@ describe('mobile Overview dashboard', () => {
     expect(activityRow.querySelector('img')).toHaveAttribute('src', 'https://example.com/josh-avatar.png')
   })
 
+  it('renders comment entries in Recent Activity', async () => {
+    dashboardMocks.getDashboardOverview.mockResolvedValueOnce({
+      canViewWorkOrders: true,
+      metrics: { highPriorityCount: 0, overdueCount: 0, dueTodayCount: 0, completedCount: 0 },
+      groups: [],
+      recentActivity: [{
+        id: 'comment-1',
+        kind: 'comment',
+        actor_id: 'user-1',
+        actorLabel: 'You',
+        event_type: 'comment_created',
+        body: 'Replaced the filter.',
+        created_at: '2026-10-08T17:07:00.000Z',
+        workOrder: { id: 'work-order-1', work_order_number: 2, title: 'Image test' },
+      }],
+      activityAvailable: true,
+    })
+    renderDashboard()
+
+    const activityRow = (await screen.findByRole('link', { name: '#2 Image test' })).closest('.dashboard-activity-row')
+    expect(activityRow).toHaveTextContent('commented on')
+    expect(activityRow).toHaveTextContent('“Replaced the filter.”')
+  })
+
+  it('renders logged Work Order time with its duration in Recent Activity', async () => {
+    dashboardMocks.getDashboardOverview.mockResolvedValueOnce({
+      canViewWorkOrders: true,
+      metrics: { highPriorityCount: 0, overdueCount: 0, dueTodayCount: 0, completedCount: 0 },
+      groups: [],
+      recentActivity: [{
+        id: 'activity-time-1',
+        kind: 'activity',
+        actor_id: 'user-1',
+        actorLabel: 'You',
+        event_type: 'work_order_time_updated',
+        details: { from_seconds: 0, to_seconds: 7 },
+        created_at: '2026-10-08T17:07:00.000Z',
+        workOrder: { id: 'work-order-1', work_order_number: 2, title: 'Image test' },
+      }],
+      activityAvailable: true,
+    })
+    renderDashboard()
+
+    const activityRow = (await screen.findByRole('link', { name: '#2 Image test' })).closest('.dashboard-activity-row')
+    expect(activityRow).toHaveTextContent('updated time to 0m 7s on')
+  })
+
   it('loads and appends the next Recent Activity page on demand', async () => {
     const firstEvent = {
       id: 'activity-1',
