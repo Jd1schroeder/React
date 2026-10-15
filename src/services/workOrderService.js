@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase'
 import { assertPermission } from './authorizationService'
 import { WORK_ORDER_ATTACHMENT_MAX_BYTES, getSafeAttachmentExtension } from '../utils/workOrderAttachments'
 import { normalizeWorkOrderFilters } from '../utils/workOrderFilters'
+import { getWorkOrderScheduleRequirementError } from '../utils/workOrderSettings'
 
 const workOrderFields = 'id, work_order_number, organization_id, title, description, status, priority, procedure_progress, due_at, due_date, due_time, start_date, estimated_duration_minutes, work_type, requester_id, assigned_to, team_id, created_by, created_at, updated_at, updated_by'
 const attachmentBucket = 'work-order-attachments'
@@ -215,12 +216,14 @@ export async function getWorkOrderById({ organizationId, workOrderId, grants, si
   return (await loadWorkOrderRelations([data], { signAttachmentUrls }))[0]
 }
 
-export async function createWorkOrder({ organizationId, title, description, priority, dueDate, dueTime, startDate, estimatedDurationMinutes, workType = 'reactive', assignments = [], pictures = [], thumbnail = null, files = [], grants }) {
+export async function createWorkOrder({ organizationId, title, description, priority, dueDate, dueTime, startDate, estimatedDurationMinutes, workType = 'reactive', assignments = [], pictures = [], thumbnail = null, files = [], requiredSchedule = 'none', grants }) {
   assertPermission(grants, 'work_orders.create')
   if (assignments.length) assertPermission(grants, 'work_orders.assign')
   if (!title?.trim()) throw new Error('A Work Order title is required.')
   if (!['Low', 'Medium', 'High', 'Urgent'].includes(priority) && priority !== null) throw new Error('Choose a valid Work Order priority.')
   if (!['reactive', 'preventive'].includes(workType)) throw new Error('Choose a valid Work Type.')
+  const scheduleError = getWorkOrderScheduleRequirementError(requiredSchedule, { dueDate, startDate })
+  if (scheduleError) throw new Error(scheduleError)
   if (estimatedDurationMinutes != null && (!Number.isInteger(estimatedDurationMinutes) || estimatedDurationMinutes <= 0)) throw new Error('Estimated time must be greater than zero minutes.')
   const filesToUpload = [
     ...pictures.map((file) => ({ file, kind: 'image', isThumbnail: file === thumbnail })),
@@ -300,12 +303,14 @@ export async function createWorkOrder({ organizationId, title, description, prio
   return createdWorkOrder
 }
 
-export async function updateWorkOrderDetails({ organizationId, workOrderId, title, description, priority, dueDate, dueTime, startDate, estimatedDurationMinutes, workType = 'reactive', assignments = null, pictures = [], files = [], retainedAttachmentIds = [], thumbnailAttachmentId = null, thumbnail = null, grants, record }) {
+export async function updateWorkOrderDetails({ organizationId, workOrderId, title, description, priority, dueDate, dueTime, startDate, estimatedDurationMinutes, workType = 'reactive', assignments = null, pictures = [], files = [], retainedAttachmentIds = [], thumbnailAttachmentId = null, thumbnail = null, requiredSchedule = 'none', grants, record }) {
   assertPermission(grants, 'work_orders.edit', record)
   if (assignments !== null) assertPermission(grants, 'work_orders.assign')
   if (!title?.trim()) throw new Error('A Work Order title is required.')
   if (!['Low', 'Medium', 'High', 'Urgent'].includes(priority) && priority !== null) throw new Error('Choose a valid Work Order priority.')
   if (!['reactive', 'preventive'].includes(workType)) throw new Error('Choose a valid Work Type.')
+  const scheduleError = getWorkOrderScheduleRequirementError(requiredSchedule, { dueDate, startDate })
+  if (scheduleError) throw new Error(scheduleError)
   if (estimatedDurationMinutes != null && (!Number.isInteger(estimatedDurationMinutes) || estimatedDurationMinutes <= 0)) throw new Error('Estimated time must be greater than zero minutes.')
 
   const filesToUpload = [

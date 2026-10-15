@@ -6,7 +6,7 @@ import { useWorkspace } from "../../components/layout/useWorkspace";
 import { getNextWorkOrderNumber, updateOrganization, updateWorkOrderStartingNumber } from "../../services/organizationService";
 import { getFeatureLabel } from "../../utils/featureLabels";
 import { normalizeFeatureModules } from "../../utils/featureModules";
-import { normalizeWorkOrderSettings } from "../../utils/workOrderSettings";
+import { normalizeWorkOrderSettings, WORK_ORDER_SCHEDULE_REQUIREMENT_OPTIONS } from "../../utils/workOrderSettings";
 import { SettingsLayout } from "./SettingsLayout";
 import { WorkOrderStartingIdModal } from "./WorkOrderStartingIdModal";
 import "./WorkOrderFeatureSettingsPage.css";
@@ -155,6 +155,7 @@ export function WorkOrderFeatureSettingsPage({ onNavigate }) {
             <SettingToggle label="Filter by Fail or Flag" description={`Enable filtering ${workOrderLabel.toLowerCase()} list based on Failures or Flags.`} checked={displayedSettings.filterByFailOrFlag} onChange={(value) => updateSetting("filterByFailOrFlag", value)} saving={savingKey === "filterByFailOrFlag"} disabled={!isOrganizationAdmin} locked />
             <SettingToggle label="Assign Users and Teams on Mention" description={`Assign mentioned users and Teams to the ${workOrderSingularLabel.toLowerCase()} from a ${workOrderSingularLabel.toLowerCase()} comment.`} checked={displayedSettings.assignUsersTeamsOnMention} onChange={(value) => updateSetting("assignUsersTeamsOnMention", value)} saving={savingKey === "assignUsersTeamsOnMention"} disabled={!isOrganizationAdmin} locked={false} />
             <SettingToggle label={`Only show ${workOrderLabel} in To Do on or after their start date`} description={`When enabled, ${workOrderLabel.toLowerCase()} appear in To Do only on or after their start date. When disabled, nearly due and late ${workOrderLabel.toLowerCase()} also appear.`} checked={displayedSettings.showToDoByStartDateOnly} onChange={(value) => updateSetting("showToDoByStartDateOnly", value)} saving={savingKey === "showToDoByStartDateOnly"} disabled={!isOrganizationAdmin} locked={false} />
+            <SelectSetting label="Required scheduling dates" description={`Require a due date, start date, or both when creating or editing a ${workOrderSingularLabel.toLowerCase()}.`} value={displayedSettings.requiredSchedule} onChange={(value) => updateSetting("requiredSchedule", value)} disabled={!isOrganizationAdmin} locked={false} options={WORK_ORDER_SCHEDULE_REQUIREMENT_OPTIONS} />
             <ActionSetting label="Manage Work Orders Overdue Escalation Teams" description={`Select a Team to notify when ${workOrderLabel.toLowerCase()} are overdue.`} locked />
             <SettingToggle label="Use Smart Time Estimates" description={`Enable Smart Time Estimates to calculate ${workOrderSingularLabel.toLowerCase()} estimated time based on historical data.`} checked={displayedSettings.useSmartTimeEstimates} onChange={(value) => updateSetting("useSmartTimeEstimates", value)} saving={savingKey === "useSmartTimeEstimates"} disabled={!isOrganizationAdmin} locked enterprise />
             <ActionSetting label={`Next ${workOrderSingularLabel} ID`} description={`Modify the ${workOrderSingularLabel.toLowerCase()} starting ID for this Organization.`} locked={!isOrganizationAdmin || isLoadingStartingId} onClick={openStartingIdModal} />
@@ -239,8 +240,8 @@ function RadioSettingRow({ label, value, onChange, disabled }) {
   return <div className="work-order-comment-row"><span>{label}</span><div>{["none", "optional", "mandatory"].map((option) => <label key={option} aria-label={`${label}: ${option}`}><input type="radio" name={`comment-${label}`} value={option} checked={value === option} onChange={() => onChange(option)} disabled={disabled} /></label>)}</div></div>;
 }
 
-function SelectSetting({ label, description, value, onChange, disabled, locked = true }) {
-  return <div className={`work-order-select-setting${locked ? " is-locked" : ""}`}><div><div className="work-order-setting-label">{locked && <LockKeyhole size={15} aria-hidden="true" />}{label}</div><p>{description}</p></div><div className="work-order-setting-control">{locked && <LockKeyhole size={18} aria-hidden="true" />}<Select ariaLabel={label} value={value} onChange={onChange} disabled={disabled || locked} options={[{ value: "automatic", label: "Automatic without Prompt" }, { value: "prompt", label: "Prompt" }, { value: "none", label: "No action" }]} /></div></div>;
+function SelectSetting({ label, description, value, onChange, disabled, locked = true, options = [{ value: "automatic", label: "Automatic without Prompt" }, { value: "prompt", label: "Prompt" }, { value: "none", label: "No action" }] }) {
+  return <div className={`work-order-select-setting${locked ? " is-locked" : ""}`}><div><div className="work-order-setting-label">{locked && <LockKeyhole size={15} aria-hidden="true" />}{label}</div><p>{description}</p></div><div className="work-order-setting-control">{locked && <LockKeyhole size={18} aria-hidden="true" />}<Select ariaLabel={label} value={value} onChange={onChange} disabled={disabled || locked} options={options} /></div></div>;
 }
 
 function ActionSetting({ label, description, locked = false, onClick }) {

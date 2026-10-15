@@ -13,6 +13,7 @@ import { ImageDropzone } from "../../components/ui/ImageDropzone";
 import { PresetNumberInput } from "../../components/ui/PresetNumberInput";
 import { Select } from "../../components/ui/Select";
 import { WORK_ORDER_ATTACHMENT_MAX_BYTES } from "../../utils/workOrderAttachments";
+import { getWorkOrderScheduleRequirementError } from "../../utils/workOrderSettings";
 
 const priorityOptions = ["None", "Low", "Medium", "High"];
 
@@ -75,6 +76,7 @@ export function NewWorkOrderForm({
   assigneeOptions = [],
   canAssign = true,
   dateFormat,
+  requiredSchedule = "none",
   mode = "create",
   initialWorkOrder = null,
   workOrderLabel = "Work Order",
@@ -131,6 +133,7 @@ export function NewWorkOrderForm({
   );
   const [files, setFiles] = useState([]);
   const [fileError, setFileError] = useState("");
+  const [scheduleError, setScheduleError] = useState("");
   const getFileKey = (file) => `${file.name}-${file.size}-${file.lastModified}`;
   const [initialSnapshot] = useState(() => JSON.stringify({
       form,
@@ -177,6 +180,12 @@ export function NewWorkOrderForm({
   const submit = (event) => {
     event.preventDefault();
     if (fileError) return;
+    const nextScheduleError = getWorkOrderScheduleRequirementError(requiredSchedule, {
+      dueDate: form.dueDate,
+      startDate: form.startDate,
+    });
+    setScheduleError(nextScheduleError);
+    if (nextScheduleError) return;
     const durationMinutes = (Number(form.hours) || 0) * 60 + (Number(form.minutes) || 0);
     const values = {
       title: form.title,
@@ -297,8 +306,9 @@ export function NewWorkOrderForm({
               </div>
             </fieldset>
           </FormRow>
-          <FormRow><DateField key={form.dueDate ? "due-date-selected" : "due-date-empty"} label="Due Date" dateFormat={dateFormat} value={form.dueDate} onChange={(value) => { update("dueDate", value); if (!value) update("dueTime", ""); }} timeValue={form.dueTime} onTimeChange={(value) => update("dueTime", value)} /></FormRow>
-          <FormRow><DateField label="Start Date" dateFormat={dateFormat} value={form.startDate} onChange={(value) => update("startDate", value)} /></FormRow>
+          <FormRow><DateField key={form.dueDate ? "due-date-selected" : "due-date-empty"} label="Due Date" dateFormat={dateFormat} value={form.dueDate} onChange={(value) => { update("dueDate", value); setScheduleError(""); if (!value) update("dueTime", ""); }} timeValue={form.dueTime} onTimeChange={(value) => update("dueTime", value)} /></FormRow>
+          <FormRow><DateField label="Start Date" dateFormat={dateFormat} value={form.startDate} onChange={(value) => { update("startDate", value); setScheduleError(""); }} /></FormRow>
+          {scheduleError && <FormRow><p className="new-work-order-error" role="alert">{scheduleError}</p></FormRow>}
           <FormRow className="new-work-order-recurrence-row">
             <div className="new-work-order-two-column new-work-order-recurrence-fields">
               <FormField label="Recurrence">

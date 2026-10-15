@@ -157,3 +157,26 @@ describe('NewWorkOrderForm mobile controls', () => {
     inputClick.mockRestore()
   })
 })
+
+describe('NewWorkOrderForm schedule requirements', () => {
+  it('blocks submission until the organization-required dates are present', () => {
+    const onCreate = vi.fn()
+    render(<NewWorkOrderForm requiredSchedule="both" onCreate={onCreate} onCancel={vi.fn()} />)
+
+    fireEvent.change(screen.getByPlaceholderText('What needs to be done? (Required)'), { target: { value: 'Inspect pump' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+    expect(onCreate).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert')).toHaveTextContent('A due date and start date are required')
+
+    const dueDate = screen.getByRole('textbox', { name: 'Due Date' })
+    const startDate = screen.getByRole('textbox', { name: 'Start Date' })
+    fireEvent.change(dueDate, { target: { value: '10/16/2026' } })
+    fireEvent.blur(dueDate)
+    fireEvent.change(startDate, { target: { value: '10/10/2026' } })
+    fireEvent.blur(startDate)
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+    expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ dueDate: '2026-10-16', startDate: '2026-10-10' }))
+  })
+})

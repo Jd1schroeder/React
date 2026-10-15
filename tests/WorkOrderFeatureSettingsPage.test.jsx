@@ -168,4 +168,16 @@ describe('Work Order feature settings', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Customize External Work Order access and permissions' }))
     expect(onNavigate).toHaveBeenCalledWith('Settings / Features / External Work Orders')
   })
+
+  it('saves the required scheduling dates policy', async () => {
+    render(<WorkOrderFeatureSettingsPage onNavigate={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Required scheduling dates' }))
+    fireEvent.click(screen.getByRole('option', { name: 'Require both dates' }))
+
+    await waitFor(() => expect(mocks.updateOrganization).toHaveBeenCalledWith({
+      organizationId: 'org-1',
+      updates: { work_order_settings: expect.objectContaining({ requiredSchedule: 'both' }) },
+    }))
+  })
 })

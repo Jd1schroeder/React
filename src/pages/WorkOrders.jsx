@@ -748,7 +748,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     setIsSaving(true)
     setCreateError('')
     try {
-      const created = normalizeWorkOrder(await createWorkOrder({ organizationId, ...values, grants }), workspace.preferences)
+      const created = normalizeWorkOrder(await createWorkOrder({ organizationId, ...values, requiredSchedule: workOrderSettings.requiredSchedule, grants }), workspace.preferences)
       setWorkOrdersById((current) => ({ ...current, [created.id]: created }))
       setIsCreating(false)
       setCopySource(null)
@@ -807,6 +807,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
         organizationId,
         workOrderId: selected.id,
         ...values,
+        requiredSchedule: workOrderSettings.requiredSchedule,
         assignments: canAssignWorkOrders && assignmentsChanged ? values.assignments : null,
         grants,
         record: {
@@ -883,9 +884,9 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   }, [activeFilters, activeSavedFilterId, applyFilterPage, pageSize])
 
   const workOrderRecordView = isCreating
-    ? <NewWorkOrderForm initialWorkOrder={copySource} workOrderLabel={workOrderSingularLabel} onCancel={() => { setIsCreating(false); setCopySource(null) }} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} />
+    ? <NewWorkOrderForm initialWorkOrder={copySource} workOrderLabel={workOrderSingularLabel} onCancel={() => { setIsCreating(false); setCopySource(null) }} onCreate={handleCreate} isSaving={isSaving} error={createError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} requiredSchedule={workOrderSettings.requiredSchedule} />
     : isEditingSelected
-      ? <NewWorkOrderForm mode="edit" initialWorkOrder={selected} workOrderLabel={workOrderSingularLabel} onCancel={() => guardNavigation(() => { setHasUnsavedChanges(false); setEditingWorkOrderId(null) })} onDirtyChange={setHasUnsavedChanges} onUpdate={handleUpdate} isSaving={isSavingEdit} error={editError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} />
+      ? <NewWorkOrderForm mode="edit" initialWorkOrder={selected} workOrderLabel={workOrderSingularLabel} onCancel={() => guardNavigation(() => { setHasUnsavedChanges(false); setEditingWorkOrderId(null) })} onDirtyChange={setHasUnsavedChanges} onUpdate={handleUpdate} isSaving={isSavingEdit} error={editError} assigneeOptions={assigneeOptions} canAssign={canAssignWorkOrders} dateFormat={workspace.preferences?.date_format} requiredSchedule={workOrderSettings.requiredSchedule} />
       : <WorkOrderDetail selected={selected} isLoadingRecord={isLoadingSelectedRecord} missingRecord={missingRecord} onBack={() => { setLocalSelectedId(undefined); onNavigate?.('Work Orders') }} onEdit={() => selected && handleEdit(selected)} onCopy={() => selected && handleCopy(selected)} onStatusChange={changeStatus} onPreparePdfExport={prepareWorkOrderForPdfExport} assigneeOptions={assigneeOptions} memberDirectory={memberDirectory} timeEntryMembers={timeEntryMembers} mentionTargets={mentionTargets} assignMentionsEnabled={Boolean(workOrderSettings.assignUsersTeamsOnMention)} onToggleRead={toggleReadState} isSavingReadState={isSavingReadState} grants={grants} userId={userId} teamIds={teamIds} dateFormat={workspace.preferences?.date_format} timezone={workspace.preferences?.timezone} onLoadActivity={loadWorkOrderActivity} onPostComment={postWorkOrderComment} onUpdateComment={editWorkOrderComment} onDeleteComment={removeWorkOrderComment} canDeleteAnyComments={canDeleteAnyWorkOrderComment} onResolveWorkOrderLinks={resolveWorkOrderLinks} organizationId={organizationId} currency={currency} isOrganizationAdmin={canManageOrganizationWorkOrderFilters} workOrderSettings={workOrderSettings} onTimeTrackingChanged={refreshSelectedWorkOrder} externalSharingEnabled={Boolean(workOrderSettings.externalWorkOrders)} canShareExternally={canShareExternally} onGetExternalShare={getExternalShare} onCreateExternalShare={createExternalShare} onDisableExternalShare={disableExternalShare} onResetExternalShare={resetExternalShare} onSaveExternalShareContacts={saveExternalShareContacts} />
 
   return <>
