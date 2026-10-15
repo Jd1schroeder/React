@@ -67,6 +67,15 @@ describe('mobile navigation', () => {
     }
   })
 
+  it('does not show timer controls while viewing Work Order comments', () => {
+    render(<MobileNavigation activePage="Work Orders" onNavigate={vi.fn()} />)
+    act(() => window.dispatchEvent(new CustomEvent('workbench:work-orders-record-view', { detail: { kind: 'detail' } })))
+    act(() => window.dispatchEvent(new CustomEvent('workbench:work-order-mobile-section', { detail: { section: 'comments' } })))
+
+    expect(screen.queryByRole('navigation', { name: 'Primary navigation' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Start Timer' })).not.toBeInTheDocument()
+  })
+
   it('recognizes a Work Order detail route before the record-view event is emitted', () => {
     window.history.pushState({}, '', '/workorders/work-order-1')
     try {

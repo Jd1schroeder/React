@@ -391,6 +391,11 @@ export function WorkOrderDetail({
   const commentsRef = useRef(null);
   const normalizedWorkOrderSettings = normalizeWorkOrderSettings(workOrderSettings);
   useEffect(() => {
+    window.dispatchEvent(new CustomEvent("workbench:work-order-mobile-section", {
+      detail: { workOrderId: selected?.id, section: activeMobileSection },
+    }));
+  }, [activeMobileSection, selected?.id]);
+  useEffect(() => {
     const mediaQuery = window.matchMedia?.("(max-width: 840px)");
     const updateViewport = () => setIsMobileMenuViewport(isMobileActionSheetViewport());
     updateViewport();
@@ -405,7 +410,6 @@ export function WorkOrderDetail({
     const scroller = detailScrollRef.current;
     const commentsSection = commentsRef.current;
     if (!scroller || !commentsSection) return;
-    setActiveMobileSection("comments");
 
     const scrollerRect = scroller.getBoundingClientRect();
     const commentsRect = commentsSection.getBoundingClientRect();
@@ -417,6 +421,10 @@ export function WorkOrderDetail({
       top: Math.max(0, top),
       behavior: prefersReducedMotion ? "auto" : "smooth",
     });
+  };
+  const openMobileSection = (section) => {
+    setActiveMobileSection(section);
+    detailScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
   useEffect(() => {
     if (!isMenuOpen || isMobileMenuViewport) return undefined;
@@ -626,7 +634,7 @@ export function WorkOrderDetail({
   const isOverdue = isOverdueWorkOrder(selected, timezone);
   const overdueDate = selected.due_date ? formatCalendarDateForUser(selected.due_date, dateFormat) : selected.due;
   return (
-    <section className="detail-pane">
+    <section className={`detail-pane${activeMobileSection === "comments" ? " is-mobile-comments-view" : ""}`}>
       <header className="detail-header">
         <div className="detail-mobile-toolbar">
           <button className="mobile-detail-back" type="button" aria-label="Back to Work Orders" onClick={onBack}><ChevronLeft size={28} aria-hidden="true" /><span>Work Orders</span></button>
@@ -741,14 +749,17 @@ export function WorkOrderDetail({
           </button>
         ))}
       </MobileActionSheet>}
-      <div className="detail-mobile-record-title"><h1>{selected.title}</h1></div>
-      {canUseComments && (
-        <nav className="detail-mobile-tabs" aria-label="Work Order sections">
-          <button type="button" aria-selected={activeMobileSection === "details"} onClick={() => { setActiveMobileSection("details"); detailScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }); }}>Details</button>
-          <button type="button" aria-selected={activeMobileSection === "comments"} onClick={scrollToComments}>Comments</button>
-        </nav>
-      )}
-      <div ref={detailScrollRef} className="detail-scroll" onScroll={(event) => { setIsDetailScrolled(event.currentTarget.scrollTop > 120); if (event.currentTarget.scrollTop < 80) setActiveMobileSection("details"); }}>
+      <div className="detail-mobile-record-header">
+        <div className="detail-mobile-record-title"><h1>{selected.title}</h1></div>
+        {canUseComments && (
+          <nav className="detail-mobile-tabs" aria-label="Work Order sections">
+            <button type="button" aria-selected={activeMobileSection === "details"} onClick={() => openMobileSection("details")}>Details</button>
+            <button type="button" aria-selected={activeMobileSection === "comments"} onClick={() => openMobileSection("comments")}>Comments</button>
+          </nav>
+        )}
+      </div>
+      <div ref={detailScrollRef} className="detail-scroll" onScroll={(event) => { setIsDetailScrolled(event.currentTarget.scrollTop > 120); }}>
+        <div className="detail-mobile-details-content">
         <div className="detail-summary-row">
           <div className="detail-content-block">
             <div className="detail-status-title"><strong>Status</strong></div>
@@ -906,7 +917,10 @@ export function WorkOrderDetail({
               enabled={normalizedWorkOrderSettings.enableCostTracking}
             />
           </section>}
-          {canUseComments && (
+        </div>
+        </div>
+        {canUseComments && (
+          <div className="detail-mobile-comments-content">
             <WorkOrderActivity
               key={selected.id}
               order={selected}
@@ -927,8 +941,8 @@ export function WorkOrderDetail({
               onDeleteComment={onDeleteComment}
               onResolveWorkOrderLinks={onResolveWorkOrderLinks}
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
       {isPdfExportOpen && (
         <WorkOrderPdfExportDialog

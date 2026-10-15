@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
-import { Check, ClipboardList, FileText, Paperclip, Pencil, Send, Trash2, X } from 'lucide-react'
+import { Camera, Check, ClipboardList, FileText, Paperclip, Pencil, Send, Trash2, X } from 'lucide-react'
 import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
+import { MobileActionSheet } from '../../components/ui/MobileActionSheet'
 import { PriorityBadge } from '../../components/ui/PriorityBadge'
 import { getRecordPath } from '../../routes'
 import { formatCalendarDateForUser, formatDateForUser } from '../../utils/dateFormatting'
@@ -14,6 +15,14 @@ import './WorkOrderActivity.css'
 
 const maxCommentAttachments = 20
 const maxDescriptionAuditExcerptLength = 120
+
+function chronologicalActivityPage(items = []) {
+  return [...items].sort((first, second) => {
+    const timeDifference = new Date(first.created_at).getTime() - new Date(second.created_at).getTime()
+    if (timeDifference !== 0) return timeDifference
+    return String(first.id).localeCompare(String(second.id))
+  })
+}
 
 function activityTimestamp(value, dateFormat, timezone) {
   if (!value) return ''
@@ -352,9 +361,11 @@ function ActivityItem({
   onDeleteComment,
 }) {
   const [isEditing, setIsEditing] = useState(false)
+  const [isTimeVisible, setIsTimeVisible] = useState(false)
   const [isSavingComment, setIsSavingComment] = useState(false)
   const [isDeletingComment, setIsDeletingComment] = useState(false)
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
+  const [isActionSheetOpen, setIsActionSheetOpen] = useState(false)
   const [draft, setDraft] = useState(item.body ?? '')
   const [actionError, setActionError] = useState('')
   const [actionNotice, setActionNotice] = useState('')
@@ -371,6 +382,46 @@ function ActivityItem({
   const canDeleteComment = isLiveComment && onDeleteComment
     && (canDeleteAnyComments || (isOwnComment && canDeleteOwnComments))
   const editedAt = item.edited_at ? activityTimestamp(item.edited_at, dateFormat, timezone) : ''
+  const canUseCommentActions = item.kind === 'comment' && !isEditing && (canEditComment || canDeleteComment)
+  const longPressTimerRef = useRef(null)
+  const suppressNextClickRef = useRef(false)
+  const clearLongPressTimer = () => {
+    if (longPressTimerRef.current == null) return
+    window.clearTimeout(longPressTimerRef.current)
+    longPressTimerRef.current = null
+  }
+  useEffect(() => () => {
+    if (longPressTimerRef.current != null) window.clearTimeout(longPressTimerRef.current)
+  }, [])
+  const toggleCommentTime = (event) => {
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false
+      return
+    }
+    if (event.target.closest('a,button,input,textarea,select,form')) return
+    setIsTimeVisible((visible) => !visible)
+  }
+  const handleCommentRowKeyDown = (event) => {
+    if (event.target.closest('a,button,input,textarea,select,form')) return
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    setIsTimeVisible((visible) => !visible)
+  }
+  const handleCommentPointerDown = (event) => {
+    if (!canUseCommentActions || event.target.closest?.('a,button,input,textarea,select,form')) return
+    suppressNextClickRef.current = false
+    clearLongPressTimer()
+    longPressTimerRef.current = window.setTimeout(() => {
+      longPressTimerRef.current = null
+      suppressNextClickRef.current = true
+      setIsActionSheetOpen(true)
+    }, 500)
+  }
+  const handleCommentPointerUp = () => clearLongPressTimer()
+  const handleCommentContextMenu = (event) => {
+    if (!canUseCommentActions) return
+    event.preventDefault()
+  }
 
   const saveComment = async (event) => {
     event.preventDefault()
@@ -438,6 +489,18 @@ function ActivityItem({
       {canDeleteComment && <button type="button" className="is-danger" onClick={() => { setActionError(''); setIsConfirmingDelete(true) }} aria-label="Delete comment" title="Delete comment"><Trash2 size={14} aria-hidden="true" />Delete</button>}
     </span>
   )
+  const openEditComment = () => {
+    setIsActionSheetOpen(false)
+    setActionError('')
+    setDraft(item.body ?? '')
+    setIsEditing(true)
+    setIsConfirmingDelete(false)
+  }
+  const openDeleteComment = () => {
+    setIsActionSheetOpen(false)
+    setActionError('')
+    setIsConfirmingDelete(true)
+  }
   const authorTimeRow = (
     <div className="work-order-activity-meta">
       {actorProfilePath
@@ -451,7 +514,18 @@ function ActivityItem({
 
   return (
     <li className="work-order-activity-list-item">
-      <div className={`work-order-activity-item${item.kind === 'comment' ? ' is-comment' : ' is-system'}`}>
+      <div
+        className={`work-order-activity-item${item.kind === 'comment' ? ' is-comment' : ' is-system'}${item.kind === 'comment' && isTimeVisible ? ' is-time-visible' : ''}`}
+        onClick={item.kind === 'comment' ? toggleCommentTime : undefined}
+        onKeyDown={item.kind === 'comment' ? handleCommentRowKeyDown : undefined}
+        onPointerDown={item.kind === 'comment' ? handleCommentPointerDown : undefined}
+        onPointerUp={item.kind === 'comment' ? handleCommentPointerUp : undefined}
+        onPointerCancel={item.kind === 'comment' ? handleCommentPointerUp : undefined}
+        onPointerLeave={item.kind === 'comment' ? handleCommentPointerUp : undefined}
+        onContextMenu={item.kind === 'comment' ? handleCommentContextMenu : undefined}
+        tabIndex={item.kind === 'comment' ? 0 : undefined}
+        aria-expanded={item.kind === 'comment' ? isTimeVisible : undefined}
+      >
         <div className="work-order-activity-row">
           {avatar}
           <div className="work-order-activity-content">
@@ -494,6 +568,20 @@ function ActivityItem({
           </div>
         </div>
       </div>
+      {isActionSheetOpen && (
+        <MobileActionSheet title="Comment actions" variant="menu" onClose={() => setIsActionSheetOpen(false)}>
+          {canEditComment && (
+            <button type="button" onClick={openEditComment}>
+              <span className="work-order-comment-mobile-action-label"><Pencil size={18} aria-hidden="true" />Edit</span>
+            </button>
+          )}
+          {canDeleteComment && (
+            <button type="button" className="is-danger" onClick={openDeleteComment}>
+              <span className="work-order-comment-mobile-action-label"><Trash2 size={18} aria-hidden="true" />Delete Message</span>
+            </button>
+          )}
+        </MobileActionSheet>
+      )}
     </li>
   )
 }
@@ -532,6 +620,7 @@ export function WorkOrderActivity({
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0)
   const requestedPreviewIds = useRef(new Set())
   const fileInputRef = useRef(null)
+  const cameraInputRef = useRef(null)
   const commentInputRef = useRef(null)
 
   const loadActivity = useCallback(async ({ before = null, reset = false } = {}) => {
@@ -541,9 +630,10 @@ export function WorkOrderActivity({
       const page = await onLoadActivity(order, before)
       if (reset) setLoadError('')
       setItems((current) => {
-        if (reset) return page.items
+        const pageItems = chronologicalActivityPage(page.items)
+        if (reset) return pageItems
         const knownIds = new Set(current.map((item) => `${item.kind}:${item.id}`))
-        return [...current, ...page.items.filter((item) => !knownIds.has(`${item.kind}:${item.id}`))]
+        return [...pageItems.filter((item) => !knownIds.has(`${item.kind}:${item.id}`)), ...current]
       })
       setNextCursor(page.nextCursor)
       setHasMore(page.hasMore)
@@ -563,7 +653,7 @@ export function WorkOrderActivity({
       .then((page) => {
         if (!active) return
         setLoadError('')
-        setItems(page.items)
+        setItems(chronologicalActivityPage(page.items))
         setNextCursor(page.nextCursor)
         setHasMore(page.hasMore)
       })
@@ -657,6 +747,10 @@ export function WorkOrderActivity({
     }
     setSelectedFiles(next)
   }
+  const handleFileSelection = (event) => {
+    addFiles(Array.from(event.target.files ?? []))
+    event.target.value = ''
+  }
   const sendComment = async (event) => {
     event.preventDefault()
     if (!onPostComment || isSending) return
@@ -676,6 +770,7 @@ export function WorkOrderActivity({
       setSelectedMentionIndex(0)
       setSelectedFiles([])
       if (fileInputRef.current) fileInputRef.current.value = ''
+      if (cameraInputRef.current) cameraInputRef.current.value = ''
       await loadActivity({ reset: true })
     } catch (error) {
       setCommentError(error.message || 'Unable to send this comment.')
@@ -701,8 +796,7 @@ export function WorkOrderActivity({
   }
 
   return (
-    <section className="detail-comments-section" aria-labelledby="detail-comments-title" ref={sectionRef}>
-      <h2 id="detail-comments-title">Comments</h2>
+    <section className="detail-comments-section" aria-label="Comments" ref={sectionRef}>
       {canPostComments && (
         <form className="work-order-comment-composer" onSubmit={sendComment}>
           <label className="work-order-comment-sr-only" htmlFor="work-order-comment-input">Write a comment</label>
@@ -720,7 +814,7 @@ export function WorkOrderActivity({
               onKeyUp={(event) => setMentionCursor(event.target.selectionStart ?? commentBody.length)}
               onKeyDown={handleMentionKeyDown}
             maxLength={10000}
-              placeholder={assignMentionsEnabled ? 'Write a comment... Use @ to assign users or teams.' : 'Write a comment...'}
+              placeholder="Write a comment . . ."
               rows={3}
               disabled={isSending}
             />
@@ -745,7 +839,7 @@ export function WorkOrderActivity({
           </div>
           <div className="work-order-comment-composer-footer">
             <label className="work-order-comment-attach" title="Attach images or files">
-              <Paperclip size={18} aria-hidden="true" />
+              <Paperclip size={22} aria-hidden="true" />
               <span className="work-order-comment-sr-only">Attach images or files</span>
               <input
                 ref={fileInputRef}
@@ -753,10 +847,20 @@ export function WorkOrderActivity({
                 multiple
                 aria-label="Attach images or files"
                 disabled={isSending}
-                onChange={(event) => {
-                  addFiles(Array.from(event.target.files ?? []))
-                  event.target.value = ''
-                }}
+                onChange={handleFileSelection}
+              />
+            </label>
+            <label className="work-order-comment-attach" title="Take a photo">
+              <Camera size={22} aria-hidden="true" />
+              <span className="work-order-comment-sr-only">Take a photo</span>
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                aria-label="Take a photo"
+                disabled={isSending}
+                onChange={handleFileSelection}
               />
             </label>
             <Button
@@ -784,38 +888,40 @@ export function WorkOrderActivity({
           {commentError && <p className="work-order-comment-error" role="alert">{commentError}</p>}
         </form>
       )}
-      {loadError && <p className="work-order-activity-error" role="alert">{loadError}</p>}
-      {isLoading && <p className="work-order-activity-loading" role="status">Loading comments and activity…</p>}
-      {!isLoading && canViewComments && visibleItems.length === 0 && !loadError && <p className="work-order-activity-empty">No comments or activity yet.</p>}
-      {canViewComments && visibleItems.length > 0 && (
-        <ul className="work-order-activity-list" aria-label="Work Order comments and activity">
-          {visibleItems.map((item) => (
-            <ActivityItem
-              key={`${item.kind}:${item.id}`}
-              item={item}
-              identitiesById={identitiesById}
-              assigneeOptionsByValue={assigneeOptionsByValue}
-              mentionTargets={mentionTargets}
-              dateFormat={dateFormat}
-              timezone={timezone}
-              linkPreviews={linkPreviews}
-              currentUserId={currentUserId}
-              canEditOwnComments={canPostComments}
-              canDeleteOwnComments={canPostComments}
-              canDeleteAnyComments={canDeleteAnyComments}
-              onUpdateComment={onUpdateComment ? editComment : undefined}
-              onDeleteComment={onDeleteComment ? deleteComment : undefined}
-            />
-          ))}
-          {hasMore && (
-            <li className="work-order-activity-load-more-item">
-              <button type="button" className="work-order-activity-load-more" disabled={isLoadingOlder} onClick={() => void loadActivity({ before: nextCursor })}>
-                {isLoadingOlder ? 'Loading…' : 'Load older activity'}
-              </button>
-            </li>
-          )}
-        </ul>
-      )}
+      <div className="work-order-activity-feed">
+        {loadError && <p className="work-order-activity-error" role="alert">{loadError}</p>}
+        {isLoading && <p className="work-order-activity-loading" role="status">Loading comments and activity…</p>}
+        {!isLoading && canViewComments && visibleItems.length === 0 && !loadError && <p className="work-order-activity-empty">No comments or activity yet.</p>}
+        {canViewComments && visibleItems.length > 0 && (
+          <ul className="work-order-activity-list" aria-label="Work Order comments and activity">
+            {visibleItems.map((item) => (
+              <ActivityItem
+                key={`${item.kind}:${item.id}`}
+                item={item}
+                identitiesById={identitiesById}
+                assigneeOptionsByValue={assigneeOptionsByValue}
+                mentionTargets={mentionTargets}
+                dateFormat={dateFormat}
+                timezone={timezone}
+                linkPreviews={linkPreviews}
+                currentUserId={currentUserId}
+                canEditOwnComments={canPostComments}
+                canDeleteOwnComments={canPostComments}
+                canDeleteAnyComments={canDeleteAnyComments}
+                onUpdateComment={onUpdateComment ? editComment : undefined}
+                onDeleteComment={onDeleteComment ? deleteComment : undefined}
+              />
+            ))}
+            {hasMore && (
+              <li className="work-order-activity-load-more-item">
+                <button type="button" className="work-order-activity-load-more" disabled={isLoadingOlder} onClick={() => void loadActivity({ before: nextCursor })}>
+                  {isLoadingOlder ? 'Loading…' : 'Load older activity'}
+                </button>
+              </li>
+            )}
+          </ul>
+        )}
+      </div>
     </section>
   )
 }

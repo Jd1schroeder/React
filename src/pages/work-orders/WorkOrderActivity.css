@@ -397,6 +397,11 @@
   cursor: not-allowed;
   opacity: 0.65;
 }
+.work-order-comment-mobile-action-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
 .work-order-comment-tombstone {
   display: grid;
   gap: var(--spacing-1);
@@ -627,6 +632,14 @@
 }
 
 @media (--wb-viewport-tablet-and-down) {
+  .work-order-activity-item.is-comment:not(.is-time-visible) .work-order-activity-time {
+    display: none;
+  }
+
+  .work-order-activity-item.is-comment .work-order-comment-actions {
+    display: none;
+  }
+
   .work-order-comment-composer textarea,
   .work-order-comment-editor textarea {
     min-height: 96px;
@@ -637,6 +650,15 @@
   .work-order-comment-send {
     min-width: 44px;
     min-height: 44px;
+  }
+
+  .work-order-comment-send {
+    min-width: 84px;
+    min-height: 40px;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-right: var(--spacing-4);
+    padding-left: var(--spacing-4);
   }
 
   .work-order-comment-actions button {

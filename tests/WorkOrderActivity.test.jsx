@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { WorkOrderActivity } from '../src/pages/work-orders/WorkOrderActivity'
@@ -159,6 +159,30 @@ describe('WorkOrderActivity', () => {
     expect(await screen.findByText('Updated logged time to 9s.')).toBeInTheDocument()
   })
 
+  it('shows the oldest activity first and the newest activity last', async () => {
+    const newestComment = {
+      id: 'comment-newest',
+      kind: 'comment',
+      author_id: 'member-1',
+      body: 'Newest note',
+      created_at: '2026-10-05T12:00:00.000Z',
+      attachments: [],
+    }
+    const oldestComment = {
+      ...newestComment,
+      id: 'comment-oldest',
+      body: 'Oldest note',
+      created_at: '2026-10-05T10:00:00.000Z',
+    }
+    renderActivity({
+      onLoadActivity: vi.fn().mockResolvedValue({ items: [oldestComment, newestComment], hasMore: false, nextCursor: null }),
+    })
+
+    const oldest = await screen.findByText('Oldest note')
+    const newest = await screen.findByText('Newest note')
+    expect(oldest.compareDocumentPosition(newest) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
   it('shows the captured name for an external comment instead of System', async () => {
     const onLoadActivity = vi.fn().mockResolvedValue({
       items: [{
@@ -182,6 +206,66 @@ describe('WorkOrderActivity', () => {
     expect(screen.getByText('This is just a test comment')).toBeInTheDocument()
   })
 
+  it('toggles a comment timestamp when the comment row is pressed', async () => {
+    const comment = {
+      id: 'comment-timestamp',
+      kind: 'comment',
+      author_id: 'member-1',
+      body: 'Timestamped note',
+      created_at: '2026-10-05T20:16:52.000Z',
+      attachments: [],
+    }
+    const { container } = renderActivity({
+      onLoadActivity: vi.fn().mockResolvedValue({ items: [comment], hasMore: false, nextCursor: null }),
+    })
+
+    const body = await screen.findByText('Timestamped note')
+    const item = body.closest('.work-order-activity-item')
+    const timestamp = item.querySelector('.work-order-activity-time')
+
+    expect(item).not.toHaveClass('is-time-visible')
+    expect(timestamp).toBeInTheDocument()
+    fireEvent.click(body)
+    expect(item).toHaveClass('is-time-visible')
+    fireEvent.click(container.querySelector('.work-order-activity-author'))
+    expect(item).toHaveClass('is-time-visible')
+  })
+
+  it('opens comment actions on long press and starts editing from the mobile sheet', async () => {
+    const comment = {
+      id: 'comment-long-press',
+      kind: 'comment',
+      author_id: 'member-1',
+      body: 'Long press note',
+      created_at: '2026-10-05T20:16:52.000Z',
+      attachments: [],
+    }
+    renderActivity({
+      currentUserId: 'member-1',
+      onUpdateComment: vi.fn().mockResolvedValue(comment),
+      onDeleteComment: vi.fn().mockResolvedValue({}),
+      onLoadActivity: vi.fn().mockResolvedValue({ items: [comment], hasMore: false, nextCursor: null }),
+    })
+
+    const body = await screen.findByText('Long press note')
+    vi.useFakeTimers()
+    try {
+      fireEvent.pointerDown(body)
+      await act(async () => {
+        vi.advanceTimersByTime(500)
+      })
+
+      expect(screen.getByRole('dialog', { name: 'Comment actions' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Delete Message' })).toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+      expect(screen.getByRole('textbox', { name: 'Edit comment' })).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('posts comment text and selected files, then refreshes the feed', async () => {
     const onLoadActivity = vi.fn().mockResolvedValue({ items: [], hasMore: false, nextCursor: null })
     const onPostComment = vi.fn().mockResolvedValue({ id: 'new-comment' })
@@ -196,6 +280,19 @@ describe('WorkOrderActivity', () => {
     await waitFor(() => expect(onLoadActivity).toHaveBeenCalledTimes(2))
     expect(screen.getByLabelText('Write a comment')).toHaveValue('')
     expect(screen.queryByText('inspection.pdf')).not.toBeInTheDocument()
+  })
+
+  it('offers a camera image upload control that uses the existing attachment flow', () => {
+    renderActivity({ onLoadActivity: vi.fn().mockResolvedValue({ items: [], hasMore: false, nextCursor: null }) })
+    const image = new File(['photo'], 'photo.jpg', { type: 'image/jpeg' })
+
+    const cameraInput = screen.getByLabelText('Take a photo')
+    expect(cameraInput).toHaveAttribute('accept', 'image/*')
+    expect(cameraInput).toHaveAttribute('capture', 'environment')
+
+    fireEvent.change(cameraInput, { target: { files: [image] } })
+
+    expect(screen.getByText('photo.jpg')).toBeInTheDocument()
   })
 
   it('keeps long description changes expandable in the activity feed', async () => {
@@ -329,6 +426,17 @@ describe('WorkOrderActivity', () => {
 
     expect(screen.getByLabelText('Write a comment')).toBeInTheDocument()
     expect(screen.queryByLabelText('Work Order comments and activity')).not.toBeInTheDocument()
+  })
+
+  it('keeps the composer outside the scrollable activity feed', () => {
+    const { container } = renderActivity()
+
+    const composer = container.querySelector('.work-order-comment-composer')
+    const activityFeed = container.querySelector('.work-order-activity-feed')
+
+    expect(composer).toBeInTheDocument()
+    expect(activityFeed).toBeInTheDocument()
+    expect(activityFeed).not.toContainElement(composer)
   })
 
   it('lets the author edit comment text, preserves attachments, and marks the result as edited', async () => {

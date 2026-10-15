@@ -374,7 +374,7 @@ describe('WorkOrderDetail authorization', () => {
     expect(screen.getByText('1h')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Categories' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Time & Cost Tracking' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Comments' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Comments' })).toBeInTheDocument()
     expect(within(screen.getByText('Parts').closest('.detail-cost-row')).getByRole('button', { name: /Add/ })).toBeDisabled()
     const timeSummary = screen.getByText('Time').closest('.work-order-time-summary')
     await waitFor(() => expect(within(timeSummary).getByRole('button', { name: /Add/ })).not.toBeDisabled())
@@ -433,6 +433,38 @@ describe('WorkOrderDetail authorization', () => {
     expect(detailScrollTo).toHaveBeenCalledWith({ top: 264, behavior: 'smooth' })
     expect(pageScrollTo).not.toHaveBeenCalled()
     expect(commentsScrollIntoView).not.toHaveBeenCalled()
+  })
+
+  it('keeps the mobile record title in the non-scrolling header when comments are opened', () => {
+    const { container } = render(<WorkOrderDetail selected={selected} userId="user-a" grants={{
+      'work_orders.view_comments': 'own',
+    }} />)
+    const detailScroll = container.querySelector('.detail-scroll')
+    Object.defineProperty(detailScroll, 'scrollTo', { configurable: true, value: vi.fn() })
+
+    fireEvent.click(container.querySelector('.detail-mobile-tabs button[aria-selected="false"]'))
+
+    const mobileHeader = container.querySelector('.detail-mobile-record-header')
+    expect(mobileHeader).toContainElement(container.querySelector('.detail-mobile-record-title h1'))
+    expect(mobileHeader).toContainElement(container.querySelector('.detail-mobile-tabs'))
+    expect(container.querySelector('.detail-mobile-tabs button[aria-selected="true"]')).toHaveTextContent('Comments')
+    expect(container.querySelector('.detail-pane')).toHaveClass('is-mobile-comments-view')
+    expect(container.querySelector('.detail-mobile-details-content')).toBeInTheDocument()
+    expect(container.querySelector('.detail-mobile-comments-content')).toBeInTheDocument()
+  })
+
+  it('does not render a timer action in the mobile comments view', () => {
+    const { container } = render(<WorkOrderDetail selected={selected} userId="user-a" workOrderSettings={{ enableTimeTracking: true }} grants={{
+      'work_orders.view_comments': 'own',
+    }} />)
+    const detailScroll = container.querySelector('.detail-scroll')
+    Object.defineProperty(detailScroll, 'scrollTo', { configurable: true, value: vi.fn() })
+
+    fireEvent.click(container.querySelector('.detail-mobile-tabs button[aria-selected="false"]'))
+
+    const commentsContent = container.querySelector('.detail-mobile-comments-content')
+    expect(within(commentsContent).queryByRole('button', { name: 'Start Timer' })).not.toBeInTheDocument()
+    expect(container.querySelector('.detail-mobile-details-content .work-order-time-tracking')).toBeInTheDocument()
   })
 
   it('shows the work-order menu options and locks actions that are not implemented', () => {

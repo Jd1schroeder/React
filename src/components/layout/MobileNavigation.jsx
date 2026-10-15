@@ -55,6 +55,7 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false)
   const [navigationOverflow, setNavigationOverflow] = useState({ previous: false, next: false })
   const [timerState, setTimerState] = useState(idleTimerState)
+  const [workOrderMobileSection, setWorkOrderMobileSection] = useState('details')
   const organizationId = workspace.organization?.id
   const grants = workspace.authorization?.grants
   const canViewWorkOrders = Boolean(grants?.['work_orders.view'])
@@ -63,6 +64,8 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const isWorkOrderDetail = activePage === 'Work Orders'
     && (workOrderNavigation.recordView === 'detail' || isWorkOrderRecordPath())
     && !workOrderNavigation.utilityPage
+  const isWorkOrderCommentsContext = isWorkOrderDetail && workOrderMobileSection === 'comments'
+  const isWorkOrderTimerContext = isWorkOrderDetail && workOrderMobileSection !== 'comments'
   const unreadWorkOrderCount = canViewWorkOrders && unreadWorkOrderBadge?.organizationId === organizationId
     ? unreadWorkOrderBadge.count
     : null
@@ -71,6 +74,12 @@ export function MobileNavigation({ activePage, onNavigate }) {
     const syncTimerState = (event) => setTimerState({ ...idleTimerState, ...event.detail })
     window.addEventListener('workbench:work-order-timer-state', syncTimerState)
     return () => window.removeEventListener('workbench:work-order-timer-state', syncTimerState)
+  }, [])
+
+  useEffect(() => {
+    const syncWorkOrderSection = (event) => setWorkOrderMobileSection(event.detail?.section || 'details')
+    window.addEventListener('workbench:work-order-mobile-section', syncWorkOrderSection)
+    return () => window.removeEventListener('workbench:work-order-mobile-section', syncWorkOrderSection)
   }, [])
 
   useEffect(() => {
@@ -158,14 +167,16 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const dispatchTimerAction = (action) => {
     window.dispatchEvent(new CustomEvent('workbench:work-order-timer-action', { detail: { action } }))
   }
-  const visibleTimerState = isWorkOrderDetail ? timerState : idleTimerState
-  const timerIsActive = isWorkOrderDetail && (visibleTimerState.status === 'running' || visibleTimerState.status === 'paused')
+  const visibleTimerState = isWorkOrderTimerContext ? timerState : idleTimerState
+  const timerIsActive = isWorkOrderTimerContext && (visibleTimerState.status === 'running' || visibleTimerState.status === 'paused')
+
+  if (isWorkOrderCommentsContext) return null
 
   return <nav
-    className={`mobile-primary-navigation${activePage === 'Work Orders' ? ' has-work-order-actions' : ''}${workOrderNavigation.utilityPage ? ` is-work-order-${workOrderNavigation.utilityPage}-open` : ''}${workOrderNavigation.recordView ? ' is-work-order-record-view' : ''}${isWorkOrderDetail ? ' is-work-order-detail' : ''}${timerIsActive ? ` is-work-order-timer-${visibleTimerState.status}` : ''}`}
+    className={`mobile-primary-navigation${activePage === 'Work Orders' ? ' has-work-order-actions' : ''}${workOrderNavigation.utilityPage ? ` is-work-order-${workOrderNavigation.utilityPage}-open` : ''}${workOrderNavigation.recordView ? ' is-work-order-record-view' : ''}${isWorkOrderTimerContext ? ' is-work-order-detail' : ''}${timerIsActive ? ` is-work-order-timer-${visibleTimerState.status}` : ''}`}
     aria-label="Primary navigation"
   >
-    {isWorkOrderDetail ? (
+    {isWorkOrderTimerContext ? (
       timerIsActive ? (
         <div className="mobile-navigation-timer-state" aria-live="polite">
           <div className="mobile-navigation-timer-readout">
