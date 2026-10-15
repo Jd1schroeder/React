@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useMobileSheetDismiss } from "../layout/useMobileSheetDismiss";
 import "./MobileActionSheet.css";
 
-export function MobileActionSheet({ title, onClose, children }) {
+export function MobileActionSheet({ title, onClose, children, variant = "default" }) {
   const sheetRef = useRef(null);
   const titleId = useId();
   const sheetDismiss = useMobileSheetDismiss(onClose, sheetRef);
@@ -46,7 +46,7 @@ export function MobileActionSheet({ title, onClose, children }) {
 
   return createPortal(
     <div className={`mobile-action-sheet-backdrop mobile-sheet-backdrop ${sheetDismiss.backdropClassName}`} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section ref={sheetRef} className={`mobile-action-sheet mobile-edge-to-edge-sheet ${sheetDismiss.dragClassName}`} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <section ref={sheetRef} className={`mobile-action-sheet mobile-edge-to-edge-sheet${variant === "menu" ? " mobile-action-sheet-menu" : ""} ${sheetDismiss.dragClassName}`} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <header className="mobile-action-sheet-header mobile-sheet-drag-handle" {...sheetDismiss.dragHandleProps}>
           <h2 id={titleId}>{title}</h2>
         </header>

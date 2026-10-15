@@ -30,6 +30,7 @@ import { WorkOrderPdfExportDialog } from "./WorkOrderPdfExportDialog";
 import { WorkOrderActivity } from "./WorkOrderActivity";
 import { WorkOrderTimeTracking } from "./WorkOrderTimeTracking";
 import { WorkOrderCostTracking } from "./WorkOrderCostTracking";
+import { MobileActionSheet } from "../../components/ui/MobileActionSheet";
 import { normalizeWorkOrderSettings } from "../../utils/workOrderSettings";
 import { getExternalWorkOrderPath } from "../../routes.js";
 import { ExternalWorkOrderShareDialog } from "./ExternalWorkOrderShareDialog";
@@ -42,17 +43,142 @@ const statusOptions = [
   { value: "Completed", label: "Done", className: "completed", icon: Check },
 ];
 
+function isMobileActionSheetViewport() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia?.("(max-width: 840px)")?.matches ?? window.innerWidth <= 840;
+}
+
+function getCarouselSlidesPerView() {
+  if (typeof window === "undefined") return 1;
+  return window.matchMedia?.("(min-width: 701px) and (max-width: 1199px)")?.matches ? 2 : 1;
+}
+
 function WorkOrderDescription({ order }) {
   const [showAllPictures, setShowAllPictures] = useState(false);
+  const [activePictureIndex, setActivePictureIndex] = useState(0);
+  const [carouselSlidesPerView, setCarouselSlidesPerView] = useState(getCarouselSlidesPerView);
+  const [carouselTrackIndex, setCarouselTrackIndex] = useState(getCarouselSlidesPerView);
+  const [isCarouselTransitionEnabled, setIsCarouselTransitionEnabled] = useState(true);
+  const pictureTouchStartRef = useRef(null);
+  const carouselTransitionFrameRef = useRef(null);
   const attachments = order.work_order_attachments ?? [];
   const pictures = attachments.filter(
     (attachment) => attachment.kind === "image" || attachment.content_type?.startsWith("image/"),
   );
   const files = attachments.filter((attachment) => !pictures.includes(attachment));
-  const visiblePictures = showAllPictures ? pictures : pictures.slice(0, 3);
+  const cloneCount = pictures.length > carouselSlidesPerView ? carouselSlidesPerView : 0;
+  const carouselPictures = cloneCount > 0
+    ? [
+        ...pictures.slice(-cloneCount).map((picture, index) => ({
+          picture,
+          sourceIndex: pictures.length - cloneCount + index,
+          isClone: true,
+          key: `clone-before-${picture.id}-${index}`,
+        })),
+        ...pictures.map((picture, index) => ({ picture, sourceIndex: index, isClone: false, key: picture.id })),
+        ...pictures.slice(0, cloneCount).map((picture, index) => ({
+          picture,
+          sourceIndex: index,
+          isClone: true,
+          key: `clone-after-${picture.id}-${index}`,
+        })),
+      ]
+    : pictures.map((picture, index) => ({ picture, sourceIndex: index, isClone: false, key: picture.id }));
+  const maxPictureIndex = Math.max(0, pictures.length - carouselSlidesPerView);
+  const currentPictureIndex = Math.min(activePictureIndex, maxPictureIndex);
+  const renderedCarouselIndex = cloneCount > 0 ? carouselTrackIndex : 0;
+
+  const scheduleCarouselTransitionRestore = () => {
+    if (carouselTransitionFrameRef.current != null) {
+      window.cancelAnimationFrame?.(carouselTransitionFrameRef.current);
+      clearTimeout(carouselTransitionFrameRef.current);
+    }
+    const restoreTransition = () => {
+      carouselTransitionFrameRef.current = null;
+      setIsCarouselTransitionEnabled(true);
+    };
+    carouselTransitionFrameRef.current = window.requestAnimationFrame?.(restoreTransition) ?? window.setTimeout(restoreTransition, 0);
+  };
+
+  const movePicture = (direction) => {
+    if (maxPictureIndex === 0) return;
+    const nextIndex = currentPictureIndex + direction;
+    const wrapsForward = nextIndex > maxPictureIndex;
+    const wrapsBackward = nextIndex < 0;
+    const wrapStep = carouselSlidesPerView;
+
+    setIsCarouselTransitionEnabled(true);
+    if (wrapsForward) {
+      setActivePictureIndex(0);
+      setCarouselTrackIndex((index) => index + wrapStep);
+      return;
+    }
+    if (wrapsBackward) {
+      setActivePictureIndex(maxPictureIndex);
+      setCarouselTrackIndex((index) => index - wrapStep);
+      return;
+    }
+    setActivePictureIndex(nextIndex);
+    setCarouselTrackIndex((index) => index + direction);
+  };
+
+  const selectPicture = (index) => {
+    if (index === currentPictureIndex || maxPictureIndex === 0) return;
+    setIsCarouselTransitionEnabled(true);
+    setActivePictureIndex(index);
+    setCarouselTrackIndex(cloneCount + index);
+  };
+
+  const handleCarouselTransitionEnd = (event) => {
+    if (event.target !== event.currentTarget || event.propertyName !== "transform" || cloneCount === 0) return;
+    const lastRealTrackIndex = cloneCount + maxPictureIndex;
+    if (carouselTrackIndex > lastRealTrackIndex) {
+      setIsCarouselTransitionEnabled(false);
+      setCarouselTrackIndex((index) => index - pictures.length);
+      scheduleCarouselTransitionRestore();
+    } else if (carouselTrackIndex < cloneCount) {
+      setIsCarouselTransitionEnabled(false);
+      setCarouselTrackIndex((index) => index + pictures.length);
+      scheduleCarouselTransitionRestore();
+    }
+  };
+  const handlePictureTouchStart = (event) => {
+    pictureTouchStartRef.current = event.touches[0]?.clientX ?? null;
+  };
+  const handlePictureTouchEnd = (event) => {
+    const startX = pictureTouchStartRef.current;
+    const endX = event.changedTouches[0]?.clientX;
+    pictureTouchStartRef.current = null;
+    if (startX == null || endX == null || Math.abs(endX - startX) < 40) return;
+    movePicture(endX < startX ? 1 : -1);
+  };
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia?.("(min-width: 701px) and (max-width: 1199px)");
+    const updateSlidesPerView = () => {
+      const nextSlidesPerView = getCarouselSlidesPerView();
+      setCarouselSlidesPerView(nextSlidesPerView);
+      setActivePictureIndex(0);
+      setCarouselTrackIndex(nextSlidesPerView);
+      setIsCarouselTransitionEnabled(false);
+      scheduleCarouselTransitionRestore();
+    };
+    if (mediaQuery?.addEventListener) mediaQuery.addEventListener("change", updateSlidesPerView);
+    else window.addEventListener("resize", updateSlidesPerView);
+    return () => {
+      if (mediaQuery?.removeEventListener) mediaQuery.removeEventListener("change", updateSlidesPerView);
+      else window.removeEventListener("resize", updateSlidesPerView);
+    };
+  }, []);
+
+  useEffect(() => () => {
+    if (carouselTransitionFrameRef.current == null) return;
+    window.cancelAnimationFrame?.(carouselTransitionFrameRef.current);
+    clearTimeout(carouselTransitionFrameRef.current);
+  }, []);
 
   return (
-    <>
+    <div className="detail-description-media">
       <div className="detail-description-row">
         <div className="detail-description-content">
           <div className="detail-section-header">
@@ -66,9 +192,19 @@ function WorkOrderDescription({ order }) {
       <div className="detail-attachments-row">
         {pictures.length > 0 && (
           <div className="detail-attachment-gallery">
-            <ul className="detail-attachment-list" aria-label="Work Order pictures">
-              {visiblePictures.map((picture, index) => (
-                <li className="detail-attachment-item" key={picture.id}>
+            <div
+              className="detail-attachment-carousel"
+              onTouchStart={handlePictureTouchStart}
+              onTouchEnd={handlePictureTouchEnd}
+            >
+              <ul
+                className={`detail-attachment-list${isCarouselTransitionEnabled ? "" : " detail-attachment-list--no-transition"}`}
+                aria-label="Work Order pictures"
+                onTransitionEnd={handleCarouselTransitionEnd}
+                style={{ "--detail-carousel-index": renderedCarouselIndex }}
+              >
+              {carouselPictures.map(({ picture, sourceIndex, isClone, key }) => (
+                <li className={`detail-attachment-item${isClone ? " detail-attachment-item--clone" : ""}${!showAllPictures && !isClone && sourceIndex >= 3 ? " detail-attachment-item--desktop-hidden" : ""}`} key={key}>
                   <div className="detail-attachment-image-link">
                     <div className="detail-attachment-ratio">
                       {picture.signed_url ? (
@@ -77,8 +213,8 @@ function WorkOrderDescription({ order }) {
                           src={picture.signed_url}
                           alt={picture.file_name || "Work Order picture"}
                           title={picture.file_name || "Work Order picture"}
-                          loading={index === 0 ? "eager" : "lazy"}
-                          fetchPriority={index === 0 ? "high" : undefined}
+                          loading={!isClone && sourceIndex === 0 ? "eager" : "lazy"}
+                          fetchPriority={!isClone && sourceIndex === 0 ? "high" : undefined}
                         />
                       ) : (
                         <div className="detail-attachment-unavailable" role="img" aria-label={`${picture.file_name || "Work Order picture"} preview unavailable`} />
@@ -87,7 +223,41 @@ function WorkOrderDescription({ order }) {
                   </div>
                 </li>
               ))}
-            </ul>
+              </ul>
+              {pictures.length > carouselSlidesPerView && (
+                <>
+                  <button
+                    className="detail-attachment-carousel-control detail-attachment-carousel-control--previous"
+                    type="button"
+                    aria-label="Previous picture"
+                    onClick={() => movePicture(-1)}
+                  >
+                    <ChevronLeft size={22} aria-hidden="true" />
+                  </button>
+                  <button
+                    className="detail-attachment-carousel-control detail-attachment-carousel-control--next"
+                    type="button"
+                    aria-label="Next picture"
+                    onClick={() => movePicture(1)}
+                  >
+                    <ChevronRight size={22} aria-hidden="true" />
+                  </button>
+                  <div className="detail-attachment-carousel-indicators" role="tablist" aria-label="Work Order picture positions">
+                    {Array.from({ length: maxPictureIndex + 1 }, (_, index) => (
+                      <button
+                        className={`detail-attachment-carousel-indicator${index === currentPictureIndex ? " detail-attachment-carousel-indicator--active" : ""}`}
+                        type="button"
+                        key={index}
+                        role="tab"
+                        aria-label={`Go to picture ${index + 1}`}
+                        aria-selected={index === currentPictureIndex}
+                        onClick={() => selectPicture(index)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
             {pictures.length > 3 && (
               <div className="detail-attachment-toggle-wrapper">
                 <button
@@ -118,7 +288,7 @@ function WorkOrderDescription({ order }) {
           </div>
         ) : null}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -132,7 +302,7 @@ function formatEstimatedTime(minutes) {
 }
 
 function DetailMetadata({ icon: Icon, children }) {
-  return <div className="detail-metadata-item">{Icon && <Icon size={16} aria-hidden="true" />}<span>{children}</span></div>;
+  return <div className="detail-metadata-item">{Icon && <Icon size={16} aria-hidden="true" />}<span>{children}</span><ChevronRight className="detail-mobile-row-chevron" size={20} aria-hidden="true" /></div>;
 }
 
 function formatExternalCompletion(value, timezone) {
@@ -186,8 +356,10 @@ export function WorkOrderDetail({
   onSaveExternalShareContacts,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMobileMenuViewport, setIsMobileMenuViewport] = useState(isMobileActionSheetViewport);
   const [isChangingStatus, setIsChangingStatus] = useState(false);
   const [isDetailScrolled, setIsDetailScrolled] = useState(false);
+  const [activeMobileSection, setActiveMobileSection] = useState("details");
   const [linkCopyStatus, setLinkCopyStatus] = useState("");
   const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
   const [isExternalShareOpen, setIsExternalShareOpen] = useState(false);
@@ -201,10 +373,22 @@ export function WorkOrderDetail({
   const detailScrollRef = useRef(null);
   const commentsRef = useRef(null);
   const normalizedWorkOrderSettings = normalizeWorkOrderSettings(workOrderSettings);
+  useEffect(() => {
+    const mediaQuery = window.matchMedia?.("(max-width: 840px)");
+    const updateViewport = () => setIsMobileMenuViewport(isMobileActionSheetViewport());
+    updateViewport();
+    if (mediaQuery?.addEventListener) mediaQuery.addEventListener("change", updateViewport);
+    else window.addEventListener("resize", updateViewport);
+    return () => {
+      if (mediaQuery?.removeEventListener) mediaQuery.removeEventListener("change", updateViewport);
+      else window.removeEventListener("resize", updateViewport);
+    };
+  }, []);
   const scrollToComments = () => {
     const scroller = detailScrollRef.current;
     const commentsSection = commentsRef.current;
     if (!scroller || !commentsSection) return;
+    setActiveMobileSection("comments");
 
     const scrollerRect = scroller.getBoundingClientRect();
     const commentsRect = commentsSection.getBoundingClientRect();
@@ -218,7 +402,7 @@ export function WorkOrderDetail({
     });
   };
   useEffect(() => {
-    if (!isMenuOpen) return undefined;
+    if (!isMenuOpen || isMobileMenuViewport) return undefined;
     const dismiss = (event) => {
       if (!menuRef.current?.contains(event.target)) setIsMenuOpen(false);
     };
@@ -231,7 +415,7 @@ export function WorkOrderDetail({
       document.removeEventListener("pointerdown", dismiss);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isMenuOpen]);
+  }, [isMenuOpen, isMobileMenuViewport]);
   const closePdfExportDialog = useCallback(() => setIsPdfExportOpen(false), []);
   const handlePdfExportComplete = useCallback((filename) => {
     showToast(`PDF download started: ${filename}`, { icon: FileDown });
@@ -425,7 +609,10 @@ export function WorkOrderDetail({
   return (
     <section className="detail-pane">
       <header className="detail-header">
-        <button className="mobile-detail-back" type="button" onClick={onBack}><ChevronLeft size={19} aria-hidden="true" /><span>Work Orders</span></button>
+        <div className="detail-mobile-toolbar">
+          <button className="mobile-detail-back" type="button" aria-label="Back to Work Orders" onClick={onBack}><ChevronLeft size={28} aria-hidden="true" /><span>Work Orders</span></button>
+          <span className="detail-mobile-number">{selected.work_order_number ? `#${selected.work_order_number}` : "Work Order"}</span>
+        </div>
         <div className="detail-heading">
           <div className="detail-title-row">
             <h2>{selected.title}</h2>
@@ -446,7 +633,7 @@ export function WorkOrderDetail({
         <div className="detail-actions">
           {canUseComments && (
             <button
-              className="detail-header-action"
+              className="detail-header-action detail-comments-action"
               type="button"
               onClick={scrollToComments}
             >
@@ -459,7 +646,7 @@ export function WorkOrderDetail({
               <button ref={moreActionsButtonRef} type="button" className="icon-button" aria-label="More work order actions" aria-haspopup="menu" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen((open) => !open)}>
                 <EllipsisVertical size={17} />
               </button>
-              {isMenuOpen && <div className="work-order-detail-menu" role="menu" aria-label="Work Order actions">
+              {isMenuOpen && !isMobileMenuViewport && <div className="work-order-detail-menu" role="menu" aria-label="Work Order actions">
                 <button type="button" role="menuitem" disabled={!canEditDetails || !onEdit} onClick={() => { onEdit?.(); setIsMenuOpen(false); }}>
                   <span>Edit</span>
                 </button>
@@ -499,7 +686,50 @@ export function WorkOrderDetail({
           )}
         </div>
       </header>
-      <div ref={detailScrollRef} className="detail-scroll" onScroll={(event) => setIsDetailScrolled(event.currentTarget.scrollTop > 120)}>
+      {isMenuOpen && isMobileMenuViewport && <MobileActionSheet title="Work Order actions" variant="menu" onClose={() => setIsMenuOpen(false)}>
+        <button type="button" disabled={!canEditDetails || !onEdit} onClick={() => { onEdit?.(); setIsMenuOpen(false); }}>
+          Edit
+        </button>
+        {externalSharingEnabled && canShareExternally && <button type="button" onClick={() => { setIsMenuOpen(false); void openExternalShare(); }}>
+          Share externally
+        </button>}
+        <button type="button" disabled={isSavingReadState || !onToggleRead} onClick={async () => { await onToggleRead(selected); setIsMenuOpen(false); }}>
+          Mark as {selected.is_read ? "unread" : "read"}
+        </button>
+        <button type="button" className={!canCreateWorkOrder || !onCopy ? "is-unavailable" : ""} disabled={!canCreateWorkOrder || !onCopy} onClick={() => { onCopy?.(); setIsMenuOpen(false); }}>
+          <span>Copy to New Work Order</span>{(!canCreateWorkOrder || !onCopy) && <LockKeyhole size={14} aria-hidden="true" />}
+        </button>
+        <button type="button" onClick={() => { setIsPdfExportOpen(true); setIsMenuOpen(false); }}>
+          Export to PDF
+        </button>
+        {canCancelSkip ? <>
+          <button type="button" disabled={isChangingStatus || selected.status === "Skipped"} onClick={() => { setIsMenuOpen(false); void handleStatusChange("Skipped"); }}>
+            Skip Work Order
+          </button>
+          <button type="button" disabled={isChangingStatus || selected.status === "Cancelled"} onClick={() => { setIsMenuOpen(false); void handleStatusChange("Cancelled"); }}>
+            Cancel Work Order
+          </button>
+        </> : <button type="button" className="is-unavailable" disabled title="Canceling and skipping Work Orders are not available for your role.">
+          <span>Cancel Work Order</span><LockKeyhole size={14} aria-hidden="true" />
+        </button>}
+        {[
+          ["Save as Work Order Template", "Work Order templates are not available yet."],
+          ["Email to Vendors", "Emailing vendors is not available yet."],
+          ["Delete", "Deleting Work Orders is not available yet."],
+        ].map(([label, unavailableMessage]) => (
+          <button type="button" className="is-unavailable" key={label} disabled title={unavailableMessage}>
+            <span>{label}</span><LockKeyhole size={14} aria-hidden="true" />
+          </button>
+        ))}
+      </MobileActionSheet>}
+      <div ref={detailScrollRef} className="detail-scroll" onScroll={(event) => { setIsDetailScrolled(event.currentTarget.scrollTop > 120); if (event.currentTarget.scrollTop < 80) setActiveMobileSection("details"); }}>
+        <div className="detail-mobile-record-title"><h1>{selected.title}</h1></div>
+        {canUseComments && (
+          <nav className="detail-mobile-tabs" aria-label="Work Order sections">
+            <button type="button" aria-selected={activeMobileSection === "details"} onClick={() => { setActiveMobileSection("details"); detailScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }); }}>Details</button>
+            <button type="button" aria-selected={activeMobileSection === "comments"} onClick={scrollToComments}>Comments</button>
+          </nav>
+        )}
         <div className="detail-summary-row">
           <div className="detail-content-block">
             <div className="detail-status-title"><strong>Status</strong></div>
@@ -533,34 +763,35 @@ export function WorkOrderDetail({
             </div>
           </div>
         )}
-        <div className="detail-work-order-facts">
-          <div className={`detail-facts-grid${hasPriority ? "" : " detail-facts-grid--without-priority"}`}>
-            <div className="detail-fact">
+        <div className="detail-overview-card">
+          <div className="detail-work-order-facts">
+            <div className={`detail-facts-grid${hasPriority ? "" : " detail-facts-grid--without-priority"}`}>
+            <div className="detail-fact detail-fact--due-date">
               <div className="detail-section-header"><h2>Due Date</h2></div>
               <div className="detail-fact-value">{selected.due || "No due date"}</div>
             </div>
             {hasPriority && (
-              <div className="detail-fact">
+              <div className="detail-fact detail-fact--priority">
                 <div className="detail-section-header"><h2>Priority</h2></div>
                 <div className="detail-fact-value">
                   <PriorityBadge priority={selected.priority} />
                 </div>
               </div>
             )}
-            <div className="detail-fact">
+            <div className="detail-fact detail-fact--work-order-id">
               <div className="detail-section-header"><h2>Work Order ID</h2></div>
               <div className="detail-fact-value">{selected.work_order_number ? `#${selected.work_order_number}` : "Not available"}</div>
             </div>
-            <div className="detail-fact">
+            <div className="detail-fact detail-fact--request-id">
               <div className="detail-section-header"><h2>Request ID</h2></div>
               <div className="detail-fact-value">{selected.request_id ? `#${selected.request_id}` : "Not available"}</div>
             </div>
+            </div>
           </div>
-        </div>
-        <div className="detail-assignee-section">
-          <div className="detail-section-header"><h2>Assigned To</h2></div>
-          <ul className="detail-assignee-list">
-            {assignmentTargets.length > 0 ? assignmentTargets.map((target) => {
+          <div className="detail-assignee-section">
+            <div className="detail-section-header"><h2>Assigned To</h2></div>
+            <ul className="detail-assignee-list">
+              {assignmentTargets.length > 0 ? assignmentTargets.map((target) => {
               const option = assigneeOptionsByValue.get(`${target.type}:${target.id}`);
               const identity = target.type === "user" ? identitiesById.get(target.id) : null;
               const name = identity?.name ?? option?.label ?? (target.type === "user" ? "Assigned user" : "Assigned team");
@@ -578,33 +809,34 @@ export function WorkOrderDetail({
                   </a>
                 </li>
               );
-            }) : (
-              <li>
-                <span className="detail-assignee-link">
-                  <Avatar className="detail-assignee-avatar avatar-blue" name="Unassigned" alt="" />
-                  <span>Unassigned</span>
-                </span>
-              </li>
-            )}
-          </ul>
+              }) : (
+                <li>
+                  <span className="detail-assignee-link">
+                    <Avatar className="detail-assignee-avatar avatar-blue" name="Unassigned" alt="" />
+                    <span>Unassigned</span>
+                  </span>
+                </li>
+              )}
+            </ul>
+          </div>
         </div>
         <WorkOrderDescription key={selected.id} order={selected} />
         <div className="detail-secondary-sections">
           <section className="detail-attributes-section" aria-label="Work Order details">
             <div className="detail-attributes-grid">
-              <div className="detail-attribute">
+              <div className="detail-attribute detail-attribute--asset">
                 <div className="detail-section-header"><h2>Asset</h2></div>
                 <DetailMetadata icon={Boxes}>{selected.asset && selected.asset !== "Not available" ? selected.asset : "Not available"}</DetailMetadata>
               </div>
-              <div className="detail-attribute">
+              <div className="detail-attribute detail-attribute--location">
                 <div className="detail-section-header"><h2>Location</h2></div>
                 <DetailMetadata icon={MapPin}>{selected.location && selected.location !== "Not available" ? selected.location : "Not available"}</DetailMetadata>
               </div>
-              <div className="detail-attribute">
+              <div className="detail-attribute detail-attribute--estimated-time">
                 <div className="detail-section-header"><h2>Estimated Time</h2></div>
                 <DetailMetadata>{formatEstimatedTime(selected.estimated_duration_minutes)}</DetailMetadata>
               </div>
-              <div className="detail-attribute">
+              <div className="detail-attribute detail-attribute--work-type">
                 <div className="detail-section-header"><h2>Work Type</h2></div>
                 <DetailMetadata>{selected.workType || "Not available"}</DetailMetadata>
               </div>

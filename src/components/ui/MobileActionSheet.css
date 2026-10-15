@@ -13,6 +13,35 @@
   .mobile-action-sheet-cancel:hover, .mobile-action-sheet-cancel:focus-visible { background: transparent; outline: var(--focus-border-width) solid var(--focus-border-color); outline-offset: -2px; }
   .mobile-action-sheet-actions button.is-danger { color: var(--danger); }
   .mobile-action-sheet-cancel { margin-top: var(--spacing-2); }
+
+  /* Action menus stay fully visible; content sheets may use the default scrollable variant. */
+  .mobile-action-sheet-menu {
+    max-height: 100dvh;
+    overflow: hidden;
+    padding: var(--spacing-4) var(--spacing-5) calc(var(--spacing-3) + env(safe-area-inset-bottom));
+  }
+  .mobile-action-sheet-menu .mobile-action-sheet-header h2 {
+    margin-bottom: var(--spacing-2);
+    font-size: var(--font-size-lg-plus);
+  }
+  .mobile-action-sheet-menu .mobile-action-sheet-actions button,
+  .mobile-action-sheet-menu .mobile-action-sheet-cancel {
+    min-height: 44px;
+    font-size: var(--font-size-lg);
+  }
+  .mobile-action-sheet-menu .mobile-action-sheet-actions button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-3);
+  }
+  .mobile-action-sheet-menu .mobile-action-sheet-actions button:disabled {
+    color: var(--text-disabled-muted);
+    cursor: not-allowed;
+  }
+  .mobile-action-sheet-menu .mobile-action-sheet-actions button.is-unavailable {
+    color: var(--text-disabled-muted);
+  }
 }
 
 @keyframes mobile-action-sheet-backdrop-in { from { opacity: 0; } to { opacity: 1; } }

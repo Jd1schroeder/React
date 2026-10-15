@@ -25,6 +25,7 @@ const selected = {
 let clipboardDescriptor
 afterEach(() => {
   cleanup()
+  vi.unstubAllGlobals()
   if (clipboardDescriptor) Object.defineProperty(navigator, 'clipboard', clipboardDescriptor)
   else delete navigator.clipboard
   clipboardDescriptor = undefined
@@ -167,6 +168,7 @@ describe('WorkOrderDetail authorization', () => {
     const onStatusChange = vi.fn()
     const { container } = render(<WorkOrderDetail selected={selected} userId="user-a" grants={{
       'work_orders.change_status': 'own',
+      'work_orders.view_comments': 'own',
     }} onStatusChange={onStatusChange} />)
 
     expect(container.querySelector('.detail-meta')).toHaveTextContent(`Due by ${selected.due}`)
@@ -175,11 +177,15 @@ describe('WorkOrderDetail authorization', () => {
     expect(screen.getByRole('button', { name: 'Open' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('heading', { name: 'Due Date' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Priority' })).toBeInTheDocument()
-    expect(screen.getByText('#41')).toBeInTheDocument()
+    expect(container.querySelector('.detail-fact--work-order-id .detail-fact-value')).toHaveTextContent('#41')
     const assetAttribute = screen.getByRole('heading', { name: 'Asset' }).closest('.detail-attribute')
     expect(assetAttribute.querySelector('svg.lucide-boxes')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Assigned To' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Description' })).toBeInTheDocument()
+    expect(container.querySelector('.detail-mobile-toolbar .detail-mobile-number')).toHaveTextContent('#41')
+    expect(container.querySelector('.detail-mobile-record-title h1')).toHaveTextContent(selected.title)
+    expect(container.querySelector('.detail-mobile-tabs')).toBeInTheDocument()
+    expect(container.querySelector('.detail-description-media')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Done' }))
     expect(onStatusChange).toHaveBeenCalledWith(selected, 'Completed')
@@ -193,12 +199,76 @@ describe('WorkOrderDetail authorization', () => {
         { id: 'image-2', kind: 'image', signed_url: '/second.jpg', file_name: 'Second image' },
       ],
     }} grants={{}} />)
-    const images = container.querySelectorAll('.detail-attachment-image')
+    const firstImage = container.querySelector('.detail-attachment-image[src="/first.jpg"]')
+    const secondImage = container.querySelector('.detail-attachment-image[src="/second.jpg"]')
 
-    expect(images[0]).toHaveAttribute('loading', 'eager')
-    expect(images[0]).toHaveAttribute('fetchpriority', 'high')
-    expect(images[1]).toHaveAttribute('loading', 'lazy')
-    expect(images[1]).not.toHaveAttribute('fetchpriority')
+    expect(firstImage).toHaveAttribute('loading', 'eager')
+    expect(firstImage).toHaveAttribute('fetchpriority', 'high')
+    expect(secondImage).toHaveAttribute('loading', 'lazy')
+    expect(secondImage).not.toHaveAttribute('fetchpriority')
+  })
+
+  it('supports swipe and button navigation for the mobile picture carousel', () => {
+    const { container } = render(<WorkOrderDetail selected={{
+      ...selected,
+      work_order_attachments: [
+        { id: 'image-1', kind: 'image', signed_url: '/first.jpg', file_name: 'First image' },
+        { id: 'image-2', kind: 'image', signed_url: '/second.jpg', file_name: 'Second image' },
+        { id: 'image-3', kind: 'image', signed_url: '/third.jpg', file_name: 'Third image' },
+      ],
+    }} grants={{}} />)
+    const carousel = container.querySelector('.detail-attachment-carousel')
+    const track = container.querySelector('.detail-attachment-list')
+    const nextButton = within(carousel).getByRole('button', { name: 'Next picture' })
+
+    const indicators = within(carousel).getAllByRole('tab')
+    expect(indicators).toHaveLength(3)
+    expect(indicators[0]).toHaveAttribute('aria-selected', 'true')
+    fireEvent.click(nextButton)
+    expect(indicators[1]).toHaveAttribute('aria-selected', 'true')
+    expect(track.style.getPropertyValue('--detail-carousel-index')).toBe('2')
+
+    fireEvent.touchStart(carousel, { touches: [{ clientX: 240 }] })
+    fireEvent.touchEnd(carousel, { changedTouches: [{ clientX: 100 }] })
+    expect(indicators[2]).toHaveAttribute('aria-selected', 'true')
+    expect(track.style.getPropertyValue('--detail-carousel-index')).toBe('3')
+
+    fireEvent.click(within(carousel).getByRole('button', { name: 'Next picture' }))
+    expect(indicators[0]).toHaveAttribute('aria-selected', 'true')
+    expect(track.style.getPropertyValue('--detail-carousel-index')).toBe('4')
+    fireEvent.transitionEnd(track, { propertyName: 'transform' })
+    expect(track.style.getPropertyValue('--detail-carousel-index')).toBe('1')
+  })
+
+  it('shows two pictures per slide on tablet viewports', () => {
+    vi.stubGlobal('matchMedia', vi.fn((query) => ({
+      matches: query === '(min-width: 701px) and (max-width: 1199px)',
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })))
+    const { container } = render(<WorkOrderDetail selected={{
+      ...selected,
+      work_order_attachments: [
+        { id: 'image-1', kind: 'image', signed_url: '/first.jpg', file_name: 'First image' },
+        { id: 'image-2', kind: 'image', signed_url: '/second.jpg', file_name: 'Second image' },
+        { id: 'image-3', kind: 'image', signed_url: '/third.jpg', file_name: 'Third image' },
+      ],
+    }} grants={{}} />)
+    const carousel = container.querySelector('.detail-attachment-carousel')
+    const track = container.querySelector('.detail-attachment-list')
+
+    const indicators = within(carousel).getAllByRole('tab')
+    expect(indicators).toHaveLength(2)
+    expect(indicators[0]).toHaveAttribute('aria-selected', 'true')
+    fireEvent.click(within(carousel).getByRole('button', { name: 'Next picture' }))
+    expect(indicators[1]).toHaveAttribute('aria-selected', 'true')
+    expect(track.style.getPropertyValue('--detail-carousel-index')).toBe('3')
+
+    fireEvent.click(within(carousel).getByRole('button', { name: 'Next picture' }))
+    expect(indicators[0]).toHaveAttribute('aria-selected', 'true')
+    expect(track.style.getPropertyValue('--detail-carousel-index')).toBe('5')
+    fireEvent.transitionEnd(track, { propertyName: 'transform' })
+    expect(track.style.getPropertyValue('--detail-carousel-index')).toBe('2')
   })
 
   it.each([null, 'None'])('hides the Priority fact when priority is %s', (priority) => {
@@ -328,7 +398,7 @@ describe('WorkOrderDetail authorization', () => {
     Object.defineProperty(pageContent, 'scrollTo', { configurable: true, value: pageScrollTo })
     Object.defineProperty(commentsSection, 'scrollIntoView', { configurable: true, value: commentsScrollIntoView })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Comments' }))
+    fireEvent.click(container.querySelector('.detail-comments-action'))
 
     expect(detailScrollTo).toHaveBeenCalledWith({ top: 264, behavior: 'smooth' })
     expect(pageScrollTo).not.toHaveBeenCalled()
@@ -350,5 +420,42 @@ describe('WorkOrderDetail authorization', () => {
 
     fireEvent.click(within(menu).getByRole('menuitem', { name: 'Mark as unread' }))
     expect(onToggleRead).toHaveBeenCalledWith(selected)
+  })
+
+  it('opens the standard mobile action sheet from the ellipsis on mobile viewports', () => {
+    vi.stubGlobal('matchMedia', vi.fn((query) => ({
+      matches: query === '(max-width: 840px)',
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })))
+    const onCopy = vi.fn()
+    render(<WorkOrderDetail selected={selected} userId="user-a" grants={{
+      'work_orders.create': 'own',
+    }} onCopy={onCopy} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'More work order actions' }))
+    const sheet = screen.getByRole('dialog', { name: 'Work Order actions' })
+    expect(sheet).toBeInTheDocument()
+    expect(sheet).toHaveClass('mobile-action-sheet-menu')
+    expect(screen.queryByRole('menu', { name: 'Work Order actions' })).not.toBeInTheDocument()
+
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Copy to New Work Order' }))
+    expect(onCopy).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps unavailable mobile actions visibly locked', () => {
+    vi.stubGlobal('matchMedia', vi.fn((query) => ({
+      matches: query === '(max-width: 840px)',
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })))
+    render(<WorkOrderDetail selected={selected} grants={{}} onToggleRead={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'More work order actions' }))
+    const sheet = screen.getByRole('dialog', { name: 'Work Order actions' })
+    expect(within(sheet).getByRole('button', { name: 'Copy to New Work Order' })).toBeDisabled()
+    expect(within(sheet).getByRole('button', { name: 'Save as Work Order Template' })).toBeDisabled()
+    expect(within(sheet).getByRole('button', { name: 'Save as Work Order Template' }).querySelector('svg.lucide-lock-keyhole')).toBeInTheDocument()
+    expect(within(sheet).getByRole('button', { name: 'Delete' }).querySelector('svg.lucide-lock-keyhole')).toBeInTheDocument()
   })
 })
