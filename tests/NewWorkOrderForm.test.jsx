@@ -159,6 +159,39 @@ describe('NewWorkOrderForm mobile controls', () => {
 })
 
 describe('NewWorkOrderForm schedule requirements', () => {
+  it('shows cycle-specific recurrence scheduling options', () => {
+    render(<NewWorkOrderForm onCreate={vi.fn()} onCancel={vi.fn()} />)
+
+    expect(screen.queryByText('Repeats every day after completion of this Work Order.')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Recurrence' }))
+    fireEvent.click(screen.getByRole('option', { name: 'Weekly' }))
+
+    expect(screen.getByLabelText('Recurrence interval')).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Recurrence days' })).toBeInTheDocument()
+    expect(screen.getByText(/Repeats every 1 week on/)).toBeInTheDocument()
+    expect(screen.getByText('Planning recurring maintenance?')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss recurring maintenance notice' }))
+    expect(screen.queryByText('Planning recurring maintenance?')).not.toBeInTheDocument()
+  })
+
+  it('submits the recurrence rule without a duplicate yearly date', () => {
+    const onCreate = vi.fn()
+    render(<NewWorkOrderForm onCreate={onCreate} onCancel={vi.fn()} />)
+
+    fireEvent.change(screen.getByPlaceholderText('What needs to be done? (Required)'), { target: { value: 'Inspect pump' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Recurrence' }))
+    fireEvent.click(screen.getByRole('option', { name: 'Yearly' }))
+
+    expect(screen.queryByRole('button', { name: 'Yearly date' })).not.toBeInTheDocument()
+    expect(screen.getByText(/using the Start Date as the annual anchor/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+    expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({
+      recurrenceRule: { frequency: 'yearly', interval: 1 },
+    }))
+  })
+
   it('blocks submission until the organization-required dates are present', () => {
     const onCreate = vi.fn()
     render(<NewWorkOrderForm requiredSchedule="both" onCreate={onCreate} onCancel={vi.fn()} />)

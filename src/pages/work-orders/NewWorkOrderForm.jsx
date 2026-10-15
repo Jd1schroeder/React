@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   CirclePlus,
+  Info,
   List,
   LockKeyhole,
   Paperclip,
@@ -16,6 +17,126 @@ import { WORK_ORDER_ATTACHMENT_MAX_BYTES } from "../../utils/workOrderAttachment
 import { getWorkOrderScheduleRequirementError } from "../../utils/workOrderSettings";
 
 const priorityOptions = ["None", "Low", "Medium", "High"];
+const weekdayOptions = [
+  { value: "0", label: "Sun" },
+  { value: "1", label: "Mon" },
+  { value: "2", label: "Tue" },
+  { value: "3", label: "Wed" },
+  { value: "4", label: "Thu" },
+  { value: "5", label: "Fri" },
+  { value: "6", label: "Sat" },
+];
+const ordinalOptions = [
+  { value: "1", label: "1st" },
+  { value: "2", label: "2nd" },
+  { value: "3", label: "3rd" },
+  { value: "4", label: "4th" },
+  { value: "last", label: "Last" },
+];
+const recurrenceIntervalOptions = Array.from({ length: 12 }, (_, index) => ({ value: String(index + 1), label: String(index + 1) }));
+function ordinalLabel(value) {
+  const suffix = value % 100 >= 11 && value % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][value % 10] ?? "th";
+  return `${value}${suffix}`;
+}
+const monthDayOptions = Array.from({ length: 31 }, (_, index) => ({
+  value: String(index + 1),
+  label: `${ordinalLabel(index + 1)}${index >= 28 ? " (Or Last)" : ""}`,
+}));
+function getRecurrenceDefaults() {
+  const today = new Date();
+  const day = String(today.getDate());
+  const weekday = String(today.getDay());
+  const ordinal = Math.min(4, Math.floor((today.getDate() - 1) / 7) + 1);
+  return {
+    recurrenceInterval: "1",
+    recurrenceWeekdays: [weekday],
+    recurrenceMonthDay: day,
+    recurrenceMonthWeek: String(ordinal),
+    recurrenceMonthWeekday: weekday,
+    recurrencePeriod: "30",
+    recurrencePeriodUnit: "minutes",
+  };
+}
+
+function buildRecurrenceRule(form) {
+  if (form.recurrence === "none") return null;
+  const rule = {
+    frequency: form.recurrence,
+    interval: Number(form.recurrenceInterval) || 1,
+  };
+  if (form.recurrence === "weekly") rule.weekdays = form.recurrenceWeekdays;
+  if (form.recurrence === "monthly-date") rule.monthDay = Number(form.recurrenceMonthDay) || 1;
+  if (form.recurrence === "monthly-weekday") {
+    rule.monthWeek = form.recurrenceMonthWeek;
+    rule.monthWeekday = Number(form.recurrenceMonthWeekday);
+  }
+  if (form.recurrence === "periodically") {
+    rule.period = Number(form.recurrencePeriod) || 1;
+    rule.periodUnit = form.recurrencePeriodUnit;
+  }
+  return rule;
+}
+
+function RecurrenceOptions({ form, update, showNotice, onDismissNotice }) {
+  if (form.recurrence === "none") return null;
+  const toggleWeekday = (value) => update("recurrenceWeekdays", form.recurrenceWeekdays.includes(value)
+    ? form.recurrenceWeekdays.filter((day) => day !== value)
+    : [...form.recurrenceWeekdays, value]);
+  const recurrenceText = form.recurrence === "daily"
+    ? "Repeats every day after completion of this Work Order."
+    : form.recurrence === "weekly"
+      ? `Repeats every ${form.recurrenceInterval} week${form.recurrenceInterval === "1" ? "" : "s"} on ${form.recurrenceWeekdays.map((day) => weekdayOptions.find((option) => option.value === day)?.label).join(", ") || "the selected day"} after completion of this Work Order.`
+      : form.recurrence === "monthly-date"
+        ? `Repeats every ${form.recurrenceInterval} month${form.recurrenceInterval === "1" ? "" : "s"} on the ${monthDayOptions.find((option) => option.value === form.recurrenceMonthDay)?.label ?? form.recurrenceMonthDay} day of the month after completion of this Work Order.`
+        : form.recurrence === "monthly-weekday"
+          ? `Repeats every ${form.recurrenceInterval} month${form.recurrenceInterval === "1" ? "" : "s"} on the ${ordinalOptions.find((option) => option.value === form.recurrenceMonthWeek)?.label ?? "selected"} ${weekdayOptions.find((option) => option.value === form.recurrenceMonthWeekday)?.label ?? "day"} of the month after completion of this Work Order.`
+          : form.recurrence === "yearly"
+            ? `Repeats every ${form.recurrenceInterval} year${form.recurrenceInterval === "1" ? "" : "s"} using the Start Date as the annual anchor and preserving the original due-date interval.`
+            : `Repeats every ${form.recurrencePeriod} ${form.recurrencePeriodUnit} after completion of this Work Order.`;
+
+  return <>
+    <FormRow className="new-work-order-recurrence-options-row">
+      {form.recurrence === "daily" && <div className="new-work-order-recurrence-days" role="group" aria-label="Recurrence days">
+        {weekdayOptions.map((option) => <button key={option.value} type="button" className="selected" aria-pressed="true" onClick={() => toggleWeekday(option.value)}>{option.label}</button>)}
+      </div>}
+      {form.recurrence === "weekly" && <div className="new-work-order-recurrence-schedule">
+        <FormField label="Every"><Select ariaLabel="Recurrence interval" value={form.recurrenceInterval} onChange={(value) => update("recurrenceInterval", value)} options={recurrenceIntervalOptions} /></FormField>
+        <span className="new-work-order-recurrence-inline-label">week on</span>
+        <div className="new-work-order-recurrence-days" role="group" aria-label="Recurrence days">
+          {weekdayOptions.map((option) => <button key={option.value} type="button" className={form.recurrenceWeekdays.includes(option.value) ? "selected" : ""} aria-pressed={form.recurrenceWeekdays.includes(option.value)} onClick={() => toggleWeekday(option.value)}>{option.label}</button>)}
+        </div>
+      </div>}
+      {form.recurrence === "monthly-date" && <div className="new-work-order-recurrence-schedule">
+        <span className="new-work-order-recurrence-inline-label">Every</span>
+        <Select ariaLabel="Recurrence interval" value={form.recurrenceInterval} onChange={(value) => update("recurrenceInterval", value)} options={recurrenceIntervalOptions} />
+        <span className="new-work-order-recurrence-inline-label">month on the</span>
+        <Select className="new-work-order-recurrence-month-day-select" ariaLabel="Day of month" value={form.recurrenceMonthDay} onChange={(value) => update("recurrenceMonthDay", value)} options={monthDayOptions} />
+      </div>}
+      {form.recurrence === "monthly-weekday" && <div className="new-work-order-recurrence-schedule">
+        <span className="new-work-order-recurrence-inline-label">Every</span>
+        <Select ariaLabel="Recurrence interval" value={form.recurrenceInterval} onChange={(value) => update("recurrenceInterval", value)} options={recurrenceIntervalOptions} />
+        <span className="new-work-order-recurrence-inline-label">month on the</span>
+        <Select ariaLabel="Week of month" value={form.recurrenceMonthWeek} onChange={(value) => update("recurrenceMonthWeek", value)} options={ordinalOptions} />
+        <Select ariaLabel="Weekday" value={form.recurrenceMonthWeekday} onChange={(value) => update("recurrenceMonthWeekday", value)} options={weekdayOptions} />
+      </div>}
+      {form.recurrence === "yearly" && <div className="new-work-order-recurrence-schedule">
+        <span className="new-work-order-recurrence-inline-label">Every</span>
+        <Select ariaLabel="Recurrence interval" value={form.recurrenceInterval} onChange={(value) => update("recurrenceInterval", value)} options={[{ value: "1", label: "1" }, { value: "2", label: "2" }, { value: "3", label: "3" }, { value: "5", label: "5" }]} />
+        <span className="new-work-order-recurrence-inline-label">year from the Start Date</span>
+      </div>}
+      {form.recurrence === "periodically" && <div className="new-work-order-periodic-control">
+        <input type="number" min="1" aria-label="Periodic interval" value={form.recurrencePeriod} onChange={(event) => update("recurrencePeriod", event.target.value)} />
+        <Select ariaLabel="Periodic unit" value={form.recurrencePeriodUnit} onChange={(value) => update("recurrencePeriodUnit", value)} options={[{ value: "minutes", label: "minutes" }, { value: "hours", label: "hours" }]} />
+      </div>}
+      <p className="new-work-order-recurrence-summary">{recurrenceText}</p>
+    </FormRow>
+    {showNotice && <FormRow className="new-work-order-recurrence-notice-row"><aside className="new-work-order-recurrence-notice">
+      <Info size={18} aria-hidden="true" />
+      <div><strong>Planning recurring maintenance?</strong><p>Maintenance Plans let you schedule maintenance ahead of time, combine multiple maintenance intervals in one plan, and avoid overlapping recurring Work Orders.</p><button type="button" className="new-work-order-recurrence-plan-button" disabled><LockKeyhole size={15} aria-hidden="true" /> Create Maintenance Plan</button></div>
+      <button type="button" className="new-work-order-recurrence-notice-close" aria-label="Dismiss recurring maintenance notice" onClick={onDismissNotice}><X size={17} aria-hidden="true" /></button>
+    </aside></FormRow>}
+  </>;
+}
 
 function FormField({ label, children, className = "" }) {
   return (
@@ -120,6 +241,7 @@ export function NewWorkOrderForm({
     }
   }
   const durationMinutes = initialWorkOrder?.estimated_duration_minutes ?? 0;
+  const recurrenceDefaults = getRecurrenceDefaults();
   const [form, setForm] = useState(() => ({
     title: initialWorkOrder?.title ?? "",
     description: initialWorkOrder?.description ?? "",
@@ -134,7 +256,17 @@ export function NewWorkOrderForm({
     dueDate: initialWorkOrder?.due_date ?? "",
     dueTime: initialWorkOrder?.due_time?.slice(0, 5) ?? "",
     startDate: initialWorkOrder?.start_date ?? "",
-    recurrence: "none",
+    recurrence: initialWorkOrder?.recurrence_rule?.frequency ?? initialWorkOrder?.recurrence ?? "none",
+    ...recurrenceDefaults,
+    ...(initialWorkOrder?.recurrence_rule ? {
+      recurrenceInterval: String(initialWorkOrder.recurrence_rule.interval ?? recurrenceDefaults.recurrenceInterval),
+      recurrenceWeekdays: initialWorkOrder.recurrence_rule.weekdays ?? recurrenceDefaults.recurrenceWeekdays,
+      recurrenceMonthDay: String(initialWorkOrder.recurrence_rule.monthDay ?? recurrenceDefaults.recurrenceMonthDay),
+      recurrenceMonthWeek: initialWorkOrder.recurrence_rule.monthWeek ?? recurrenceDefaults.recurrenceMonthWeek,
+      recurrenceMonthWeekday: String(initialWorkOrder.recurrence_rule.monthWeekday ?? recurrenceDefaults.recurrenceMonthWeekday),
+      recurrencePeriod: String(initialWorkOrder.recurrence_rule.period ?? recurrenceDefaults.recurrencePeriod),
+      recurrencePeriodUnit: initialWorkOrder.recurrence_rule.periodUnit ?? recurrenceDefaults.recurrencePeriodUnit,
+    } : {}),
     workType: initialWorkOrder?.work_type ?? "reactive",
     priority: initialWorkOrder?.priority ?? "None",
     parts: "",
@@ -154,6 +286,7 @@ export function NewWorkOrderForm({
   const [fileError, setFileError] = useState("");
   const [scheduleError, setScheduleError] = useState("");
   const [customFieldError, setCustomFieldError] = useState("");
+  const [showRecurrenceNotice, setShowRecurrenceNotice] = useState(true);
   const getFileKey = (file) => `${file.name}-${file.size}-${file.lastModified}`;
   const [initialSnapshot] = useState(() => JSON.stringify({
       form,
@@ -222,6 +355,7 @@ export function NewWorkOrderForm({
       dueDate: form.dueDate || null,
       dueTime: form.dueDate && form.dueTime ? form.dueTime : null,
       startDate: form.startDate || null,
+      recurrenceRule: buildRecurrenceRule(form),
       estimatedDurationMinutes: durationMinutes || null,
       workType: form.workType,
       customFieldValues: form.customFieldValues,
@@ -339,7 +473,7 @@ export function NewWorkOrderForm({
           <FormRow className="new-work-order-recurrence-row">
             <div className="new-work-order-two-column new-work-order-recurrence-fields">
               <FormField label="Recurrence">
-                <Select className="new-work-order-recurrence" ariaLabel="Recurrence" disabled icon={LockKeyhole} value={form.recurrence} onChange={(value) => update("recurrence", value)} options={[
+                <Select className="new-work-order-recurrence" ariaLabel="Recurrence" value={form.recurrence} onChange={(value) => update("recurrence", value)} options={[
                   { value: "none", label: "Does not repeat" },
                   { value: "daily", label: "Daily" },
                   { value: "weekly", label: "Weekly" },
@@ -357,6 +491,7 @@ export function NewWorkOrderForm({
               </FormField>
             </div>
           </FormRow>
+          <RecurrenceOptions form={form} update={update} showNotice={showRecurrenceNotice} onDismissNotice={() => setShowRecurrenceNotice(false)} />
           <FormRow>
             <fieldset className="new-work-order-fieldset">
               <legend>Priority</legend>

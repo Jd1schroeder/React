@@ -681,6 +681,161 @@
 .new-work-order-recurrence .select-menu {
   max-height: none;
 }
+.new-work-order-recurrence-options-row {
+  margin-top: calc(-1 * var(--spacing-2));
+}
+.new-work-order-recurrence-schedule {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+.new-work-order-recurrence-schedule > .new-work-order-field {
+  flex: 0 0 auto;
+  margin: 0;
+}
+.new-work-order-recurrence-schedule .select {
+  width: auto;
+  flex: 0 0 auto;
+}
+.new-work-order-recurrence-schedule .select-trigger {
+  width: auto;
+}
+.new-work-order-recurrence-month-day-select {
+  width: 180px;
+}
+.new-work-order-recurrence-month-day-select .select-trigger {
+  width: 100%;
+}
+.new-work-order-recurrence-month-day-select .select-menu button {
+  white-space: nowrap;
+}
+.new-work-order-recurrence-schedule > .new-work-order-field .select-trigger,
+.new-work-order-recurrence-schedule > .select-trigger {
+  min-width: 66px;
+}
+.new-work-order-recurrence-inline-label {
+  padding-bottom: var(--spacing-3);
+  color: var(--ink);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+}
+.new-work-order-recurrence-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+.new-work-order-recurrence-days button {
+  min-width: 56px;
+  min-height: 40px;
+  padding: 0 var(--spacing-3);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-control);
+  color: var(--blue);
+  background: var(--surface);
+  font: inherit;
+  cursor: pointer;
+}
+.new-work-order-recurrence-days button.selected,
+.new-work-order-recurrence-days button:hover {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+.new-work-order-recurrence-summary {
+  flex: 1 0 100%;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-copy);
+}
+.new-work-order-periodic-control {
+  display: flex;
+  width: min(100%, 250px);
+  align-items: stretch;
+  gap: var(--spacing-2);
+}
+.new-work-order-periodic-control input {
+  box-sizing: border-box;
+  width: 100px;
+  min-height: 40px;
+  padding: 0 var(--spacing-3);
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+  outline: 0;
+}
+.new-work-order-periodic-control input:focus {
+  border-color: var(--focus-border-color);
+  box-shadow: 0 0 0 calc(var(--focus-border-width) - 1px) var(--focus-border-color);
+}
+.new-work-order-periodic-control .select-trigger {
+  width: 100%;
+  border-radius: var(--radius-control);
+}
+.new-work-order-periodic-control .select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.new-work-order-recurrence-notice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--spacing-3);
+  align-items: start;
+  padding: var(--spacing-4);
+  color: var(--ink);
+  background: var(--blue-soft);
+  border-radius: var(--radius-control);
+}
+.new-work-order-recurrence-notice > svg {
+  margin-top: 2px;
+  color: var(--blue);
+}
+.new-work-order-recurrence-notice strong {
+  display: block;
+  margin-bottom: var(--spacing-1);
+  font-size: var(--font-size-md);
+}
+.new-work-order-recurrence-notice p {
+  max-width: 620px;
+  margin: 0;
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-copy);
+}
+.new-work-order-recurrence-plan-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-height: 34px;
+  margin-top: var(--spacing-3);
+  padding: 0 var(--spacing-3);
+  border: var(--border-width-normal) solid var(--blue);
+  border-radius: var(--radius-control);
+  color: var(--blue);
+  background: var(--surface);
+  font: inherit;
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+}
+.new-work-order-recurrence-plan-button:disabled {
+  border-color: var(--line);
+  color: var(--text-disabled-control);
+  background: var(--surface-control-disabled);
+  cursor: not-allowed;
+}
+.new-work-order-recurrence-notice-close {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+}
 .new-work-order-priority {
   display: inline-flex;
   max-width: 100%;

@@ -4,9 +4,12 @@
 }
 .work-order-saved-filters-trigger {
   min-height: 32px;
-  color: var(--text-control-secondary);
+  color: var(--ink);
   background: var(--surface);
   white-space: nowrap;
+}
+.work-order-saved-filters-trigger svg {
+  color: var(--blue);
 }
 .work-order-saved-filters-trigger.is-active {
   color: var(--blue);
