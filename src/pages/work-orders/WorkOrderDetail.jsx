@@ -722,14 +722,14 @@ export function WorkOrderDetail({
           </button>
         ))}
       </MobileActionSheet>}
+      <div className="detail-mobile-record-title"><h1>{selected.title}</h1></div>
+      {canUseComments && (
+        <nav className="detail-mobile-tabs" aria-label="Work Order sections">
+          <button type="button" aria-selected={activeMobileSection === "details"} onClick={() => { setActiveMobileSection("details"); detailScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }); }}>Details</button>
+          <button type="button" aria-selected={activeMobileSection === "comments"} onClick={scrollToComments}>Comments</button>
+        </nav>
+      )}
       <div ref={detailScrollRef} className="detail-scroll" onScroll={(event) => { setIsDetailScrolled(event.currentTarget.scrollTop > 120); if (event.currentTarget.scrollTop < 80) setActiveMobileSection("details"); }}>
-        <div className="detail-mobile-record-title"><h1>{selected.title}</h1></div>
-        {canUseComments && (
-          <nav className="detail-mobile-tabs" aria-label="Work Order sections">
-            <button type="button" aria-selected={activeMobileSection === "details"} onClick={() => { setActiveMobileSection("details"); detailScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }); }}>Details</button>
-            <button type="button" aria-selected={activeMobileSection === "comments"} onClick={scrollToComments}>Comments</button>
-          </nav>
-        )}
         <div className="detail-summary-row">
           <div className="detail-content-block">
             <div className="detail-status-title"><strong>Status</strong></div>

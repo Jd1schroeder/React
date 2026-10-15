@@ -866,7 +866,8 @@ a.detail-assignee-link:hover {
 
   .detail-mobile-record-title {
     display: block;
-    margin: 0 calc(var(--spacing-4) * -1);
+    flex: 0 0 auto;
+    margin: 0;
     padding: var(--spacing-5) var(--spacing-4) var(--spacing-4);
     color: var(--ink);
     background: var(--surface);
@@ -881,13 +882,11 @@ a.detail-assignee-link:hover {
   }
 
   .detail-mobile-tabs {
-    position: sticky;
-    z-index: 4;
-    top: 0;
+    flex: 0 0 auto;
     display: flex;
     min-height: 58px;
     align-items: stretch;
-    margin: 0 calc(var(--spacing-4) * -1);
+    margin: 0;
     border-bottom: var(--border-width-normal) solid var(--line);
     background: var(--surface);
   }
@@ -937,6 +936,10 @@ a.detail-assignee-link:hover {
     scrollbar-gutter: auto;
     scroll-padding-bottom: 92px;
     padding-bottom: 92px;
+  }
+
+  .detail-summary-row {
+    padding-top: var(--spacing-3);
   }
 
   .detail-status-buttons {
@@ -1016,6 +1019,10 @@ a.detail-assignee-link:hover {
   .detail-assignee-section .detail-section-header h2,
   .detail-status-title {
     font-size: var(--font-size-xl-compact);
+  }
+
+  .detail-status-title {
+    font-size: var(--font-size-lg);
   }
 
   .detail-fact-value {
