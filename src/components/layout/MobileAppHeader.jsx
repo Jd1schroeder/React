@@ -24,7 +24,7 @@ export function MobileAppHeader({ activePage, titleOverride, onNavigate, onNavig
   const isOrganizationSettingsPage = Boolean(organizationSettingsTitles[activePage])
   const isWorkOrderTrackingTypesPage = ['Settings / Features / Work Order Cost Types', 'Settings / Features / Work Order Time Types'].includes(activePage)
   const pageTitle = activePage === 'Settings / Edit Account' ? 'Edit Account' : activePage === 'Settings / Linked Device' ? 'Linked Device' : activePage === 'Settings / Notification Settings' ? 'Notification Settings' : 'My Account'
-  const title = organizationSettingsTitles[activePage] || (activePage === 'Settings / Features / Work Order Cost Types' ? 'Custom Work Order Cost Types' : activePage === 'Settings / Features / Work Order Time Types' ? 'Custom Work Order Time Types' : activePage === 'Settings / Notification Settings' && titleOverride ? titleOverride : pageTitle)
+  const title = titleOverride || organizationSettingsTitles[activePage] || (activePage === 'Settings / Features / Work Order Cost Types' ? 'Custom Work Order Cost Types' : activePage === 'Settings / Features / Work Order Time Types' ? 'Custom Work Order Time Types' : pageTitle)
   const isPageHeader = isAccountPage || isOrganizationSettingsPage || isWorkOrderTrackingTypesPage
 
   return (

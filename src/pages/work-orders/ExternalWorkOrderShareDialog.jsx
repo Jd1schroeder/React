@@ -1,5 +1,6 @@
-import { Info, Link2, LockKeyhole, Mail, Plus, RotateCcw, Share2, Trash2, X } from 'lucide-react'
+import { ArrowLeft, Info, Link2, LockKeyhole, Plus, RotateCcw, Share2, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
+import { ResponsiveDialog } from '../../components/ui/ResponsiveDialog'
 
 function expirationLabel(value) {
   return {
@@ -37,7 +38,9 @@ export function ExternalWorkOrderShareDialog({ title, share, expiration, isLoadi
       setContactError('That email address is already selected.')
       return
     }
-    setContacts((current) => [...current, { vendorName: vendorName.trim(), displayName: displayName.trim(), email: normalizedEmail }])
+    const nextContacts = [...contacts, { vendorName: vendorName.trim(), displayName: displayName.trim(), email: normalizedEmail }]
+    setContacts(nextContacts)
+    onSaveContacts?.(nextContacts)
     setVendorName('')
     setDisplayName('')
     setEmail('')
@@ -45,14 +48,19 @@ export function ExternalWorkOrderShareDialog({ title, share, expiration, isLoadi
   }
 
   return (
-    <div className="external-work-order-share-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !isSaving) onClose() }}>
-      <section className="external-work-order-share-dialog" role="dialog" aria-modal="true" aria-labelledby="external-work-order-share-title">
+    <ResponsiveDialog mobileMode="page" backdropClassName="external-work-order-share-backdrop" dialogClassName="external-work-order-share-dialog" ariaLabelledBy="external-work-order-share-title" onBackdropMouseDown={(event) => { if (event.target === event.currentTarget && !isSaving) onClose() }}>
+        <header className="mobile-app-header is-page-header external-work-order-share-mobile-header">
+          <button type="button" className="mobile-app-header-back" onClick={onClose} aria-label="Back" disabled={isSaving}>
+            <ArrowLeft size={26} aria-hidden="true" />
+          </button>
+          <h1 className="mobile-app-header-title">Share &quot;{title}&quot;</h1>
+        </header>
         <header className="external-work-order-share-header">
           <div>
             <p>External Work Orders</p>
             <h2 id="external-work-order-share-title">Share &quot;{title}&quot;</h2>
           </div>
-          <button type="button" aria-label="Close external sharing" onClick={onClose} disabled={isSaving}>
+          <button type="button" className="external-work-order-share-desktop-close" aria-label="Close external sharing" onClick={onClose} disabled={isSaving}>
             <X size={19} aria-hidden="true" />
           </button>
         </header>
@@ -100,17 +108,16 @@ export function ExternalWorkOrderShareDialog({ title, share, expiration, isLoadi
                   <div className="external-work-order-share-contact-email"><input id="external-share-contact-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} maxLength="320" placeholder="vendor@example.com" disabled={isSaving} /><button type="button" onClick={addContact} disabled={isSaving || !email.trim()}><Plus size={16} aria-hidden="true" />Add contact</button></div>
                 </div>
                 {contactError && <p className="external-work-order-share-contact-error" role="alert">{contactError}</p>}
-                {contacts.length > 0 && <ul className="external-work-order-share-contact-list">{contacts.map((contact) => <li key={contact.email}><div><strong>{contact.displayName || contact.email}</strong><span>{[contact.vendorName, contact.displayName && contact.email].filter(Boolean).join(' · ') || contact.email}</span></div><button type="button" aria-label={`Remove ${contact.email}`} onClick={() => setContacts((current) => current.filter((item) => item.email !== contact.email))} disabled={isSaving}><Trash2 size={16} aria-hidden="true" /></button></li>)}</ul>}
-                <button type="button" className="external-work-order-share-save-contacts" onClick={() => onSaveContacts?.(contacts)} disabled={isSaving}><Mail size={16} aria-hidden="true" />Save vendor contacts</button>
+                {contacts.length > 0 && <ul className="external-work-order-share-contact-list">{contacts.map((contact) => <li key={contact.email}><div><strong>{contact.displayName || contact.email}</strong><span>{[contact.vendorName, contact.displayName && contact.email].filter(Boolean).join(' · ') || contact.email}</span></div><button type="button" aria-label={`Remove ${contact.email}`} onClick={() => { const nextContacts = contacts.filter((item) => item.email !== contact.email); setContacts(nextContacts); onSaveContacts?.(nextContacts) }} disabled={isSaving}><Trash2 size={16} aria-hidden="true" /></button></li>)}</ul>}
               </>}
             </section>
+
           </>}
         </div>
 
         <footer className="external-work-order-share-footer">
           <button type="button" onClick={onClose} disabled={isSaving}>Close</button>
         </footer>
-      </section>
-    </div>
+    </ResponsiveDialog>
   )
 }

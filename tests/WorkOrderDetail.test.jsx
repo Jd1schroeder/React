@@ -80,13 +80,16 @@ describe('WorkOrderDetail authorization', () => {
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
     const onGetExternalShare = vi.fn().mockResolvedValue({ enabled: false, shareId: null })
     const onCreateExternalShare = vi.fn().mockResolvedValue({ enabled: true, token: 'a'.repeat(64), shareId: 'share-1' })
-    const onSaveExternalShareContacts = vi.fn().mockResolvedValue([{ displayName: 'Vendor Contact', vendorName: 'Acme Services', email: 'vendor@example.com' }])
-
+    const onSaveExternalShareContacts = vi.fn().mockResolvedValue([{ displayName: '', vendorName: 'Acme Services', email: 'vendor@example.com' }])
     render(<ToastProvider><WorkOrderDetail selected={selected} grants={{}} externalSharingEnabled canShareExternally onGetExternalShare={onGetExternalShare} onCreateExternalShare={onCreateExternalShare} onDisableExternalShare={vi.fn()} onResetExternalShare={vi.fn()} onSaveExternalShareContacts={onSaveExternalShareContacts} /></ToastProvider>)
 
     fireEvent.click(screen.getByRole('button', { name: 'More work order actions' }))
     fireEvent.click(screen.getByRole('menuitem', { name: 'Share externally' }))
-    expect(await screen.findByRole('dialog', { name: 'Share "Replace filter"' })).toBeInTheDocument()
+    const shareDialog = await screen.findByRole('dialog', { name: 'Share "Replace filter"' })
+    expect(shareDialog).toHaveClass('responsive-dialog', 'is-mobile-page', 'external-work-order-share-dialog')
+    expect(shareDialog.querySelector('.mobile-app-header')).toHaveClass('is-page-header')
+    expect(shareDialog.querySelector('.mobile-app-header-title')).toHaveTextContent('Share "Replace filter"')
+    expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
     expect(screen.getByRole('note')).toHaveTextContent('External access is limited to this Work Order.')
     expect(screen.getByRole('button', { name: 'About external links' })).toHaveAttribute('aria-describedby', 'external-work-order-share-help-text')
 
@@ -98,10 +101,11 @@ describe('WorkOrderDetail authorization', () => {
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(2))
     expect(onCreateExternalShare).toHaveBeenCalledTimes(1)
 
+    expect(screen.getByRole('heading', { name: 'Vendor Contacts' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Save vendor contacts' })).not.toBeInTheDocument()
     fireEvent.change(screen.getByPlaceholderText('Company name'), { target: { value: 'Acme Services' } })
     fireEvent.change(screen.getByPlaceholderText('vendor@example.com'), { target: { value: 'vendor@example.com' } })
     fireEvent.click(screen.getByRole('button', { name: 'Add contact' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Save vendor contacts' }))
     await waitFor(() => expect(onSaveExternalShareContacts).toHaveBeenCalledWith('wo-1', [{ displayName: '', vendorName: 'Acme Services', email: 'vendor@example.com' }]))
   })
 

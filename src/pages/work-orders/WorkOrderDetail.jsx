@@ -368,9 +368,9 @@ export function WorkOrderDetail({
     try {
       const savedContacts = await onSaveExternalShareContacts(selected.id, contacts);
       setExternalShare((currentShare) => ({ ...currentShare, contacts: savedContacts }));
-      showToast("Vendor contacts saved.");
+      showToast("Vendor contact association updated.");
     } catch (error) {
-      setExternalShareError(error.message || "Unable to save vendor contacts.");
+      setExternalShareError(error.message || "Unable to update vendor contacts.");
     } finally {
       setIsSavingExternalShare(false);
     }
@@ -693,7 +693,7 @@ export function WorkOrderDetail({
           timezone={timezone}
         />
       )}
-      {isExternalShareOpen && <ExternalWorkOrderShareDialog key={externalShare?.shareId ?? "external-share-loading"} title={selected.title} share={externalShare} expiration={normalizedWorkOrderSettings.externalWorkOrderLinkExpiration} isLoading={isLoadingExternalShare} isSaving={isSavingExternalShare} error={externalShareError} onClose={() => { if (!isSavingExternalShare) setIsExternalShareOpen(false); }} onEnable={() => { void saveExternalShare(onCreateExternalShare); }} onDisable={() => { void saveExternalShare(onDisableExternalShare); }} onReset={() => { void saveExternalShare(onResetExternalShare); }} onCopy={() => { void copyExternalShare(); }} onSaveContacts={(contacts) => { void saveExternalShareContacts(contacts); }} />}
+      {isExternalShareOpen && <ExternalWorkOrderShareDialog key={externalShare?.shareId ?? "external-share-loading"} title={selected.title} share={externalShare} expiration={normalizedWorkOrderSettings.externalWorkOrderLinkExpiration} isLoading={isLoadingExternalShare} isSaving={isSavingExternalShare} error={externalShareError} onClose={() => { if (!isSavingExternalShare) setIsExternalShareOpen(false); }} onEnable={() => { void saveExternalShare(onCreateExternalShare); }} onDisable={() => { void saveExternalShare(onDisableExternalShare); }} onReset={() => { void saveExternalShare(onResetExternalShare); }} onCopy={() => { void copyExternalShare(); }} onSaveContacts={(contacts) => saveExternalShareContacts(contacts)} />}
     </section>
   );
 }
