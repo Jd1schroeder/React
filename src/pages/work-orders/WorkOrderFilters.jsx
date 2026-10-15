@@ -2,9 +2,17 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Avatar } from '../../components/ui/Avatar'
 import {
+  CalendarClock,
+  CalendarDays,
   ChevronDown,
+  Hash,
+  Link,
   Plus,
+  Search,
+  SlidersHorizontal,
   Trash2,
+  Type,
+  AlignLeft,
   UsersRound,
 } from 'lucide-react'
 import { normalizeWorkOrderFilters } from '../../utils/workOrderFilters'
@@ -12,8 +20,8 @@ import { WorkOrderSavedFilters } from './WorkOrderSavedFilters'
 import { workOrderFilterDefinitions, selectableWorkOrderFilterFields } from './workOrderFilterOptions'
 import './WorkOrderFilters.css'
 
-function operatorLabel(field, operator) {
-  return workOrderFilterDefinitions[field]?.operators.find(([value]) => value === operator)?.[1] ?? 'One of'
+function operatorLabel(definitions, field, operator) {
+  return definitions[field]?.operators.find(([value]) => value === operator)?.[1] ?? 'One of'
 }
 
 function filterCount(filter) {
@@ -27,10 +35,20 @@ function calendarValues(operator, values) {
   return Array.from({ length: count }, (_, index) => values[index] ?? '')
 }
 
+const dateTimeFilterOptions = [
+  { value: 'today', label: 'Today' },
+  { value: 'tomorrow', label: 'Tomorrow' },
+  { value: 'next_7_days', label: 'Next 7 Days' },
+  { value: 'next_30_days', label: 'Next 30 Days' },
+  { value: 'this_month', label: 'This Month' },
+  { value: 'is_past', label: 'Is Past' },
+]
+
 export function WorkOrderFilters({
   filters = [],
   onFiltersChange = () => {},
   assigneeOptions = [],
+  customFields = [],
   savedFilters = [],
   savedFiltersLoading = false,
   savedFiltersError = '',
@@ -45,12 +63,12 @@ export function WorkOrderFilters({
   onUpdateSavedFilter,
   onDeleteSavedFilter,
 }) {
-  const normalizedFilters = normalizeWorkOrderFilters(filters)
   const filterId = useId()
   const [activeField, setActiveField] = useState(null)
   const [operatorDraft, setOperatorDraft] = useState('one_of')
   const [operatorMenuOpen, setOperatorMenuOpen] = useState(false)
   const [dateDraft, setDateDraft] = useState(['', ''])
+  const [textDraft, setTextDraft] = useState('')
   const [assignmentSearch, setAssignmentSearch] = useState('')
   const [menuPosition, setMenuPosition] = useState(null)
   const rootRef = useRef(null)
@@ -59,15 +77,37 @@ export function WorkOrderFilters({
   const operatorTriggerRef = useRef(null)
   const triggerRefs = useRef(new Map())
 
+  const customFieldDefinitions = Object.fromEntries(customFields
+    .filter((field) => field?.id && field.name?.trim())
+    .map((field) => [field.id, {
+      label: field.name.trim(),
+      Icon: field.type === 'link' ? Link : field.type === 'number' ? Hash : field.type === 'datetime' ? CalendarClock : field.type === 'date' ? CalendarDays : field.type === 'text' ? Type : field.type === 'long_text' ? AlignLeft : SlidersHorizontal,
+      defaultOperator: field.type === 'single_select' || ['date', 'datetime'].includes(field.type) ? 'one_of' : ['text', 'long_text', 'number', 'link'].includes(field.type) ? 'contains' : null,
+      operators: field.type === 'single_select'
+        ? [['one_of', 'One of'], ['none_of', 'None of'], ['is_empty', 'Is empty'], ['is_not_empty', 'Is not empty']]
+        : ['date', 'datetime'].includes(field.type)
+          ? [['one_of', 'One of'], ['none_of', 'None of'], ['is_empty', 'Is empty'], ['is_not_empty', 'Is not empty']]
+        : ['text', 'long_text', 'number', 'link'].includes(field.type)
+          ? [['contains', 'Contains'], ['not_contains', 'Does not contain'], ['is_empty', 'Is empty'], ['is_not_empty', 'Is not empty']]
+          : [],
+      options: field.type === 'single_select'
+        ? (field.options ?? []).map((value) => ({ value, label: value }))
+        : ['date', 'datetime'].includes(field.type) ? dateTimeFilterOptions : null,
+      kind: ['text', 'long_text', 'link'].includes(field.type) ? 'text' : field.type === 'number' ? 'number' : ['date', 'datetime'].includes(field.type) ? 'date_time' : null,
+      disabled: !['single_select', 'text', 'long_text', 'number', 'link', 'date', 'datetime'].includes(field.type),
+    }]))
+  const filterDefinitions = { ...workOrderFilterDefinitions, ...customFieldDefinitions }
+  const selectableFields = [...selectableWorkOrderFilterFields, ...Object.keys(customFieldDefinitions)]
+  const normalizedFilters = normalizeWorkOrderFilters(filters, customFields)
   const filterByField = new Map(normalizedFilters.map((filter) => [filter.field, filter]))
   const activeFilter = activeField ? filterByField.get(activeField) : null
-  const activeDefinition = activeField ? workOrderFilterDefinitions[activeField] : null
+  const activeDefinition = activeField ? filterDefinitions[activeField] : null
 
   const changeFilter = (field, operator, values) => {
     const next = normalizeWorkOrderFilters([
       ...normalizedFilters.filter((filter) => filter.field !== field),
       { field, operator, values },
-    ])
+    ], customFields)
     onFiltersChange(next)
   }
 
@@ -81,11 +121,12 @@ export function WorkOrderFilters({
   }
 
   const openField = (field) => {
-    const definition = workOrderFilterDefinitions[field]
+    const definition = filterDefinitions[field]
     const current = filterByField.get(field)
     setOperatorDraft(current?.operator ?? definition.defaultOperator)
     setOperatorMenuOpen(false)
     setDateDraft(calendarValues(current?.operator ?? definition.defaultOperator, current?.values ?? []))
+    setTextDraft(current?.values?.[0] ?? '')
     setAssignmentSearch('')
     setActiveField(field)
   }
@@ -157,7 +198,7 @@ export function WorkOrderFilters({
   }, [activeField])
 
   const renderFilterChip = (field) => {
-    const definition = workOrderFilterDefinitions[field]
+    const definition = filterDefinitions[field]
     const Icon = definition.Icon
     const filter = filterByField.get(field)
     const count = filterCount(filter)
@@ -167,7 +208,7 @@ export function WorkOrderFilters({
           ref={(node) => { if (node) triggerRefs.current.set(field, node); else triggerRefs.current.delete(field) }}
           type="button"
           className={`filter-button work-order-filter-chip${filter ? ' is-active' : ''}`}
-          aria-label={`${definition.label}${filter ? ` filter, ${operatorLabel(field, filter.operator)}${count ? `, ${count} selected` : ''}` : ' filter'}`}
+          aria-label={`${definition.label}${filter ? ` filter, ${operatorLabel(filterDefinitions, field, filter.operator)}${count ? `, ${count} selected` : ''}` : ' filter'}`}
           aria-expanded={activeField === field}
           onClick={() => activeField === field ? setActiveField(null) : openField(field)}
         >
@@ -183,6 +224,8 @@ export function WorkOrderFilters({
   const selectedOperator = operatorDraft
   const hasEmptyOperator = selectedOperator === 'is_empty' || selectedOperator === 'is_not_empty'
   const isDateFilter = activeField === 'due_date' || activeField === 'start_date'
+  const isTextFilter = activeDefinition?.kind === 'text'
+  const isNumberFilter = activeDefinition?.kind === 'number'
   const filteredAssignees = assigneeOptions.filter((option) => option.label.toLowerCase().includes(assignmentSearch.trim().toLowerCase()))
   const teamOptions = filteredAssignees.filter((option) => option.value.startsWith('team:'))
   const userOptions = filteredAssignees.filter((option) => option.value.startsWith('user:'))
@@ -213,6 +256,11 @@ export function WorkOrderFilters({
       }
       return
     }
+    if (isTextFilter || isNumberFilter) {
+      if (textDraft.trim()) changeFilter(activeField, operator, [textDraft.trim()])
+      else if (activeFilter) onFiltersChange(normalizedFilters.filter((filter) => filter.field !== activeField))
+      return
+    }
     if (selectedValues.length > 0) changeFilter(activeField, operator, selectedValues)
   }
 
@@ -229,12 +277,17 @@ export function WorkOrderFilters({
     const requiredCount = operatorDraft === 'between' ? 2 : 1
     if (nextValues.slice(0, requiredCount).every(Boolean)) changeFilter(activeField, operatorDraft, nextValues.slice(0, requiredCount))
   }
+  const updateText = (value) => {
+    setTextDraft(value)
+    if (value.trim()) changeFilter(activeField, operatorDraft, [value.trim()])
+    else onFiltersChange(normalizedFilters.filter((filter) => filter.field !== activeField))
+  }
 
   return (
     <div className="work-order-actions" ref={rootRef} role="group" aria-label="Work Order filters">
       {renderFilterChip('assigned_to')}
       {renderFilterChip('status')}
-      {selectableWorkOrderFilterFields.filter((field) => filterByField.has(field)).map(renderFilterChip)}
+      {selectableFields.filter((field) => filterByField.has(field)).map(renderFilterChip)}
       <div className="work-order-filter-button-wrap">
         <button
           ref={(node) => { if (node) triggerRefs.current.set('add', node); else triggerRefs.current.delete('add') }}
@@ -284,11 +337,12 @@ export function WorkOrderFilters({
           >
           {activeField === 'add'
             ? <div className="work-order-filter-add-options">
-                {selectableWorkOrderFilterFields.filter((field) => !filterByField.has(field)).map((field) => {
-                  const { Icon, label } = workOrderFilterDefinitions[field]
-                  return <button type="button" key={field} onClick={() => openField(field)}><Icon size={15} aria-hidden="true" />{label}</button>
+                {selectableFields.filter((field) => !filterByField.has(field)).map((field) => {
+                  const { Icon, label } = filterDefinitions[field]
+                  const definition = filterDefinitions[field]
+                  return <button type="button" key={field} disabled={definition.disabled} title={definition.disabled ? 'This custom field filter is not available yet' : undefined} onClick={() => openField(field)}><Icon size={15} aria-hidden="true" />{label}</button>
                 })}
-                {selectableWorkOrderFilterFields.every((field) => filterByField.has(field)) && <p>All available filters are already added.</p>}
+                {selectableFields.every((field) => filterByField.has(field)) && <p>All available filters are already added.</p>}
               </div>
             : <>
                 <header className="work-order-filter-popover-header">
@@ -300,12 +354,12 @@ export function WorkOrderFilters({
                           ref={operatorTriggerRef}
                           className={`work-order-filter-operator-trigger${operatorMenuOpen ? ' is-open' : ''}`}
                           type="button"
-                          aria-label={`${activeDefinition.label} operator: ${operatorLabel(activeField, operatorDraft)}`}
+                          aria-label={`${activeDefinition.label} operator: ${operatorLabel(filterDefinitions, activeField, operatorDraft)}`}
                           aria-expanded={operatorMenuOpen}
                           aria-controls="work-order-filter-operator-menu"
                           onClick={() => setOperatorMenuOpen((open) => !open)}
                         >
-                          <span className="work-order-filter-operator-label">{operatorLabel(activeField, operatorDraft)}</span>
+                          <span className="work-order-filter-operator-label">{operatorLabel(filterDefinitions, activeField, operatorDraft)}</span>
                           <ChevronDown size={14} aria-hidden="true" />
                         </button>
                         {operatorMenuOpen && <div id="work-order-filter-operator-menu" className="work-order-filter-operator-menu" role="group" aria-label={`${activeDefinition.label} operators`}>
@@ -385,7 +439,12 @@ export function WorkOrderFilters({
                         return <label key={option.value} className={`work-order-filter-option${OptionIcon ? ' is-status' : ''}`}>
                           {OptionIcon && <span className={`work-order-filter-option-icon work-order-filter-status-icon ${option.tone}`} aria-hidden="true"><OptionIcon size={16} /></span>}
                           <span className="work-order-filter-option-label">{option.label}</span>
-                          <input type="checkbox" checked={selectedValues.includes(option.value)} onChange={() => toggleValue(option.value)} />
+                          <input
+                            type="checkbox"
+                            checked={selectedValues.includes(option.value)}
+                            onClick={(event) => { event.stopPropagation(); toggleValue(option.value) }}
+                            onChange={(event) => event.stopPropagation()}
+                          />
                         </label>
                       })}
                 </div>}
@@ -397,6 +456,7 @@ export function WorkOrderFilters({
                     <input type="date" value={dateDraft[1]} min={dateDraft[0] || undefined} onChange={(event) => updateDate(1, event.target.value)} />
                   </label>}
                 </div>}
+                {(isTextFilter || isNumberFilter) && !hasEmptyOperator && <label className="work-order-filter-search work-order-filter-text-input"><Search size={18} aria-hidden="true" /><span className="work-order-filter-sr-only">{activeDefinition.label}</span><input type={isNumberFilter ? 'number' : 'search'} placeholder={isNumberFilter ? 'Enter Number' : 'Enter Text'} value={textDraft} onChange={(event) => updateText(event.target.value)} /></label>}
                 {activeField === 'assigned_to' && hasEmptyOperator && <p className="work-order-filter-hint">This filter matches Work Orders with {operatorDraft === 'is_empty' ? 'no assignee' : 'at least one assignee'}.</p>}
                 {activeField === 'priority' && hasEmptyOperator && <p className="work-order-filter-hint">This filter matches Work Orders {operatorDraft === 'is_empty' ? 'without a priority' : 'with a priority'}.</p>}
                 </div>

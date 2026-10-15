@@ -205,6 +205,9 @@
 .work-order-filter-popover.is-add-menu {
   overflow: auto;
 }
+.work-order-filter-popover:not(.is-add-menu) {
+  overflow: visible;
+}
 .work-order-filter-popover-header {
   position: relative;
   box-sizing: border-box;
@@ -326,7 +329,7 @@
 }
 .work-order-filter-operator-menu {
   position: absolute;
-  z-index: 2;
+  z-index: 4;
   top: calc(100% + var(--spacing-1));
   left: 0;
   display: grid;
@@ -389,6 +392,24 @@
   background: var(--surface);
   font: inherit;
 }
+.work-order-filter-text-input {
+  position: relative;
+  padding: var(--spacing-3);
+}
+.work-order-filter-text-input > svg {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--spacing-3) + var(--spacing-3));
+  color: var(--icon-secondary);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+.work-order-filter-text-input input {
+  padding-left: calc(var(--spacing-3) + 24px);
+}
+.work-order-filter-text-input input:focus-visible {
+  outline-offset: -2px;
+}
 .work-order-filter-popover-body {
   flex: 0 1 auto;
   min-height: 0;
@@ -441,6 +462,7 @@
 .work-order-filter-option {
   box-sizing: border-box;
   display: flex;
+  position: relative;
   min-height: 38px;
   align-items: center;
   justify-content: space-between;
@@ -550,6 +572,8 @@
   justify-content: center;
 }
 .work-order-filter-option-checkbox input[type="checkbox"] {
+  position: relative;
+  z-index: 1;
   flex: 0 0 auto;
   width: 16px;
   height: 16px;
@@ -621,6 +645,13 @@
 }
 .work-order-filter-add-options button:hover {
   background: var(--surface-control-hover);
+}
+.work-order-filter-add-options button:disabled {
+  color: var(--text-disabled-control);
+  cursor: not-allowed;
+}
+.work-order-filter-add-options button:disabled:hover {
+  background: transparent;
 }
 .work-order-filter-add-options button svg {
   color: var(--icon-secondary);

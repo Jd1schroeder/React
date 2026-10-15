@@ -4,11 +4,11 @@ import { normalizeWorkOrderFilters } from '../utils/workOrderFilters'
 
 const savedFilterColumns = 'id, organization_id, created_by, filter_scope, name, filters, created_at, updated_at'
 
-function validateSavedFilter({ name, filters, grants }) {
+function validateSavedFilter({ name, filters, customFields = [], grants }) {
   assertPermission(grants, 'work_orders.manage_saved_filters')
   const normalizedName = typeof name === 'string' ? name.trim() : ''
   if (!normalizedName || normalizedName.length > 80) throw new Error('Enter a filter name between 1 and 80 characters.')
-  const normalizedFilters = normalizeWorkOrderFilters(filters)
+  const normalizedFilters = normalizeWorkOrderFilters(filters, customFields)
   if (!normalizedFilters.length) throw new Error('Add at least one valid filter before saving.')
   return { name: normalizedName, filters: normalizedFilters }
 }
@@ -31,8 +31,8 @@ export async function listWorkOrderSavedFilters({ organizationId, grants }) {
   return data ?? []
 }
 
-export async function createWorkOrderSavedFilter({ organizationId, filterScope = 'personal', name, filters, grants, canManageOrganizationFilters = false }) {
-  const normalized = validateSavedFilter({ name, filters, grants })
+export async function createWorkOrderSavedFilter({ organizationId, filterScope = 'personal', name, filters, customFields = [], grants, canManageOrganizationFilters = false }) {
+  const normalized = validateSavedFilter({ name, filters, customFields, grants })
   if (!['personal', 'organization'].includes(filterScope)) throw new Error('Invalid saved filter collection.')
   if (filterScope === 'organization' && !canManageOrganizationFilters) throw new Error('Only organization administrators can save shared filters.')
   const { data, error } = await supabase
@@ -44,8 +44,8 @@ export async function createWorkOrderSavedFilter({ organizationId, filterScope =
   return data
 }
 
-export async function updateWorkOrderSavedFilter({ organizationId, savedFilterId, filterScope, name, filters, grants, canManageOrganizationFilters = false }) {
-  const normalized = validateSavedFilter({ name, filters, grants })
+export async function updateWorkOrderSavedFilter({ organizationId, savedFilterId, filterScope, name, filters, customFields = [], grants, canManageOrganizationFilters = false }) {
+  const normalized = validateSavedFilter({ name, filters, customFields, grants })
   if (filterScope === 'organization' && !canManageOrganizationFilters) throw new Error('Only organization administrators can edit shared filters.')
   const { data, error } = await supabase
     .from('work_order_saved_filters')

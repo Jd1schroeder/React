@@ -31,13 +31,26 @@ function isCalendarDate(value) {
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
 }
 
-export function normalizeWorkOrderFilters(filters = []) {
+const dateTimeFilterValues = ['today', 'tomorrow', 'next_7_days', 'next_30_days', 'this_month', 'is_past']
+
+export function normalizeWorkOrderFilters(filters = [], customFields = []) {
+  const customRules = Object.fromEntries((customFields ?? [])
+    .filter((field) => field?.id && ['single_select', 'text', 'long_text', 'number', 'link', 'date', 'datetime'].includes(field.type))
+    .map((field) => [field.id, {
+      operators: ['single_select', 'date', 'datetime'].includes(field.type)
+        ? ['one_of', 'none_of', 'is_empty', 'is_not_empty']
+        : ['contains', 'not_contains', 'is_empty', 'is_not_empty'],
+      values: (value) => field.type === 'single_select'
+        ? (field.options ?? []).includes(value)
+        : ['date', 'datetime'].includes(field.type) ? dateTimeFilterValues.includes(value) : value.trim().length > 0,
+    }]))
+  const rules = { ...filterRules, ...customRules }
   if (!Array.isArray(filters)) return []
   const seenFields = new Set()
   const normalized = []
 
   for (const filter of filters) {
-    const rule = filterRules[filter?.field]
+    const rule = rules[filter?.field]
     const field = filter?.field
     const operator = filter?.operator
     if (!rule || seenFields.has(field) || !rule.operators.includes(operator)) continue
@@ -85,8 +98,26 @@ function matchesDate(value, operator, values) {
   return false
 }
 
-export function matchesWorkOrderFilters(order, filters = []) {
-  return normalizeWorkOrderFilters(filters).every((filter) => {
+function matchesDateTimePreset(value, preset, now = new Date()) {
+  if (!value) return false
+  const [year, month, day] = String(value).slice(0, 10).split('-').map(Number)
+  if (!year || !month || !day) return false
+  const valueDate = new Date(year, month - 1, day)
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const date = new Date(valueDate.getFullYear(), valueDate.getMonth(), valueDate.getDate())
+  const dayDifference = Math.round((date - today) / 86400000)
+  if (preset === 'today') return dayDifference === 0
+  if (preset === 'tomorrow') return dayDifference === 1
+  if (preset === 'next_7_days') return dayDifference >= 0 && dayDifference <= 7
+  if (preset === 'next_30_days') return dayDifference >= 0 && dayDifference <= 30
+  if (preset === 'this_month') return date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth()
+  if (preset === 'is_past') return date < today
+  return false
+}
+
+export function matchesWorkOrderFilters(order, filters = [], customFields = []) {
+  const customFieldTypes = new Map((customFields ?? []).filter((field) => field?.id).map((field) => [field.id, field.type]))
+  return normalizeWorkOrderFilters(filters, customFields).every((filter) => {
     const { field, operator, values } = filter
     if (field === 'assigned_to') {
       const targets = assignedTargets(order)
@@ -100,6 +131,23 @@ export function matchesWorkOrderFilters(order, filters = []) {
       if (operator === 'is_empty') return order.priority == null
       if (operator === 'is_not_empty') return order.priority != null
       const hasMatch = values.some((value) => value === 'None' ? order.priority == null : value === order.priority)
+      return operator === 'one_of' ? hasMatch : !hasMatch
+    }
+    if (customFieldTypes.has(field)) {
+      const customValue = order.custom_field_values?.[field]
+      if (operator === 'is_empty') return customValue == null || customValue === ''
+      if (operator === 'is_not_empty') return customValue != null && customValue !== ''
+      if (['text', 'long_text', 'number', 'link'].includes(customFieldTypes.get(field))) {
+        const normalizedValue = String(customValue ?? '').toLocaleLowerCase()
+        const searchValue = values[0].toLocaleLowerCase()
+        const hasMatch = normalizedValue.includes(searchValue)
+        return operator === 'contains' ? hasMatch : !hasMatch
+      }
+      if (['date', 'datetime'].includes(customFieldTypes.get(field))) {
+        const hasMatch = values.some((value) => matchesDateTimePreset(customValue, value))
+        return operator === 'one_of' ? hasMatch : !hasMatch
+      }
+      const hasMatch = values.includes(customValue)
       return operator === 'one_of' ? hasMatch : !hasMatch
     }
     const hasMatch = values.includes(order[field])

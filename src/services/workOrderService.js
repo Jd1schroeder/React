@@ -84,13 +84,13 @@ export async function signWorkOrderAttachmentUrls(orders, { optimizeImages = fal
   }))
 }
 
-export async function listWorkOrderInboxCounts({ organizationId, tab, search, filters = [], grants }) {
+export async function listWorkOrderInboxCounts({ organizationId, tab, search, filters = [], customFields = [], grants }) {
   assertPermission(grants, 'work_orders.view')
   const { data, error } = await supabase.rpc('get_work_order_inbox_counts', {
     target_organization_id: organizationId,
     target_tab: tab,
     target_search: search?.trim() || null,
-    target_filters: normalizeWorkOrderFilters(filters),
+    target_filters: normalizeWorkOrderFilters(filters, customFields),
   })
   if (error) throw error
   return data ?? {}
@@ -172,20 +172,20 @@ export async function markWorkOrderUnread({ workOrderId, grants }) {
   notifyUnreadWorkOrderCountInvalidated()
 }
 
-export async function markWorkOrderInboxRead({ organizationId, tab, search, filters = [], grants }) {
+export async function markWorkOrderInboxRead({ organizationId, tab, search, filters = [], customFields = [], grants }) {
   assertPermission(grants, 'work_orders.view')
   const { data, error } = await supabase.rpc('mark_work_order_inbox_read', {
     target_organization_id: organizationId,
     target_tab: tab,
     target_search: search?.trim() || null,
-    target_filters: normalizeWorkOrderFilters(filters),
+    target_filters: normalizeWorkOrderFilters(filters, customFields),
   })
   if (error) throw error
   notifyUnreadWorkOrderCountInvalidated()
   return data ?? 0
 }
 
-export async function listWorkOrderInboxPage({ organizationId, tab, group, search, sort, unreadFirst = false, offset, pageSize = 50, filters = [], includeRelations = true, grants }) {
+export async function listWorkOrderInboxPage({ organizationId, tab, group, search, sort, unreadFirst = false, offset, pageSize = 50, filters = [], customFields = [], includeRelations = true, grants }) {
   assertPermission(grants, 'work_orders.view')
   const { data, error } = await supabase.rpc('get_work_order_inbox_page', {
     target_organization_id: organizationId,
@@ -196,7 +196,7 @@ export async function listWorkOrderInboxPage({ organizationId, tab, group, searc
     target_unread_first: unreadFirst,
     target_offset: offset,
     target_page_size: pageSize,
-    target_filters: normalizeWorkOrderFilters(filters),
+    target_filters: normalizeWorkOrderFilters(filters, customFields),
   })
   if (error) throw error
   const workOrders = data ?? []

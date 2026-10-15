@@ -5,12 +5,13 @@ import { WorkOrderFilters } from '../src/pages/work-orders/WorkOrderFilters'
 
 afterEach(cleanup)
 
-function ControlledFilters({ onChange, assigneeOptions }) {
+function ControlledFilters({ onChange, assigneeOptions, customFields }) {
   const [filters, setFilters] = useState([])
   return <WorkOrderFilters
     filters={filters}
     onFiltersChange={(next) => { setFilters(next); onChange?.(next) }}
     assigneeOptions={assigneeOptions}
+    customFields={customFields}
   />
 }
 
@@ -92,6 +93,139 @@ describe('WorkOrderFilters', () => {
     expect(onFiltersChange).toHaveBeenLastCalledWith([
       { field: 'priority', operator: 'one_of', values: ['None'] },
     ])
+  })
+
+  it('shows configured custom fields at the end of the Add filter menu', () => {
+    render(<ControlledFilters customFields={[{ id: 'custom-link', name: 'Link Test', type: 'link' }, { id: 'custom-number', name: 'Number 1', type: 'number' }]} />)
+    fireEvent.click(screen.getByRole('button', { name: /Add filter/ }))
+
+    const dialog = screen.getByRole('dialog', { name: 'Add Work Order filter' })
+    const options = within(dialog).getAllByRole('button').map((button) => button.textContent.trim())
+    expect(options).toEqual(['Due date', 'Priority', 'Work type', 'Start date', 'Link Test', 'Number 1'])
+    expect(within(dialog).getByRole('button', { name: 'Link Test' })).toBeEnabled()
+    expect(within(dialog).getByRole('button', { name: 'Link Test' }).querySelector('.lucide-link')).not.toBeNull()
+    expect(within(dialog).getByRole('button', { name: 'Number 1' })).toBeEnabled()
+    expect(within(dialog).getByRole('button', { name: 'Number 1' }).querySelector('.lucide-hash')).not.toBeNull()
+  })
+
+  it('supports multi-select single-select custom field filters and empty operators', () => {
+    const onFiltersChange = vi.fn()
+    render(<ControlledFilters
+      onChange={onFiltersChange}
+      customFields={[{ id: 'custom-tool', name: 'Tool', type: 'single_select', options: ['Dew Point Meter', 'Manual Grease Gun'] }]}
+    />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Add filter/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Tool' }))
+    const dialog = screen.getByRole('dialog', { name: 'Tool filter' })
+    expect(within(dialog).getByRole('button', { name: 'Tool operator: One of' })).toBeInTheDocument()
+    fireEvent.click(within(dialog).getByLabelText('Dew Point Meter'))
+    fireEvent.click(within(dialog).getByLabelText('Manual Grease Gun'))
+    expect(onFiltersChange).toHaveBeenLastCalledWith([{ field: 'custom-tool', operator: 'one_of', values: ['Dew Point Meter', 'Manual Grease Gun'] }])
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Tool operator: One of' }))
+    const operatorMenu = within(dialog).getByRole('group', { name: 'Tool operators' })
+    fireEvent.click(within(operatorMenu).getByRole('button', { name: 'Is empty' }))
+    expect(onFiltersChange).toHaveBeenLastCalledWith([{ field: 'custom-tool', operator: 'is_empty', values: [] }])
+  })
+
+  it('supports Single Line Text contains and empty operators', () => {
+    const onFiltersChange = vi.fn()
+    render(<ControlledFilters
+      onChange={onFiltersChange}
+      customFields={[{ id: 'custom-reference', name: 'Reference', type: 'text' }]}
+    />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Add filter/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Reference' }))
+    const dialog = screen.getByRole('dialog', { name: 'Reference filter' })
+    expect(within(dialog).getByRole('button', { name: 'Reference operator: Contains' })).toBeInTheDocument()
+    fireEvent.change(within(dialog).getByRole('searchbox', { name: 'Reference' }), { target: { value: 'pump' } })
+    expect(onFiltersChange).toHaveBeenLastCalledWith([{ field: 'custom-reference', operator: 'contains', values: ['pump'] }])
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Reference operator: Contains' }))
+    const operatorMenu = within(dialog).getByRole('group', { name: 'Reference operators' })
+    fireEvent.click(within(operatorMenu).getByRole('button', { name: 'Is not empty' }))
+    expect(onFiltersChange).toHaveBeenLastCalledWith([{ field: 'custom-reference', operator: 'is_not_empty', values: [] }])
+  })
+
+  it('supports Multi-Line Text contains and empty operators', () => {
+    const onFiltersChange = vi.fn()
+    render(<ControlledFilters
+      onChange={onFiltersChange}
+      customFields={[{ id: 'custom-notes', name: 'Notes', type: 'long_text' }]}
+    />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Add filter/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Notes' }))
+    const dialog = screen.getByRole('dialog', { name: 'Notes filter' })
+    expect(within(dialog).getByRole('button', { name: 'Notes operator: Contains' })).toBeInTheDocument()
+    fireEvent.change(within(dialog).getByRole('searchbox', { name: 'Notes' }), { target: { value: 'pump' } })
+    expect(onFiltersChange).toHaveBeenLastCalledWith([{ field: 'custom-notes', operator: 'contains', values: ['pump'] }])
+  })
+
+  it('supports Date & Time preset filters', () => {
+    const onFiltersChange = vi.fn()
+    render(<ControlledFilters
+      onChange={onFiltersChange}
+      customFields={[{ id: 'custom-inspection', name: 'Inspection', type: 'datetime' }]}
+    />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Add filter/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Inspection' }))
+    const dialog = screen.getByRole('dialog', { name: 'Inspection filter' })
+    expect(within(dialog).getByRole('button', { name: 'Inspection operator: One of' })).toBeInTheDocument()
+    fireEvent.click(within(dialog).getByLabelText('Today'))
+    expect(onFiltersChange).toHaveBeenLastCalledWith([{ field: 'custom-inspection', operator: 'one_of', values: ['today'] }])
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Inspection operator: One of' }))
+    expect(within(dialog).getByRole('button', { name: 'None of' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Is empty' })).toBeInTheDocument()
+  })
+
+  it('supports Date preset filters', () => {
+    const onFiltersChange = vi.fn()
+    render(<ControlledFilters
+      onChange={onFiltersChange}
+      customFields={[{ id: 'custom-service-date', name: 'Service Date', type: 'date' }]}
+    />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Add filter/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Service Date' }))
+    const dialog = screen.getByRole('dialog', { name: 'Service Date filter' })
+    fireEvent.click(within(dialog).getByLabelText('Next 7 Days'))
+    expect(onFiltersChange).toHaveBeenLastCalledWith([{ field: 'custom-service-date', operator: 'one_of', values: ['next_7_days'] }])
+  })
+
+  it('supports Number contains filters', () => {
+    const onFiltersChange = vi.fn()
+    render(<ControlledFilters
+      onChange={onFiltersChange}
+      customFields={[{ id: 'custom-meter', name: 'Meter', type: 'number' }]}
+    />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Add filter/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Meter' }))
+    const dialog = screen.getByRole('dialog', { name: 'Meter filter' })
+    expect(within(dialog).getByRole('button', { name: 'Meter operator: Contains' })).toBeInTheDocument()
+    expect(within(dialog).getByPlaceholderText('Enter Number')).toHaveAttribute('type', 'number')
+    fireEvent.change(within(dialog).getByRole('spinbutton', { name: 'Meter' }), { target: { value: '12' } })
+    expect(onFiltersChange).toHaveBeenLastCalledWith([{ field: 'custom-meter', operator: 'contains', values: ['12'] }])
+  })
+
+  it('supports Link contains filters', () => {
+    const onFiltersChange = vi.fn()
+    render(<ControlledFilters
+      onChange={onFiltersChange}
+      customFields={[{ id: 'custom-link', name: 'Link', type: 'link' }]}
+    />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Add filter/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Link' }))
+    const dialog = screen.getByRole('dialog', { name: 'Link filter' })
+    expect(within(dialog).getByRole('button', { name: 'Link operator: Contains' })).toBeInTheDocument()
+    fireEvent.change(within(dialog).getByRole('searchbox', { name: 'Link' }), { target: { value: 'google.com' } })
+    expect(onFiltersChange).toHaveBeenLastCalledWith([{ field: 'custom-link', operator: 'contains', values: ['google.com'] }])
   })
 
   it('adds a due-date filter and applies a complete date range', () => {

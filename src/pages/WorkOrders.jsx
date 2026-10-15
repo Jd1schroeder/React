@@ -131,11 +131,12 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
   }, [dashboardFilter, workspace.preferences?.timezone])
   const [sortId, setSortId] = useState('priority-highest')
   const [unreadFirst, setUnreadFirst] = useState(false)
+  const normalizeInboxFilters = useCallback((filters) => normalizeWorkOrderFilters(filters, workOrderSettings.workOrderFields.customFields), [workOrderSettings.workOrderFields.customFields])
   const { filters: inboxFilters, setFilters: setInboxFilters } = usePersistedFilterSelection({
     moduleKey: 'work-orders',
     userId,
     organizationId,
-    normalizeFilters: normalizeWorkOrderFilters,
+    normalizeFilters: normalizeInboxFilters,
   })
   const activeFilters = dashboardFilter ? dashboardFilters : inboxFilters
   const toggleCalendarView = useCallback(() => {
@@ -305,13 +306,14 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
       filterScope,
       name,
       filters,
+      customFields: workOrderSettings.workOrderFields.customFields,
       grants,
       canManageOrganizationFilters: canManageOrganizationWorkOrderFilters,
     })
     setSavedWorkOrderFilters((current) => [...current, savedFilter].sort((left, right) => left.filter_scope.localeCompare(right.filter_scope) || left.name.localeCompare(right.name)))
     setActiveSavedFilterId(savedFilter.id)
     return savedFilter
-  }, [canManageOrganizationWorkOrderFilters, grants, organizationId])
+  }, [canManageOrganizationWorkOrderFilters, grants, organizationId, workOrderSettings.workOrderFields.customFields])
   const updateSavedWorkOrderFilter = useCallback(async ({ savedFilterId, filterScope, name, filters }) => {
     const savedFilter = await updateWorkOrderSavedFilter({
       organizationId,
@@ -319,13 +321,14 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
       filterScope,
       name,
       filters,
+      customFields: workOrderSettings.workOrderFields.customFields,
       grants,
       canManageOrganizationFilters: canManageOrganizationWorkOrderFilters,
     })
     setSavedWorkOrderFilters((current) => current.map((item) => item.id === savedFilter.id ? savedFilter : item)
       .sort((left, right) => left.filter_scope.localeCompare(right.filter_scope) || left.name.localeCompare(right.name)))
     return savedFilter
-  }, [canManageOrganizationWorkOrderFilters, grants, organizationId])
+  }, [canManageOrganizationWorkOrderFilters, grants, organizationId, workOrderSettings.workOrderFields.customFields])
   const deleteSavedWorkOrderFilter = useCallback(async ({ savedFilterId, filterScope }) => {
     await deleteWorkOrderSavedFilter({
       organizationId,
@@ -351,12 +354,12 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
       return undefined
     }
     let active = true
-    listWorkOrderInboxCounts({ organizationId, tab: activeTab, search: debouncedSearch, filters: activeFilters, grants })
+    listWorkOrderInboxCounts({ organizationId, tab: activeTab, search: debouncedSearch, filters: activeFilters, customFields: workOrderSettings.workOrderFields.customFields, grants })
       .then((counts) => { if (active) setGroupCounts(counts) })
       .catch((loadError) => { if (active) setError(loadError.message || 'Unable to load Work Orders.') })
       .finally(() => { if (active) setLoadState('ready') })
     return () => { active = false }
-  }, [activeFilters, activeTab, calendarView, canViewWorkOrders, debouncedSearch, grants, organizationId, refreshVersion])
+  }, [activeFilters, activeTab, calendarView, canViewWorkOrders, debouncedSearch, grants, organizationId, refreshVersion, workOrderSettings.workOrderFields.customFields])
 
   const calendarRange = useMemo(() => getWorkOrderCalendarRange(calendarView, calendarDate), [calendarDate, calendarView])
   const calendarRangeKey = `${calendarRange.startDate}:${calendarRange.endDate}`
@@ -400,7 +403,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     const normalizedSearch = debouncedSearch.trim().toLowerCase()
     return calendarOrders.filter((order) => {
       const matchesSearch = !normalizedSearch || `${order.title} ${order.id} ${order.work_order_number}`.toLowerCase().includes(normalizedSearch)
-      return matchesSearch && matchesWorkOrderFilters(order, activeFilters)
+      return matchesSearch && matchesWorkOrderFilters(order, activeFilters, workOrderSettings.workOrderFields.customFields)
     })
   }, [activeFilters, calendarOrders, debouncedSearch])
   const selected = workOrdersById[selectedId]
@@ -444,12 +447,12 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     setIsSavingReadState(true)
     setReadError('')
     try {
-      await markWorkOrderInboxRead({ organizationId, tab: activeTab, search: debouncedSearch, filters: activeFilters, grants })
+      await markWorkOrderInboxRead({ organizationId, tab: activeTab, search: debouncedSearch, filters: activeFilters, customFields: workOrderSettings.workOrderFields.customFields, grants })
       const normalizedSearch = debouncedSearch.trim().toLowerCase()
       setWorkOrdersById((current) => Object.fromEntries(Object.entries(current).map(([id, order]) => {
         const inTab = activeTab === 'Done' ? order.status === 'Completed' : order.status !== 'Completed'
         const matchesSearch = !normalizedSearch || `${order.title} ${order.id} ${order.work_order_number}`.toLowerCase().includes(normalizedSearch)
-        return [id, inTab && matchesSearch && matchesWorkOrderFilters(order, activeFilters) ? { ...order, is_read: true } : order]
+        return [id, inTab && matchesSearch && matchesWorkOrderFilters(order, activeFilters, workOrderSettings.workOrderFields.customFields) ? { ...order, is_read: true } : order]
       })))
       const tabLabel = activeTab === 'Done' ? 'Done' : 'To Do'
       const matchingLabel = debouncedSearch.trim() || activeFilters.length ? 'matching ' : ''
@@ -516,7 +519,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     return () => { active = false }
   }, [canViewWorkOrders, grants, markViewed, organizationId, recordId, recordLookupKey, recordLookupResult?.key, workOrderSettings.workOrderFields.customFields, workOrdersById, workspace.preferences])
   const loadGroupPage = async ({ tab, group, sort, unreadFirst, offset, filters, pageSize: requestedPageSize }) => {
-    const orders = await listWorkOrderInboxPage({ organizationId, tab, group, search: debouncedSearch, sort, unreadFirst, offset, pageSize: requestedPageSize, filters, grants })
+    const orders = await listWorkOrderInboxPage({ organizationId, tab, group, search: debouncedSearch, sort, unreadFirst, offset, pageSize: requestedPageSize, filters, customFields: workOrderSettings.workOrderFields.customFields, grants })
     return orders.map((order) => normalizeWorkOrder(order, workspace.preferences))
   }
   const loadWorkOrderActivity = useCallback((order, before) => listWorkOrderActivity({
@@ -915,6 +918,7 @@ export function WorkOrders({ recordId, onNavigateRecord, onNavigate }) {
     filters={activeFilters}
     onFiltersChange={changeInboxFilters}
     assigneeOptions={filterAssigneeOptions}
+    customFields={workOrderSettings.workOrderFields.customFields}
     savedFilters={savedFiltersLoadedForOrganization === organizationId ? savedWorkOrderFilters : []}
     savedFiltersLoading={savedFiltersLoadingForOrganization === organizationId}
     savedFiltersError={savedFiltersErrorOrganization === organizationId ? savedFiltersError : ''}

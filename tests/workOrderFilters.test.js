@@ -59,4 +59,78 @@ describe('Work Order filters', () => {
     expect(matchesWorkOrderFilters({ priority: 'Low' }, filter)).toBe(false)
     expect(matchesWorkOrderFilters({ priority: null }, [{ ...filter[0], operator: 'none_of' }])).toBe(false)
   })
+
+  it('normalizes and matches single-select custom fields with multiple selections', () => {
+    const customFields = [{ id: 'custom-tool', type: 'single_select', options: ['Dew Point Meter', 'Manual Grease Gun'] }]
+    const filters = [{ field: 'custom-tool', operator: 'one_of', values: ['Dew Point Meter', 'Manual Grease Gun'] }]
+    const order = { custom_field_values: { 'custom-tool': 'Manual Grease Gun' } }
+
+    expect(normalizeWorkOrderFilters(filters, customFields)).toEqual(filters)
+    expect(matchesWorkOrderFilters(order, filters, customFields)).toBe(true)
+    expect(matchesWorkOrderFilters({ custom_field_values: {} }, filters, customFields)).toBe(false)
+    expect(matchesWorkOrderFilters({ custom_field_values: {} }, [{ field: 'custom-tool', operator: 'is_empty', values: [] }], customFields)).toBe(true)
+    expect(matchesWorkOrderFilters(order, [{ field: 'custom-tool', operator: 'is_not_empty', values: [] }], customFields)).toBe(true)
+  })
+
+  it('normalizes and matches Single Line Text filters case-insensitively', () => {
+    const customFields = [{ id: 'custom-reference', type: 'text' }]
+    const order = { custom_field_values: { 'custom-reference': 'Pump room west' } }
+
+    expect(normalizeWorkOrderFilters([{ field: 'custom-reference', operator: 'contains', values: ['ROOM'] }], customFields)).toEqual([
+      { field: 'custom-reference', operator: 'contains', values: ['ROOM'] },
+    ])
+    expect(matchesWorkOrderFilters(order, [{ field: 'custom-reference', operator: 'contains', values: ['room'] }], customFields)).toBe(true)
+    expect(matchesWorkOrderFilters(order, [{ field: 'custom-reference', operator: 'not_contains', values: ['north'] }], customFields)).toBe(true)
+    expect(matchesWorkOrderFilters({ custom_field_values: {} }, [{ field: 'custom-reference', operator: 'is_empty', values: [] }], customFields)).toBe(true)
+  })
+
+  it('normalizes and matches Multi-Line Text filters case-insensitively', () => {
+    const customFields = [{ id: 'custom-notes', type: 'long_text' }]
+    const order = { custom_field_values: { 'custom-notes': 'Pump room west' } }
+
+    expect(normalizeWorkOrderFilters([{ field: 'custom-notes', operator: 'contains', values: ['ROOM'] }], customFields)).toEqual([
+      { field: 'custom-notes', operator: 'contains', values: ['ROOM'] },
+    ])
+    expect(matchesWorkOrderFilters(order, [{ field: 'custom-notes', operator: 'contains', values: ['room'] }], customFields)).toBe(true)
+    expect(matchesWorkOrderFilters(order, [{ field: 'custom-notes', operator: 'not_contains', values: ['north'] }], customFields)).toBe(true)
+  })
+
+  it('normalizes and matches Date & Time presets', () => {
+    const customFields = [{ id: 'custom-inspection', type: 'datetime' }]
+    const today = new Date()
+    const todayValue = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 30).toISOString()
+    const order = { custom_field_values: { 'custom-inspection': todayValue } }
+
+    expect(normalizeWorkOrderFilters([{ field: 'custom-inspection', operator: 'one_of', values: ['today'] }], customFields)).toEqual([
+      { field: 'custom-inspection', operator: 'one_of', values: ['today'] },
+    ])
+    expect(matchesWorkOrderFilters(order, [{ field: 'custom-inspection', operator: 'one_of', values: ['today'] }], customFields)).toBe(true)
+    expect(matchesWorkOrderFilters(order, [{ field: 'custom-inspection', operator: 'none_of', values: ['tomorrow'] }], customFields)).toBe(true)
+  })
+
+  it('normalizes and matches Date presets', () => {
+    const customFields = [{ id: 'custom-service-date', type: 'date' }]
+    const today = new Date()
+    const todayValue = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    const order = { custom_field_values: { 'custom-service-date': todayValue } }
+
+    expect(matchesWorkOrderFilters(order, [{ field: 'custom-service-date', operator: 'one_of', values: ['today'] }], customFields)).toBe(true)
+    expect(matchesWorkOrderFilters(order, [{ field: 'custom-service-date', operator: 'none_of', values: ['tomorrow'] }], customFields)).toBe(true)
+  })
+
+  it('normalizes and matches Number contains filters', () => {
+    const customFields = [{ id: 'custom-meter', type: 'number' }]
+    const order = { custom_field_values: { 'custom-meter': 120 } }
+
+    expect(matchesWorkOrderFilters(order, [{ field: 'custom-meter', operator: 'contains', values: ['12'] }], customFields)).toBe(true)
+    expect(matchesWorkOrderFilters(order, [{ field: 'custom-meter', operator: 'not_contains', values: ['99'] }], customFields)).toBe(true)
+  })
+
+  it('normalizes and matches Link contains filters', () => {
+    const customFields = [{ id: 'custom-link', type: 'link' }]
+    const order = { custom_field_values: { 'custom-link': 'https://www.google.com' } }
+
+    expect(matchesWorkOrderFilters(order, [{ field: 'custom-link', operator: 'contains', values: ['google.com'] }], customFields)).toBe(true)
+    expect(matchesWorkOrderFilters(order, [{ field: 'custom-link', operator: 'not_contains', values: ['example.com'] }], customFields)).toBe(true)
+  })
 })
