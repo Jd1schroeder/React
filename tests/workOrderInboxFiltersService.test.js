@@ -45,4 +45,19 @@ describe('Work Order inbox filter RPC contract', () => {
       target_filters: filters,
     }))
   })
+
+  it('forwards numeric searches for Work Order number matching', async () => {
+    await listWorkOrderInboxCounts({ organizationId: 'org-1', tab: 'To Do', search: '17675', grants })
+    await listWorkOrderInboxPage({
+      organizationId: 'org-1', tab: 'To Do', group: 'all-open', search: '17675',
+      sort: 'created-oldest', offset: 0, grants,
+    })
+
+    expect(rpc).toHaveBeenNthCalledWith(1, 'get_work_order_inbox_counts', expect.objectContaining({
+      target_search: '17675',
+    }))
+    expect(rpc).toHaveBeenNthCalledWith(2, 'get_work_order_inbox_page', expect.objectContaining({
+      target_search: '17675',
+    }))
+  })
 })
