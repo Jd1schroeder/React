@@ -66,6 +66,7 @@ function WorkOrderDescription({ order }) {
     (attachment) => attachment.kind === "image" || attachment.content_type?.startsWith("image/"),
   );
   const files = attachments.filter((attachment) => !pictures.includes(attachment));
+  const pictureKey = (picture, index) => picture.id ?? picture.attachment_id ?? picture.signed_url ?? `${picture.file_name ?? "picture"}-${index}`;
   const cloneCount = pictures.length > carouselSlidesPerView ? carouselSlidesPerView : 0;
   const carouselPictures = cloneCount > 0
     ? [
@@ -73,17 +74,17 @@ function WorkOrderDescription({ order }) {
           picture,
           sourceIndex: pictures.length - cloneCount + index,
           isClone: true,
-          key: `clone-before-${picture.id}-${index}`,
+          key: `clone-before-${pictureKey(picture, pictures.length - cloneCount + index)}-${index}`,
         })),
-        ...pictures.map((picture, index) => ({ picture, sourceIndex: index, isClone: false, key: picture.id })),
+        ...pictures.map((picture, index) => ({ picture, sourceIndex: index, isClone: false, key: `picture-${pictureKey(picture, index)}-${index}` })),
         ...pictures.slice(0, cloneCount).map((picture, index) => ({
           picture,
           sourceIndex: index,
           isClone: true,
-          key: `clone-after-${picture.id}-${index}`,
+          key: `clone-after-${pictureKey(picture, index)}-${index}`,
         })),
       ]
-    : pictures.map((picture, index) => ({ picture, sourceIndex: index, isClone: false, key: picture.id }));
+    : pictures.map((picture, index) => ({ picture, sourceIndex: index, isClone: false, key: `picture-${pictureKey(picture, index)}-${index}` }));
   const maxPictureIndex = Math.max(0, pictures.length - carouselSlidesPerView);
   const currentPictureIndex = Math.min(activePictureIndex, maxPictureIndex);
   const renderedCarouselIndex = cloneCount > 0 ? carouselTrackIndex : 0;

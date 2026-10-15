@@ -37,8 +37,10 @@ begin
     where conrelid = 'public.work_order_activity'::regclass
       and conname = 'work_order_activity_event_type_check'
       and position('external_completion_requested' in pg_get_constraintdef(oid)) > 0
+      and position('work_order_time_added' in pg_get_constraintdef(oid)) > 0
+      and position('work_order_cost_added' in pg_get_constraintdef(oid)) > 0
   ) then
-    raise exception 'Internal activity must support external completion requests';
+    raise exception 'Internal activity must support external, time, and cost events';
   end if;
 
   if to_regclass('public.work_order_external_shares_work_order_idx') is null then

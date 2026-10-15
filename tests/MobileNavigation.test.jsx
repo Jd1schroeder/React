@@ -49,6 +49,74 @@ describe('mobile navigation', () => {
     expect(await screen.findByRole('button', { name: 'Work Orders, 89 unread' })).toBeInTheDocument()
   })
 
+  it('replaces the primary navigation with a Start Timer action on a Work Order detail view', () => {
+    const startTimer = vi.fn()
+    window.addEventListener('workbench:work-order-start-timer', startTimer)
+    try {
+      render(<MobileNavigation activePage="Work Orders" onNavigate={vi.fn()} />)
+      act(() => window.dispatchEvent(new CustomEvent('workbench:work-orders-record-view', { detail: { kind: 'detail' } })))
+
+      expect(screen.getByRole('navigation', { name: 'Primary navigation' })).toHaveClass('is-work-order-detail')
+      expect(screen.getByRole('button', { name: 'Start Timer' })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Assets' })).not.toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole('button', { name: 'Start Timer' }))
+      expect(startTimer).toHaveBeenCalledOnce()
+    } finally {
+      window.removeEventListener('workbench:work-order-start-timer', startTimer)
+    }
+  })
+
+  it('recognizes a Work Order detail route before the record-view event is emitted', () => {
+    window.history.pushState({}, '', '/workorders/work-order-1')
+    try {
+      render(<MobileNavigation activePage="Work Orders" onNavigate={vi.fn()} />)
+
+      expect(screen.getByRole('button', { name: 'Start Timer' })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Assets' })).not.toBeInTheDocument()
+    } finally {
+      window.history.pushState({}, '', '/')
+    }
+  })
+
+  it('shows pause controls while a Work Order timer is running', () => {
+    const timerAction = vi.fn()
+    window.addEventListener('workbench:work-order-timer-action', timerAction)
+    try {
+      render(<MobileNavigation activePage="Work Orders" onNavigate={vi.fn()} />)
+      act(() => window.dispatchEvent(new CustomEvent('workbench:work-orders-record-view', { detail: { kind: 'detail' } })))
+      act(() => window.dispatchEvent(new CustomEvent('workbench:work-order-timer-state', {
+        detail: { status: 'running', trackingTypeName: 'Work', elapsedSeconds: 7 },
+      })))
+
+      expect(screen.getByText('00:00:07')).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: 'Pause' }))
+      expect(timerAction).toHaveBeenCalledWith(expect.objectContaining({ detail: { action: 'pause' } }))
+    } finally {
+      window.removeEventListener('workbench:work-order-timer-action', timerAction)
+    }
+  })
+
+  it('shows stop and resume controls while a Work Order timer is paused', () => {
+    const timerAction = vi.fn()
+    window.addEventListener('workbench:work-order-timer-action', timerAction)
+    try {
+      render(<MobileNavigation activePage="Work Orders" onNavigate={vi.fn()} />)
+      act(() => window.dispatchEvent(new CustomEvent('workbench:work-orders-record-view', { detail: { kind: 'detail' } })))
+      act(() => window.dispatchEvent(new CustomEvent('workbench:work-order-timer-state', {
+        detail: { status: 'paused', trackingTypeName: 'Work', elapsedSeconds: 13 },
+      })))
+
+      expect(screen.getByText('00:00:13')).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Resume' }))
+      expect(timerAction).toHaveBeenNthCalledWith(1, expect.objectContaining({ detail: { action: 'stop' } }))
+      expect(timerAction).toHaveBeenNthCalledWith(2, expect.objectContaining({ detail: { action: 'resume' } }))
+    } finally {
+      window.removeEventListener('workbench:work-order-timer-action', timerAction)
+    }
+  })
+
   it('keeps Work Order calendar and filter actions in the Work Orders navigation feature', () => {
     const onCalendarToggle = vi.fn()
     const onUtilityPage = vi.fn()

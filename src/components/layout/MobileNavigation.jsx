@@ -13,7 +13,11 @@ import {
   Home,
   Menu,
   MessagesCircle,
+  Pause,
+  Play,
   Settings,
+  Square,
+  Timer,
 } from 'lucide-react'
 import './MobileNavigation.css'
 
@@ -28,6 +32,21 @@ function isPrimaryPage(page, activePage) {
   return activePage === page
 }
 
+function formatTimerDuration(totalSeconds) {
+  const seconds = Math.max(0, Number(totalSeconds) || 0)
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const remainder = seconds % 60
+  return [hours, minutes, remainder].map((value) => String(value).padStart(2, '0')).join(':')
+}
+
+const idleTimerState = { status: 'idle', elapsedSeconds: 0, trackingTypeName: 'Work', isSaving: false }
+
+function isWorkOrderRecordPath() {
+  if (typeof window === 'undefined') return false
+  return /^\/workorders\/[^/]+\/?$/.test(window.location.pathname)
+}
+
 export function MobileNavigation({ activePage, onNavigate }) {
   const navigationTabsRef = useRef(null)
   const workspace = useWorkspace()
@@ -35,14 +54,24 @@ export function MobileNavigation({ activePage, onNavigate }) {
   const [unreadWorkOrderBadge, setUnreadWorkOrderBadge] = useState(null)
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false)
   const [navigationOverflow, setNavigationOverflow] = useState({ previous: false, next: false })
+  const [timerState, setTimerState] = useState(idleTimerState)
   const organizationId = workspace.organization?.id
   const grants = workspace.authorization?.grants
   const canViewWorkOrders = Boolean(grants?.['work_orders.view'])
   const isSettingsContext = activePage === 'Tools' || activePage.startsWith('Settings /')
   const isToolsCurrent = !isSettingsContext && !primaryDestinations.some((item) => isPrimaryPage(item.page, activePage))
+  const isWorkOrderDetail = activePage === 'Work Orders'
+    && (workOrderNavigation.recordView === 'detail' || isWorkOrderRecordPath())
+    && !workOrderNavigation.utilityPage
   const unreadWorkOrderCount = canViewWorkOrders && unreadWorkOrderBadge?.organizationId === organizationId
     ? unreadWorkOrderBadge.count
     : null
+
+  useEffect(() => {
+    const syncTimerState = (event) => setTimerState({ ...idleTimerState, ...event.detail })
+    window.addEventListener('workbench:work-order-timer-state', syncTimerState)
+    return () => window.removeEventListener('workbench:work-order-timer-state', syncTimerState)
+  }, [])
 
   useEffect(() => {
     const tabs = navigationTabsRef.current
@@ -126,11 +155,55 @@ export function MobileNavigation({ activePage, onNavigate }) {
     const previousItemLeft = tabs.scrollLeft + previousItem.getBoundingClientRect().left - tabsRect.left - tabs.clientLeft - 4
     tabs.scrollTo({ left: previousItemLeft, behavior: 'smooth' })
   }
+  const dispatchTimerAction = (action) => {
+    window.dispatchEvent(new CustomEvent('workbench:work-order-timer-action', { detail: { action } }))
+  }
+  const visibleTimerState = isWorkOrderDetail ? timerState : idleTimerState
+  const timerIsActive = isWorkOrderDetail && (visibleTimerState.status === 'running' || visibleTimerState.status === 'paused')
 
   return <nav
-    className={`mobile-primary-navigation${activePage === 'Work Orders' ? ' has-work-order-actions' : ''}${workOrderNavigation.utilityPage ? ` is-work-order-${workOrderNavigation.utilityPage}-open` : ''}${workOrderNavigation.recordView ? ' is-work-order-record-view' : ''}`}
+    className={`mobile-primary-navigation${activePage === 'Work Orders' ? ' has-work-order-actions' : ''}${workOrderNavigation.utilityPage ? ` is-work-order-${workOrderNavigation.utilityPage}-open` : ''}${workOrderNavigation.recordView ? ' is-work-order-record-view' : ''}${isWorkOrderDetail ? ' is-work-order-detail' : ''}${timerIsActive ? ` is-work-order-timer-${visibleTimerState.status}` : ''}`}
     aria-label="Primary navigation"
   >
+    {isWorkOrderDetail ? (
+      timerIsActive ? (
+        <div className="mobile-navigation-timer-state" aria-live="polite">
+          <div className="mobile-navigation-timer-readout">
+            <span>{visibleTimerState.trackingTypeName || 'Work'}</span>
+            <strong>{formatTimerDuration(visibleTimerState.elapsedSeconds)}</strong>
+          </div>
+          <div className="mobile-navigation-timer-controls">
+            {visibleTimerState.status === 'running' ? (
+              <button className="mobile-navigation-timer-button mobile-navigation-timer-button--pause" type="button" onClick={() => dispatchTimerAction('pause')} disabled={visibleTimerState.isSaving}>
+                <Pause size={20} strokeWidth={2.4} aria-hidden="true" />
+                <span>Pause</span>
+              </button>
+            ) : (
+              <>
+                <button className="mobile-navigation-timer-button mobile-navigation-timer-button--stop" type="button" onClick={() => dispatchTimerAction('stop')} disabled={visibleTimerState.isSaving}>
+                  <Square size={18} strokeWidth={2.4} aria-hidden="true" />
+                  <span>Stop</span>
+                </button>
+                <button className="mobile-navigation-timer-button mobile-navigation-timer-button--resume" type="button" onClick={() => dispatchTimerAction('resume')} disabled={visibleTimerState.isSaving}>
+                  <Play size={20} strokeWidth={2.4} fill="currentColor" aria-hidden="true" />
+                  <span>Resume</span>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      ) : (
+        <button
+          className="mobile-navigation-timer-action"
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent('workbench:work-order-start-timer'))}
+          disabled={visibleTimerState.isSaving}
+        >
+          <Timer size={22} strokeWidth={2} aria-hidden="true" />
+          <span>Start Timer</span>
+        </button>
+      )
+    ) : <>
     <MobileWorkOrderNavigationActions activePage={activePage} navigation={workOrderNavigation} position="leading" />
     <button className="mobile-navigation-scroll-back" type="button" aria-label="Show previous navigation options" onClick={scrollNavigationBackward} hidden={!navigationOverflow.previous}>
       <ChevronLeft size={22} strokeWidth={2.4} />
@@ -170,5 +243,6 @@ export function MobileNavigation({ activePage, onNavigate }) {
       <ChevronRight size={22} strokeWidth={2.4} aria-hidden="true" />
     </button>
     <MobileWorkOrderNavigationActions activePage={activePage} navigation={workOrderNavigation} position="trailing" />
+    </>}
   </nav>
 }

@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useMobileSheetDismiss } from "../layout/useMobileSheetDismiss";
 import "./MobileActionSheet.css";
 
-export function MobileActionSheet({ title, onClose, children, variant = "default" }) {
+export function MobileActionSheet({ title, onClose, children, variant = "default", headerStart, headerEnd, showCancel = true }) {
   const sheetRef = useRef(null);
   const titleId = useId();
   const sheetDismiss = useMobileSheetDismiss(onClose, sheetRef);
@@ -46,12 +46,14 @@ export function MobileActionSheet({ title, onClose, children, variant = "default
 
   return createPortal(
     <div className={`mobile-action-sheet-backdrop mobile-sheet-backdrop ${sheetDismiss.backdropClassName}`} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section ref={sheetRef} className={`mobile-action-sheet mobile-edge-to-edge-sheet${variant === "menu" ? " mobile-action-sheet-menu" : ""} ${sheetDismiss.dragClassName}`} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby={titleId}>
-        <header className="mobile-action-sheet-header mobile-sheet-drag-handle" {...sheetDismiss.dragHandleProps}>
-          <h2 id={titleId}>{title}</h2>
-        </header>
+      <section ref={sheetRef} className={`mobile-action-sheet mobile-edge-to-edge-sheet${variant === "menu" ? " mobile-action-sheet-menu" : ""} ${sheetDismiss.dragClassName}`} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" {...(title ? { "aria-labelledby": titleId } : { "aria-label": "Actions" })}>
+        {(title || headerStart || headerEnd) && <header className={`mobile-action-sheet-header mobile-sheet-drag-handle${headerStart || headerEnd ? " mobile-action-sheet-header-with-actions" : ""}`} {...sheetDismiss.dragHandleProps}>
+          {headerStart && <div className="mobile-action-sheet-header-start">{headerStart}</div>}
+          {title && <h2 id={titleId}>{title}</h2>}
+          {headerEnd && <div className="mobile-action-sheet-header-end">{headerEnd}</div>}
+        </header>}
         <div className="mobile-action-sheet-actions">{children}</div>
-        <button type="button" className="mobile-action-sheet-cancel" onClick={onClose}>Cancel</button>
+        {showCancel && <button type="button" className="mobile-action-sheet-cancel" onClick={onClose}>Cancel</button>}
       </section>
     </div>,
     document.body,

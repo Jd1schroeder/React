@@ -5,7 +5,7 @@ import { MobileActionSheet } from '../src/components/ui/MobileActionSheet'
 
 afterEach(cleanup)
 
-function Harness({ onClose = vi.fn() }) {
+function Harness({ onClose = vi.fn(), title = 'Actions' }) {
   const [isOpen, setIsOpen] = useState(true)
   const close = () => {
     onClose()
@@ -14,7 +14,7 @@ function Harness({ onClose = vi.fn() }) {
 
   return <>
     <button type="button">Trigger</button>
-    {isOpen && <MobileActionSheet title="Actions" onClose={close}>
+    {isOpen && <MobileActionSheet title={title} onClose={close}>
       <button type="button">First action</button>
     </MobileActionSheet>}
   </>
@@ -47,5 +47,11 @@ describe('MobileActionSheet accessibility behavior', () => {
 
     fireEvent.keyDown(document, { key: 'Tab', shiftKey: true })
     expect(document.activeElement).toBe(lastButton)
+  })
+
+  it('supports a titleless action sheet with an accessible dialog name', () => {
+    render(<Harness title="" />)
+    expect(screen.getByRole('dialog', { name: 'Actions' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument()
   })
 })

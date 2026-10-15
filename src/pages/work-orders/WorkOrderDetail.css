@@ -423,23 +423,35 @@ a.detail-assignee-link:hover {
 }
 .work-order-time-summary {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   gap: var(--spacing-3);
   box-sizing: border-box;
   height: 54px;
   min-height: 54px;
 }
-.work-order-time-summary > span:first-child,
+.work-order-time-summary-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+  min-width: 0;
+}
 .work-order-time-summary-value {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-2);
 }
-.work-order-time-overview-link { display: inline-flex; align-items: center; gap: var(--spacing-2); justify-self: start; padding: 0; border: 0; color: var(--ink); background: transparent; font: inherit; cursor: pointer; }
+.work-order-time-overview-link { display: inline-flex; align-items: center; gap: var(--spacing-2); justify-self: start; padding: 0; border: 0; color: var(--ink); background: transparent; font: inherit; }
+.work-order-time-overview-value-link { display: inline-flex; align-items: center; gap: var(--spacing-2); padding: 0; border: 0; color: var(--blue); background: transparent; font: inherit; cursor: pointer; }
+.work-order-time-add { display: inline-flex; align-items: center; gap: var(--spacing-1); padding: var(--spacing-2); border: 0; color: var(--blue); background: transparent; font: inherit; cursor: pointer; }
+.work-order-time-add:disabled { color: var(--text-disabled-muted); cursor: not-allowed; }
+.work-order-time-add-chevron { display: none; }
+.work-order-time-overview-chevron { display: none; }
 .work-order-time-summary-value {
-  color: var(--text-secondary-muted);
+  color: var(--blue);
   font-variant-numeric: tabular-nums;
 }
+.work-order-time-cost-row { display: none; }
 .work-order-time-entry-list {
   display: grid;
   gap: var(--spacing-2);
@@ -456,6 +468,8 @@ a.detail-assignee-link:hover {
 .work-order-time-entry-actions { display: inline-flex; gap: var(--spacing-2); }
 .work-order-time-entry-actions button { padding: 0; border: 0; color: var(--blue); background: transparent; font: inherit; font-size: var(--font-size-sm); cursor: pointer; }
 .work-order-time-error { margin: var(--spacing-2) var(--spacing-4); color: var(--danger); font-size: var(--font-size-sm); }
+.work-order-cost-add { display: inline-flex; align-items: center; gap: var(--spacing-1); }
+.work-order-cost-add-chevron { display: none; }
 .work-order-time-overlay { display: none; }
 .work-order-time-modal-backdrop { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: var(--spacing-4); background: rgb(0 0 0 / 35%); }
 .work-order-time-modal { display: grid; gap: var(--spacing-4); width: min(100%, 480px); max-height: min(90vh, 680px); overflow: auto; padding: var(--spacing-6); border: 0; border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-lg); }
@@ -548,12 +562,71 @@ a.detail-assignee-link:hover {
 .work-order-time-overview-summary { display: grid; grid-template-columns: 1fr 1fr; max-width: 780px; margin: var(--spacing-3) auto 0; border-bottom: var(--border-width-normal) solid var(--line); }
 .work-order-time-overview-summary > div { display: grid; justify-items: center; gap: var(--spacing-5); min-height: 132px; padding: var(--spacing-5); border-right: var(--border-width-normal) solid var(--line); }
 .work-order-time-overview-summary > div:last-child { border-right: 0; }
-.work-order-time-overview-summary strong { color: var(--ink); font-size: 36px; font-weight: var(--font-normal); font-variant-numeric: tabular-nums; }
+.work-order-time-overview-summary strong { color: var(--ink); font-size: var(--font-size-display-md); font-weight: var(--font-normal); font-variant-numeric: tabular-nums; }
 .work-order-time-overview-summary span { color: var(--text-secondary-muted); }
 .work-order-time-overview-summary button { padding: var(--spacing-2) var(--spacing-5); border: var(--border-width-normal) solid var(--blue); border-radius: var(--radius-sm); color: var(--blue); background: var(--surface); font: inherit; cursor: pointer; }
+.work-order-time-overview-summary .work-order-time-overview-total-label { display: inline-flex; align-items: center; justify-content: center; padding: var(--spacing-2) var(--spacing-5); border: var(--border-width-normal) solid var(--blue); border-radius: var(--radius-sm); color: var(--blue); background: var(--surface); font: inherit; cursor: default; }
 .work-order-time-overview-content { max-width: 780px; margin: 0 auto; padding: var(--spacing-6); color: var(--ink); }
 .work-order-time-overview-content > p { margin: 0 0 var(--spacing-4); }
 .work-order-time-overview-content > button { min-height: 40px; padding: 0 var(--spacing-4); border: var(--border-width-normal) solid var(--blue); border-radius: var(--radius-sm); color: var(--blue); background: var(--surface); font: inherit; cursor: pointer; }
+.work-order-time-overview-group h4 { margin: 0; color: var(--ink); font-size: var(--font-size-md); font-weight: var(--font-semibold); }
+.work-order-time-overview-entry { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: var(--spacing-3); padding: var(--spacing-3) 0; border-bottom: var(--border-width-normal) solid var(--line); }
+.work-order-time-overview-avatar { width: 44px; height: 44px; font-size: var(--font-size-sm); }
+.work-order-time-overview-entry-details { display: grid; gap: var(--spacing-1); min-width: 0; }
+.work-order-time-overview-entry-details strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.work-order-time-overview-entry-details span { color: var(--text-secondary-muted); font-size: var(--font-size-sm); }
+.work-order-time-overview-entry-duration { color: var(--blue); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.work-order-time-overview-entry-duration-link { padding: 0; border: 0; background: transparent; font: inherit; font-weight: var(--font-bold); cursor: pointer; }
+.work-order-time-overview-entry > svg { color: var(--text-secondary-muted); }
+.work-order-time-overview-empty { color: var(--text-secondary-muted); }
+.work-order-time-overview-add { display: none; }
+.work-order-time-user-times { min-height: 100%; background: var(--surface); }
+.work-order-time-user-times-summary { display: grid; justify-items: center; gap: var(--spacing-2); padding: var(--spacing-7) var(--spacing-6); }
+.work-order-time-user-times-avatar { width: 72px; height: 72px; margin-bottom: var(--spacing-2); font-size: var(--font-size-xl); }
+.work-order-time-user-times-summary > strong { color: var(--ink); font-size: var(--font-size-xl-compact); }
+.work-order-time-user-times-duration { color: var(--ink); font-size: var(--font-size-display-md); font-variant-numeric: tabular-nums; }
+.work-order-time-user-times-cost { color: var(--text-secondary-muted); font-size: var(--font-size-xl-compact); }
+.work-order-time-user-times-divider { min-height: 28px; background: var(--surface-muted-light); border-top: var(--border-width-normal) solid var(--line); border-bottom: var(--border-width-normal) solid var(--line); }
+.work-order-time-user-times-content { max-width: 780px; margin: 0 auto; padding: var(--spacing-6); color: var(--ink); }
+.work-order-time-user-times-content h4 { margin: 0 0 var(--spacing-5); font-size: var(--font-size-xl-compact); }
+.work-order-time-user-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: var(--spacing-4); padding: var(--spacing-3) 0; border-bottom: var(--border-width-normal) solid var(--line); }
+.work-order-time-user-entry { width: 100%; border-top: 0; border-right: 0; border-left: 0; color: inherit; background: transparent; font: inherit; text-align: left; cursor: pointer; }
+.work-order-time-user-entry:hover, .work-order-time-user-entry:focus-visible { background: var(--surface-subtle); outline: 0; }
+.work-order-time-user-entry-body { min-width: 0; }
+.work-order-time-user-entry-duration { display: flex; align-items: center; gap: var(--spacing-2); color: var(--blue); font-size: var(--font-size-xl-compact); font-weight: var(--font-bold); font-variant-numeric: tabular-nums; }
+.work-order-time-user-entry-meta { display: grid; gap: var(--spacing-1); margin-top: var(--spacing-2); }
+.work-order-time-user-entry-meta strong { font-size: var(--font-size-lg); }
+.work-order-time-user-entry-meta strong span, .work-order-time-user-entry-meta > span { color: var(--text-secondary-muted); font-weight: var(--font-normal); }
+.work-order-time-user-entry > svg { color: var(--text-secondary-muted); }
+.work-order-time-user-times-empty { color: var(--text-secondary-muted); }
+.work-order-time-delete-confirmation-backdrop { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; box-sizing: border-box; padding: var(--spacing-4); background: rgb(0 0 0 / 35%); }
+.work-order-time-delete-confirmation-modal { width: min(100%, 464px); overflow: hidden; border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-lg); }
+.work-order-time-delete-confirmation-body { display: grid; gap: var(--spacing-3); padding: var(--spacing-5); }
+.work-order-time-delete-confirmation-body h3 { margin: 0; color: var(--ink); font-size: var(--font-size-xl-compact); }
+.work-order-time-delete-confirmation-body p { margin: 0; color: var(--ink); font-size: var(--font-size-body-sm); line-height: var(--line-height-loose); }
+.work-order-time-delete-confirmation-actions { display: flex; justify-content: flex-end; gap: var(--spacing-3); padding: var(--spacing-4) var(--spacing-5); border-top: var(--border-width-normal) solid var(--line); }
+.work-order-time-delete-confirmation-actions button { min-height: 40px; padding: 0 var(--spacing-4); border: 0; border-radius: var(--radius-sm); color: var(--blue); background: transparent; font: inherit; font-weight: var(--font-semibold); cursor: pointer; }
+.work-order-time-delete-confirmation-actions button.is-danger { color: var(--white); background: var(--danger); }
+.work-order-time-delete-confirmation-actions button.is-danger:hover,
+.work-order-time-delete-confirmation-actions button.is-danger:focus-visible { background: var(--danger-strong); }
+.work-order-time-delete-confirmation-actions button:disabled { opacity: .55; cursor: not-allowed; }
+.work-order-time-user-options { display: grid; }
+.work-order-time-user-options button { display: flex; align-items: center; justify-content: space-between; min-height: 68px; padding: 0 var(--spacing-4); border: 0; border-bottom: var(--border-width-normal) solid var(--line); color: var(--ink); background: var(--surface); font: inherit; font-size: var(--font-size-xl-plus); text-align: left; cursor: pointer; }
+.work-order-time-user-options button.is-selected svg { color: var(--blue); }
+.work-order-time-category-options { display: grid; }
+.work-order-time-category-options button { display: flex; align-items: center; justify-content: space-between; min-height: 68px; padding: 0 var(--spacing-4); border: 0; border-bottom: var(--border-width-normal) solid var(--line); color: var(--ink); background: var(--surface); font: inherit; font-size: var(--font-size-xl-plus); text-align: left; cursor: pointer; }
+.work-order-time-category-options button.is-selected { color: var(--ink); }
+.work-order-time-category-options button.is-selected svg { color: var(--blue); }
+.work-order-time-edit-fields { display: grid; gap: var(--spacing-6); padding: var(--spacing-5) var(--spacing-4) var(--spacing-7); color: var(--ink); font-size: var(--font-size-xl-plus); }
+.work-order-time-edit-selected-category { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-4); }
+.work-order-time-edit-selected-category strong { font-weight: var(--font-bold); }
+.work-order-time-edit-duration { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: var(--spacing-2); margin-top: var(--spacing-3); }
+.work-order-time-edit-duration input,
+.work-order-time-edit-rate input { box-sizing: border-box; width: 100%; min-height: 64px; padding: 0 var(--spacing-4); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); color: var(--ink); background: var(--surface); font: inherit; font-size: var(--font-size-xl-plus); }
+.work-order-time-edit-duration input::placeholder { color: var(--text-disabled-muted); }
+.work-order-time-edit-rate { display: flex; align-items: center; margin-top: var(--spacing-3); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); }
+.work-order-time-edit-rate > span { padding-left: var(--spacing-4); }
+.work-order-time-edit-rate input { min-height: 64px; border: 0; }
 .work-order-tracking-type-list { display: grid; gap: var(--spacing-2); max-height: 260px; overflow: auto; }
 .work-order-tracking-type-row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-3); padding: var(--spacing-2) 0; border-bottom: var(--border-width-normal) solid var(--line); }
 .work-order-tracking-type-row small { display: block; color: var(--text-secondary-muted); font-size: var(--font-size-xs); }
@@ -1293,7 +1366,246 @@ a.detail-assignee-link:hover {
   }
 
   .detail-cost-section > h2 {
+    font-size: var(--font-size-2xl-compact);
+    font-weight: var(--font-bold);
+  }
+
+  .detail-cost-row {
+    min-height: 68px;
+    padding: 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-semibold);
+  }
+
+  .detail-cost-row > button {
+    padding: 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-semibold);
+  }
+
+  .work-order-time-summary {
+    grid-template-columns: 1fr auto;
+    height: 68px;
+    min-height: 68px;
+  }
+
+  .work-order-time-summary-actions {
+    gap: var(--spacing-2);
+  }
+
+  .work-order-time-summary-value {
+    display: inline-flex;
+    justify-self: end;
+    color: var(--blue);
+  }
+
+  .work-order-time-overview-link > svg,
+  .work-order-time-add,
+  .work-order-time-add-icon {
+    display: none;
+  }
+
+  .work-order-time-overview-value-link { font-weight: var(--font-semibold); }
+  .work-order-time-overview-chevron { display: block; color: var(--blue); }
+
+  .work-order-time-tracking > .work-order-time-entry-list { display: none; }
+
+  .work-order-time-cost-row {
+    display: flex;
+    min-height: 68px;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 calc(var(--spacing-4) * -1);
+    padding: 0 var(--spacing-4);
+    color: var(--ink);
+    background: var(--surface-subtle);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-semibold);
+  }
+
+  .work-order-time-cost-row strong { font-variant-numeric: tabular-nums; }
+
+  .work-order-cost-summary {
+    min-height: 68px;
+    padding: 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-semibold);
+  }
+
+  .work-order-cost-add {
+    padding: 0;
+    color: var(--blue);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-semibold);
+  }
+
+  .work-order-cost-add-icon { display: none; }
+  .work-order-cost-add-chevron { display: block; }
+  .work-order-cost-summary + .work-order-time-entry-list { display: none; }
+
+  .work-order-time-overview {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    overflow: auto;
+    background: var(--surface);
+  }
+
+  .work-order-time-user-times {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    overflow: auto;
+    background: var(--surface);
+  }
+
+  .work-order-time-user-times-summary {
+    flex: 0 0 auto;
+    gap: var(--spacing-2);
+    padding: var(--spacing-7) var(--spacing-4) var(--spacing-8);
+  }
+
+  .work-order-time-user-times-avatar { width: 72px; height: 72px; margin-bottom: var(--spacing-3); }
+  .work-order-time-user-times-summary > strong { font-size: var(--font-size-2xl-compact); font-weight: var(--font-bold); }
+  .work-order-time-user-times-duration { font-size: var(--font-size-4xl); }
+  .work-order-time-user-times-cost { font-size: var(--font-size-xl); }
+  .work-order-time-user-times-divider { min-height: 28px; }
+  .work-order-time-user-times-content { max-width: none; margin: 0; padding: 0 0 112px; }
+  .work-order-time-user-times-content h4 { margin: 0; padding: var(--spacing-5) var(--spacing-4); font-size: var(--font-size-2xl-compact); }
+  .work-order-time-user-entry { min-height: 112px; gap: var(--spacing-3); padding: var(--spacing-4); }
+  .work-order-time-user-entry-duration { font-size: var(--font-size-2xl-compact); }
+  .work-order-time-user-entry-meta { margin-top: var(--spacing-2); }
+  .work-order-time-user-entry-meta strong { font-size: var(--font-size-xl); }
+  .work-order-time-user-entry-meta > span { font-size: var(--font-size-lg); }
+  .work-order-time-user-entry > svg { width: 28px; height: 28px; }
+  .work-order-time-user-times-empty { padding: 0 var(--spacing-4); }
+
+  .work-order-time-overview-header {
+    flex: 0 0 64px;
+    min-height: 64px;
+    gap: var(--spacing-2);
+    padding: 0 var(--spacing-3);
+    border-bottom: 0;
+    color: var(--white);
+    background: var(--blue);
+    box-shadow: var(--elevation-2);
+  }
+
+  .work-order-time-overview-header h3 {
+    color: var(--white);
+    font-size: var(--font-size-2xl-compact);
+    font-weight: var(--font-medium);
+  }
+
+  .work-order-time-overview-header button:first-child {
+    position: relative;
+    width: 44px;
+    height: 56px;
+    min-height: 44px;
+    flex: 0 0 44px;
+    color: var(--white);
+    background: transparent;
+    font-size: inherit;
+  }
+
+  .work-order-time-overview-header > button:last-child { display: none; }
+
+  .work-order-time-overview-summary {
+    display: block;
+    max-width: none;
+    margin: 0;
+    border-bottom: 0;
+  }
+
+  .work-order-time-overview-summary > div {
+    min-height: 220px;
+    box-sizing: border-box;
+    align-content: center;
+    gap: var(--spacing-4);
+    padding: var(--spacing-8) var(--spacing-4);
+    border-right: 0;
+    border-bottom: var(--border-width-normal) solid var(--line);
+  }
+
+  .work-order-time-overview-summary strong {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-normal);
+  }
+
+  .work-order-time-overview-summary span { font-size: var(--font-size-3xl); }
+
+  .work-order-time-overview-summary button {
+    min-height: 68px;
+    padding: 0 var(--spacing-6);
+    border-width: 2px;
+    font-size: var(--font-size-2xl-compact);
+    font-weight: var(--font-bold);
+  }
+
+  .work-order-time-overview-summary .work-order-time-overview-total-label {
+    min-height: 68px;
+    padding: 0 var(--spacing-6);
+    border-width: 2px;
+    font-size: var(--font-size-2xl-compact);
+    font-weight: var(--font-bold);
+  }
+
+  .work-order-time-overview-summary button.is-selected {
+    border-color: var(--success);
+    color: var(--success);
+  }
+
+  .work-order-time-overview > .work-order-time-overview-header,
+  .work-order-time-user-times > .work-order-time-overview-header { display: none; }
+
+  .work-order-time-overview-content {
+    max-width: none;
+    margin: 0;
+    padding: 0 0 112px;
+  }
+
+  .work-order-time-overview-group h4 {
+    padding: var(--spacing-4) var(--spacing-4);
+    background: var(--surface-muted-light);
     font-size: var(--font-size-xl-compact);
+  }
+
+  .work-order-time-overview-entry {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    gap: var(--spacing-3);
+    min-height: 86px;
+    padding: var(--spacing-4);
+  }
+
+  .work-order-time-overview-avatar { width: 64px; height: 64px; font-size: var(--font-size-lg); }
+  .work-order-time-overview-entry-details { font-size: var(--font-size-lg); }
+  .work-order-time-overview-entry-details span { font-size: var(--font-size-md); }
+  .work-order-time-overview-entry-duration { font-size: var(--font-size-xl); }
+  .work-order-time-overview-entry > svg { width: 28px; height: 28px; color: var(--text-secondary-muted); }
+  .work-order-time-overview-empty { padding: var(--spacing-5) var(--spacing-4); }
+
+  .work-order-time-overview-add {
+    position: fixed;
+    right: var(--spacing-5);
+    bottom: calc(var(--spacing-5) + env(safe-area-inset-bottom));
+    z-index: 1;
+    display: grid;
+    width: 64px;
+    height: 64px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-circle);
+    color: var(--white);
+    background: var(--blue);
+    box-shadow: var(--elevation-3);
+    cursor: pointer;
   }
 
   .detail-comments-section {
@@ -1309,26 +1621,8 @@ a.detail-assignee-link:hover {
   }
 
   .work-order-time-overlay {
-    position: sticky;
-    bottom: var(--spacing-3);
-    z-index: 5;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--spacing-2);
-    min-height: 52px;
-    margin: var(--spacing-3) 0 0;
-    padding: var(--spacing-2);
-    border: var(--border-width-normal) solid var(--blue);
-    border-radius: var(--radius-lg);
-    background: color-mix(in srgb, var(--surface) 94%, transparent);
-    box-shadow: var(--shadow-md);
-    backdrop-filter: blur(8px);
+    display: none;
   }
-  .work-order-time-overlay-value { margin-right: auto; padding-left: var(--spacing-2); color: var(--ink); font-variant-numeric: tabular-nums; }
-  .work-order-time-overlay button { display: inline-flex; align-items: center; gap: var(--spacing-2); min-height: 40px; padding: 0 var(--spacing-3); border: 0; border-radius: var(--radius-sm); color: white; background: var(--blue); font: inherit; cursor: pointer; }
-  .work-order-time-overlay button + button { color: var(--blue); background: var(--surface-subtle); }
-  .work-order-time-overlay button:disabled { opacity: .6; cursor: not-allowed; }
 }
 
 @media (prefers-reduced-motion: reduce) {

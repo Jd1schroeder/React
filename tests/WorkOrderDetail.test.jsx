@@ -351,7 +351,7 @@ describe('WorkOrderDetail authorization', () => {
     expect(screen.getAllByRole('button', { name: /Add/ })).toHaveLength(3)
     expect(within(screen.getByText('Parts').closest('.detail-cost-row')).getByRole('button', { name: /Add/ })).toBeDisabled()
     await waitFor(() => expect(within(screen.getByText('Time').closest('.work-order-time-summary')).getByRole('button', { name: /Add/ })).not.toBeDisabled())
-    expect(within(screen.getByText('Other Costs').closest('.work-order-time-summary')).getByRole('button', { name: /Add/ })).not.toBeDisabled()
+    expect(within(screen.getByText('Other Costs').closest('.work-order-cost-summary')).getByRole('button', { name: /Add/ })).not.toBeDisabled()
   })
 
   it.each([

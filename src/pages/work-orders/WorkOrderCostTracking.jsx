@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Plus } from "lucide-react";
+import { ChevronRight, Plus } from "lucide-react";
 import { createWorkOrderCostEntry, deleteWorkOrderCostEntry, listWorkOrderCostEntries, listWorkOrderTrackingTypes, updateWorkOrderCostEntry } from "../../services/workOrderTimeService";
 
 function memberLabel(member) {
@@ -32,7 +32,6 @@ export function WorkOrderCostTracking({ organizationId, workOrderId, grants, rec
 
   useEffect(() => { const timer = window.setTimeout(() => { void reload(); }, 0); return () => window.clearTimeout(timer); }, [reload]);
   if (!enabled) return null;
-  const total = entries.reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
   const submit = async (event) => {
     event.preventDefault();
     setIsSaving(true); setError("");
@@ -43,7 +42,7 @@ export function WorkOrderCostTracking({ organizationId, workOrderId, grants, rec
     } catch (submitError) { setError(submitError.message || "Unable to add Work Order cost."); } finally { setIsSaving(false); }
   };
   return <>
-    <div className="detail-cost-row work-order-time-summary"><span>Other Costs</span><span className="work-order-time-summary-value">${total.toFixed(2)}</span><button type="button" onClick={() => setIsOpen(true)} disabled={isSaving}>Add <Plus size={14} aria-hidden="true" /></button></div>
+    <div className="detail-cost-row work-order-cost-summary"><span>Other Costs</span><button type="button" className="work-order-cost-add" onClick={() => setIsOpen(true)} disabled={isSaving}>Add <Plus className="work-order-cost-add-icon" size={14} aria-hidden="true" /><ChevronRight className="work-order-cost-add-chevron" size={20} aria-hidden="true" /></button></div>
     {entries.length > 0 && <div className="work-order-time-entry-list">{entries.map((entry) => <div className="work-order-time-entry" key={entry.id}><span>{entry.work_order_tracking_types?.name || "Other"}</span><span>{entry.description || "No description"}</span><strong>${Number(entry.amount || 0).toFixed(2)}</strong>{(entry.user_id === userId || isOrganizationAdmin) && <span className="work-order-time-entry-actions"><button type="button" onClick={() => { setEditingEntry(entry); setForm({ userId: entry.user_id, typeId: entry.tracking_type_id, amount: entry.amount, description: entry.description || "" }); setIsOpen(true); }}>Edit</button><button type="button" onClick={() => { if (window.confirm("Delete this cost entry?")) { setIsSaving(true); void deleteWorkOrderCostEntry({ costEntryId: entry.id, grants, record: recordRef.current }).then(reload).catch((deleteError) => setError(deleteError.message || "Unable to delete Work Order cost.")).finally(() => setIsSaving(false)); } }}>Delete</button></span>}</div>)}</div>}
     {error && <p className="work-order-time-error" role="alert">{error}</p>}
     {isOpen && <div className="work-order-time-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsOpen(false); }}><form className="work-order-time-modal" onSubmit={submit} aria-labelledby="add-cost-title"><h3 id="add-cost-title">{editingEntry ? "Edit Cost" : "Add Cost"}</h3>{isOrganizationAdmin && <label>User<select value={form.userId} onChange={(event) => setForm({ ...form, userId: event.target.value })}>{timeEntryMembers.map((member) => <option key={member.user_id} value={member.user_id}>{memberLabel(member)}</option>)}</select></label>}<label>Amount<input type="number" min="0" step="0.01" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} required /></label><label>Type<select value={form.typeId} onChange={(event) => setForm({ ...form, typeId: event.target.value })}>{types.map((type) => <option key={type.id} value={type.id}>{type.name}</option>)}</select></label><label>Description<textarea rows="3" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></label><div className="work-order-time-modal-actions"><button type="button" onClick={() => { setIsOpen(false); setEditingEntry(null); }}>Cancel</button><button type="submit" disabled={isSaving || form.amount === ""}>{editingEntry ? "Save Cost" : "Add Cost"}</button></div></form></div>}

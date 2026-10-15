@@ -1,10 +1,16 @@
 import { useEffect, useLayoutEffect, useState } from 'react'
 
+function getInitialRecordView() {
+  if (typeof window === 'undefined') return null
+  const pathname = window.location.pathname.replace(/\/+$/, '')
+  return /^\/workorders\/[^/]+$/.test(pathname) ? 'detail' : null
+}
+
 export function useMobileWorkOrderNavigation() {
   const [utilityPage, setUtilityPage] = useState(null)
   const [filterSubpage, setFilterSubpage] = useState(null)
   const [activeFilterCount, setActiveFilterCount] = useState(0)
-  const [recordView, setRecordView] = useState(null)
+  const [recordView, setRecordView] = useState(getInitialRecordView)
 
   useEffect(() => {
     const syncUtilityPage = (event) => setUtilityPage(event.detail?.page ?? null)

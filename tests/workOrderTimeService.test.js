@@ -13,6 +13,7 @@ import {
   createWorkOrderTimeEntry,
   deleteWorkOrderTimeEntry,
   listWorkOrderTimeEntries,
+  pauseWorkOrderTimer,
   startWorkOrderTimer,
   updateWorkOrderTimeEntry,
 } from '../src/services/workOrderTimeService'
@@ -48,6 +49,14 @@ describe('workOrderTimeService', () => {
     expect(mocks.rpc).toHaveBeenCalledWith('start_work_order_timer', {
       target_work_order_id: 'wo-1',
       target_tracking_type_id: 'type-1',
+    })
+  })
+
+  it('finalizes the active timer through the server stop contract', async () => {
+    await pauseWorkOrderTimer({ timeEntryId: 'entry-1', finalize: true, grants: {}, record: {} })
+    expect(mocks.rpc).toHaveBeenCalledWith('pause_work_order_timer', {
+      target_time_entry_id: 'entry-1',
+      finalize: true,
     })
   })
 
