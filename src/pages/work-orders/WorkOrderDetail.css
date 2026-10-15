@@ -1419,8 +1419,8 @@ a.detail-assignee-link:hover {
   .detail-custom-fields-section {
     max-width: none;
     margin-top: var(--spacing-5);
-    padding: var(--spacing-3) var(--spacing-4) 0;
-    overflow: hidden;
+    padding: 0 var(--spacing-4);
+    overflow: visible;
   }
 
   .detail-attributes-grid {
@@ -1431,6 +1431,35 @@ a.detail-assignee-link:hover {
   .detail-custom-fields-grid {
     display: block;
     max-width: none;
+  }
+
+  .detail-custom-fields-section {
+    padding-bottom: 0;
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .detail-custom-fields-section .detail-attribute:last-child {
+    border-bottom: 0;
+  }
+
+  .detail-custom-fields-section .detail-metadata-item > span {
+    line-height: 24px;
+  }
+
+  .detail-custom-fields-section .detail-custom-field-link {
+    display: inline-block;
+    line-height: inherit;
+    vertical-align: middle;
+  }
+
+  .detail-custom-fields-section .detail-mobile-row-chevron {
+    display: none;
+  }
+
+  .detail-custom-fields-section .detail-attribute {
+    padding-right: var(--spacing-4);
+    padding-left: var(--spacing-4);
   }
 
   .detail-attribute {
