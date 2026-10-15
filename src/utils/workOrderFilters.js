@@ -5,7 +5,7 @@ const filterRules = {
   },
   status: {
     operators: ['one_of', 'none_of'],
-    values: (value) => ['Open', 'On Hold', 'In Progress', 'Completed'].includes(value),
+    values: (value) => ['Open', 'On Hold', 'In Progress', 'Completed', 'Skipped', 'Cancelled'].includes(value),
   },
   due_date: {
     operators: ['on', 'before', 'after', 'between', 'is_empty', 'is_not_empty'],

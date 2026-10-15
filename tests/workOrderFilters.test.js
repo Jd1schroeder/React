@@ -2,6 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { matchesWorkOrderFilters, normalizeWorkOrderFilters } from '../src/utils/workOrderFilters'
 
 describe('Work Order filters', () => {
+  it('accepts skipped and cancelled status values', () => {
+    const filters = [{ field: 'status', operator: 'one_of', values: ['Skipped', 'Cancelled'] }]
+
+    expect(normalizeWorkOrderFilters(filters)).toEqual(filters)
+    expect(matchesWorkOrderFilters({ status: 'Skipped' }, filters)).toBe(true)
+    expect(matchesWorkOrderFilters({ status: 'Cancelled' }, filters)).toBe(true)
+    expect(matchesWorkOrderFilters({ status: 'Open' }, filters)).toBe(false)
+  })
+
   it('normalizes supported filters and ignores duplicate, malformed, or empty selections', () => {
     expect(normalizeWorkOrderFilters([
       { field: 'status', operator: 'one_of', values: ['Open', 'Open', 'Invalid'] },
