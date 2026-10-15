@@ -191,6 +191,32 @@ describe('WorkOrderDetail authorization', () => {
     expect(onStatusChange).toHaveBeenCalledWith(selected, 'Completed')
   })
 
+  it('shows overdue treatment for incomplete Work Orders past their due date', () => {
+    const { container } = render(<ToastProvider><WorkOrderDetail selected={{
+      ...selected,
+      due: '10/08/2026',
+      due_date: '2026-10-08',
+    }} dateFormat="MM/DD/YYYY" grants={{}} /></ToastProvider>)
+
+    expect(container.querySelector('.detail-meta')).toHaveTextContent('Overdue since 10/08/2026')
+    expect(container.querySelector('.detail-meta')).toHaveClass('detail-meta--overdue')
+    expect(container.querySelector('.detail-fact--due-date .detail-fact-value')).toHaveTextContent('10/08/2026')
+    expect(container.querySelector('.detail-overdue-indicator')).toHaveTextContent('Overdue')
+  })
+
+  it('does not show overdue treatment for completed Work Orders', () => {
+    const { container } = render(<ToastProvider><WorkOrderDetail selected={{
+      ...selected,
+      status: 'Completed',
+      due: '10/08/2026',
+      due_date: '2026-10-08',
+    }} dateFormat="MM/DD/YYYY" grants={{}} /></ToastProvider>)
+
+    expect(container.querySelector('.detail-meta')).toHaveTextContent('Due by 10/08/2026')
+    expect(container.querySelector('.detail-meta--overdue')).not.toBeInTheDocument()
+    expect(container.querySelector('.detail-overdue-indicator')).not.toBeInTheDocument()
+  })
+
   it('prioritizes only the first detail picture', () => {
     const { container } = render(<WorkOrderDetail selected={{
       ...selected,

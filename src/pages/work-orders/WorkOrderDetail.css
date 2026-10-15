@@ -119,6 +119,10 @@
 .detail-meta span {
   color: var(--border-disabled);
 }
+.detail-meta--overdue {
+  color: var(--danger);
+  font-weight: var(--font-semibold);
+}
 .detail-actions {
   display: flex;
   align-items: center;
@@ -291,6 +295,23 @@
   font-size: var(--font-size-md);
   line-height: var(--line-height-md-px);
   overflow-wrap: anywhere;
+}
+.detail-fact-value--overdue {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  color: var(--danger);
+}
+.detail-overdue-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  color: var(--danger);
+  font-size: var(--font-size-sm);
+}
+.detail-overdue-indicator svg {
+  flex: none;
 }
 .detail-assignee-section {
   padding: var(--spacing-7) var(--spacing-1);

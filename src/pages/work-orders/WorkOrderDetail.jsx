@@ -18,6 +18,7 @@ import {
   RefreshCw,
   ChevronDown,
   ChevronRight,
+  Clock3,
   Share2,
 } from "lucide-react";
 import { Avatar } from "../../components/ui/Avatar";
@@ -34,6 +35,7 @@ import { MobileActionSheet } from "../../components/ui/MobileActionSheet";
 import { normalizeWorkOrderSettings } from "../../utils/workOrderSettings";
 import { getExternalWorkOrderPath } from "../../routes.js";
 import { ExternalWorkOrderShareDialog } from "./ExternalWorkOrderShareDialog";
+import { formatCalendarDateForUser } from "../../utils/dateFormatting";
 import "./WorkOrderDetail.css";
 
 const statusOptions = [
@@ -51,6 +53,22 @@ function isMobileActionSheetViewport() {
 function getCarouselSlidesPerView() {
   if (typeof window === "undefined") return 1;
   return window.matchMedia?.("(min-width: 701px) and (max-width: 1199px)")?.matches ? 2 : 1;
+}
+
+function dateKeyInTimezone(date, timezone) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone || undefined,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function isOverdueWorkOrder(order, timezone) {
+  if (!order?.due_date || ["Completed", "Cancelled", "Skipped"].includes(order.status)) return false;
+  return order.due_date < dateKeyInTimezone(new Date(), timezone);
 }
 
 function WorkOrderDescription({ order }) {
@@ -607,6 +625,8 @@ export function WorkOrderDetail({
     ? identitiesById.get(selected.updated_by)?.name ?? "User details unavailable"
     : "Not available";
   const hasPriority = Boolean(selected.priority && String(selected.priority).trim().toLowerCase() !== "none");
+  const isOverdue = isOverdueWorkOrder(selected, timezone);
+  const overdueDate = selected.due_date ? formatCalendarDateForUser(selected.due_date, dateFormat) : selected.due;
   return (
     <section className="detail-pane">
       <header className="detail-header">
@@ -627,8 +647,8 @@ export function WorkOrderDetail({
               <Link size={17} aria-hidden="true" />
             </button>
           </div>
-          <div className="detail-meta">
-            <CalendarDays size={14} /> Due by {selected.due}
+          <div className={`detail-meta${isOverdue ? " detail-meta--overdue" : ""}`}>
+            <CalendarDays size={14} /> {isOverdue ? `Overdue since ${overdueDate}` : `Due by ${selected.due}`}
           </div>
         </div>
         <div className="detail-actions">
@@ -769,7 +789,10 @@ export function WorkOrderDetail({
             <div className={`detail-facts-grid${hasPriority ? "" : " detail-facts-grid--without-priority"}`}>
             <div className="detail-fact detail-fact--due-date">
               <div className="detail-section-header"><h2>Due Date</h2></div>
-              <div className="detail-fact-value">{selected.due || "No due date"}</div>
+              <div className={`detail-fact-value${isOverdue ? " detail-fact-value--overdue" : ""}`}>
+                <span>{isOverdue ? overdueDate : selected.due || "No due date"}</span>
+                {isOverdue && <span className="detail-overdue-indicator"><Clock3 size={14} aria-hidden="true" /> Overdue</span>}
+              </div>
             </div>
             {hasPriority && (
               <div className="detail-fact detail-fact--priority">
