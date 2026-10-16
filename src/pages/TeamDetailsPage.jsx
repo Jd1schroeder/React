@@ -2,6 +2,7 @@ import { ArrowLeft, ChevronDown, LockKeyhole, MapPin, MoreVertical, UsersRound, 
 import { useEffect, useMemo, useState } from 'react'
 import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
+import { LoadingState } from '../components/ui/LoadingState'
 import { Select } from '../components/ui/Select'
 import { useWorkspace } from '../components/layout/useWorkspace'
 import { addOrganizationTeamMembers, deleteOrganizationTeam, getOrganizationTeamShell, listOrganizationMembers, removeOrganizationTeamMember, updateOrganizationTeam, updateOrganizationTeamMemberRole } from '../services/organizationService'
@@ -161,7 +162,7 @@ export function TeamDetailsPage({ recordId, onNavigate, isTeamAddMembers = false
     }
   }
 
-  if (isLoading) return <main className="team-details-page"><p className="team-details-state">Loading team...</p></main>
+  if (isLoading) return <main className="team-details-page"><LoadingState className="team-details-loading" message="Loading team..." /></main>
   if (error || !team) return <main className="team-details-page"><p className="team-details-state team-details-error" role="alert">{error || 'Team not found.'}</p></main>
 
   return <main className="team-details-page"><header className="team-details-header"><button type="button" className="team-details-back" onClick={() => onNavigate('/teams')} aria-label="Back to teams"><ArrowLeft size={20} /></button><h1>{team.name}</h1></header><section className="team-details-card">
