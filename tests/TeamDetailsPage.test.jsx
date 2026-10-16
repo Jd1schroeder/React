@@ -84,6 +84,15 @@ describe('TeamDetailsPage', () => {
     expect(roleSelect).toHaveTextContent('Member')
   })
 
+  it('navigates to the member account when the name is clicked', async () => {
+    const onNavigate = vi.fn()
+    render(<TeamDetailsPage recordId="team-a" onNavigate={onNavigate} />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'View account for Joshua Schroeder' }))
+
+    expect(onNavigate).toHaveBeenCalledWith('/users/profile/user-a')
+  })
+
   it('uses the app confirmation dialog before deleting a team', async () => {
     render(<TeamDetailsPage recordId="team-a" onNavigate={vi.fn()} />)
 
