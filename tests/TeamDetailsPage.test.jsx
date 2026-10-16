@@ -1,10 +1,10 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TeamDetailsPage } from '../src/pages/TeamDetailsPage'
-import { addOrganizationTeamMembers, deleteOrganizationTeam, getOrganizationTeamShell, listOrganizationMembers, updateOrganizationTeamMemberRole } from '../src/services/organizationService'
+import { addOrganizationTeamMembers, deleteOrganizationTeam, getOrganizationTeamShell, listOrganizationMembers, updateOrganizationTeam, updateOrganizationTeamMemberRole } from '../src/services/organizationService'
 
 vi.mock('../src/components/layout/useWorkspace', () => ({ useWorkspace: () => ({ organization: { id: 'organization-a' }, preferences: {} }) }))
-vi.mock('../src/services/organizationService', () => ({ addOrganizationTeamMembers: vi.fn(), deleteOrganizationTeam: vi.fn(), getOrganizationTeamShell: vi.fn(), listOrganizationMembers: vi.fn(), removeOrganizationTeamMember: vi.fn(), updateOrganizationTeamMemberRole: vi.fn() }))
+vi.mock('../src/services/organizationService', () => ({ addOrganizationTeamMembers: vi.fn(), deleteOrganizationTeam: vi.fn(), getOrganizationTeamShell: vi.fn(), listOrganizationMembers: vi.fn(), removeOrganizationTeamMember: vi.fn(), updateOrganizationTeam: vi.fn(), updateOrganizationTeamMemberRole: vi.fn() }))
 
 describe('TeamDetailsPage', () => {
   beforeEach(() => {
@@ -19,6 +19,7 @@ describe('TeamDetailsPage', () => {
     ])
     addOrganizationTeamMembers.mockResolvedValue([{ team_id: 'team-a', user_id: 'user-c' }])
     updateOrganizationTeamMemberRole.mockResolvedValue({ team_id: 'team-a', user_id: 'user-a', role: 'member' })
+    updateOrganizationTeam.mockResolvedValue({ id: 'team-a', name: 'Engineering', description: 'New team description.', color: '#3bc4bc' })
     deleteOrganizationTeam.mockResolvedValue(undefined)
   })
 
@@ -44,8 +45,8 @@ describe('TeamDetailsPage', () => {
     render(<TeamDetailsPage recordId="team-a" onNavigate={onNavigate} isTeamAddMembers />)
 
     expect(await screen.findByRole('heading', { name: 'Add Members to the Team' })).toBeInTheDocument()
-    fireEvent.focus(screen.getByRole('combobox', { name: 'Add Members to the Team' }))
-    fireEvent.click(await screen.findByRole('option', { name: 'Steve Huddleston' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Show available members' }))
+    fireEvent.click(await screen.findByRole('option', { name: /Steve Huddleston/ }))
     expect(screen.getByRole('listbox')).toBeInTheDocument()
     fireEvent.pointerDown(document.body)
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
@@ -54,6 +55,19 @@ describe('TeamDetailsPage', () => {
     await waitFor(() => expect(addOrganizationTeamMembers).toHaveBeenCalledWith({ organizationId: 'organization-a', teamId: 'team-a', userIds: ['user-c'] }))
     expect(screen.queryByRole('heading', { name: 'Add Members to the Team' })).not.toBeInTheDocument()
     expect(onNavigate).toHaveBeenCalledWith('/teams/team-a')
+  })
+
+  it('allows a missing team description to be added inline', async () => {
+    getOrganizationTeamShell.mockResolvedValue({ id: 'team-a', name: 'Engineering', description: null, color: '#3bc4bc', created_by: 'user-a', memberIds: [], memberRoles: {} })
+    listOrganizationMembers.mockResolvedValue([])
+    render(<TeamDetailsPage recordId="team-a" onNavigate={vi.fn()} />)
+
+    fireEvent.click(await screen.findByRole('button', { name: /Add a description/ }))
+    fireEvent.change(screen.getByRole('textbox', { name: 'Team description' }), { target: { value: 'New team description.' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Update' }))
+
+    await waitFor(() => expect(updateOrganizationTeam).toHaveBeenCalledWith({ organizationId: 'organization-a', teamId: 'team-a', name: 'Engineering', description: 'New team description.', color: '#3bc4bc', isEscalationTeam: false, escalationEvents: [] }))
+    expect(await screen.findByText('New team description.')).toBeInTheDocument()
   })
 
   it('shows the member preview and row actions', async () => {

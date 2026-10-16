@@ -14,7 +14,13 @@
 .team-details-avatar { display: grid; place-items: center; width: 130px; height: 130px; border-radius: var(--radius-circle); color: var(--white); font-size: var(--font-size-display-md); font-weight: var(--font-normal); }
 .team-details-description p { margin: 0; color: var(--ink); }
 .team-details-description-text { max-width: 560px; line-height: var(--line-height-copy-relaxed); white-space: pre-wrap; }
-.team-details-description button, .team-details-related button { display: inline-flex; align-items: center; gap: var(--spacing-2); margin-top: var(--spacing-1); padding: 0; border: 0; color: var(--blue); background: transparent; font: inherit; cursor: not-allowed; }
+.team-details-description-editor { display: grid; gap: var(--spacing-2); width: min(760px, 100%); }
+.team-details-description-editor textarea { box-sizing: border-box; width: 100%; min-height: 80px; padding: var(--spacing-3); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); color: var(--ink); background: var(--surface); font: inherit; resize: vertical; }
+.team-details-description-editor textarea:focus { border-color: var(--focus-border-color); outline: 0; box-shadow: 0 0 0 calc(var(--focus-border-width) - var(--border-width-normal)) var(--focus-border-color); }
+.team-details-description-editor > div { display: flex; justify-content: flex-end; gap: var(--spacing-3); }
+.team-details-description-editor button:first-child { min-height: 38px; padding: 0 var(--spacing-4); border: 0; color: var(--blue); background: transparent; font: inherit; font-weight: var(--font-semibold); cursor: pointer; }
+.team-details-description-editor .button { min-height: 38px; padding: 0 var(--spacing-4); }
+.team-details-description > button, .team-details-related button { display: inline-flex; align-items: center; gap: var(--spacing-2); margin-top: var(--spacing-1); padding: 0; border: 0; color: var(--blue); background: transparent; font: inherit; cursor: pointer; }
 .team-details-divider { height: 1px; margin: var(--spacing-7) 0; background: var(--line); }
 .team-details-section-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--spacing-3); }
 .team-details-section-heading h2, .team-details-related h2 { margin: 0; font-size: var(--font-size-md); font-weight: var(--font-semibold); }

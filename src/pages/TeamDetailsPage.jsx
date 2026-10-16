@@ -4,7 +4,7 @@ import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Select } from '../components/ui/Select'
 import { useWorkspace } from '../components/layout/useWorkspace'
-import { addOrganizationTeamMembers, deleteOrganizationTeam, getOrganizationTeamShell, listOrganizationMembers, removeOrganizationTeamMember, updateOrganizationTeamMemberRole } from '../services/organizationService'
+import { addOrganizationTeamMembers, deleteOrganizationTeam, getOrganizationTeamShell, listOrganizationMembers, removeOrganizationTeamMember, updateOrganizationTeam, updateOrganizationTeamMemberRole } from '../services/organizationService'
 import { UserLastVisitCell } from '../components/people/UserTableCells'
 import './TeamDetailsPage.css'
 
@@ -28,6 +28,9 @@ export function TeamDetailsPage({ recordId, onNavigate, isTeamAddMembers = false
   const [memberSearch, setMemberSearch] = useState('')
   const [selectedMemberIds, setSelectedMemberIds] = useState([])
   const [isAddingMembers, setIsAddingMembers] = useState(false)
+  const [isDescriptionEditing, setIsDescriptionEditing] = useState(false)
+  const [descriptionDraft, setDescriptionDraft] = useState('')
+  const [isSavingDescription, setIsSavingDescription] = useState(false)
 
   useEffect(() => {
     if (!isMenuOpen && !memberMenuOpenId) return undefined
@@ -63,6 +66,7 @@ export function TeamDetailsPage({ recordId, onNavigate, isTeamAddMembers = false
     getOrganizationTeamShell(organizationId, recordId)
       .then((selectedTeam) => {
         setTeam(selectedTeam)
+        setDescriptionDraft(selectedTeam?.description ?? '')
         setIsLoading(false)
         if (!selectedTeam) return null
         return listOrganizationMembers(organizationId, isTeamAddMembers ? {} : { userIds: selectedTeam.memberIds })
@@ -98,6 +102,20 @@ export function TeamDetailsPage({ recordId, onNavigate, isTeamAddMembers = false
     } catch (addError) {
       setError(addError.message || 'Unable to add members to this team.')
       setIsAddingMembers(false)
+    }
+  }
+  const saveDescription = async () => {
+    setIsSavingDescription(true)
+    setError('')
+    try {
+      const updatedTeam = await updateOrganizationTeam({ organizationId: workspace.organization.id, teamId: recordId, name: team.name, description: descriptionDraft, color: team.color, isEscalationTeam: Boolean(team.is_escalation_team), escalationEvents: team.escalation_events ?? [] })
+      setTeam((current) => ({ ...current, ...updatedTeam }))
+      setDescriptionDraft(updatedTeam.description ?? '')
+      setIsDescriptionEditing(false)
+    } catch (descriptionError) {
+      setError(descriptionError.message || 'Unable to update the team description.')
+    } finally {
+      setIsSavingDescription(false)
     }
   }
   const deleteTeam = () => {
@@ -147,7 +165,7 @@ export function TeamDetailsPage({ recordId, onNavigate, isTeamAddMembers = false
   if (error || !team) return <main className="team-details-page"><p className="team-details-state team-details-error" role="alert">{error || 'Team not found.'}</p></main>
 
   return <main className="team-details-page"><header className="team-details-header"><button type="button" className="team-details-back" onClick={() => onNavigate('/teams')} aria-label="Back to teams"><ArrowLeft size={20} /></button><h1>{team.name}</h1></header><section className="team-details-card">
-    <div className="team-details-summary"><span className="team-details-avatar" style={{ backgroundColor: team.color || 'var(--blue)' }}>{team.name.slice(0, 1).toUpperCase()}</span><div className="team-details-description">{team.description ? <p className="team-details-description-text">{team.description}</p> : <><p>What’s this Team responsible for?</p><button type="button" disabled><LockKeyhole size={13} /> Add a description</button></>}</div><div className="team-details-menu-wrap"><button type="button" className="team-details-more" aria-expanded={isMenuOpen} aria-label="Team actions" onClick={() => setIsMenuOpen((current) => !current)}><MoreVertical size={20} /></button>{isMenuOpen && <div className="team-details-menu" role="menu" aria-label="Team actions"><button type="button" role="menuitem" onClick={() => onNavigate(`/teams/${encodeURIComponent(team.id)}/edit`)}>Edit Details</button><button type="button" role="menuitem" className="is-danger" onClick={deleteTeam}>Delete</button></div>}</div></div>
+    <div className="team-details-summary"><span className="team-details-avatar" style={{ backgroundColor: team.color || 'var(--blue)' }}>{team.name.slice(0, 1).toUpperCase()}</span><div className="team-details-description">{team.description && !isDescriptionEditing ? <p className="team-details-description-text">{team.description}</p> : isDescriptionEditing ? <div className="team-details-description-editor"><textarea aria-label="Team description" value={descriptionDraft} onChange={(event) => setDescriptionDraft(event.target.value)} autoFocus maxLength={240} /><div><Button variant="ghost" onClick={() => { setDescriptionDraft(team.description ?? ''); setIsDescriptionEditing(false) }} disabled={isSavingDescription}>Cancel</Button><Button onClick={saveDescription} disabled={isSavingDescription}>{isSavingDescription ? 'Updating...' : 'Update'}</Button></div></div> : <><p>What's this Team responsible for?</p><button type="button" onClick={() => { setDescriptionDraft(''); setIsDescriptionEditing(true) }}><LockKeyhole size={13} /> Add a description</button></>}</div><div className="team-details-menu-wrap"><button type="button" className="team-details-more" aria-expanded={isMenuOpen} aria-label="Team actions" onClick={() => setIsMenuOpen((current) => !current)}><MoreVertical size={20} /></button>{isMenuOpen && <div className="team-details-menu" role="menu" aria-label="Team actions"><button type="button" role="menuitem" onClick={() => onNavigate(`/teams/${encodeURIComponent(team.id)}/edit`)}>Edit Details</button><button type="button" role="menuitem" className="is-danger" onClick={deleteTeam}>Delete</button></div>}</div></div>
     <div className="team-details-divider" />
     <section className="team-details-members" aria-labelledby="team-members-title"><div className="team-details-section-heading"><h2 id="team-members-title">Members ({members.length})</h2><Button onClick={() => onNavigate(`/teams/${encodeURIComponent(recordId)}/addmembers`)}><UsersRound size={15} /> Add Members</Button></div><div className="team-members-table"><div className="team-member-row team-member-heading"><span>Full Name</span><span>Role</span><span>Last Visit</span><span /></div>{visibleMembers.map((member) => <div className="team-member-row" key={member.user_id}><button type="button" className="team-member-name team-member-name-link" onClick={() => onNavigate(`/users/profile/${encodeURIComponent(member.user_id)}`)} aria-label={`View account for ${memberName(member)}`}><Avatar src={member.profile?.avatar_url?.startsWith('http') ? member.profile.avatar_url : ''} firstName={member.profile?.first_name} lastName={member.profile?.last_name} alt="" />{memberName(member)}</button><span className="team-member-role-cell"><Select className="team-member-role-select" value={member.teamRole ?? 'member'} onChange={(role) => updateMemberRole(member, role)} disabled={roleSavingId === member.user_id} ariaLabel={`Role for ${memberName(member)}`} options={[{ value: 'admin', label: 'Team Administrator' }, { value: 'member', label: 'Member' }]} /></span><UserLastVisitCell member={member} dateFormat={workspace.preferences?.date_format} timeZone={workspace.preferences?.timezone} weekStart={workspace.preferences?.week_start} /><div className="team-member-actions"><button type="button" className="team-member-more" aria-expanded={memberMenuOpenId === member.user_id} aria-label={`Actions for ${memberName(member)}`} onClick={() => setMemberMenuOpenId((current) => current === member.user_id ? null : member.user_id)}><MoreVertical size={18} /></button>{memberMenuOpenId === member.user_id && <div className="team-member-menu" role="menu" aria-label={`${memberName(member)} actions`}><button type="button" role="menuitem" className="is-disabled" disabled><span>Send Message</span><LockKeyhole size={15} /></button><button type="button" role="menuitem" onClick={() => onNavigate(`/users/profile/${encodeURIComponent(member.user_id)}`)}>See Account</button><button type="button" role="menuitem" className="is-danger" onClick={() => setMemberToRemove(member)}>Remove from Team</button></div>}</div></div>)}</div>{sortedMembers.length > 3 && <button type="button" className="team-see-all-members" onClick={() => setShowAllMembers((current) => !current)}>{showAllMembers ? 'Show fewer Members' : 'See all Members'}<ChevronDown size={16} className={showAllMembers ? 'is-open' : ''} /></button>}</section>
     <div className="team-details-related"><section><h2>Locations (0)</h2><p><MapPin size={16} /> No locations assigned.</p><button type="button" disabled><LockKeyhole size={13} /> Assign locations to the Team</button></section><section><h2>Assets (0)</h2><p><UsersRound size={16} /> No assets assigned.</p><button type="button" disabled><LockKeyhole size={13} /> Assign assets to the Team</button></section></div>
