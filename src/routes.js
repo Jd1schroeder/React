@@ -55,6 +55,10 @@ export const pagePaths = {
   Locations: '/locations',
   Users: '/users',
   Teams: '/teams',
+  'Teams / Create': '/teams/create',
+  'Teams / Details': '/teams/:recordId',
+  'Teams / Add Members': '/teams/:recordId/addmembers',
+  'Teams / Edit': '/teams/:recordId/edit',
   Vendors: '/vendors',
 };
 

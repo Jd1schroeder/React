@@ -195,6 +195,36 @@
   background: var(--surface-subtle);
   font-weight: var(--font-semibold);
 }
+.teams-table-card { overflow: visible; }
+.teams-page .panel-view-header-actions > .button,
+.teams-page .teams-empty-card > .button {
+  box-sizing: border-box;
+  min-width: 118px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 15px;
+}
+.teams-section-heading { padding: var(--spacing-5) 0 var(--spacing-4) var(--spacing-5); }
+.teams-section-heading h2 { margin: 0; font-size: var(--font-size-md); font-weight: var(--font-semibold); }
+.teams-table { width: 100%; border-collapse: collapse; }
+.teams-table th, .teams-table td { padding: var(--spacing-5); border-top: var(--border-width-normal) solid var(--line); text-align: left; }
+.teams-table th:last-child, .teams-table td:last-child { width: 52px; padding-right: var(--spacing-3); padding-left: var(--spacing-3); }
+.teams-table th { color: var(--muted); font-size: var(--font-size-sm); font-weight: var(--font-medium); }
+.teams-table td { color: var(--ink); }
+.team-name-cell { display: inline-flex; align-items: center; gap: var(--spacing-3); }
+.team-name-link { padding: 0; border: 0; color: inherit; background: transparent; font: inherit; text-align: left; cursor: pointer; }
+.team-name-link:hover, .team-name-link:focus-visible { color: var(--blue); }
+.team-color-dot { display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--radius-circle); color: var(--white); font-size: var(--font-size-lg); }
+.team-row-actions { position: relative; display: flex; justify-content: flex-end; }
+.team-actions-cell { position: relative; }
+.team-row-action { display: grid; place-items: center; width: 36px; height: 36px; margin-left: auto; padding: 0; border: 0; border-radius: var(--radius-sm); color: var(--text-secondary-strong); background: transparent; cursor: pointer; }
+.team-row-action:hover, .team-row-action:focus-visible { color: var(--ink); background: var(--surface-control-hover); }
+.team-row-menu { position: absolute; z-index: 10; top: calc(100% + var(--spacing-2)); right: 0; display: grid; width: 202px; padding: var(--spacing-2) 0; border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); background: var(--surface); box-shadow: var(--elevation-menu); }
+.team-row-menu button { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-4); min-height: 38px; padding: 0 var(--spacing-3); border: 0; color: var(--text-disabled-control); background: transparent; font: inherit; font-size: var(--font-size-body-sm); text-align: left; cursor: not-allowed; opacity: 0.8; }
+.team-row-menu button:not(:disabled) { color: var(--ink); cursor: pointer; opacity: 1; }
+.team-row-menu button:not(:disabled):hover, .team-row-menu button:not(:disabled):focus-visible { background: var(--surface-control-hover); }
+.team-row-menu button.is-danger { color: var(--danger); opacity: 0.55; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (--wb-viewport-max-700) {
   .people-page .panel-view-header {
     align-items: flex-start;
@@ -206,4 +236,6 @@
   .users-page .data-table-scroll {
     overflow-x: auto;
   }
+  .teams-table { min-width: 620px; }
+  .teams-table-card { overflow-x: auto; }
 }

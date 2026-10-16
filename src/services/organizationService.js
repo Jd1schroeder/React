@@ -148,19 +148,121 @@ export async function listOrganizationRoles(organizationId) {
 }
 
 export async function listOrganizationTeams(organizationId) {
-  const { data, error } = await supabase
+  const { data: teams, error } = await supabase
     .from('organization_teams')
-    .select('id, name')
+    .select('id, organization_id, name, description, color, is_escalation_team, escalation_events, created_by, created_at, updated_at')
     .eq('organization_id', organizationId)
     .order('name', { ascending: true })
   if (error) throw error
+  if (!teams?.length) return []
+
+  const [{ data: memberships, error: membershipsError }, { data: profiles, error: profilesError }] = await Promise.all([
+    supabase
+      .from('organization_team_members')
+      .select('team_id, user_id, role')
+      .in('team_id', teams.map((team) => team.id)),
+    supabase
+      .from('profiles')
+      .select('id, first_name, last_name, avatar_url')
+      .in('id', teams.map((team) => team.created_by)),
+  ])
+  if (membershipsError) throw membershipsError
+  if (profilesError) throw profilesError
+
+  const membersByTeamId = new Map()
+  for (const membership of memberships ?? []) {
+    const current = membersByTeamId.get(membership.team_id) ?? []
+    current.push(membership.user_id)
+    membersByTeamId.set(membership.team_id, current)
+  }
+  const profilesById = new Map((profiles ?? []).map((profile) => [profile.id, profile]))
+  return teams.map((team) => ({
+    ...team,
+    memberIds: membersByTeamId.get(team.id) ?? [],
+    memberRoles: Object.fromEntries((memberships ?? []).filter((membership) => membership.team_id === team.id).map((membership) => [membership.user_id, membership.role ?? 'member'])),
+    memberCount: (membersByTeamId.get(team.id) ?? []).length,
+    administrator: profilesById.get(team.created_by) ?? null,
+  }))
+}
+
+export async function createOrganizationTeam({ organizationId, name, description = '', color = '#1887fc', isEscalationTeam = false, escalationEvents = [] }) {
+  const { data, error } = await supabase
+    .from('organization_teams')
+    .insert({
+      organization_id: organizationId,
+      name: name.trim(),
+      description: description.trim() || null,
+      color,
+      is_escalation_team: isEscalationTeam,
+      escalation_events: escalationEvents,
+      created_by: await getUserId(),
+    })
+    .select('id, organization_id, name, description, color, is_escalation_team, escalation_events, created_by, created_at, updated_at')
+    .single()
+  if (error) throw error
+  return { ...data, memberIds: [], memberCount: 0, administrator: null }
+}
+
+export async function updateOrganizationTeam({ organizationId, teamId, name, description = '', color = '#1887fc', isEscalationTeam = false, escalationEvents = [] }) {
+  const { data, error } = await supabase
+    .from('organization_teams')
+    .update({ name: name.trim(), description: description.trim() || null, color, is_escalation_team: isEscalationTeam, escalation_events: escalationEvents })
+    .eq('organization_id', organizationId)
+    .eq('id', teamId)
+    .select('id, organization_id, name, description, color, is_escalation_team, escalation_events, created_by, created_at, updated_at')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteOrganizationTeam({ organizationId, teamId }) {
+  const { error } = await supabase
+    .from('organization_teams')
+    .delete()
+    .eq('organization_id', organizationId)
+    .eq('id', teamId)
+  if (error) throw error
+}
+
+export async function addOrganizationTeamMembers({ organizationId, teamId, userIds }) {
+  const memberIds = [...new Set((userIds ?? []).filter(Boolean))]
+  if (!memberIds.length) return []
+  const { data, error } = await supabase
+    .from('organization_team_members')
+    .upsert(memberIds.map((userId) => ({ team_id: teamId, user_id: userId })), { onConflict: 'team_id,user_id', ignoreDuplicates: true })
+    .select('team_id, user_id, role, organization_teams!inner(organization_id)')
+    .eq('organization_teams.organization_id', organizationId)
+  if (error) throw error
   return data ?? []
+}
+
+export async function removeOrganizationTeamMember({ organizationId, teamId, userId }) {
+  const { error } = await supabase
+    .from('organization_team_members')
+    .delete()
+    .eq('team_id', teamId)
+    .eq('user_id', userId)
+  if (error) throw error
+  return { organizationId, teamId, userId }
+}
+
+export async function updateOrganizationTeamMemberRole({ organizationId, teamId, userId, role }) {
+  const { data, error } = await supabase
+    .from('organization_team_members')
+    .update({ role })
+    .eq('team_id', teamId)
+    .eq('user_id', userId)
+    .select('team_id, user_id, role, organization_teams!inner(organization_id)')
+    .eq('organization_teams.organization_id', organizationId)
+    .single()
+  if (error) throw error
+  return data
 }
 
 export async function listOrganizationTeamMemberships(organizationId) {
   const { data, error } = await supabase
     .from('organization_team_members')
-    .select('team_id, user_id, organization_teams!inner(organization_id)')
+    .select('team_id, user_id, role, organization_teams!inner(organization_id)')
     .eq('organization_teams.organization_id', organizationId)
   if (error) throw error
   return data ?? []

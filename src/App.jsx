@@ -53,7 +53,8 @@ function PageRoute({ pageName, isPublic = false }) {
         : 'Tools'))
   }), [guardNavigation, navigate, pageName])
   const onNavigateRecord = useCallback((type, id) => guardNavigation(() => navigate(getRecordPath(type, id))), [guardNavigation, navigate])
-  const content = <RouteErrorBoundary><Page pageName={pageName} recordId={recordId} userId={userId} sessionId={sessionId} shareToken={shareToken} onNavigate={onNavigate} onNavigateRecord={onNavigateRecord} onMobileHeaderTitleChange={updateMobileHeaderTitle} onMobileHeaderBackChange={updateMobileHeaderBack} /></RouteErrorBoundary>
+  const teamPageKey = pageName.startsWith('Teams /') ? `${pageName}:${recordId ?? ''}` : undefined
+  const content = <RouteErrorBoundary><Page key={teamPageKey} pageName={pageName} recordId={recordId} userId={userId} sessionId={sessionId} shareToken={shareToken} isTeamAddMembers={pageName === 'Teams / Add Members'} onNavigate={onNavigate} onNavigateRecord={onNavigateRecord} onMobileHeaderTitleChange={updateMobileHeaderTitle} onMobileHeaderBackChange={updateMobileHeaderBack} /></RouteErrorBoundary>
 
   if (isPublic) return content
   return <AppLayout activePage={pageName} mobileHeaderTitle={mobileHeaderTitle} mobileHeaderBack={mobileHeaderBack || onNavigateBack} onNavigate={onNavigate} onNavigateBack={onNavigateBack}>{content}</AppLayout>

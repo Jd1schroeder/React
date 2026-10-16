@@ -24,6 +24,8 @@ const MetersPage = lazyNamed(() => import('../pages/Meters'), 'Meters')
 const PartsInventoryPage = lazyNamed(() => import('../pages/PartsInventory'), 'PartsInventory')
 const UsersPage = lazyNamed(() => import('../pages/UsersPage'), 'UsersPage')
 const TeamsPage = lazyNamed(() => import('../pages/TeamsPage'), 'TeamsPage')
+const TeamCreatePage = lazyNamed(() => import('../pages/TeamCreatePage'), 'TeamCreatePage')
+const TeamDetailsPage = lazyNamed(() => import('../pages/TeamDetailsPage'), 'TeamDetailsPage')
 const UserProfilePage = lazyNamed(() => import('../pages/UserProfilePage'), 'UserProfilePage')
 
 export const pages = {
@@ -85,6 +87,10 @@ export const pages = {
   Locations: ScaffoldPage,
   Users: UsersPage,
   Teams: TeamsPage,
+  'Teams / Create': TeamCreatePage,
+  'Teams / Details': TeamDetailsPage,
+  'Teams / Add Members': TeamDetailsPage,
+  'Teams / Edit': TeamCreatePage,
   'User Profile': UserProfilePage,
   Vendors: ScaffoldPage,
   NotFound: TorkPage,
