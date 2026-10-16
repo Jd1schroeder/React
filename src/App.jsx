@@ -50,6 +50,8 @@ function PageRoute({ pageName, isPublic = false }) {
       ? 'Settings / Features'
       : pageName === 'Settings / Features / External Work Orders'
         ? 'Settings / Features / Work Orders'
+        : pageName === 'User Profile'
+          ? '/users'
         : 'Tools'))
   }), [guardNavigation, navigate, pageName])
   const onNavigateRecord = useCallback((type, id) => guardNavigation(() => navigate(getRecordPath(type, id))), [guardNavigation, navigate])

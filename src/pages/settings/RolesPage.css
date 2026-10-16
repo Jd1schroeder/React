@@ -4,7 +4,7 @@
 .roles-toolbar {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--spacing-6);
 }
 .roles-toolbar h2,
@@ -22,21 +22,33 @@
   color: var(--muted);
   font-size: var(--font-size-body-sm);
 }
+.roles-toolbar > .roles-context { margin: 0 auto 0 0; }
 .roles-toolbar-actions {
   display: flex;
   align-items: center;
   gap: var(--spacing-3);
+  width: auto;
+}
+.roles-toolbar-actions > .roles-primary-action {
+  flex: 0 0 132px;
+  width: 132px;
+  min-height: 40px;
+  box-sizing: border-box;
+  white-space: nowrap;
 }
 .roles-search {
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--spacing-2);
-  width: 260px;
-  min-height: 38px;
+  gap: var(--spacing-3);
+  width: min(300px, 100%);
+  min-width: 0;
+  flex: 0 1 300px;
+  min-height: 40px;
+  box-sizing: border-box;
   padding: 0 var(--spacing-3);
   border: var(--border-width-normal) solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md-compact);
   color: var(--muted);
   background: var(--surface);
 }
@@ -52,7 +64,7 @@
   color: var(--ink);
   background: transparent;
   font: inherit;
-  font-size: var(--font-size-body-sm);
+  font-size: var(--font-size-sm);
 }
 .roles-clear-search {
   position: absolute;
@@ -143,6 +155,11 @@
 }
 .role-create-form > label .select {
   width: 100%;
+}
+.roles-context {
+  margin: 0 auto 0 0;
+  color: var(--muted);
+  font-size: var(--font-size-body-sm);
 }
 .role-create-form > label .select-trigger {
   min-height: 42px;

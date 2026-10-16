@@ -66,4 +66,13 @@ describe('TeamCreatePage', () => {
     }))
     expect(onNavigate).toHaveBeenCalledWith('/teams/team-a')
   })
+
+  it('returns to the originating page when cancelling team creation', async () => {
+    const onNavigateBack = vi.fn()
+    render(<TeamCreatePage onNavigate={vi.fn()} onNavigateBack={onNavigateBack} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(onNavigateBack).toHaveBeenCalledTimes(1)
+  })
 })

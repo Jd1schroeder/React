@@ -5,16 +5,29 @@
 .teammates-card-header {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--spacing-6);
-  margin-bottom: var(--spacing-7);
 }
 .teammates-card-actions {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   gap: var(--spacing-3);
+  width: auto;
+  min-width: 0;
+}
+.teammates-context {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--font-size-body-sm);
+}
+.teammates-card-actions > button {
+  flex: 0 0 132px;
+  width: 132px;
+  min-height: 40px;
+  box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .teammates-search {
@@ -22,8 +35,11 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-3);
-  width: 300px;
+  width: min(300px, 100%);
+  min-width: 0;
+  flex: 0 1 300px;
   min-height: 40px;
+  box-sizing: border-box;
   padding: 0 var(--spacing-3);
   border: var(--border-width-normal) solid var(--line);
   border-radius: var(--radius-md-compact);
@@ -75,23 +91,50 @@
 }
 
 .teammates-card-header p {
-  margin: 7px 0 0;
+  margin: var(--spacing-2) 0 0;
   color: var(--muted);
   font-size: var(--font-size-body-sm);
 }
-
-.teammates-list {
-  display: grid;
-  border-top: var(--border-width-normal) solid var(--line);
+.teammates-card-header > .teammates-context {
+  margin: 0 auto 0 0;
 }
 
-.teammate-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 180px auto;
-  align-items: center;
-  gap: var(--spacing-5);
-  min-height: 68px;
-  border-bottom: var(--border-width-normal) solid var(--line);
+.teammates-table {
+  overflow: visible;
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.teammates-heading {
+  margin: var(--spacing-6) 0 var(--spacing-3);
+  color: var(--ink);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-semibold);
+}
+.teammates-table .data-table-scroll {
+  overflow: visible;
+}
+.teammates-table .data-table {
+  min-width: 680px;
+}
+.teammates-table th:nth-child(2),
+.teammates-table td:nth-child(2),
+.teammates-table th:nth-child(3),
+.teammates-table td:nth-child(3) {
+  text-align: center;
+}
+.teammates-table td:nth-child(2) .select {
+  margin: 0 auto;
+}
+.teammates-table td:nth-child(2) .select-trigger {
+  position: relative;
+  justify-content: center;
+}
+.teammates-table td:nth-child(2) .select-trigger .select-chevron {
+  position: absolute;
+  right: var(--spacing-4);
+}
+.teammates-table td:nth-child(2) .select-native-control {
+  text-align: center;
 }
 
 .teammate-identity {
@@ -125,32 +168,74 @@
   font-size: var(--font-size-body-sm);
   overflow-wrap: anywhere;
 }
+.teammate-profile-link {
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-body-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.teammate-profile-link:hover,
+.teammate-profile-link:focus-visible {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.teammate-row-actions {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+}
+.teammate-row-action {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+.teammate-row-action:hover,
+.teammate-row-action:focus-visible { color: var(--ink); }
+.teammate-row-menu {
+  position: absolute;
+  top: calc(100% + var(--spacing-2));
+  right: 0;
+  z-index: 10;
+  display: grid;
+  width: 180px;
+  padding: var(--spacing-2) 0;
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--elevation-menu);
+}
+.teammate-row-menu button {
+  min-height: 38px;
+  padding: 0 var(--spacing-3);
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-body-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.teammate-row-menu button:hover,
+.teammate-row-menu button:focus-visible { background: var(--surface-control-hover); }
+.teammate-row-menu button.is-danger { color: var(--danger); }
 
 .teammate-identity small {
   color: var(--muted);
   font-size: var(--font-size-sm-compact);
   text-transform: capitalize;
-}
-
-.teammate-status-button {
-  min-height: 34px;
-  padding: 0 11px;
-  border: var(--border-width-normal) solid var(--line);
-  border-radius: var(--radius-sm);
-  color: var(--ink);
-  background: var(--surface);
-  font-size: var(--font-size-sm);
-}
-
-.teammate-status-button:hover {
-  border-color: var(--focus-border-color);
-  color: var(--blue);
-}
-
-.teammate-pending-role,
-.teammate-pending-status {
-  color: var(--muted);
-  font-size: var(--font-size-sm);
 }
 
 .teammates-state,
@@ -171,9 +256,13 @@
   .teammates-search {
     width: 100%;
   }
+  .teammates-card-actions { flex-wrap: wrap; }
 
   .teammates-card-actions > button {
     justify-content: center;
     width: 100%;
+    flex: 1 1 auto;
   }
+  .teammates-table { overflow-x: auto; }
+  .teammates-table .data-table-scroll { overflow-x: auto; }
 }

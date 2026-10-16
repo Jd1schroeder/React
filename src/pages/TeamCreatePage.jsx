@@ -12,7 +12,7 @@ const escalationOptions = [
   ['critical_parts', 'Critical Parts'],
 ]
 
-export function TeamCreatePage({ onNavigate, recordId }) {
+export function TeamCreatePage({ onNavigate, onNavigateBack, recordId }) {
   const workspace = useWorkspace()
   const isEditing = Boolean(recordId)
   const [form, setForm] = useState({ name: '', description: '', color: teamColors[0], escalationEvents: [] })
@@ -33,6 +33,10 @@ export function TeamCreatePage({ onNavigate, recordId }) {
 
   const updateForm = (updates) => setForm((current) => ({ ...current, ...updates }))
   const toggleEscalation = (eventKey) => updateForm({ escalationEvents: form.escalationEvents.includes(eventKey) ? form.escalationEvents.filter((item) => item !== eventKey) : [...form.escalationEvents, eventKey] })
+  const closeEditor = () => {
+    if (onNavigateBack) onNavigateBack()
+    else onNavigate(isEditing ? `/teams/${encodeURIComponent(recordId)}` : '/teams')
+  }
 
   const save = async (event) => {
     event.preventDefault()
@@ -43,7 +47,7 @@ export function TeamCreatePage({ onNavigate, recordId }) {
       const payload = { organizationId: workspace.organization.id, name: form.name, description: form.description, color: form.color, isEscalationTeam: form.escalationEvents.length > 0, escalationEvents: form.escalationEvents }
       if (isEditing) await updateOrganizationTeam({ ...payload, teamId: recordId })
       else await createOrganizationTeam(payload)
-      onNavigate(isEditing ? `/teams/${encodeURIComponent(recordId)}` : '/teams')
+      closeEditor()
     } catch (saveError) {
       setError(saveError.message || 'Unable to create this team.')
     } finally {
@@ -51,8 +55,8 @@ export function TeamCreatePage({ onNavigate, recordId }) {
     }
   }
 
-  return <div className="team-create-page"><div className="team-create-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !isSaving) onNavigate(isEditing ? `/teams/${encodeURIComponent(recordId)}` : '/teams') }}><section className="team-create-modal" role="dialog" aria-modal="true" aria-labelledby="team-create-title">
-    <header className="team-create-header"><h1 id="team-create-title">{isEditing ? 'Edit Team' : 'New Team'}</h1><button type="button" className="team-create-close" onClick={() => onNavigate(isEditing ? `/teams/${encodeURIComponent(recordId)}` : '/teams')} aria-label="Close"><X size={20} /></button></header>
+  return <div className="team-create-page"><div className="team-create-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !isSaving) closeEditor() }}><section className="team-create-modal" role="dialog" aria-modal="true" aria-labelledby="team-create-title">
+    <header className="team-create-header"><h1 id="team-create-title">{isEditing ? 'Edit Team' : 'New Team'}</h1><button type="button" className="team-create-close" onClick={closeEditor} aria-label="Close"><X size={20} /></button></header>
     <form onSubmit={save}>
       <div className="team-create-content">
         <div className="team-icon-preview" aria-hidden="true"><Camera size={22} /><span>+</span></div>
@@ -62,7 +66,7 @@ export function TeamCreatePage({ onNavigate, recordId }) {
         <fieldset className="team-escalation-field"><legend>Set as Escalation Team</legend><p>Should this team be automatically notified about certain events?</p>{escalationOptions.map(([value, label]) => <label key={value}><input type="checkbox" checked={form.escalationEvents.includes(value)} onChange={() => toggleEscalation(value)} /><span>{label}</span></label>)}</fieldset>
         {error && <p className="team-create-error" role="alert">{error}</p>}
       </div>
-      <footer className="team-create-footer"><button type="button" className="team-create-cancel" onClick={() => onNavigate(isEditing ? `/teams/${encodeURIComponent(recordId)}` : '/teams')} disabled={isSaving}>Cancel</button><button type="submit" className="team-create-submit" disabled={isSaving || !form.name.trim()}>{isSaving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Team'}</button></footer>
+      <footer className="team-create-footer"><button type="button" className="team-create-cancel" onClick={closeEditor} disabled={isSaving}>Cancel</button><button type="submit" className="team-create-submit" disabled={isSaving || !form.name.trim()}>{isSaving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Team'}</button></footer>
     </form>
   </section></div></div>
 }

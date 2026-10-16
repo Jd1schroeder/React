@@ -47,7 +47,7 @@ function permissionRow(definition, grantedPermissions) {
   </div>
 }
 
-export function UserProfilePage({ userId, onNavigate }) {
+export function UserProfilePage({ userId, onNavigate, onNavigateBack }) {
   const [user, setUser] = useState(null)
   const [dateFormat, setDateFormat] = useState('MM/DD/YYYY')
   const [timeZone, setTimeZone] = useState(undefined)
@@ -141,8 +141,8 @@ export function UserProfilePage({ userId, onNavigate }) {
         <header className="user-profile-header">
           <div className="user-profile-header-texts">
             <div className="user-profile-header-text-wrapper">
-              <button type="button" className="user-profile-back" onClick={() => onNavigate('/users')} aria-label="Back to users"><ArrowLeft size={20} /></button>
-              <button type="button" className="user-profile-title-button" onClick={() => onNavigate('/users')}><h1>Manage User</h1></button>
+              <button type="button" className="user-profile-back" onClick={onNavigateBack ?? (() => onNavigate('/users'))} aria-label="Back"><ArrowLeft size={20} /></button>
+              <button type="button" className="user-profile-title-button" onClick={onNavigateBack ?? (() => onNavigate('/users'))}><h1>Manage User</h1></button>
             </div>
           </div>
         </header>
