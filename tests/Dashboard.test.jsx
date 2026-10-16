@@ -26,6 +26,12 @@ vi.mock('../src/components/layout/useWorkspace', () => ({
 }))
 
 vi.mock('../src/services/dashboardService', () => ({
+  completedWorkOrderPeriods: [
+    { key: 'all', label: 'All time' },
+    { key: 'this_month', label: 'This month' },
+    { key: 'last_7_days', label: 'Last 7 days' },
+    { key: 'today', label: 'Today' },
+  ],
   getDashboardOverview: dashboardMocks.getDashboardOverview,
   getDashboardMetricWorkOrders: dashboardMocks.getDashboardMetricWorkOrders,
   getDashboardRecentActivityPage: dashboardMocks.getDashboardRecentActivityPage,
@@ -386,6 +392,20 @@ describe('mobile Overview dashboard', () => {
     const completedSheet = await screen.findByRole('dialog', { name: 'Completed Work Orders' })
     expect(within(completedSheet).getByRole('link', { name: /Pump inspection/ })).toHaveAttribute('href', '/workorders/completed-order')
     expect(dashboardMocks.getDashboardMetricWorkOrders).toHaveBeenNthCalledWith(2, expect.objectContaining({ metric: 'completed' }))
+  })
+
+  it('opens the completed-period menu on a mobile long press and reloads the count', async () => {
+    renderDashboard()
+    await screen.findByRole('heading', { name: 'Welcome to Simona PMC' })
+    const completedCard = screen.getByRole('button', { name: /Completed Work Orders/ })
+
+    fireEvent.pointerDown(completedCard, { pointerType: 'touch' })
+    await new Promise((resolve) => setTimeout(resolve, 600))
+    expect(await screen.findByRole('dialog', { name: 'Completed Work Orders' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'This month' }))
+    await waitFor(() => expect(dashboardMocks.getDashboardOverview).toHaveBeenLastCalledWith(expect.objectContaining({ completedPeriod: 'this_month' })))
+    expect(screen.queryByRole('dialog', { name: 'Completed Work Orders' })).not.toBeInTheDocument()
   })
 
   it.each([

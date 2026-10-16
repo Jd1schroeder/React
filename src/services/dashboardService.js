@@ -4,6 +4,21 @@ import { listWorkOrderInboxCounts, listWorkOrderInboxPage } from './workOrderSer
 
 const recentActivityPageSize = 8
 const dashboardWorkOrderGroupIds = new Set(['assigned-to-me', 'assigned-to-my-teams'])
+export const completedWorkOrderPeriods = [
+  { key: 'all', label: 'All time' },
+  { key: 'this_month', label: 'This month' },
+  { key: 'last_7_days', label: 'Last 7 days' },
+  { key: 'today', label: 'Today' },
+]
+
+function completedSince(period, today) {
+  if (period === 'all') return null
+  const date = new Date(`${today}T00:00:00.000Z`)
+  if (period === 'today') return date.toISOString()
+  if (period === 'last_7_days') date.setUTCDate(date.getUTCDate() - 6)
+  if (period === 'this_month') date.setUTCDate(1)
+  return date.toISOString()
+}
 
 function applyRecentActivityCursor(query, before) {
   if (!before?.created_at || !before?.id) return query
@@ -94,7 +109,7 @@ export async function getDashboardRecentActivityPage({ organizationId, userId, g
   }
 }
 
-export async function getDashboardOverview({ organizationId, userId, grants, today }) {
+export async function getDashboardOverview({ organizationId, userId, grants, today, completedPeriod = 'all' }) {
   if (!organizationId) throw new Error('Choose a workspace to view its overview.')
   if (!hasPermission(grants, 'work_orders.view')) {
     return { canViewWorkOrders: false, groups: [], recentActivity: [], recentActivityHasMore: false, recentActivityCursor: null, activityAvailable: false }
@@ -106,7 +121,11 @@ export async function getDashboardOverview({ organizationId, userId, grants, tod
     countWorkOrders(organizationId, (query) => query.in('priority', ['Urgent', 'High']).neq('status', 'Completed')),
     countWorkOrders(organizationId, (query) => query.lt('due_date', today).neq('status', 'Completed')),
     countWorkOrders(organizationId, (query) => query.eq('due_date', today).neq('status', 'Completed')),
-    countWorkOrders(organizationId, (query) => query.eq('status', 'Completed')),
+    countWorkOrders(organizationId, (query) => {
+      const nextQuery = query.eq('status', 'Completed')
+      const since = completedSince(completedPeriod, today)
+      return since ? nextQuery.gte('completed_at', since) : nextQuery
+    }),
     listWorkOrderInboxCounts({ organizationId, tab: 'To Do', search: '', grants }),
     activityAvailable
       ? getDashboardRecentActivityPage({ organizationId, userId, grants })
@@ -145,7 +164,18 @@ export async function getDashboardOverview({ organizationId, userId, grants, tod
   }
 }
 
-export async function getDashboardMetricWorkOrders({ organizationId, metric, today, grants }) {
+export async function getDashboardMetricWorkOrders({ organizationId, metric, today, grants, completedPeriod = 'all' }) {
+  if (metric === 'completed' && completedPeriod !== 'all') {
+    const { data, error } = await supabase.from('work_orders')
+      .select('id, title, work_order_number, status, priority')
+      .eq('organization_id', organizationId)
+      .eq('status', 'Completed')
+      .gte('completed_at', completedSince(completedPeriod, today))
+      .order('completed_at', { ascending: false })
+      .limit(50)
+    if (error) throw error
+    return data ?? []
+  }
   const metricQueries = {
     'high-priority': {
       tab: 'To Do',

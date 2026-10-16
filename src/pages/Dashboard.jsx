@@ -32,7 +32,7 @@ import { Avatar } from '../components/ui/Avatar'
 import { FloatingCreateButton } from '../components/ui/FloatingCreateButton'
 import { useMobileSheetDismiss } from '../components/layout/useMobileSheetDismiss'
 import { hasPermission } from '../services/authorizationService'
-import { getDashboardMetricWorkOrders, getDashboardOverview, getDashboardRecentActivityPage, getDashboardWorkOrderGroupPage } from '../services/dashboardService'
+import { completedWorkOrderPeriods, getDashboardMetricWorkOrders, getDashboardOverview, getDashboardRecentActivityPage, getDashboardWorkOrderGroupPage } from '../services/dashboardService'
 import { getRecordPath } from '../routes'
 import { PriorityBadge } from '../components/ui/PriorityBadge'
 import { formatCompactDuration } from '../utils/workOrderTimeFormatting'
@@ -155,10 +155,20 @@ function DashboardQuickAction({ icon: Icon, label, hint, disabled = false, disab
   )
 }
 
-function MetricCard({ metric, value, onClick, unavailable = false }) {
+function MetricCard({ metric, value, onClick, onLongPress, unavailable = false }) {
   const Icon = metric.icon
+  const timerRef = useRef(null)
+  const longPressRef = useRef(false)
+  const clearTimer = () => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = null }
   return (
-    <button type="button" className={`dashboard-metric-card${unavailable ? ' is-unavailable' : ''}`} aria-haspopup="dialog" onClick={onClick}>
+    <button type="button" className={`dashboard-metric-card${unavailable ? ' is-unavailable' : ''}`} aria-haspopup="dialog" onPointerDown={(event) => {
+      if (!onLongPress || !['touch', 'pen'].includes(event.pointerType)) return
+      longPressRef.current = false
+      timerRef.current = setTimeout(() => { longPressRef.current = true; onLongPress(event) }, 550)
+    }} onPointerUp={clearTimer} onPointerCancel={clearTimer} onPointerLeave={clearTimer} onContextMenu={(event) => event.preventDefault()} onClick={(event) => {
+      if (longPressRef.current) { event.preventDefault(); longPressRef.current = false; return }
+      onClick(event)
+    }}>
       <span className={`dashboard-metric-icon is-${metric.tone}`}><Icon size={26} strokeWidth={2.4} aria-hidden="true" /></span>
       <strong className="dashboard-metric-value">{value}</strong>
       <ChevronRight className="dashboard-metric-chevron" size={23} aria-hidden="true" />
@@ -167,7 +177,18 @@ function MetricCard({ metric, value, onClick, unavailable = false }) {
   )
 }
 
-function DashboardMetricSheet({ metric, count, organizationId, grants, timeZone, canCreateWorkOrders, onClose, onNavigate, triggerRef }) {
+function CompletedPeriodSheet({ activePeriod, onSelect, onClose }) {
+  const dialogRef = useRef(null)
+  const sheetDismiss = useMobileSheetDismiss(onClose, dialogRef)
+  return createPortal(<div className={`dashboard-metric-backdrop mobile-sheet-backdrop ${sheetDismiss.backdropClassName}`} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+    <section ref={dialogRef} className={`dashboard-period-sheet mobile-edge-to-edge-sheet ${sheetDismiss.dragClassName}`} onTransitionEnd={sheetDismiss.onTransitionEnd} role="dialog" aria-modal="true" aria-labelledby="dashboard-period-title">
+      <header className="dashboard-metric-sheet-header mobile-sheet-drag-handle" {...sheetDismiss.dragHandleProps}><CalendarDays className="dashboard-metric-sheet-icon is-green" size={36} aria-hidden="true" /><h2 id="dashboard-period-title">Completed Work Orders</h2><button className="dashboard-metric-sheet-close" type="button" aria-label="Close" onClick={onClose}><X size={28} aria-hidden="true" /></button></header>
+      <div className="dashboard-period-options">{completedWorkOrderPeriods.map((period) => <button key={period.key} type="button" className={period.key === activePeriod ? 'is-selected' : ''} onClick={() => onSelect(period.key)}>{period.label}{period.key === activePeriod && <Check size={20} aria-hidden="true" />}</button>)}</div>
+    </section>
+  </div>, document.body)
+}
+
+function DashboardMetricSheet({ metric, count, organizationId, grants, timeZone, canCreateWorkOrders, onClose, onNavigate, triggerRef, completedPeriod }) {
   const [result, setResult] = useState({ status: metric.key === 'requests' ? 'unavailable' : count === 0 ? 'ready' : 'loading', workOrders: [], error: '' })
   const [retryVersion, setRetryVersion] = useState(0)
   const dialogRef = useRef(null)
@@ -182,6 +203,7 @@ function DashboardMetricSheet({ metric, count, organizationId, grants, timeZone,
     getDashboardMetricWorkOrders({
       organizationId,
       metric: metric.key,
+      completedPeriod,
       today: getCalendarDate(timeZone),
       grants,
     }).then((workOrders) => {
@@ -190,7 +212,7 @@ function DashboardMetricSheet({ metric, count, organizationId, grants, timeZone,
       if (active) setResult({ status: 'error', workOrders: [], error: error.message || 'Unable to load these Work Orders.' })
     })
     return () => { active = false }
-  }, [count, grants, metric.key, organizationId, retryVersion, timeZone])
+  }, [completedPeriod, count, grants, metric.key, organizationId, retryVersion, timeZone])
 
   useEffect(() => {
     const triggerElement = triggerRef.current
@@ -601,6 +623,8 @@ export function Dashboard({ onNavigate }) {
   const [activeMetricKey, setActiveMetricKey] = useState(null)
   const [activeWorkOrderGroup, setActiveWorkOrderGroup] = useState(null)
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false)
+  const [completedPeriod, setCompletedPeriod] = useState('all')
+  const [isCompletedPeriodSheetOpen, setIsCompletedPeriodSheetOpen] = useState(false)
   const metricTriggerRef = useRef(null)
   const groupTriggerRef = useRef(null)
   const createTriggerRef = useRef(null)
@@ -617,6 +641,10 @@ export function Dashboard({ onNavigate }) {
   const openMetricSheet = useCallback((metricKey, event) => {
     metricTriggerRef.current = event.currentTarget
     setActiveMetricKey(metricKey)
+  }, [])
+  const openCompletedPeriodSheet = useCallback((event) => {
+    event.preventDefault()
+    setIsCompletedPeriodSheetOpen(true)
   }, [])
   const openGroupSheet = useCallback((group, event) => {
     const isMobile = window.matchMedia?.('(max-width: 840px)').matches ?? window.innerWidth <= 840
@@ -635,6 +663,7 @@ export function Dashboard({ onNavigate }) {
           userId,
           grants,
           today: getCalendarDate(timeZone),
+          completedPeriod,
         })
         if (!active) return
         setOverview(result)
@@ -648,7 +677,7 @@ export function Dashboard({ onNavigate }) {
     }
     void loadOverview()
     return () => { active = false }
-  }, [grants, organizationId, refreshVersion, timeZone, userId])
+  }, [completedPeriod, grants, organizationId, refreshVersion, timeZone, userId])
 
   const metrics = overview?.metrics
   const organizationName = workspace.organization?.name || 'your workspace'
@@ -677,7 +706,7 @@ export function Dashboard({ onNavigate }) {
           <MetricCard metric={dashboardMetricDefinitions['high-priority']} value={metrics.highPriorityCount} onClick={(event) => openMetricSheet('high-priority', event)} />
           <MetricCard metric={dashboardMetricDefinitions.overdue} value={metrics.overdueCount} onClick={(event) => openMetricSheet('overdue', event)} />
           <MetricCard metric={dashboardMetricDefinitions.requests} value="N/A" unavailable onClick={(event) => openMetricSheet('requests', event)} />
-          <MetricCard metric={dashboardMetricDefinitions.completed} value={metrics.completedCount} onClick={(event) => openMetricSheet('completed', event)} />
+          <MetricCard metric={{ ...dashboardMetricDefinitions.completed, label: completedPeriod === 'all' ? 'Completed Work Orders' : `Completed Work Orders · ${completedWorkOrderPeriods.find((period) => period.key === completedPeriod)?.label}` }} value={metrics.completedCount} onClick={(event) => openMetricSheet('completed', event)} onLongPress={openCompletedPeriodSheet} />
         </div>}
         {loadState === 'ready' && !overview?.canViewWorkOrders && <p className="dashboard-section-state">Your role does not include Work Order access.</p>}
       </section>
@@ -722,11 +751,13 @@ export function Dashboard({ onNavigate }) {
       organizationId={organizationId}
       grants={grants}
       timeZone={timeZone}
+      completedPeriod={completedPeriod}
       canCreateWorkOrders={canCreateWorkOrders}
       onClose={closeMetricSheet}
       onNavigate={onNavigate}
       triggerRef={metricTriggerRef}
     />}
+    {isCompletedPeriodSheetOpen && <CompletedPeriodSheet activePeriod={completedPeriod} onClose={() => setIsCompletedPeriodSheetOpen(false)} onSelect={(period) => { setCompletedPeriod(period); setIsCompletedPeriodSheetOpen(false) }} />}
     {activeWorkOrderGroup && <DashboardWorkOrderGroupSheet
       key={activeWorkOrderGroup.id}
       group={activeWorkOrderGroup}

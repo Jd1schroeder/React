@@ -269,6 +269,41 @@ button.dashboard-metric-card:hover {
     both;
 }
 
+.dashboard-period-sheet {
+  box-sizing: border-box;
+  width: min(100%, 520px);
+  padding-bottom: 18px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--elevation-3);
+}
+
+.dashboard-period-options {
+  display: grid;
+  gap: 8px;
+  padding: 8px 20px 12px;
+}
+
+.dashboard-period-options button {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+  text-align: left;
+}
+
+.dashboard-period-options button.is-selected {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: var(--surface-muted);
+}
+
 .dashboard-create-sheet {
   box-sizing: border-box;
   display: flex;

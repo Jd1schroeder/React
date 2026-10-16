@@ -4,7 +4,7 @@ import { WORK_ORDER_ATTACHMENT_MAX_BYTES, getSafeAttachmentExtension } from '../
 import { normalizeWorkOrderFilters } from '../utils/workOrderFilters'
 import { getWorkOrderScheduleRequirementError } from '../utils/workOrderSettings'
 
-const workOrderFields = 'id, work_order_number, organization_id, title, description, status, priority, procedure_progress, due_at, due_date, due_time, start_date, estimated_duration_minutes, work_type, requester_id, assigned_to, team_id, created_by, created_at, updated_at, updated_by, custom_field_values, recurrence_rule, recurrence_series_id, recurrence_sequence, deleted_at, deleted_by'
+const workOrderFields = 'id, work_order_number, organization_id, title, description, status, priority, procedure_progress, due_at, due_date, due_time, start_date, estimated_duration_minutes, work_type, requester_id, assigned_to, team_id, created_by, created_at, updated_at, updated_by, completed_at, custom_field_values, recurrence_rule, recurrence_series_id, recurrence_sequence, deleted_at, deleted_by'
 const attachmentBucket = 'work-order-attachments'
 const unreadWorkOrderCountRequests = new Map()
 
