@@ -28,27 +28,33 @@ export async function getUserOrganizations() {
   return (data ?? []).map(({ organizations, ...membership }) => ({ ...organizations, ...membership }))
 }
 
-export async function listOrganizationMembers(organizationId, { includePendingInvitations = false } = {}) {
+export async function listOrganizationMembers(organizationId, { includePendingInvitations = false, userIds } = {}) {
+  if (Array.isArray(userIds) && !userIds.length) return []
+  const memberQuery = supabase
+    .from('organization_members')
+    .select('organization_id, user_id, role, role_id, status, invited_by, invited_at, joined_at, created_at, updated_at, organization_roles(id, name, system_key, is_system)')
+    .eq('organization_id', organizationId)
+    .order('created_at', { ascending: true })
+  if (Array.isArray(userIds)) memberQuery.in('user_id', userIds)
   const [{ data: members, error: membersError }, invitations] = await Promise.all([
-    supabase
-      .from('organization_members')
-      .select('organization_id, user_id, role, role_id, status, invited_by, invited_at, joined_at, created_at, updated_at, organization_roles(id, name, system_key, is_system)')
-      .eq('organization_id', organizationId)
-      .order('created_at', { ascending: true }),
+    memberQuery,
     includePendingInvitations ? listOrganizationInvitations(organizationId) : Promise.resolve([]),
   ])
   if (membersError) throw membersError
 
   const memberRows = members ?? []
-  let profiles = []
-  if (memberRows.length) {
-    const { data, error: profilesError } = await supabase
+  const memberUserIds = memberRows.map((member) => member.user_id)
+  const profilesPromise = memberRows.length
+    ? supabase
       .from('profiles')
       .select('id, user_number, first_name, last_name, phone, avatar_url')
-      .in('id', memberRows.map((member) => member.user_id))
-    if (profilesError) throw profilesError
-    profiles = data ?? []
-  }
+      .in('id', memberUserIds)
+    : Promise.resolve({ data: [], error: null })
+  const lastVisitsPromise = memberRows.length
+    ? supabase.rpc('get_organization_member_last_visits', { target_organization_id: organizationId })
+    : Promise.resolve({ data: [], error: null })
+  const [{ data: profiles, error: profilesError }, { data: lastVisits, error: lastVisitsError }] = await Promise.all([profilesPromise, lastVisitsPromise])
+  if (profilesError) throw profilesError
 
   const profilesById = new Map((profiles ?? []).map((profile) => [profile.id, profile]))
   const invitationsByUserId = new Map((invitations ?? [])
@@ -66,9 +72,6 @@ export async function listOrganizationMembers(organizationId, { includePendingIn
       if (avatar.path && avatar.signedUrl) signedAvatarUrlsByPath.set(avatar.path, avatar.signedUrl)
     }
   }
-  const { data: lastVisits, error: lastVisitsError } = memberRows.length
-    ? await supabase.rpc('get_organization_member_last_visits', { target_organization_id: organizationId })
-    : { data: [], error: null }
   const lastVisitsByUserId = new Map((lastVisitsError ? [] : lastVisits ?? []).map((visit) => [visit.user_id, visit.last_sign_in_at]))
   const hydratedMembers = memberRows.map((member) => ({
     ...member,
@@ -183,6 +186,59 @@ export async function listOrganizationTeams(organizationId) {
     memberCount: (membersByTeamId.get(team.id) ?? []).length,
     administrator: profilesById.get(team.created_by) ?? null,
   }))
+}
+
+export async function getOrganizationTeamDetails(organizationId, teamId) {
+  const [{ data: team, error: teamError }, { data: memberships, error: membershipsError }] = await Promise.all([
+    supabase
+      .from('organization_teams')
+      .select('id, organization_id, name, description, color, is_escalation_team, escalation_events, created_by, created_at, updated_at')
+      .eq('organization_id', organizationId)
+      .eq('id', teamId)
+      .maybeSingle(),
+    supabase
+      .from('organization_team_members')
+      .select('team_id, user_id, role')
+      .eq('team_id', teamId),
+  ])
+  if (teamError) throw teamError
+  if (membershipsError) throw membershipsError
+  if (!team) return null
+
+  const memberIds = (memberships ?? []).map((membership) => membership.user_id)
+  const organizationMembers = await listOrganizationMembers(organizationId, { userIds: memberIds })
+  return {
+    ...team,
+    memberIds,
+    memberRoles: Object.fromEntries((memberships ?? []).map((membership) => [membership.user_id, membership.role ?? 'member'])),
+    memberCount: memberIds.length,
+    organizationMembers,
+  }
+}
+
+export async function getOrganizationTeamShell(organizationId, teamId) {
+  const [{ data: team, error: teamError }, { data: memberships, error: membershipsError }] = await Promise.all([
+    supabase
+      .from('organization_teams')
+      .select('id, organization_id, name, description, color, is_escalation_team, escalation_events, created_by, created_at, updated_at')
+      .eq('organization_id', organizationId)
+      .eq('id', teamId)
+      .maybeSingle(),
+    supabase
+      .from('organization_team_members')
+      .select('team_id, user_id, role')
+      .eq('team_id', teamId),
+  ])
+  if (teamError) throw teamError
+  if (membershipsError) throw membershipsError
+  if (!team) return null
+  const memberIds = (memberships ?? []).map((membership) => membership.user_id)
+  return {
+    ...team,
+    memberIds,
+    memberRoles: Object.fromEntries((memberships ?? []).map((membership) => [membership.user_id, membership.role ?? 'member'])),
+    memberCount: memberIds.length,
+  }
 }
 
 export async function createOrganizationTeam({ organizationId, name, description = '', color = '#1887fc', isEscalationTeam = false, escalationEvents = [] }) {

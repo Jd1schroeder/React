@@ -52,6 +52,16 @@
 .team-remove-member-dialog footer > button:first-child { min-height: 38px; padding: 0 var(--spacing-4); border: 0; color: var(--blue); background: transparent; font: inherit; font-weight: var(--font-semibold); cursor: pointer; }
 .team-remove-member-dialog footer .team-remove-member-confirm { min-height: 38px; padding: 0 var(--spacing-4); color: var(--white); background: var(--danger); }
 .team-remove-member-dialog footer .team-remove-member-confirm:hover { background: var(--danger-hover, var(--danger)); }
+.team-delete-confirmation-backdrop { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; box-sizing: border-box; padding: var(--spacing-4); background: rgb(0 0 0 / 35%); }
+.team-delete-confirmation-modal { width: min(100%, 464px); overflow: hidden; border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-lg); }
+.team-delete-confirmation-body { display: grid; gap: var(--spacing-3); padding: var(--spacing-5); }
+.team-delete-confirmation-body h3 { margin: 0; color: var(--ink); font-size: var(--font-size-xl-compact); }
+.team-delete-confirmation-body p { margin: 0; color: var(--ink); font-size: var(--font-size-body-sm); line-height: var(--line-height-loose); }
+.team-delete-confirmation-actions { display: flex; justify-content: flex-end; gap: var(--spacing-3); padding: var(--spacing-4) var(--spacing-5); border-top: var(--border-width-normal) solid var(--line); }
+.team-delete-confirmation-actions button { min-height: 40px; padding: 0 var(--spacing-4); border: 0; border-radius: var(--radius-sm); color: var(--blue); background: transparent; font: inherit; font-weight: var(--font-semibold); cursor: pointer; }
+.team-delete-confirmation-actions button.is-danger { color: var(--white); background: var(--danger); }
+.team-delete-confirmation-actions button.is-danger:hover, .team-delete-confirmation-actions button.is-danger:focus-visible { background: var(--danger-strong); }
+.team-delete-confirmation-actions button:disabled { opacity: .55; cursor: not-allowed; }
 .team-details-related { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-9); margin-top: var(--spacing-9); }
 .team-details-related section { min-width: 0; }
 .team-details-related p { display: flex; align-items: center; gap: var(--spacing-3); min-height: 48px; margin: var(--spacing-3) 0 0; padding: 0 var(--spacing-2); border-bottom: var(--border-width-normal) solid var(--line); color: var(--muted); }

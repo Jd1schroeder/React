@@ -1,16 +1,16 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TeamDetailsPage } from '../src/pages/TeamDetailsPage'
-import { addOrganizationTeamMembers, listOrganizationMembers, listOrganizationTeams, updateOrganizationTeamMemberRole } from '../src/services/organizationService'
+import { addOrganizationTeamMembers, deleteOrganizationTeam, getOrganizationTeamShell, listOrganizationMembers, updateOrganizationTeamMemberRole } from '../src/services/organizationService'
 
 vi.mock('../src/components/layout/useWorkspace', () => ({ useWorkspace: () => ({ organization: { id: 'organization-a' }, preferences: {} }) }))
-vi.mock('../src/services/organizationService', () => ({ addOrganizationTeamMembers: vi.fn(), listOrganizationMembers: vi.fn(), listOrganizationTeams: vi.fn(), removeOrganizationTeamMember: vi.fn(), updateOrganizationTeamMemberRole: vi.fn() }))
+vi.mock('../src/services/organizationService', () => ({ addOrganizationTeamMembers: vi.fn(), deleteOrganizationTeam: vi.fn(), getOrganizationTeamShell: vi.fn(), listOrganizationMembers: vi.fn(), removeOrganizationTeamMember: vi.fn(), updateOrganizationTeamMemberRole: vi.fn() }))
 
 describe('TeamDetailsPage', () => {
   beforeEach(() => {
     cleanup()
     vi.clearAllMocks()
-    listOrganizationTeams.mockResolvedValue([{ id: 'team-a', name: 'Engineering', description: 'Keeps equipment running.', color: '#3bc4bc', created_by: 'user-a', memberIds: ['user-a', 'user-b', 'user-c', 'user-d'] }])
+    getOrganizationTeamShell.mockResolvedValue({ id: 'team-a', name: 'Engineering', description: 'Keeps equipment running.', color: '#3bc4bc', created_by: 'user-a', memberIds: ['user-a', 'user-b', 'user-c', 'user-d'], memberRoles: {} })
     listOrganizationMembers.mockResolvedValue([
       { user_id: 'user-a', profile: { first_name: 'Joshua', last_name: 'Schroeder' }, last_sign_in_at: null },
       { user_id: 'user-b', profile: { first_name: 'Wyatt', last_name: 'Atchison' }, last_sign_in_at: null },
@@ -19,6 +19,7 @@ describe('TeamDetailsPage', () => {
     ])
     addOrganizationTeamMembers.mockResolvedValue([{ team_id: 'team-a', user_id: 'user-c' }])
     updateOrganizationTeamMemberRole.mockResolvedValue({ team_id: 'team-a', user_id: 'user-a', role: 'member' })
+    deleteOrganizationTeam.mockResolvedValue(undefined)
   })
 
   it('renders team identity and members from persisted team membership', async () => {
@@ -34,7 +35,12 @@ describe('TeamDetailsPage', () => {
 
   it('opens the add members route modal and adds selected organization members', async () => {
     const onNavigate = vi.fn()
-    listOrganizationTeams.mockResolvedValue([{ id: 'team-a', name: 'Engineering', description: 'Keeps equipment running.', color: '#3bc4bc', created_by: 'user-a', memberIds: ['user-a', 'user-b'] }])
+    getOrganizationTeamShell.mockResolvedValue({ id: 'team-a', name: 'Engineering', description: 'Keeps equipment running.', color: '#3bc4bc', created_by: 'user-a', memberIds: ['user-a', 'user-b'], memberRoles: {} })
+    listOrganizationMembers.mockResolvedValue([
+      { user_id: 'user-a', profile: { first_name: 'Joshua', last_name: 'Schroeder' }, last_sign_in_at: null },
+      { user_id: 'user-b', profile: { first_name: 'Wyatt', last_name: 'Atchison' }, last_sign_in_at: null },
+      { user_id: 'user-c', profile: { first_name: 'Steve', last_name: 'Huddleston' }, last_sign_in_at: null },
+    ])
     render(<TeamDetailsPage recordId="team-a" onNavigate={onNavigate} isTeamAddMembers />)
 
     expect(await screen.findByRole('heading', { name: 'Add Members to the Team' })).toBeInTheDocument()
@@ -76,5 +82,19 @@ describe('TeamDetailsPage', () => {
 
     await waitFor(() => expect(updateOrganizationTeamMemberRole).toHaveBeenCalledWith({ organizationId: 'organization-a', teamId: 'team-a', userId: 'user-a', role: 'member' }))
     expect(roleSelect).toHaveTextContent('Member')
+  })
+
+  it('uses the app confirmation dialog before deleting a team', async () => {
+    render(<TeamDetailsPage recordId="team-a" onNavigate={vi.fn()} />)
+
+    await screen.findByRole('heading', { name: 'Engineering' })
+    fireEvent.click(screen.getByRole('button', { name: 'Team actions' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }))
+
+    expect(screen.getByRole('alertdialog')).toHaveTextContent('Are you sure you want to delete “Engineering”?')
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    expect(deleteOrganizationTeam).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
 })
