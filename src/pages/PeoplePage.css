@@ -196,6 +196,8 @@
   font-weight: var(--font-semibold);
 }
 .teams-table-card { overflow: visible; }
+.teams-page .data-table { min-width: 620px; }
+.teams-page .data-table-scroll { overflow: visible; }
 .teams-page .panel-view-header-actions > .button,
 .teams-page .teams-empty-card > .button {
   box-sizing: border-box;
@@ -204,13 +206,8 @@
   min-height: 38px;
   padding: 0 15px;
 }
-.teams-section-heading { padding: var(--spacing-5) 0 var(--spacing-4) var(--spacing-5); }
+.teams-section-heading { padding: var(--spacing-5) 0 var(--spacing-4); }
 .teams-section-heading h2 { margin: 0; font-size: var(--font-size-md); font-weight: var(--font-semibold); }
-.teams-table { width: 100%; border-collapse: collapse; }
-.teams-table th, .teams-table td { padding: var(--spacing-5); border-top: var(--border-width-normal) solid var(--line); text-align: left; }
-.teams-table th:last-child, .teams-table td:last-child { width: 52px; padding-right: var(--spacing-3); padding-left: var(--spacing-3); }
-.teams-table th { color: var(--muted); font-size: var(--font-size-sm); font-weight: var(--font-medium); }
-.teams-table td { color: var(--ink); }
 .team-name-cell { display: inline-flex; align-items: center; gap: var(--spacing-3); }
 .team-name-link { padding: 0; border: 0; color: inherit; background: transparent; font: inherit; text-align: left; cursor: pointer; }
 .team-name-link:hover, .team-name-link:focus-visible { color: var(--blue); }
@@ -236,6 +233,6 @@
   .users-page .data-table-scroll {
     overflow-x: auto;
   }
-  .teams-table { min-width: 620px; }
+  .teams-page .data-table-scroll { overflow-x: auto; }
   .teams-table-card { overflow-x: auto; }
 }

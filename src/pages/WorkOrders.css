@@ -205,14 +205,6 @@
   color: var(--muted);
   font-size: var(--font-size-body-sm);
 }
-.work-orders-loading-spinner {
-  width: 28px;
-  height: 28px;
-  border: 3px solid var(--border-info);
-  border-top-color: var(--blue);
-  border-radius: var(--radius-circle);
-  animation: workspace-spinner 760ms linear infinite;
-}
 .work-orders-mobile-search-action,
 .work-orders-mobile-filter-badge {
   display: none;

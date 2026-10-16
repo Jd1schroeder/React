@@ -35,7 +35,9 @@ describe('TeamsPage', () => {
     expect(detailsAction).toBeEnabled()
     fireEvent.click(detailsAction)
     expect(onNavigate).toHaveBeenCalledWith('/teams/team-a')
-    expect(screen.getByRole('menuitem', { name: 'Invite Members' })).toBeDisabled()
+    expect(screen.getByRole('menuitem', { name: 'Invite Members' })).toBeEnabled()
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Invite Members' }))
+    expect(onNavigate).toHaveBeenCalledWith('/teams/team-a/addmembers')
     expect(screen.getByRole('menuitem', { name: 'Send Message' })).toBeDisabled()
     expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeDisabled()
   })
@@ -50,5 +52,18 @@ describe('TeamsPage', () => {
     expect(screen.getByText('Maintenance')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /create team/i }))
     expect(onNavigate).toHaveBeenCalledWith('/teams/create')
+  })
+
+  it('uses sortable shared table headers for team columns', async () => {
+    render(<TeamsPage onNavigate={vi.fn()} />)
+
+    await screen.findByText('Engineering')
+    const nameHeader = screen.getByRole('button', { name: 'Name' })
+    expect(nameHeader).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Administrator' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Members' })).toBeInTheDocument()
+
+    fireEvent.click(nameHeader)
+    expect(nameHeader.querySelector('.lucide-arrow-down')).toBeInTheDocument()
   })
 })

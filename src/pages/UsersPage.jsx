@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { UserRowActions } from '../components/people/UserRowActions'
 import { UserLastVisitCell, UserNameCell } from '../components/people/UserTableCells'
 import { DataTable } from '../components/ui/DataTable'
+import { LoadingState } from '../components/ui/LoadingState'
 import { PanelLayout } from '../components/layout/PanelLayout'
 import { getFeatureLabel } from '../utils/featureLabels'
 import { getCurrentWorkspace } from '../services/workspaceService'
@@ -70,6 +71,7 @@ export function UsersPage({ onNavigate }) {
   const teamLabel = getFeatureLabel(featureLabels, 'team')
 
   return <PanelLayout title={`${teamLabel} / Users`} searchValue={search} onSearch={setSearch} searchPlaceholder="Search Users" actionLabel="Invite users" onAction={() => onNavigate('Settings / Invite Users')} showViewSelector={false} className="people-page users-page" bodyClassName="people-body" subnavigation={<PeopleTabs active="users" onNavigate={onNavigate} />}>
+    {isLoading && <LoadingState message="Loading users..." />}
     {!isLoading && <section className="people-table-card" aria-label="Users">
       {error && <p className="people-state people-error" role="alert">{error}</p>}
       {!error && <DataTable ariaLabel="Users" columns={userColumns} rows={filteredMembers} rowKey={(member) => `${member.organization_id}-${member.user_id ?? member.invitation_id}`} initialSortKey="name" emptyState="No users found." />}

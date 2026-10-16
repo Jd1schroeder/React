@@ -46,6 +46,9 @@ describe('TeamDetailsPage', () => {
     expect(await screen.findByRole('heading', { name: 'Add Members to the Team' })).toBeInTheDocument()
     fireEvent.focus(screen.getByRole('combobox', { name: 'Add Members to the Team' }))
     fireEvent.click(await screen.findByRole('option', { name: 'Steve Huddleston' }))
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
+    fireEvent.pointerDown(document.body)
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
     fireEvent.click(screen.getAllByRole('button', { name: 'Add Members' }).at(-1))
 
     await waitFor(() => expect(addOrganizationTeamMembers).toHaveBeenCalledWith({ organizationId: 'organization-a', teamId: 'team-a', userIds: ['user-c'] }))
