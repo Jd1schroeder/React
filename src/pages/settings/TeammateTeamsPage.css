@@ -1,4 +1,21 @@
 .teammate-teams-card { min-height: 520px; }
+.teammate-teams-heading { margin: var(--spacing-6) 0 var(--spacing-3); color: var(--ink); font-size: var(--font-size-body-sm); font-weight: var(--font-semibold); }
+.teammate-teams-table { overflow: visible; border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); }
+.teammate-teams-table .data-table-scroll { overflow: visible; }
+.teammate-team-name { display: inline-flex; align-items: center; gap: var(--spacing-3); padding: 0; border: 0; color: var(--ink); background: transparent; font: inherit; cursor: pointer; }
+.teammate-team-name:hover, .teammate-team-name:focus-visible { color: var(--blue); text-decoration: underline; }
+.teammate-team-color { display: grid; place-items: center; width: 34px; height: 34px; flex: none; border-radius: var(--radius-circle); color: var(--white); font-size: var(--font-size-md); }
+.teammate-team-action { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
+.teammate-team-action:hover, .teammate-team-action:focus-visible { color: var(--ink); }
+.teammate-team-actions { position: relative; display: flex; justify-content: flex-end; }
+.teammate-team-menu { position: absolute; top: calc(100% + var(--spacing-2)); right: 0; z-index: 10; display: grid; width: 200px; padding: var(--spacing-2) 0; border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); background: var(--surface); box-shadow: var(--elevation-menu); }
+.teammate-team-menu button { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 38px; padding: 0 var(--spacing-3); border: 0; color: var(--ink); background: transparent; font: inherit; font-size: var(--font-size-body-sm); text-align: left; cursor: pointer; }
+.teammate-team-menu button:hover, .teammate-team-menu button:focus-visible { background: var(--surface-control-hover); }
+.teammate-team-menu button:disabled { color: var(--text-disabled-control); cursor: not-allowed; }
+.teammate-team-menu button:disabled:hover { background: transparent; }
+.teammate-team-menu button.is-danger { color: var(--danger); }
+.teammate-state { margin: 0; padding: var(--spacing-9); color: var(--muted); text-align: center; }
+.teammate-error { color: var(--danger); }
 .teammate-section-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--spacing-6); }
 .teammate-section-actions { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: var(--spacing-3); }
 .teammate-search { position: relative; display: flex; align-items: center; gap: var(--spacing-3); width: 300px; min-height: 40px; padding: 0 var(--spacing-3); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-md-compact); color: var(--text-input-placeholder); background: var(--surface); }
@@ -14,4 +31,4 @@
 .teammate-empty-state h3 { margin: 0; color: var(--ink); font-size: var(--font-size-lg); }
 .teammate-empty-state p { max-width: 380px; margin: 0; }
 .teammate-secondary-action { border-color: var(--line); color: var(--ink); background: var(--surface-subtle); }
-@media (--wb-viewport-max-800) { .teammate-section-header { flex-direction: column; }.teammate-section-actions, .teammate-search { width: 100%; }.teammate-section-actions > button { width: 100%; } }
+@media (--wb-viewport-max-800) { .teammate-section-header { flex-direction: column; }.teammate-section-actions, .teammate-search { width: 100%; }.teammate-section-actions > button { width: 100%; }.teammate-teams-table { overflow-x: auto; }.teammate-teams-table .data-table-scroll { overflow-x: auto; } }

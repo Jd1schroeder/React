@@ -89,6 +89,16 @@ describe('TeamDetailsPage', () => {
     expect(screen.queryByRole('menu', { name: 'Joshua Schroeder actions' })).not.toBeInTheDocument()
   })
 
+  it('returns to the originating list when cancelling the add-members route', async () => {
+    const onNavigateBack = vi.fn()
+    render(<TeamDetailsPage recordId="team-a" onNavigate={vi.fn()} onNavigateBack={onNavigateBack} isTeamAddMembers />)
+
+    expect(await screen.findByRole('heading', { name: 'Add Members to the Team' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(onNavigateBack).toHaveBeenCalledTimes(1)
+  })
+
   it('allows the role to be changed from the member row', async () => {
     render(<TeamDetailsPage recordId="team-a" onNavigate={vi.fn()} />)
 
