@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
+  Check,
+  ChevronDown,
   CirclePlus,
   Info,
   List,
@@ -8,6 +10,7 @@ import {
   Paperclip,
   X,
 } from "lucide-react";
+import { Avatar } from "../../components/ui/Avatar";
 import { Button } from "../../components/ui/Button";
 import { DatePicker } from "../../components/ui/DatePicker";
 import { ImageDropzone } from "../../components/ui/ImageDropzone";
@@ -173,6 +176,91 @@ function SearchSelect({ label, placeholder, value, onChange, options = [], disab
   );
 }
 
+function AssignmentSearchSelect({ label, placeholder, value = [], onChange, options = [], onInviteTeammates }) {
+  const rootRef = useRef(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const selectedValues = Array.isArray(value) ? value : [];
+  const normalizedSearch = search.trim().toLowerCase();
+  const filteredOptions = options.filter((option) => {
+    if (!normalizedSearch) return true;
+    return `${option.label ?? ""} ${option.email ?? ""} ${option.phone ?? ""} ${option.searchText ?? ""}`.toLowerCase().includes(normalizedSearch);
+  });
+  const teams = filteredOptions.filter((option) => option.value?.startsWith("team:"));
+  const users = filteredOptions.filter((option) => option.value?.startsWith("user:"));
+  const selectedOptions = selectedValues.map((selectedValue) => options.find((option) => option.value === selectedValue)).filter(Boolean);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const closeOnOutsidePointer = (event) => {
+      if (!rootRef.current?.contains(event.target)) setIsOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePointer);
+  }, [isOpen]);
+
+  const toggleOption = (option) => {
+    const nextValue = selectedValues.includes(option.value)
+      ? selectedValues.filter((selectedValue) => selectedValue !== option.value)
+      : [...selectedValues, option.value];
+    onChange(nextValue, option);
+  };
+
+  const renderOption = (option) => {
+    const isSelected = selectedValues.includes(option.value);
+    const isTeam = option.value?.startsWith("team:");
+    return <button
+      key={option.value}
+      type="button"
+      className={`new-work-order-assignment-option${isSelected ? " is-selected" : ""}`}
+      role="option"
+      aria-selected={isSelected}
+      onClick={() => toggleOption(option)}
+    >
+      {isTeam
+        ? <span className="new-work-order-assignment-team-avatar" aria-hidden="true">{(option.label ?? "T").slice(0, 2).toUpperCase()}</span>
+        : <Avatar className="new-work-order-assignment-user-avatar" src={option.avatar?.src} firstName={option.avatar?.firstName} lastName={option.avatar?.lastName} name={option.avatar?.name ?? option.label} aria-hidden="true" />}
+      <span className="new-work-order-assignment-option-label">{option.label}</span>
+      <span className="new-work-order-assignment-checkbox" aria-hidden="true">{isSelected && <Check size={13} strokeWidth={2.5} />}</span>
+    </button>;
+  };
+
+  return <FormField label={label}>
+    <div ref={rootRef} className={`new-work-order-assignment-select${isOpen ? " is-open" : ""}`}>
+      <div className="new-work-order-assignment-control" onClick={() => setIsOpen(true)}>
+        <div className="new-work-order-assignment-value">
+          {selectedOptions.map((option) => <span className="new-work-order-assignment-chip" key={option.value}>
+            {option.value?.startsWith("team:")
+              ? <span className="new-work-order-assignment-chip-avatar new-work-order-assignment-team-avatar" aria-hidden="true">{(option.label ?? "T").slice(0, 2).toUpperCase()}</span>
+              : <Avatar className="new-work-order-assignment-chip-avatar new-work-order-assignment-user-avatar" src={option.avatar?.src} firstName={option.avatar?.firstName} lastName={option.avatar?.lastName} name={option.avatar?.name ?? option.label} aria-hidden="true" />}
+            <span className="new-work-order-assignment-chip-label">{option.label}</span>
+            <button type="button" className="new-work-order-assignment-chip-remove" aria-label={`Remove ${option.label}`} onClick={(event) => { event.stopPropagation(); toggleOption(option); }}><X size={14} aria-hidden="true" /></button>
+          </span>)}
+          <input
+            type="search"
+            aria-label="Search assignees"
+            aria-expanded={isOpen}
+            aria-controls="new-work-order-assignment-menu"
+            placeholder={selectedOptions.length ? "" : placeholder}
+            value={search}
+            onFocus={() => setIsOpen(true)}
+            onChange={(event) => { setSearch(event.target.value); setIsOpen(true); }}
+            onKeyDown={(event) => { if (event.key === "Escape") { setSearch(""); setIsOpen(false); } }}
+          />
+        </div>
+        {selectedOptions.length > 0 && <button type="button" className="new-work-order-assignment-clear" aria-label="Clear assignees" onClick={(event) => { event.stopPropagation(); onChange([]); setSearch(""); }}><X size={18} aria-hidden="true" /></button>}
+        <ChevronDown className="new-work-order-assignment-chevron" size={18} aria-hidden="true" />
+      </div>
+      {isOpen && <div id="new-work-order-assignment-menu" className="new-work-order-assignment-menu" role="listbox" aria-label="Assign to" aria-multiselectable="true">
+        <button type="button" className="new-work-order-assignment-invite" onClick={() => onInviteTeammates?.()}><CirclePlus size={17} aria-hidden="true" /> Invite Teammates</button>
+        {teams.length > 0 && <section className="new-work-order-assignment-group" aria-labelledby="new-work-order-assignment-teams"><h4 id="new-work-order-assignment-teams">Teams</h4>{teams.map(renderOption)}</section>}
+        {users.length > 0 && <section className="new-work-order-assignment-group" aria-labelledby="new-work-order-assignment-users"><h4 id="new-work-order-assignment-users">Users</h4>{users.map(renderOption)}</section>}
+        {!teams.length && !users.length && <p className="new-work-order-assignment-empty">No matching teams or users.</p>}
+      </div>}
+    </div>
+  </FormField>;
+}
+
 function DateField({ label, value, onChange, dateFormat, timeValue = "", onTimeChange }) {
   const [showTime, setShowTime] = useState(Boolean(timeValue));
 
@@ -219,6 +307,7 @@ export function NewWorkOrderForm({
   mode = "create",
   initialWorkOrder = null,
   workOrderLabel = "Work Order",
+  onInviteTeammates,
 }) {
   const existingAssignments = initialWorkOrder?.work_order_assignments ?? [];
   const existingAttachments = initialWorkOrder?.work_order_attachments ?? [];
@@ -451,7 +540,9 @@ export function NewWorkOrderForm({
               <button type="button" className="new-work-order-secondary" disabled><LockKeyhole size={15} aria-hidden="true" /> Add Procedure</button>
             </section>
           </FormRow>
-          <FormRow><SearchSelect label="Assign to" placeholder={canAssign ? "Type name" : "Assignment unavailable"} value={form.assignee} onChange={(value) => update("assignee", value)} options={formAssigneeOptions} multiple disabled={!canAssign} /></FormRow>
+          <FormRow>{canAssign
+            ? <AssignmentSearchSelect label="Assign to (Required)" placeholder="Type name, email or phone number" value={form.assignee} onChange={(value) => update("assignee", value)} options={formAssigneeOptions} onInviteTeammates={onInviteTeammates} />
+            : <SearchSelect label="Assign to" placeholder="Assignment unavailable" value={form.assignee} onChange={(value) => update("assignee", value)} options={formAssigneeOptions} multiple disabled />}</FormRow>
           <FormRow>
             <fieldset className="new-work-order-fieldset">
               <legend>Estimated Time</legend>

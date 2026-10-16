@@ -158,6 +158,46 @@ describe('NewWorkOrderForm mobile controls', () => {
   })
 })
 
+describe('NewWorkOrderForm assignment control', () => {
+  it('searches grouped teams and users and preserves multi-select assignments', () => {
+    const onCreate = vi.fn()
+    render(<NewWorkOrderForm
+      assigneeOptions={[
+        { value: 'team:team-1', label: 'Engineering' },
+        { value: 'team:team-2', label: 'Maintenance' },
+        { value: 'user:user-1', label: 'Charlie Shindeldecker', avatar: { name: 'Charlie Shindeldecker' } },
+      ]}
+      onCreate={onCreate}
+      onCancel={vi.fn()}
+    />)
+
+    const search = screen.getByRole('searchbox', { name: 'Search assignees' })
+    fireEvent.focus(search)
+    expect(screen.getByText('Invite Teammates')).toBeInTheDocument()
+    expect(screen.getByText('Teams')).toBeInTheDocument()
+    expect(screen.getByText('Users')).toBeInTheDocument()
+
+    fireEvent.change(search, { target: { value: 'Engineering' } })
+    expect(screen.getByRole('option', { name: /Engineering/ })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: /Maintenance/ })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('option', { name: /Engineering/ }))
+    fireEvent.change(search, { target: { value: '' } })
+    fireEvent.click(screen.getByRole('option', { name: /Charlie Shindeldecker/ }))
+    expect(document.querySelector('.new-work-order-assignment-chip-label')).toHaveTextContent('Engineering')
+    expect(screen.getByRole('button', { name: 'Remove Engineering' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Clear assignees' }))
+    expect(document.querySelector('.new-work-order-assignment-chip-label')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('option', { name: /Engineering/ }))
+    fireEvent.click(screen.getByRole('option', { name: /Charlie Shindeldecker/ }))
+
+    fireEvent.change(screen.getByPlaceholderText('What needs to be done? (Required)'), { target: { value: 'Inspect pump' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({
+      assignments: [{ teamId: 'team-1' }, { userId: 'user-1' }],
+    }))
+  })
+})
+
 describe('NewWorkOrderForm schedule requirements', () => {
   it('shows cycle-specific recurrence scheduling options', () => {
     render(<NewWorkOrderForm onCreate={vi.fn()} onCancel={vi.fn()} />)
