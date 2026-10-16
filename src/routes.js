@@ -19,6 +19,7 @@ export const pagePaths = {
   'Settings / Manage Teammates': '/settings/teammates/users',
   'Settings / Teammates / Teams': '/settings/teammates/teams',
   'Settings / Teammates / Roles': '/settings/teammates/roles',
+  'Settings / Teammates / Role Details': '/settings/teammates/roles/:roleId',
   'Settings / Customizations': '/settings/customizations',
   'Settings / Integrations': '/settings/integrations',
   'Settings / Profile Preferences': '/settings/profile-preferences',

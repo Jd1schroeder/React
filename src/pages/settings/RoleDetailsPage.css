@@ -1,0 +1,43 @@
+.role-details-card { min-height: 520px; }
+.role-details-back-row { display: flex; align-items: center; gap: var(--spacing-3); min-height: 48px; border-bottom: var(--border-width-normal) solid var(--line); color: var(--ink); font-weight: var(--font-semibold); }
+.role-details-back { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
+.role-details-back:hover { color: var(--blue); }
+.role-details-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--spacing-5); padding: var(--spacing-6) 0; border-bottom: var(--border-width-normal) solid var(--line); }
+.role-details-heading h2 { margin: var(--spacing-1) 0 0; color: var(--ink); font-size: var(--font-size-xl); }
+.role-details-heading p:last-child { max-width: 720px; margin: var(--spacing-2) 0 0; color: var(--muted); }
+.role-details-user-count { flex: none; color: var(--muted); font-size: var(--font-size-body-sm); }
+.role-details-heading-actions { display: flex; align-items: center; gap: var(--spacing-4); }
+.role-details-edit { display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-2); min-height: 36px; padding: 0 var(--spacing-4); border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); color: var(--ink); background: var(--surface); font: inherit; font-size: var(--font-size-body-sm); cursor: pointer; }
+.role-details-edit:hover, .role-details-edit:focus-visible { border-color: var(--blue); color: var(--blue); }
+.role-details-section { margin-top: var(--spacing-7); }
+.role-details-section h3 { margin: 0 0 var(--spacing-3); color: var(--ink); font-size: var(--font-size-lg); }
+.role-permission-groups { display: grid; gap: var(--spacing-5); }
+.role-permission-group { overflow: hidden; border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); }
+.role-permission-group-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; padding: 0 var(--spacing-4); border: 0; color: var(--ink); background: var(--surface-subtle); font: inherit; font-size: var(--font-size-body-sm); font-weight: var(--font-semibold); text-align: left; cursor: pointer; }
+.role-permission-group.is-expanded .role-permission-group-toggle { border-bottom: var(--border-width-normal) solid var(--line); }
+.role-permission-group-toggle:hover, .role-permission-group-toggle:focus-visible { background: var(--surface-control-hover); }
+.role-permission-group-toggle svg { color: var(--muted); }
+.role-permission-row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-4); min-height: 52px; padding: var(--spacing-3) var(--spacing-4); border-bottom: var(--border-width-normal) solid var(--line); }
+.role-permission-row:last-child { border-bottom: 0; }
+.role-permission-label { display: flex; align-items: center; gap: var(--spacing-3); min-width: 0; }
+.role-permission-label > span { display: grid; place-items: center; color: var(--muted); }
+.role-permission-label > span.is-granted { color: var(--success); }
+.role-permission-label strong { color: var(--ink); font-size: var(--font-size-body-sm); }
+.role-permission-label p { margin: var(--spacing-1) 0 0; color: var(--muted); font-size: var(--font-size-body-xs); }
+.role-permission-scope { flex: none; color: var(--muted); font-size: var(--font-size-body-sm); }
+.role-assigned-users { display: grid; overflow: hidden; border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); }
+.role-assigned-user { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: var(--spacing-3); min-height: 56px; padding: 0 var(--spacing-4); border: 0; border-bottom: var(--border-width-normal) solid var(--line); color: var(--ink); background: var(--surface); font: inherit; text-align: left; }
+.role-assigned-user:last-child { border-bottom: 0; }
+.role-assigned-user:not(:disabled) { cursor: pointer; }
+.role-assigned-user:not(:disabled):hover { color: var(--blue); }
+.role-assigned-avatar { width: 32px; height: 32px; }
+.role-assigned-user small { color: var(--muted); font-size: var(--font-size-body-xs); }
+.role-details-state, .role-details-empty { margin: 0; padding: var(--spacing-8) 0; color: var(--muted); text-align: center; }
+.role-details-error { color: var(--danger); }
+.role-history-list { display: grid; overflow: hidden; border: var(--border-width-normal) solid var(--line); border-radius: var(--radius-sm); }
+.role-history-row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-4); min-height: 56px; padding: var(--spacing-3) var(--spacing-4); border-bottom: var(--border-width-normal) solid var(--line); }
+.role-history-row:last-child { border-bottom: 0; }
+.role-history-row strong { color: var(--ink); font-size: var(--font-size-body-sm); }
+.role-history-row p, .role-history-row time { margin: var(--spacing-1) 0 0; color: var(--muted); font-size: var(--font-size-body-xs); }
+.role-history-permissions { margin: var(--spacing-2) 0; padding-left: var(--spacing-5); color: var(--muted); font-size: var(--font-size-body-sm); }
+@media (--wb-viewport-max-800) { .role-details-heading { flex-direction: column; } .role-details-heading-actions { width: 100%; justify-content: space-between; } .role-permission-row { align-items: flex-start; flex-direction: column; } .role-assigned-user { grid-template-columns: 32px minmax(0, 1fr); } .role-assigned-user small { grid-column: 2; } }

@@ -27,6 +27,7 @@ const TeamsPage = lazyNamed(() => import('../pages/TeamsPage'), 'TeamsPage')
 const TeamCreatePage = lazyNamed(() => import('../pages/TeamCreatePage'), 'TeamCreatePage')
 const TeamDetailsPage = lazyNamed(() => import('../pages/TeamDetailsPage'), 'TeamDetailsPage')
 const UserProfilePage = lazyNamed(() => import('../pages/UserProfilePage'), 'UserProfilePage')
+const RoleDetailsPage = lazyNamed(() => import('../pages/settings/RoleDetailsPage'), 'RoleDetailsPage')
 
 export const pages = {
   Splash: SplashPage,
@@ -92,6 +93,7 @@ export const pages = {
   'Teams / Add Members': TeamDetailsPage,
   'Teams / Edit': TeamCreatePage,
   'User Profile': UserProfilePage,
+  'Settings / Teammates / Role Details': RoleDetailsPage,
   Vendors: ScaffoldPage,
   NotFound: TorkPage,
 }

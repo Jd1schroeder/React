@@ -307,6 +307,12 @@
 .user-profile-empty svg {
   color: var(--muted);
 }
+.user-history-card { overflow: hidden; }
+.user-history-list { display: grid; border-top: var(--border-width-normal) solid var(--line); }
+.user-history-row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-4); min-height: 56px; padding: var(--spacing-3) var(--spacing-6); border-bottom: var(--border-width-normal) solid var(--line); }
+.user-history-row:last-child { border-bottom: 0; }
+.user-history-row strong { color: var(--ink); font-size: var(--font-size-body-sm); }
+.user-history-row p, .user-history-row time { margin: var(--spacing-1) 0 0; color: var(--muted); font-size: var(--font-size-body-xs); }
 .user-profile-state {
   display: block;
   margin: var(--spacing-6) var(--spacing-5) 0;

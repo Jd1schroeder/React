@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase'
 import { listOrganizationInvitations } from './invitationService'
-import { getBaselinePermissions, validatePermissionGrants } from './permissionCatalog'
+import { getBaselinePermissions, organizationRoleCatalog, validatePermissionGrants } from './permissionCatalog'
+import { recordAuditEvent } from './auditService'
 export { organizationRoleCatalog } from './permissionCatalog'
 
 const organizationLogoBucket = 'organization-assets'
@@ -148,6 +149,23 @@ export async function listOrganizationRoles(organizationId) {
     .order('name', { ascending: true })
   if (error) throw error
   return data ?? []
+}
+
+export async function getOrganizationRoleDetails(organizationId, roleId) {
+  const { data: role, error: roleError } = await supabase
+    .from('organization_roles')
+    .select('id, organization_id, name, description, is_system, system_key, created_at, updated_at')
+    .eq('organization_id', organizationId)
+    .eq('id', roleId)
+    .maybeSingle()
+  if (roleError) throw roleError
+  if (!role) return null
+
+  const [members, permissions] = await Promise.all([
+    listOrganizationMembers(organizationId, { includePendingInvitations: true }),
+    listOrganizationRolePermissions(role.id),
+  ])
+  return { ...role, members: members.filter((member) => member.role_id === role.id), permissions }
 }
 
 export async function listOrganizationTeams(organizationId) {
@@ -391,7 +409,7 @@ async function saveRolePermissions(roleId, permissions) {
   if (error) throw error
 }
 
-export async function createCustomOrganizationRole({ organizationId, name, description, baselineRoleKey = 'technician', permissions }) {
+export async function createCustomOrganizationRole({ organizationId, name, description, baselineRoleKey = 'technician', sourceRoleName, permissions }) {
   const rolePermissions = validatePermissionGrants(permissions ?? getBaselinePermissions(baselineRoleKey))
   const { data, error } = await supabase
     .from('organization_roles')
@@ -404,6 +422,21 @@ export async function createCustomOrganizationRole({ organizationId, name, descr
   } catch (permissionsError) {
     await supabase.from('organization_roles').delete().eq('id', data.id)
     throw permissionsError
+  }
+  try {
+    await recordAuditEvent({
+      organizationId,
+      action: 'created_with_permissions',
+      entityType: 'organization_role',
+      entityId: data.id,
+      metadata: {
+        name: data.name,
+        source_role_name: sourceRoleName || organizationRoleCatalog.find((role) => role.key === baselineRoleKey)?.name || null,
+        permissions: Object.entries(rolePermissions).map(([permission_key, scope]) => ({ permission_key, scope })),
+      },
+    })
+  } catch {
+    // The database trigger still records the role and permission mutations if this summary fails.
   }
   return { ...data, permissions: rolePermissions }
 }

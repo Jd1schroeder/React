@@ -3,9 +3,12 @@ import { ArrowLeft, Camera, ChevronRight, CircleCheck, CircleX, Clock3, LoaderCi
 import { Avatar } from '../components/ui/Avatar'
 import { getCurrentWorkspace } from '../services/workspaceService'
 import { getOrganizationMemberProfile, listOrganizationRolePermissions, membershipRoles } from '../services/organizationService'
+import { listAuditEvents } from '../services/auditService'
 import { getOrganizationMemberAccount, updateOrganizationMemberAccount } from '../services/userAccountService'
 import { permissionCatalog } from '../services/permissionCatalog'
 import { formatLastVisitForUser } from '../utils/dateFormatting'
+import { auditActorName, auditEventDescription } from '../utils/auditFormatting'
+import { formatDateForUser } from '../utils/dateFormatting'
 import './UserProfilePage.css'
 
 function roleLabel(role, assignedRole) {
@@ -55,6 +58,7 @@ export function UserProfilePage({ userId, onNavigate, onNavigateBack }) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [permissions, setPermissions] = useState([])
+  const [auditEvents, setAuditEvents] = useState([])
   const [organizationId, setOrganizationId] = useState('')
   const [canEditAccount, setCanEditAccount] = useState(false)
   const [isEditAccountOpen, setIsEditAccountOpen] = useState(false)
@@ -77,6 +81,9 @@ export function UserProfilePage({ userId, onNavigate, onNavigateBack }) {
         setWeekStart(workspace.preferences?.week_start ?? 'Sunday')
         const member = await getOrganizationMemberProfile(workspace.organization.id, userId)
         if (!member) return null
+        void listAuditEvents({ organizationId: workspace.organization.id, entityId: userId, entityTypes: ['organization_member'], actions: ['created', 'role_changed', 'status_changed', 'deleted'] })
+          .then((events) => { if (active) setAuditEvents(events) })
+          .catch(() => {})
         if (member.role_id) setPermissions(await listOrganizationRolePermissions(member.role_id))
         return { ...member, email: workspace.user?.id === userId ? workspace.user.email : member.email ?? null }
       })
@@ -210,6 +217,10 @@ export function UserProfilePage({ userId, onNavigate, onNavigateBack }) {
                     </div>
                   </section>)}
                 </div>
+              </section>
+              <section className="user-profile-card user-history-card" aria-labelledby="user-history-title">
+                <div className="user-profile-section-heading"><h2 id="user-history-title">Role and access history</h2></div>
+                {auditEvents.length ? <div className="user-history-list">{auditEvents.map((event) => <div className="user-history-row" key={event.id}><div><strong>{auditEventDescription(event)}</strong><p>By {auditActorName(event)}</p></div><time dateTime={event.created_at}>{formatDateForUser(event.created_at, dateFormat, timeZone)}</time></div>)}</div> : <p className="user-profile-empty">No role or access history available.</p>}
               </section>
               </>}
             </div>

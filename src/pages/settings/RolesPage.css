@@ -245,13 +245,13 @@
   font-size: var(--font-size-lg);
 }
 .roles-table {
-  overflow: hidden;
+  overflow: visible;
   border: var(--border-width-normal) solid var(--line);
   border-radius: var(--radius-sm);
 }
 .roles-table-row {
   display: grid;
-  grid-template-columns: minmax(150px, 0.8fr) 140px minmax(0, 2fr);
+  grid-template-columns: minmax(150px, 0.8fr) 140px minmax(0, 2fr) auto;
   gap: var(--spacing-4);
   align-items: center;
   min-height: 56px;
@@ -264,10 +264,54 @@
   grid-template-columns: minmax(150px, 0.8fr) 140px minmax(0, 2fr) auto;
 }
 .role-row-actions {
+  position: relative;
   display: flex;
   justify-content: flex-end;
   gap: var(--spacing-2);
 }
+.role-row-action {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+.role-row-action:hover,
+.role-row-action:focus-visible { color: var(--ink); }
+.role-row-menu {
+  position: absolute;
+  top: calc(100% + var(--spacing-2));
+  right: 0;
+  z-index: 10;
+  display: grid;
+  width: 190px;
+  padding: var(--spacing-2) 0;
+  border: var(--border-width-normal) solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--elevation-menu);
+}
+.role-row-menu button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 var(--spacing-3);
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-body-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.role-row-menu button:hover,
+.role-row-menu button:focus-visible { background: var(--surface-control-hover); }
+.role-row-menu button.is-danger { color: var(--danger); }
 .role-edit-button {
   justify-self: end;
   min-height: 32px;
@@ -334,6 +378,22 @@
   color: var(--ink);
   font-weight: var(--font-semibold);
 }
+.role-name-link {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+  font-weight: var(--font-semibold);
+  text-align: left;
+  cursor: pointer;
+}
+.role-name-link:hover,
+.role-name-link:focus-visible {
+  color: var(--blue);
+  text-decoration: none;
+}
 .roles-table-header {
   min-height: 44px;
   color: var(--muted);
@@ -356,7 +416,7 @@
     width: auto;
   }
   .roles-table-row {
-    grid-template-columns: minmax(130px, 0.8fr) 90px minmax(220px, 2fr);
+    grid-template-columns: minmax(130px, 0.8fr) 90px minmax(220px, 2fr) auto;
     min-width: 560px;
   }
   .custom-role-row {

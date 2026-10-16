@@ -35,7 +35,7 @@ function PageRoute({ pageName, isPublic = false }) {
   const Page = pages[pageName] ?? pages.NotFound
   const navigate = useNavigate()
   const { guardNavigation } = useUnsavedChanges()
-  const { recordId, userId, sessionId, shareToken } = useParams()
+  const { recordId, userId, roleId, sessionId, shareToken } = useParams()
   const [mobileHeader, setMobileHeader] = useState({ pageName: null, title: '', back: null })
   const updateMobileHeaderTitle = useCallback((title) => setMobileHeader((current) => ({ pageName, title, back: current.pageName === pageName ? current.back : null })), [pageName])
   const updateMobileHeaderBack = useCallback((back) => setMobileHeader((current) => ({ pageName, title: current.pageName === pageName ? current.title : '', back })), [pageName])
@@ -50,13 +50,15 @@ function PageRoute({ pageName, isPublic = false }) {
       ? 'Settings / Features'
       : pageName === 'Settings / Features / External Work Orders'
         ? 'Settings / Features / Work Orders'
+        : pageName === 'Settings / Teammates / Role Details'
+          ? '/settings/teammates/roles'
         : pageName === 'User Profile'
           ? '/users'
         : 'Tools'))
   }), [guardNavigation, navigate, pageName])
   const onNavigateRecord = useCallback((type, id) => guardNavigation(() => navigate(getRecordPath(type, id))), [guardNavigation, navigate])
   const teamPageKey = pageName.startsWith('Teams /') ? `${pageName}:${recordId ?? ''}` : undefined
-  const content = <RouteErrorBoundary><Page key={teamPageKey} pageName={pageName} recordId={recordId} userId={userId} sessionId={sessionId} shareToken={shareToken} isTeamAddMembers={pageName === 'Teams / Add Members'} onNavigate={onNavigate} onNavigateBack={onNavigateBack} onNavigateRecord={onNavigateRecord} onMobileHeaderTitleChange={updateMobileHeaderTitle} onMobileHeaderBackChange={updateMobileHeaderBack} /></RouteErrorBoundary>
+  const content = <RouteErrorBoundary><Page key={teamPageKey} pageName={pageName} recordId={recordId} roleId={roleId} userId={userId} sessionId={sessionId} shareToken={shareToken} isTeamAddMembers={pageName === 'Teams / Add Members'} onNavigate={onNavigate} onNavigateBack={onNavigateBack} onNavigateRecord={onNavigateRecord} onMobileHeaderTitleChange={updateMobileHeaderTitle} onMobileHeaderBackChange={updateMobileHeaderBack} /></RouteErrorBoundary>
 
   if (isPublic) return content
   return <AppLayout activePage={pageName} mobileHeaderTitle={mobileHeaderTitle} mobileHeaderBack={mobileHeaderBack || onNavigateBack} onNavigate={onNavigate} onNavigateBack={onNavigateBack}>{content}</AppLayout>

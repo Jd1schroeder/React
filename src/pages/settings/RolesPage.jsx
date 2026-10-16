@@ -1,25 +1,42 @@
-import { Plus, Search, X } from "lucide-react";
+import { MoreVertical, Plus, Search, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { LoadingState } from "../../components/ui/LoadingState";
 import { Select } from "../../components/ui/Select";
 import { getCurrentWorkspace } from "../../services/workspaceService";
-import { createCustomOrganizationRole, deleteCustomOrganizationRole, listCustomOrganizationRoles, listOrganizationRoles, organizationRoleCatalog, updateCustomOrganizationRole } from "../../services/organizationService";
+import { createCustomOrganizationRole, deleteCustomOrganizationRole, listCustomOrganizationRoles, listOrganizationMembers, listOrganizationRoles, organizationRoleCatalog, updateCustomOrganizationRole } from "../../services/organizationService";
 import { getBaselinePermissions, permissionCatalog, permissionScopeOptions } from "../../services/permissionCatalog";
+import { useDismissibleMenu } from "../../hooks/useDismissibleMenu";
 import { SettingsLayout } from "./SettingsLayout";
 import { TeammateTabs } from "./TeammateTabs";
 import "./RolesPage.css";
 
-const emptyForm = { name: "", description: "", baselineRoleKey: "technician", permissions: {} };
+const emptyForm = { name: "", description: "", baselineRoleKey: "technician", sourceRoleName: "", permissions: {} };
 const permissionGroups = permissionCatalog.reduce((groups, permission) => {
   groups[permission.module] ??= [];
   groups[permission.module].push(permission);
   return groups;
 }, {});
 
+function RoleRowActions({ role, isCustom, onView, onCopy, onEdit, onDelete }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const rootRef = useDismissibleMenu(isOpen, () => setIsOpen(false));
+  const close = () => setIsOpen(false);
+  return <div ref={rootRef} className="role-row-actions">
+    <button type="button" className="role-row-action" aria-label={`Actions for ${role.name}`} aria-haspopup="menu" aria-expanded={isOpen} onClick={() => setIsOpen((current) => !current)}><MoreVertical size={18} /></button>
+    {isOpen && <div className="role-row-menu" role="menu" aria-label={`Actions for ${role.name}`}>
+      <button type="button" role="menuitem" onClick={() => { close(); onView(role); }}>View role</button>
+      <button type="button" role="menuitem" onClick={() => { close(); onCopy(role); }}>Copy to new role</button>
+      {isCustom && <button type="button" role="menuitem" onClick={() => { close(); onEdit(role); }}>Edit role</button>}
+      {isCustom && <button type="button" role="menuitem" className="is-danger" onClick={() => { close(); onDelete(role); }}>Delete role</button>}
+    </div>}
+  </div>;
+}
+
 export function RolesPage({ onNavigate }) {
   const [organizationId, setOrganizationId] = useState("");
   const [customRoles, setCustomRoles] = useState([]);
   const [organizationRoles, setOrganizationRoles] = useState([]);
+  const [members, setMembers] = useState([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -36,9 +53,28 @@ export function RolesPage({ onNavigate }) {
         const id = workspace.organization?.id ?? "";
         setOrganizationId(id);
         if (id) {
-          const [custom, all] = await Promise.all([listCustomOrganizationRoles(id), listOrganizationRoles(id)]);
+          const [custom, all, memberRows] = await Promise.all([listCustomOrganizationRoles(id), listOrganizationRoles(id), listOrganizationMembers(id)]);
           setCustomRoles(custom);
           setOrganizationRoles(all);
+          setMembers(memberRows);
+          const requestedEditRoleId = new URLSearchParams(window.location.search).get("edit");
+          const requestedRole = custom.find((role) => role.id === requestedEditRoleId);
+          if (requestedRole) {
+            setEditingRoleId(requestedRole.id);
+            setForm({ name: requestedRole.name, description: requestedRole.description ?? "", baselineRoleKey: "", permissions: requestedRole.permissions ?? {} });
+            setIsEditing(true);
+          } else {
+            const requestedCopyRoleId = new URLSearchParams(window.location.search).get("copy");
+            const storedRole = custom.find((role) => role.id === requestedCopyRoleId) ?? all.find((role) => role.id === requestedCopyRoleId);
+            const catalogRole = organizationRoleCatalog.find((role) => role.key === storedRole?.system_key);
+            const sourceRole = storedRole?.is_system && catalogRole ? { ...catalogRole, ...storedRole } : storedRole;
+            if (sourceRole) {
+              const baselineRoleKey = sourceRole.key ?? sourceRole.system_key ?? emptyForm.baselineRoleKey;
+              setEditingRoleId(null);
+              setForm({ name: `${sourceRole.name} copy`, description: sourceRole.description ?? "", baselineRoleKey, sourceRoleName: sourceRole.name, permissions: sourceRole.permissions ?? getBaselinePermissions(baselineRoleKey) });
+              setIsEditing(true);
+            }
+          }
         }
       })
       .catch((loadError) => setError(loadError.message || "Unable to load roles."))
@@ -56,10 +92,23 @@ export function RolesPage({ onNavigate }) {
       : customRoles;
     return [...roles].sort((left, right) => left.name.localeCompare(right.name));
   }, [customRoles, searchQuery]);
+  const roleAssignmentCounts = useMemo(() => members.reduce((counts, member) => {
+    if (member.role_id) counts[member.role_id] = (counts[member.role_id] ?? 0) + 1;
+    return counts;
+  }, {}), [members]);
+  const assignedUserCount = (role) => {
+    const roleId = role.id ?? organizationRoles.find((item) => item.system_key === role.key)?.id;
+    return roleId ? roleAssignmentCounts[roleId] ?? 0 : 0;
+  };
+  const openRoleDetails = (role) => {
+    const roleId = role.id ?? organizationRoles.find((item) => item.system_key === role.key)?.id;
+    if (roleId) onNavigate(`/settings/teammates/roles/${encodeURIComponent(roleId)}`);
+  };
 
-  const openCreate = () => {
+  const openCreate = (sourceRole = null) => {
     setEditingRoleId(null);
-    setForm({ ...emptyForm, permissions: getBaselinePermissions(emptyForm.baselineRoleKey) });
+    const baselineRoleKey = sourceRole?.key ?? emptyForm.baselineRoleKey;
+    setForm({ name: sourceRole ? `${sourceRole.name} copy` : "", description: sourceRole?.description ?? "", baselineRoleKey, sourceRoleName: sourceRole?.name ?? "", permissions: sourceRole?.permissions ?? getBaselinePermissions(baselineRoleKey) });
     setError("");
     setIsEditing(true);
   };
@@ -87,7 +136,7 @@ export function RolesPage({ onNavigate }) {
     setIsSaving(true);
     setError("");
     try {
-      const payload = { organizationId, name: form.name, description: form.description, permissions: form.permissions };
+      const payload = { organizationId, name: form.name, description: form.description, sourceRoleName: form.sourceRoleName, permissions: form.permissions };
       const role = editingRoleId
         ? await updateCustomOrganizationRole({ ...payload, roleId: editingRoleId })
         : await createCustomOrganizationRole({ ...payload, baselineRoleKey: form.baselineRoleKey });
@@ -137,8 +186,8 @@ export function RolesPage({ onNavigate }) {
         </form>}
         {error && <p className="roles-error" role="alert">{error}</p>}
         {rolePendingDelete && <div className="role-delete-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !isSaving) setRolePendingDelete(null); }}><section className="role-delete-modal" role="dialog" aria-modal="true" aria-labelledby="delete-role-title"><h3 id="delete-role-title">Delete {rolePendingDelete.name}?</h3><p>Users assigned to this role must be reassigned before the role can be deleted.</p><Select ariaLabel="Replacement role" value={replacementRoleId} placeholder="Select replacement role" options={organizationRoles.filter((role) => role.id !== rolePendingDelete.id).map((role) => ({ value: role.id, label: role.name }))} onChange={setReplacementRoleId} /><div className="role-create-actions"><button type="button" className="role-secondary-action" onClick={() => setRolePendingDelete(null)} disabled={isSaving}>Cancel</button><button type="button" className="role-danger-action" onClick={confirmDelete} disabled={isSaving || !replacementRoleId}>{isSaving ? "Deleting..." : "Delete role"}</button></div></section></div>}
-        <section className="roles-section" aria-labelledby="default-roles-title"><h3 id="default-roles-title">Built-in roles</h3>{filteredBuiltInRoles.length > 0 && <div className="roles-table"><div className="roles-table-row roles-table-header"><span>Name</span><span>Users assigned</span><span>Description</span></div>{filteredBuiltInRoles.map((role) => <div className="roles-table-row" key={role.key}><strong>{role.name}</strong><span>—</span><span>{role.description}</span></div>)}</div>}{searchQuery && !filteredBuiltInRoles.length && <p className="roles-state">No built-in roles match your search.</p>}</section>
-        <section className="roles-section" aria-labelledby="custom-roles-title"><h3 id="custom-roles-title">Custom roles</h3>{isLoading && <LoadingState message="Loading custom roles..." />}{!isLoading && !filteredCustomRoles.length && <p className="roles-state">{searchQuery ? "No custom roles match your search." : "No custom roles available."}</p>}{!isLoading && filteredCustomRoles.length > 0 && <div className="roles-table">{filteredCustomRoles.map((role) => <div className="roles-table-row custom-role-row" key={role.id}><strong>{role.name}</strong><span>—</span><span>{role.description || "No description provided."}</span><div className="role-row-actions"><button type="button" className="role-edit-button" onClick={() => openEdit(role)}>Edit</button><button type="button" className="role-delete-button" onClick={() => { setRolePendingDelete(role); setReplacementRoleId(organizationRoles.find((item) => item.is_system)?.id ?? ""); }}>Delete</button></div></div>)}</div>}</section>
+        <section className="roles-section" aria-labelledby="default-roles-title"><h3 id="default-roles-title">Built-in roles</h3>{filteredBuiltInRoles.length > 0 && <div className="roles-table"><div className="roles-table-row roles-table-header"><span>Name</span><span>Users assigned</span><span>Description</span><span aria-hidden="true" /></div>{filteredBuiltInRoles.map((role) => <div className="roles-table-row role-list-row" key={role.key}><button type="button" className="role-name-link" onClick={() => openRoleDetails(role)}>{role.name}</button><span>{assignedUserCount(role)}</span><span>{role.description}</span><RoleRowActions role={role} onView={openRoleDetails} onCopy={openCreate} /></div>)}</div>}{searchQuery && !filteredBuiltInRoles.length && <p className="roles-state">No built-in roles match your search.</p>}</section>
+        <section className="roles-section" aria-labelledby="custom-roles-title"><h3 id="custom-roles-title">Custom roles</h3>{isLoading && <LoadingState message="Loading custom roles..." />}{!isLoading && !filteredCustomRoles.length && <p className="roles-state">{searchQuery ? "No custom roles match your search." : "No custom roles available."}</p>}{!isLoading && filteredCustomRoles.length > 0 && <div className="roles-table">{filteredCustomRoles.map((role) => <div className="roles-table-row custom-role-row" key={role.id}><button type="button" className="role-name-link" onClick={() => openRoleDetails(role)}>{role.name}</button><span>{assignedUserCount(role)}</span><span>{role.description || "No description provided."}</span><RoleRowActions role={role} isCustom onView={openRoleDetails} onCopy={openCreate} onEdit={openEdit} onDelete={(pendingRole) => { setRolePendingDelete(pendingRole); setReplacementRoleId(organizationRoles.find((item) => item.is_system)?.id ?? ""); }} /></div>)}</div>}</section>
       </section>
     </SettingsLayout>
   </div>;
