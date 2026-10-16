@@ -29,8 +29,9 @@ vi.mock('../src/services/dashboardService', () => ({
   completedWorkOrderPeriods: [
     { key: 'all', label: 'All time' },
     { key: 'this_month', label: 'This month' },
-    { key: 'last_7_days', label: 'Last 7 days' },
     { key: 'today', label: 'Today' },
+    { key: 'last_24_hours', label: 'Last 24 hours' },
+    { key: 'last_7_days', label: 'Last 7 days' },
   ],
   getDashboardOverview: dashboardMocks.getDashboardOverview,
   getDashboardMetricWorkOrders: dashboardMocks.getDashboardMetricWorkOrders,

@@ -7,14 +7,16 @@ const dashboardWorkOrderGroupIds = new Set(['assigned-to-me', 'assigned-to-my-te
 export const completedWorkOrderPeriods = [
   { key: 'all', label: 'All time' },
   { key: 'this_month', label: 'This month' },
-  { key: 'last_7_days', label: 'Last 7 days' },
   { key: 'today', label: 'Today' },
+  { key: 'last_24_hours', label: 'Last 24 hours' },
+  { key: 'last_7_days', label: 'Last 7 days' },
 ]
 
 function completedSince(period, today) {
   if (period === 'all') return null
   const date = new Date(`${today}T00:00:00.000Z`)
   if (period === 'today') return date.toISOString()
+  if (period === 'last_24_hours') return new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
   if (period === 'last_7_days') date.setUTCDate(date.getUTCDate() - 6)
   if (period === 'this_month') date.setUTCDate(1)
   return date.toISOString()
